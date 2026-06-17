@@ -1,0 +1,11 @@
+:root {
+  --navy: #0E2A47; --navy2: #16345A; --gold: #C9A227; --gold-soft: #E4Cd7a;
+  --bg: #F4F7FB; --card: #FFFFFF; --border: #E6ECF3; --muted: #6B7C93; --dark: #14213D;
+  --display: "Fraunces", Georgia, serif;
+  --body: "Archivo", -apple-system, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--body); background: var(--bg); color: var(--dark); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
