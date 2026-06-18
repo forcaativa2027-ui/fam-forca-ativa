@@ -46,8 +46,21 @@ export const cellSchema = z.object({
   address: optionalText,
   meeting_weekday: z.enum(["domingo","segunda","terca","quarta","quinta","sexta","sabado"]).optional().nullable(),
   meeting_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora invalida (HH:MM)").optional().or(z.literal("")),
+  leader_id: z.string().uuid().optional().nullable(),
+  host_id: z.string().uuid().optional().nullable(),
 });
 export type CellInput = z.infer<typeof cellSchema>;
+
+export const discipleshipAdminSchema = z.object({
+  discipler_id: z.string().uuid("Discipulador obrigatorio"),
+  disciple_id: z.string().uuid("Discipulo obrigatorio"),
+  current_module: optionalText,
+  notes: optionalText,
+}).refine((d) => d.discipler_id !== d.disciple_id, {
+  message: "Discipulador e discipulo devem ser pessoas diferentes",
+  path: ["disciple_id"],
+});
+export type DiscipleshipAdminInput = z.infer<typeof discipleshipAdminSchema>;
 
 export const prayerSchema = z.object({
   request: reqText("Pedido", 3),

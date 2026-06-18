@@ -20,6 +20,9 @@ import {
 import { supabase } from "@/lib/supabase/client";
 import { youtubeThumb } from "@/services/content";
 import { logAudit } from "@/services/audit";
+import { MembersAdmin } from "./MembersAdmin";
+import { CellsAdmin } from "./CellsAdmin";
+import { DiscipleshipAdmin } from "./DiscipleshipAdmin";
 
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
@@ -47,6 +50,9 @@ export default function AdminPanel() {
             <TabsTrigger value="events">Agenda</TabsTrigger>
             <TabsTrigger value="services">Cultos</TabsTrigger>
             <TabsTrigger value="word">Palavra</TabsTrigger>
+            <TabsTrigger value="members">Membros</TabsTrigger>
+            <TabsTrigger value="cells">Células</TabsTrigger>
+            <TabsTrigger value="discipleship">Discipulado</TabsTrigger>
             <TabsTrigger value="mda">Estrutura MDA</TabsTrigger>
             <TabsTrigger value="audit">Auditoria</TabsTrigger>
           </TabsList>
@@ -55,6 +61,9 @@ export default function AdminPanel() {
         <TabsContent value="events"><EventsAdmin /></TabsContent>
         <TabsContent value="services"><ServiceTimesAdmin /></TabsContent>
         <TabsContent value="word"><DailyWordsAdmin /></TabsContent>
+        <TabsContent value="members"><MembersAdmin /></TabsContent>
+        <TabsContent value="cells"><CellsAdmin /></TabsContent>
+        <TabsContent value="discipleship"><DiscipleshipAdmin /></TabsContent>
         <TabsContent value="mda"><MdaStructure /></TabsContent>
         <TabsContent value="audit"><AuditView /></TabsContent>
       </Tabs>

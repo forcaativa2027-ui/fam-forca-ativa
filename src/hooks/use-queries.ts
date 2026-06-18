@@ -64,3 +64,13 @@ export const useCellPrayers = (cellId: string|null) =>
     queryFn: () => Pr.listCellPrayers(supabase, cellId),
     enabled: !!cellId,
   });
+
+// B4a — Gestão da rede
+export const useAllMembers = () => useQuery({
+  queryKey: ["all-members"],
+  queryFn: () => Me.listAllMembers(supabase),
+});
+export const useAllDiscipleships = () => useQuery({
+  queryKey: ["all-discipleships"],
+  queryFn: () => Di.listAllDiscipleships(supabase),
+});
