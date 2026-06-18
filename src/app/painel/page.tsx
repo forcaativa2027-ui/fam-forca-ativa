@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, hasSupabaseEnv } from "@/lib/supabase/client";
 
-const AdminPanel = dynamic(() => import("@/components/admin/AdminPanel"), {
+const PanelDashboard = dynamic(() => import("@/components/panel/PanelDashboard"), {
   ssr: false, loading: () => <main className="grid h-screen place-items-center text-muted">Carregando…</main>,
 });
 
-export default function Page() {
+export default function PanelPage() {
   const envOk = hasSupabaseEnv();
   const [session, setSession] = useState<Session | null | "loading">("loading");
   useEffect(() => {
@@ -21,5 +21,5 @@ export default function Page() {
   if (!envOk) return <main className="grid h-screen place-items-center px-4 text-center text-muted">Configure as variáveis de ambiente do Supabase na Vercel.</main>;
   if (session === "loading") return <main className="grid h-screen place-items-center text-muted">Carregando…</main>;
   if (!session) return null;
-  return <AdminPanel />;
+  return <PanelDashboard />;
 }

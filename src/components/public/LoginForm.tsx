@@ -1,0 +1,66 @@
+"use client";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase, hasSupabaseEnv } from "@/lib/supabase/client";
+import { loginSchema, type LoginInput } from "@/schemas";
+import { logAudit } from "@/services/audit";
+
+export default function LoginForm() {
+  const envOk = hasSupabaseEnv();
+  const [err, setErr] = useState("");
+  const { register, handleSubmit, formState: { errors, isSubmitting } } =
+    useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
+
+  useEffect(() => {
+    if (!envOk) return;
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) window.location.href = "/painel";
+    });
+  }, [envOk]);
+
+  async function onSubmit(values: LoginInput) {
+    if (!envOk) { setErr("Configure as variaveis de ambiente do Supabase na Vercel."); return; }
+    setErr("");
+    const { error, data } = await supabase.auth.signInWithPassword(values);
+    if (error) { setErr(error.message); return; }
+    if (data.user) await logAudit(supabase, "login", "auth", data.user.id);
+    window.location.href = "/painel";
+  }
+
+  return (
+    <main className="relative grid min-h-screen place-items-center bg-[radial-gradient(circle_at_30%_20%,#16345A,#0E2A47_60%)] p-5">
+      <Link href="/" className="absolute left-5 top-5 flex items-center gap-2 text-sm font-semibold text-white/80 hover:text-white">
+        <ArrowLeft className="h-4 w-4" /> Voltar ao início
+      </Link>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl">
+        <div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-gold" /><h1 className="font-display text-2xl text-navy">Área do membro</h1></div>
+        <div className="my-3 h-[3px] w-16 rounded bg-gold" />
+        <p className="mb-6 text-xs text-muted">Discipulado, células, núcleos e gestão</p>
+
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="email">E-mail</Label>
+            <Input id="email" type="email" autoComplete="email" {...register("email")} />
+            {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
+          </div>
+          <div>
+            <Label htmlFor="password">Senha</Label>
+            <Input id="password" type="password" autoComplete="current-password" {...register("password")} />
+            {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
+          </div>
+        </div>
+
+        {err && <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{err}</p>}
+        <Button type="submit" disabled={isSubmitting} className="mt-4 w-full">{isSubmitting ? "Entrando…" : "Entrar"}</Button>
+        <p className="mt-4 text-center text-xs text-muted">Sem acesso? Fale com a liderança da sua célula.</p>
+      </form>
+    </main>
+  );
+}

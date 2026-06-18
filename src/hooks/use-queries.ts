@@ -1,0 +1,22 @@
+"use client";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase/client";
+import * as P from "@/services/profiles";
+import * as Co from "@/services/content";
+import * as C from "@/services/churches";
+import * as A from "@/services/audit";
+import * as D from "@/services/dashboard";
+
+export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
+export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
+export const useDistricts      = () => useQuery({ queryKey: ["districts"],  queryFn: () => C.listDistricts(supabase) });
+export const useAreas          = () => useQuery({ queryKey: ["areas"],      queryFn: () => C.listAreas(supabase) });
+export const useSectors        = () => useQuery({ queryKey: ["sectors"],    queryFn: () => C.listSectors(supabase) });
+export const useCells          = () => useQuery({ queryKey: ["cells"],      queryFn: () => C.listCells(supabase) });
+export const useMdaAlerts      = () => useQuery({ queryKey: ["mda-alerts"], queryFn: () => C.listMdaAlerts(supabase) });
+export const usePublicSermons  = () => useQuery({ queryKey: ["public-sermons"], queryFn: () => Co.listPublicSermons(supabase) });
+export const usePublicEvents   = () => useQuery({ queryKey: ["public-events"],  queryFn: () => Co.listPublicEvents(supabase) });
+export const useSermons        = () => useQuery({ queryKey: ["sermons"], queryFn: () => Co.listSermons(supabase) });
+export const useEvents         = () => useQuery({ queryKey: ["events"],  queryFn: () => Co.listEvents(supabase) });
+export const useAuditLogs      = () => useQuery({ queryKey: ["audit-logs"], queryFn: () => A.listAuditLogs(supabase) });
+export const useDashboard      = (churchId: string|null) => useQuery({ queryKey: ["dashboard", churchId ?? "all"], queryFn: () => D.getDashboardStats(supabase, churchId) });
