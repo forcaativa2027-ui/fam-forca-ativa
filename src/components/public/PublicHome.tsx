@@ -10,9 +10,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   usePublicSermons, usePublicEvents, useChurches, useCells,
+  useServiceTimes, useTodaysWord,
 } from "@/hooks/use-queries";
 import { youtubeThumb } from "@/services/content";
-import { getDefaultServices, getTodaysWord } from "@/services/institutional";
+import { defaultServiceTimes, defaultWord } from "@/services/institutional";
 import type { EventItem, Church, Cell } from "@/types/domain";
 
 const STATUS_LABELS: Record<EventItem["status"], string> = {
@@ -29,10 +30,15 @@ export default function PublicHome() {
   const { data: events = [] } = usePublicEvents();
   const { data: churches = [] } = useChurches();
   const { data: cells = [] } = useCells();
-  const word = getTodaysWord();
-  const featured = sermons.find((s) => s.is_featured) ?? sermons[0];
   const sede = churches.find((c) => c.type === "sede") ?? churches[0] ?? null;
-  const services = getDefaultServices(sede);
+  const { data: dbServices = [] } = useServiceTimes(sede?.id ?? null);
+  const { data: dbWord } = useTodaysWord();
+
+  // Fallback inteligente: se o banco tem dados use-os; senao mostra defaults.
+  const services = dbServices.length > 0 ? dbServices : defaultServiceTimes(sede);
+  const word = dbWord ?? defaultWord();
+
+  const featured = sermons.find((s) => s.is_featured) ?? sermons[0];
 
   return (
     <div className="min-h-screen bg-background">
@@ -124,7 +130,7 @@ export default function PublicHome() {
               <Card key={s.id} className="border-l-4 border-l-gold">
                 <CardContent className="flex items-center gap-4 pt-6">
                   <div className="text-center">
-                    <b className="block font-display text-xl text-navy">{s.time}</b>
+                    <b className="block font-display text-xl text-navy">{s.time.slice(0,5)}</b>
                     <span className="text-[10px] font-bold uppercase tracking-wide text-muted">{WEEKDAY_LABELS[s.weekday]}</span>
                   </div>
                   <div className="flex-1 border-l border-border pl-4">

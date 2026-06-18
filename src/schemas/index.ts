@@ -54,3 +54,22 @@ export const prayerSchema = z.object({
   life_group_id: z.string().uuid().optional().nullable(),
 });
 export type PrayerInput = z.infer<typeof prayerSchema>;
+
+// B2 — Conteudo institucional
+export const serviceTimeSchema = z.object({
+  church_id: z.string().uuid("Igreja invalida"),
+  weekday: z.enum(["domingo","segunda","terca","quarta","quinta","sexta","sabado"]),
+  time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora invalida (HH:MM)"),
+  description: optionalText,
+  sort_order: z.coerce.number().int().min(0).default(0),
+});
+export type ServiceTimeInput = z.infer<typeof serviceTimeSchema>;
+
+export const dailyWordSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data invalida"),
+  title: reqText("Titulo", 3),
+  verse_ref: optionalText,
+  verse_text: optionalText,
+  reflection: optionalText,
+});
+export type DailyWordInput = z.infer<typeof dailyWordSchema>;

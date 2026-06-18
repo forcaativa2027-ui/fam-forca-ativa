@@ -6,6 +6,7 @@ import * as Co from "@/services/content";
 import * as C from "@/services/churches";
 import * as A from "@/services/audit";
 import * as D from "@/services/dashboard";
+import * as I from "@/services/institutional";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -20,3 +21,9 @@ export const useSermons        = () => useQuery({ queryKey: ["sermons"], queryFn
 export const useEvents         = () => useQuery({ queryKey: ["events"],  queryFn: () => Co.listEvents(supabase) });
 export const useAuditLogs      = () => useQuery({ queryKey: ["audit-logs"], queryFn: () => A.listAuditLogs(supabase) });
 export const useDashboard      = (churchId: string|null) => useQuery({ queryKey: ["dashboard", churchId ?? "all"], queryFn: () => D.getDashboardStats(supabase, churchId) });
+
+// B2 — conteudo institucional
+export const useServiceTimes   = (churchId: string|null) => useQuery({ queryKey: ["service-times", churchId ?? "none"], queryFn: () => I.listServiceTimes(supabase, churchId) });
+export const useAllServiceTimes= () => useQuery({ queryKey: ["service-times-all"], queryFn: () => I.listAllServiceTimes(supabase) });
+export const useTodaysWord     = () => useQuery({ queryKey: ["todays-word"], queryFn: () => I.getTodaysWord(supabase) });
+export const useDailyWords     = () => useQuery({ queryKey: ["daily-words"], queryFn: () => I.listDailyWords(supabase) });

@@ -41,6 +41,14 @@ export interface DashboardStats {
   reports_trend: { week:string; attendance:number; visitors:number }[];
 }
 
-/** Conteudo institucional (vem de tabela `church_info` ou placeholders). */
-export interface ServiceTime { id:string; church_id:string; weekday:Weekday; time:string; description:string|null; }
-export interface DailyWord { id:string; date:string; title:string; verse_ref:string|null; verse_text:string|null; reflection:string|null; }
+/** Conteudo institucional (vindo das tabelas `church_info` e `daily_words`). */
+export interface ChurchInfo {
+  id: string; church_id: string; weekday: Weekday; time: string;
+  description: string | null; is_active: boolean; sort_order: number;
+}
+export type ServiceTime = ChurchInfo; // alias usado no front
+export interface DailyWord {
+  id: string; date: string; title: string;
+  verse_ref: string | null; verse_text: string | null; reflection: string | null;
+  is_active: boolean;
+}
