@@ -73,3 +73,15 @@ export const dailyWordSchema = z.object({
   reflection: optionalText,
 });
 export type DailyWordInput = z.infer<typeof dailyWordSchema>;
+
+// B3 — Area do membro
+export const profileEditSchema = z.object({
+  full_name: reqText("Nome completo", 3),
+  phone: optionalText,
+});
+export type ProfileEditInput = z.infer<typeof profileEditSchema>;
+
+export const newPrayerSchema = z.object({
+  request: reqText("Pedido", 3),
+});
+export type NewPrayerInput = z.infer<typeof newPrayerSchema>;

@@ -7,6 +7,10 @@ import * as C from "@/services/churches";
 import * as A from "@/services/audit";
 import * as D from "@/services/dashboard";
 import * as I from "@/services/institutional";
+import * as Me from "@/services/members";
+import * as Di from "@/services/discipleship";
+import * as Tl from "@/services/timeline";
+import * as Pr from "@/services/prayer";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -27,3 +31,36 @@ export const useServiceTimes   = (churchId: string|null) => useQuery({ queryKey:
 export const useAllServiceTimes= () => useQuery({ queryKey: ["service-times-all"], queryFn: () => I.listAllServiceTimes(supabase) });
 export const useTodaysWord     = () => useQuery({ queryKey: ["todays-word"], queryFn: () => I.getTodaysWord(supabase) });
 export const useDailyWords     = () => useQuery({ queryKey: ["daily-words"], queryFn: () => I.listDailyWords(supabase) });
+
+// B3 — Area do membro
+export const useMyMember          = () => useQuery({ queryKey: ["my-member"], queryFn: () => Me.getMyMember(supabase) });
+export const useCellMembers       = (cellId: string|null, excludeId?: string|null) =>
+  useQuery({
+    queryKey: ["cell-members", cellId ?? "none", excludeId ?? "none"],
+    queryFn: () => cellId ? Me.listCellMembers(supabase, cellId, excludeId ?? undefined) : Promise.resolve([]),
+    enabled: !!cellId,
+  });
+export const useMyActiveDiscipleship = (myMemberId: string|null) =>
+  useQuery({
+    queryKey: ["my-active-discipleship", myMemberId ?? "none"],
+    queryFn: () => Di.getMyActiveDiscipleship(supabase, myMemberId),
+    enabled: !!myMemberId,
+  });
+export const useMyDisciples = (myMemberId: string|null) =>
+  useQuery({
+    queryKey: ["my-disciples", myMemberId ?? "none"],
+    queryFn: () => Di.listMyDisciples(supabase, myMemberId),
+    enabled: !!myMemberId,
+  });
+export const useMyTimeline = (memberId: string|null) =>
+  useQuery({
+    queryKey: ["my-timeline", memberId ?? "none"],
+    queryFn: () => Tl.listMemberTimeline(supabase, memberId),
+    enabled: !!memberId,
+  });
+export const useCellPrayers = (cellId: string|null) =>
+  useQuery({
+    queryKey: ["cell-prayers", cellId ?? "none"],
+    queryFn: () => Pr.listCellPrayers(supabase, cellId),
+    enabled: !!cellId,
+  });
