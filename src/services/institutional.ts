@@ -71,6 +71,7 @@ export function defaultWord(): DailyWord {
     verse_ref: "Salmos 23:1",
     verse_text: "O Senhor é o meu pastor; nada me faltará.",
     reflection: "Permita que Ele guie seu dia.",
+    prayer: "Senhor, conduze meus passos hoje. Que eu reconheça Tua voz e siga Teu caminho. Amém.",
     is_active: true,
   };
 }

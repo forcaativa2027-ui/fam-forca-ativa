@@ -26,6 +26,7 @@ export const eventSchema = z.object({
   starts_at: z.string().min(10, "Data e hora obrigatorias"),
   location: optionalText,
   status: z.enum(["abertas","encerradas","esgotado","em_breve"]).default("abertas"),
+  event_type: z.enum(["culto","congresso","conferencia","encontro","ebd","outro"]).default("outro"),
   registration_url: z.string().url("URL invalida").optional().or(z.literal("")),
 });
 export type EventInput = z.infer<typeof eventSchema>;
@@ -44,6 +45,9 @@ export const cellSchema = z.object({
   name: reqText("Nome da celula"),
   sector_id: z.string().uuid("Setor invalido"),
   address: optionalText,
+  state: optionalText,
+  city: optionalText,
+  neighborhood: optionalText,
   meeting_weekday: z.enum(["domingo","segunda","terca","quarta","quinta","sexta","sabado"]).optional().nullable(),
   meeting_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora invalida (HH:MM)").optional().or(z.literal("")),
   leader_id: z.string().uuid().optional().nullable(),
@@ -84,8 +88,47 @@ export const dailyWordSchema = z.object({
   verse_ref: optionalText,
   verse_text: optionalText,
   reflection: optionalText,
+  prayer: optionalText,
 });
 export type DailyWordInput = z.infer<typeof dailyWordSchema>;
+
+// M1a — Conteudo publico
+export const newsSchema = z.object({
+  title: reqText("Titulo", 3),
+  category: z.enum(["minha_comunidade","cec_manaus","cec_brasilia","geral"]).default("geral"),
+  summary: optionalText,
+  body: optionalText,
+  cover_url: z.string().url("URL invalida").optional().or(z.literal("")),
+  author_name: optionalText,
+  is_published: z.boolean().default(false),
+  meta_title: optionalText,
+  meta_description: optionalText,
+});
+export type NewsInput = z.infer<typeof newsSchema>;
+
+export const publicPrayerFormSchema = z.object({
+  full_name: reqText("Nome", 2),
+  email: z.string().email("E-mail invalido").optional().or(z.literal("")),
+  phone: optionalText,
+  city: optionalText,
+  request: reqText("Pedido de oracao", 5),
+  // honeypot (anti-spam): aceita qualquer string, mas deve vir vazia
+  website: z.string().optional().default(""),
+});
+export type PublicPrayerFormInput = z.infer<typeof publicPrayerFormSchema>;
+
+export const visitFormSchema = z.object({
+  full_name: reqText("Nome", 2),
+  email: z.string().email("E-mail invalido").optional().or(z.literal("")),
+  phone: z.string({required_error:"Telefone e obrigatorio"}).trim().min(8, "Telefone invalido"),
+  city: optionalText,
+  address: optionalText,
+  best_time: optionalText,
+  reason: optionalText,
+  // honeypot
+  website: z.string().optional().default(""),
+});
+export type VisitFormInput = z.infer<typeof visitFormSchema>;
 
 // B3 — Area do membro
 export const profileEditSchema = z.object({
@@ -98,3 +141,42 @@ export const newPrayerSchema = z.object({
   request: reqText("Pedido", 3),
 });
 export type NewPrayerInput = z.infer<typeof newPrayerSchema>;
+
+// B4b — Operação semanal
+export const weeklyReportSchema = z.object({
+  life_group_id: z.string().uuid("Célula obrigatória"),
+  meeting_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"),
+  share_theme: optionalText,
+  bible_text: optionalText,
+  flowed: z.enum(["sim","nao","null"]).default("null"),
+  flowed_reason: optionalText,
+  decisions_count: z.coerce.number().int().min(0).default(0),
+  needs: optionalText,
+  summary: optionalText,
+});
+export type WeeklyReportFormInput = z.infer<typeof weeklyReportSchema>;
+
+export const financeSchema = z.object({
+  church_id: z.string().uuid("Igreja obrigatória"),
+  direction: z.enum(["entrada","saida"]),
+  kind: z.enum(["dizimo","oferta","primicia","missoes","construcao","outras_entradas",
+                "salario","aluguel","energia","evangelismo","evento","investimento","outras_saidas"]),
+  amount: z.coerce.number().positive("Valor deve ser maior que zero"),
+  description: optionalText,
+  occurred_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"),
+  payer_name: optionalText,
+});
+export type FinanceFormInput = z.infer<typeof financeSchema>;
+
+// M1b — Banners (Hero Carousel)
+export const bannerSchema = z.object({
+  title: reqText("Titulo", 3),
+  subtitle: optionalText,
+  image_url: z.string().url("URL invalida").optional().or(z.literal("")),
+  cta_label: optionalText,
+  cta_url: z.string().url("URL invalida").optional().or(z.literal("")),
+  is_active: z.boolean().default(true),
+  starts_at: optionalText,
+  ends_at: optionalText,
+});
+export type BannerInput = z.infer<typeof bannerSchema>;

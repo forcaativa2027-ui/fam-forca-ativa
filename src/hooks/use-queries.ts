@@ -74,3 +74,76 @@ export const useAllDiscipleships = () => useQuery({
   queryKey: ["all-discipleships"],
   queryFn: () => Di.listAllDiscipleships(supabase),
 });
+
+// B4b — Operação semanal
+import * as Wr from "@/services/weeklyReports";
+import * as Mr from "@/services/monthlyReports";
+import * as Fn from "@/services/finance";
+
+export const useWeeklyReports = (cellId: string | null) =>
+  useQuery({
+    queryKey: ["weekly-reports", cellId ?? "none"],
+    queryFn: () => Wr.listWeeklyReports(supabase, cellId),
+    enabled: !!cellId,
+  });
+
+export const useMonthlyReports = (cellId: string | null) =>
+  useQuery({
+    queryKey: ["monthly-reports", cellId ?? "none"],
+    queryFn: () => Mr.listMonthlyReports(supabase, cellId),
+    enabled: !!cellId,
+  });
+
+export const useMonthlyReportFull = (reportId: string | null) =>
+  useQuery({
+    queryKey: ["monthly-report-full", reportId ?? "none"],
+    queryFn: () => reportId ? Mr.getMonthlyReportFull(supabase, reportId) : Promise.resolve(null),
+    enabled: !!reportId,
+  });
+
+export const useFinances = (churchId: string | null, year: number, month: number) =>
+  useQuery({
+    queryKey: ["finances", churchId ?? "none", year, month],
+    queryFn: () => Fn.listFinances(supabase, churchId, year, month),
+    enabled: !!churchId,
+  });
+
+// M1a — Conteudo publico e formularios
+import * as N from "@/services/news";
+import * as Pf from "@/services/publicForms";
+
+export const usePublicNews = (category?: import("@/types/domain").NewsCategory) =>
+  useQuery({
+    queryKey: ["public-news", category ?? "all"],
+    queryFn: () => N.listPublicNews(supabase, category),
+  });
+export const useAllNews = () => useQuery({
+  queryKey: ["all-news"], queryFn: () => N.listAllNews(supabase),
+});
+export const usePrayerRequests = (status?: import("@/types/domain").ContactStatus) =>
+  useQuery({
+    queryKey: ["prayer-requests", status ?? "all"],
+    queryFn: () => Pf.listPrayerRequests(supabase, status),
+  });
+export const useVisitRequests = (status?: import("@/types/domain").ContactStatus) =>
+  useQuery({
+    queryKey: ["visit-requests", status ?? "all"],
+    queryFn: () => Pf.listVisitRequests(supabase, status),
+  });
+export const usePendingCounts = () => useQuery({
+  queryKey: ["pending-counts"],
+  queryFn: () => Pf.getPendingCounts(supabase),
+  refetchInterval: 60_000, // atualiza a cada minuto
+});
+
+// M1b — Banners
+import * as Bn from "@/services/banners";
+export const useActiveBanners = () => useQuery({
+  queryKey: ["active-banners"],
+  queryFn: () => Bn.listActiveBanners(supabase),
+  refetchInterval: 60_000,
+});
+export const useAllBanners = () => useQuery({
+  queryKey: ["all-banners"],
+  queryFn: () => Bn.listAllBanners(supabase),
+});

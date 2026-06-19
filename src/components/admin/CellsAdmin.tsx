@@ -37,6 +37,9 @@ export function CellsAdmin() {
       name: c.name,
       sector_id: c.sector_id ?? "",
       address: c.address ?? "",
+      state: c.state ?? "",
+      city: c.city ?? "",
+      neighborhood: c.neighborhood ?? "",
       meeting_weekday: c.meeting_weekday,
       meeting_time: c.meeting_time ? c.meeting_time.slice(0,5) : "",
       leader_id: null,
@@ -53,6 +56,9 @@ export function CellsAdmin() {
         name: v.name,
         sector_id: v.sector_id,
         address: v.address || null,
+        state: v.state || null,
+        city: v.city || null,
+        neighborhood: v.neighborhood || null,
         meeting_weekday: v.meeting_weekday ?? null,
         meeting_time: v.meeting_time || null,
       };
@@ -122,8 +128,19 @@ export function CellsAdmin() {
               </Field>
             </div>
             <Field label="Endereço" error={errors.address?.message}>
-              <Input {...register("address")} placeholder="Rua, número, bairro, cidade" />
+              <Input {...register("address")} placeholder="Rua, número, complemento" />
             </Field>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="Estado" error={errors.state?.message}>
+                <Input {...register("state")} placeholder="Ex: AM" maxLength={3} />
+              </Field>
+              <Field label="Cidade" error={errors.city?.message}>
+                <Input {...register("city")} placeholder="Ex: Manaus" />
+              </Field>
+              <Field label="Bairro" error={errors.neighborhood?.message}>
+                <Input {...register("neighborhood")} placeholder="Ex: Praça 14" />
+              </Field>
+            </div>
             {err && <p className="text-sm text-destructive">{err}</p>}
             <Button type="submit" disabled={isSubmitting} className="gap-2">
               <Plus className="h-4 w-4" />{editing ? "Salvar alterações" : "Cadastrar célula"}

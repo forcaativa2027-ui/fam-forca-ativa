@@ -23,9 +23,17 @@ import { logAudit } from "@/services/audit";
 import { MembersAdmin } from "./MembersAdmin";
 import { CellsAdmin } from "./CellsAdmin";
 import { DiscipleshipAdmin } from "./DiscipleshipAdmin";
+import { WeeklyReportsAdmin } from "./WeeklyReportsAdmin";
+import { MonthlyReportAdmin } from "./MonthlyReportAdmin";
+import { FinanceAdmin } from "./FinanceAdmin";
+import { NewsAdmin } from "./NewsAdmin";
+import { PublicPrayerRequestsAdmin, VisitRequestsAdmin } from "./ContactRequestsAdmin";
+import { BannersAdmin } from "./BannersAdmin";
+import { usePendingCounts } from "@/hooks/use-queries";
 
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
+  const { data: counts } = usePendingCounts();
   const isAdmin = me && ["apostolo","pastor"].includes(me.role);
 
   if (isLoading) return <main className="grid h-screen place-items-center text-muted">Carregando…</main>;
@@ -48,22 +56,36 @@ export default function AdminPanel() {
           <TabsList className="mb-6 min-w-max">
             <TabsTrigger value="sermons">Pregações</TabsTrigger>
             <TabsTrigger value="events">Agenda</TabsTrigger>
+            <TabsTrigger value="news">Notícias</TabsTrigger>
+            <TabsTrigger value="banners">Banners</TabsTrigger>
             <TabsTrigger value="services">Cultos</TabsTrigger>
             <TabsTrigger value="word">Palavra</TabsTrigger>
             <TabsTrigger value="members">Membros</TabsTrigger>
             <TabsTrigger value="cells">Células</TabsTrigger>
             <TabsTrigger value="discipleship">Discipulado</TabsTrigger>
+            <TabsTrigger value="weekly">Rel. semanal</TabsTrigger>
+            <TabsTrigger value="monthly">Rel. mensal</TabsTrigger>
+            <TabsTrigger value="finance">Financeiro</TabsTrigger>
+            <TabsTrigger value="prayer-requests"><BadgeTab label="Pedidos" count={counts?.prayer_pending ?? 0} /></TabsTrigger>
+            <TabsTrigger value="visit-requests"><BadgeTab label="Visitas" count={counts?.visit_pending ?? 0} /></TabsTrigger>
             <TabsTrigger value="mda">Estrutura MDA</TabsTrigger>
             <TabsTrigger value="audit">Auditoria</TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="sermons"><SermonsAdmin /></TabsContent>
         <TabsContent value="events"><EventsAdmin /></TabsContent>
+        <TabsContent value="news"><NewsAdmin /></TabsContent>
+        <TabsContent value="banners"><BannersAdmin /></TabsContent>
         <TabsContent value="services"><ServiceTimesAdmin /></TabsContent>
         <TabsContent value="word"><DailyWordsAdmin /></TabsContent>
         <TabsContent value="members"><MembersAdmin /></TabsContent>
         <TabsContent value="cells"><CellsAdmin /></TabsContent>
         <TabsContent value="discipleship"><DiscipleshipAdmin /></TabsContent>
+        <TabsContent value="weekly"><WeeklyReportsAdmin /></TabsContent>
+        <TabsContent value="monthly"><MonthlyReportAdmin /></TabsContent>
+        <TabsContent value="finance"><FinanceAdmin /></TabsContent>
+        <TabsContent value="prayer-requests"><PublicPrayerRequestsAdmin /></TabsContent>
+        <TabsContent value="visit-requests"><VisitRequestsAdmin /></TabsContent>
         <TabsContent value="mda"><MdaStructure /></TabsContent>
         <TabsContent value="audit"><AuditView /></TabsContent>
       </Tabs>
@@ -162,13 +184,13 @@ function EventsAdmin() {
   const qc = useQueryClient();
   const [err, setErr] = useState("");
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
-    useForm<EventInput>({ resolver: zodResolver(eventSchema), defaultValues: { status: "abertas" } });
+    useForm<EventInput>({ resolver: zodResolver(eventSchema), defaultValues: { status: "abertas", event_type: "outro" } });
 
   async function onSubmit(v: EventInput) {
     setErr("");
     const { data, error } = await supabase.from("events").insert({
       title: v.title, starts_at: new Date(v.starts_at).toISOString(),
-      location: v.location || null, status: v.status,
+      location: v.location || null, status: v.status, event_type: v.event_type,
       registration_url: v.registration_url || null,
     }).select().single();
     if (error) { setErr(error.message); return; }
@@ -198,14 +220,26 @@ function EventsAdmin() {
               <Field label="Data e hora" error={errors.starts_at?.message}><Input type="datetime-local" {...register("starts_at")} /></Field>
               <Field label="Local"><Input {...register("location")} placeholder="Templo Sede" /></Field>
             </div>
-            <Field label="Status">
-              <select {...register("status")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                <option value="abertas">Inscrições abertas</option>
-                <option value="encerradas">Encerradas</option>
-                <option value="esgotado">Esgotado</option>
-                <option value="em_breve">Em breve</option>
-              </select>
-            </Field>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Tipo">
+                <select {...register("event_type")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                  <option value="culto">Culto</option>
+                  <option value="congresso">Congresso</option>
+                  <option value="conferencia">Conferência</option>
+                  <option value="encontro">Encontro</option>
+                  <option value="ebd">Escola Bíblica</option>
+                  <option value="outro">Outro</option>
+                </select>
+              </Field>
+              <Field label="Status">
+                <select {...register("status")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                  <option value="abertas">Inscrições abertas</option>
+                  <option value="encerradas">Encerradas</option>
+                  <option value="esgotado">Esgotado</option>
+                  <option value="em_breve">Em breve</option>
+                </select>
+              </Field>
+            </div>
             {err && <p className="text-sm text-destructive">{err}</p>}
             <Button type="submit" disabled={isSubmitting} className="gap-2"><Plus className="h-4 w-4" /> Adicionar evento</Button>
           </form>
@@ -438,7 +472,9 @@ function DailyWordsAdmin() {
     const { data, error } = await supabase.from("daily_words").insert({
       date: v.date, title: v.title,
       verse_ref: v.verse_ref || null, verse_text: v.verse_text || null,
-      reflection: v.reflection || null, is_active: true,
+      reflection: v.reflection || null,
+      prayer: v.prayer || null,
+      is_active: true,
     }).select().single();
     if (error) { setErr(error.message); return; }
     await logAudit(supabase, "insert", "daily_words", data.id, { title: v.title });
@@ -478,6 +514,9 @@ function DailyWordsAdmin() {
             <Field label="Reflexão" error={errors.reflection?.message}>
               <textarea {...register("reflection")} rows={3} className="w-full rounded-md border bg-background p-3 text-sm" placeholder="Reflexão pastoral" />
             </Field>
+            <Field label="Oração" error={errors.prayer?.message}>
+              <textarea {...register("prayer")} rows={3} className="w-full rounded-md border bg-background p-3 text-sm" placeholder="Oração inspirada no texto (opcional)" />
+            </Field>
             {err && <p className="text-sm text-destructive">{err}</p>}
             <Button type="submit" disabled={isSubmitting} className="gap-2"><Plus className="h-4 w-4" /> Cadastrar palavra</Button>
           </form>
@@ -497,12 +536,24 @@ function DailyWordsAdmin() {
               {w.verse_ref && <p className="text-xs font-semibold text-gold">{w.verse_ref}</p>}
               {w.verse_text && <p className="mt-1 font-display italic text-sm text-ink">"{w.verse_text}"</p>}
               {w.reflection && <p className="mt-1 text-xs text-muted">{w.reflection}</p>}
+              {w.prayer && <p className="mt-1 rounded bg-gold/5 p-2 text-xs italic text-ink">🙏 {w.prayer}</p>}
             </div>
             <Button onClick={() => remove(w.id, w.title)} variant="destructive" size="sm"><Trash2 className="h-3.5 w-3.5" /></Button>
           </div>
         ))}
       </div>
     </div>
+  );
+}
+
+function BadgeTab({ label, count }: { label: string; count: number }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      {label}
+      {count > 0 && (
+        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-gold px-1.5 text-[10px] font-bold text-navy">{count}</span>
+      )}
+    </span>
   );
 }
 
