@@ -71,11 +71,12 @@ export async function updateVisitStatus(sb: SupabaseClient, id: string, status: 
 export async function getPendingCounts(sb: SupabaseClient): Promise<PendingCounts> {
   try {
     const { data, error } = await sb.rpc("get_pending_counts");
-    if (error || !data) return { prayer_pending: 0, visit_pending: 0 };
+    if (error || !data) return { prayer_pending: 0, visit_pending: 0, pipeline_new: 0 };
     const row = Array.isArray(data) ? data[0] : data;
     return {
       prayer_pending: Number(row?.prayer_pending ?? 0),
       visit_pending: Number(row?.visit_pending ?? 0),
+      pipeline_new: Number(row?.pipeline_new ?? 0),
     };
-  } catch { return { prayer_pending: 0, visit_pending: 0 }; }
+  } catch { return { prayer_pending: 0, visit_pending: 0, pipeline_new: 0 }; }
 }

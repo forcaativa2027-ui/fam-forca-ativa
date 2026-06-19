@@ -139,4 +139,19 @@ export interface VisitRequest {
   status: ContactStatus; internal_notes: string | null;
   church_id: string | null; created_at: string;
 }
-export interface PendingCounts { prayer_pending: number; visit_pending: number; }
+export interface PendingCounts { prayer_pending: number; visit_pending: number; pipeline_new: number; }
+
+// M3 — Cadastro inteligente / Visitor Pipeline
+export type PipelineStage = "novo"|"aguardando_contato"|"contato_realizado"|"convidado_culto"|"convidado_life_group"|"participou"|"discipulado"|"consolidacao"|"batizado"|"membro"|"servo"|"lider";
+export type PipelineIntent = "lifegroup"|"discipulado"|"acompanhamento_pastoral"|"visita"|"conhecer"|"batismo"|"servir"|"outro";
+export interface VisitorPipeline {
+  id: string; user_id: string | null; profile_id: string | null; community_id: string | null;
+  full_name: string; phone: string | null; email: string | null;
+  state: string | null; city: string | null; cep: string | null;
+  intent: PipelineIntent; stage: PipelineStage; source: string | null;
+  assigned_to: string | null; internal_notes: string | null;
+  first_contact_at: string | null; life_group_invite_at: string | null;
+  discipleship_started_at: string | null;
+  baptism_date: string | null; member_date: string | null;
+  created_at: string;
+}

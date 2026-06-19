@@ -16,6 +16,7 @@ import { youtubeThumb } from "@/services/content";
 import { defaultServiceTimes, defaultWord } from "@/services/institutional";
 import { PublicNewsSection } from "./PublicNewsSection";
 import { PublicContactForms } from "./PublicContactForms";
+import { PublicParticipateSection } from "./PublicParticipateSection";
 import { HeroCarousel } from "./HeroCarousel";
 import type { EventItem, Church, Cell } from "@/types/domain";
 
@@ -86,6 +87,7 @@ export default function PublicHome() {
             <NavTrigger value="agenda">Agenda</NavTrigger>
             <NavTrigger value="igrejas">Igrejas</NavTrigger>
             <NavTrigger value="celulas">Mapa de Células</NavTrigger>
+            <NavTrigger value="participar">Quero participar</NavTrigger>
             <NavTrigger value="contato">Quero conversar</NavTrigger>
           </TabsList>
         </div>
@@ -218,6 +220,11 @@ export default function PublicHome() {
           <h2 className="mb-2 font-display text-2xl text-navy">Mapa das células</h2>
           <p className="mb-6 text-sm text-muted">Encontre a célula (Life Group) mais próxima de você.</p>
           <CellsSearch cells={cells} />
+        </TabsContent>
+
+        {/* === QUERO PARTICIPAR === */}
+        <TabsContent value="participar">
+          <PublicParticipateSection />
         </TabsContent>
 
         {/* === QUERO CONVERSAR === */}

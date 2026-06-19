@@ -180,3 +180,33 @@ export const bannerSchema = z.object({
   ends_at: optionalText,
 });
 export type BannerInput = z.infer<typeof bannerSchema>;
+
+// M3 — Cadastro inteligente / Wizard
+export const wizardStep1Schema = z.object({
+  full_name: reqText("Nome completo", 3),
+  phone: z.string({required_error:"Telefone obrigatório"}).trim().min(13, "Telefone incompleto"),
+  email: z.string().email("E-mail inválido").optional().or(z.literal("")),
+});
+export const wizardStep2Schema = z.object({
+  cep: z.string().optional().or(z.literal("")),
+  state: optionalText,
+  city: optionalText,
+});
+export const wizardStep3Schema = z.object({
+  community_id: z.string().uuid("Selecione uma comunidade"),
+});
+export const wizardStep4Schema = z.object({
+  intent: z.enum(["lifegroup","discipulado","acompanhamento_pastoral","visita","conhecer","batismo","servir","outro"]),
+});
+export const wizardStep5Schema = z.object({
+  email: z.string({required_error:"E-mail obrigatório para criar conta"}).email("E-mail inválido"),
+  password: z.string({required_error:"Senha obrigatória"}).min(6, "Senha precisa ter ao menos 6 caracteres"),
+  password_confirm: z.string(),
+}).refine((d) => d.password === d.password_confirm, {
+  message: "Senhas não conferem", path: ["password_confirm"],
+});
+export type WizardStep1Input = z.infer<typeof wizardStep1Schema>;
+export type WizardStep2Input = z.infer<typeof wizardStep2Schema>;
+export type WizardStep3Input = z.infer<typeof wizardStep3Schema>;
+export type WizardStep4Input = z.infer<typeof wizardStep4Schema>;
+export type WizardStep5Input = z.infer<typeof wizardStep5Schema>;
