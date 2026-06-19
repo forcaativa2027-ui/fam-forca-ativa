@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { bannerSchema, type BannerInput } from "@/schemas";
-import { useAllBanners } from "@/hooks/use-queries";
+import { useAllBanners, useChurches } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import {
   createBanner, updateBanner, deleteBanner, swapBannerOrder,
@@ -33,15 +33,18 @@ function fromIsoToLocal(iso: string | null): string {
 
 export function BannersAdmin() {
   const { data: banners = [] } = useAllBanners();
+  const { data: churches = [] } = useChurches();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Banner | null>(null);
   const [err, setErr] = useState("");
+  const [churchId, setChurchId] = useState<string>("");
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
     useForm<BannerInput>({ resolver: zodResolver(bannerSchema), defaultValues: { is_active: true } });
 
   function startEdit(b: Banner) {
     setEditing(b); setErr("");
+    setChurchId(((b as Banner & { church_id?: string | null }).church_id) ?? "");
     reset({
       title: b.title,
       subtitle: b.subtitle ?? "",
@@ -54,13 +57,13 @@ export function BannersAdmin() {
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-  function cancelEdit() { setEditing(null); reset({ is_active: true }); }
+  function cancelEdit() { setEditing(null); setChurchId(""); reset({ is_active: true }); }
 
   async function onSubmit(v: BannerInput) {
     setErr("");
     try {
       const next_order = banners.length > 0 ? Math.max(...banners.map((b) => b.sort_order)) + 1 : 0;
-      const payload: Partial<Banner> = {
+      const payload: Partial<Banner> & { church_id?: string | null } = {
         title: v.title,
         subtitle: v.subtitle || null,
         image_url: v.image_url || null,
@@ -69,6 +72,7 @@ export function BannersAdmin() {
         is_active: v.is_active,
         starts_at: toIsoOrNull(v.starts_at),
         ends_at: toIsoOrNull(v.ends_at),
+        church_id: churchId || null,
       };
       if (editing) {
         await updateBanner(supabase, editing.id, payload);
@@ -130,6 +134,13 @@ export function BannersAdmin() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            <Field label="Exibir em qual comunidade?">
+              <select value={churchId} onChange={(e) => setChurchId(e.target.value)}
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="">— Global (todas as comunidades) —</option>
+                {churches.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </Field>
             <Field label="Título" error={errors.title?.message}>
               <Input {...register("title")} placeholder="Ex: Conferência de Avivamento 2026" />
             </Field>

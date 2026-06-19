@@ -130,12 +130,13 @@ export interface News {
 export interface PublicPrayerRequest {
   id: string; full_name: string; email: string | null; phone: string | null;
   city: string | null; request: string; status: ContactStatus;
-  internal_notes: string | null; created_at: string;
+  internal_notes: string | null; church_id: string | null; created_at: string;
 }
 export interface VisitRequest {
   id: string; full_name: string; email: string | null; phone: string;
   city: string | null; address: string | null;
   best_time: string | null; reason: string | null;
-  status: ContactStatus; internal_notes: string | null; created_at: string;
+  status: ContactStatus; internal_notes: string | null;
+  church_id: string | null; created_at: string;
 }
 export interface PendingCounts { prayer_pending: number; visit_pending: number; }

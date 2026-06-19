@@ -222,7 +222,7 @@ export default function PublicHome() {
 
         {/* === QUERO CONVERSAR === */}
         <TabsContent value="contato">
-          <PublicContactForms />
+          <PublicContactForms churchId={communityId} />
         </TabsContent>
       </Tabs>
 

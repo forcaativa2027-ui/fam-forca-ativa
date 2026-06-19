@@ -1,16 +1,16 @@
 "use client";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Mail, Phone, MapPin, Clock, Check, Pause, X as Xicon, Trash2 } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Check, Pause, X as Xicon, Trash2, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { usePrayerRequests, useVisitRequests } from "@/hooks/use-queries";
+import { usePrayerRequests, useVisitRequests, useChurches } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { updatePrayerStatus, updateVisitStatus } from "@/services/publicForms";
 import { logAudit } from "@/services/audit";
-import type { ContactStatus, PublicPrayerRequest, VisitRequest } from "@/types/domain";
+import type { ContactStatus, PublicPrayerRequest, VisitRequest, Church } from "@/types/domain";
 
 const STATUS_LABELS: Record<ContactStatus, string> = {
   novo: "Novo", em_andamento: "Em andamento", concluido: "Concluído", spam: "Spam",
@@ -24,8 +24,13 @@ const STATUS_COLORS: Record<ContactStatus, string> = {
 
 export function PublicPrayerRequestsAdmin() {
   const [filter, setFilter] = useState<ContactStatus | "all">("novo");
+  const [churchFilter, setChurchFilter] = useState<string>("");
   const { data: items = [] } = usePrayerRequests(filter === "all" ? undefined : filter);
+  const { data: churches = [] } = useChurches();
   const qc = useQueryClient();
+
+  const filtered = churchFilter ? items.filter((i) => i.church_id === churchFilter) : items;
+  const churchMap = new Map(churches.map((c) => [c.id, c]));
 
   async function setStatus(id: string, status: ContactStatus) {
     try {
@@ -43,28 +48,43 @@ export function PublicPrayerRequestsAdmin() {
           <CardTitle>Pedidos de oração</CardTitle>
           <CardDescription>Recebidos pelo formulário público</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <FilterTabs value={filter} onChange={setFilter} />
+          {churches.length > 1 && (
+            <div className="space-y-1.5">
+              <Label className="text-xs uppercase tracking-wider text-muted">Filtrar por comunidade</Label>
+              <select value={churchFilter} onChange={(e) => setChurchFilter(e.target.value)}
+                className="h-9 w-full rounded-md border bg-background px-3 text-sm sm:w-72">
+                <option value="">Todas as comunidades</option>
+                {churches.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       <div className="space-y-2">
-        {items.length === 0 && <p className="text-sm italic text-muted">Nenhum pedido nessa categoria.</p>}
-        {items.map((p) => <PrayerCard key={p.id} item={p} onStatus={setStatus} />)}
+        {filtered.length === 0 && <p className="text-sm italic text-muted">Nenhum pedido nessa categoria.</p>}
+        {filtered.map((p) => <PrayerCard key={p.id} item={p} church={p.church_id ? churchMap.get(p.church_id) : undefined} onStatus={setStatus} />)}
       </div>
     </div>
   );
 }
 
-function PrayerCard({ item: p, onStatus }: { item: PublicPrayerRequest; onStatus: (id: string, s: ContactStatus) => void }) {
+function PrayerCard({ item: p, church, onStatus }: { item: PublicPrayerRequest; church?: Church; onStatus: (id: string, s: ContactStatus) => void }) {
   return (
     <Card>
       <CardContent className="pt-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <b className="text-navy">{p.full_name}</b>
               <StatusBadge status={p.status} />
+              {church && (
+                <span className="inline-flex items-center gap-0.5 rounded-full bg-navy-50 px-2 py-0.5 text-[10px] font-bold uppercase text-navy">
+                  <Building2 className="h-2.5 w-2.5" />{church.name}
+                </span>
+              )}
             </div>
             <p className="mt-1 text-[11px] text-muted">{new Date(p.created_at).toLocaleString("pt-BR")}</p>
             <p className="mt-2 text-sm text-ink">{p.request}</p>
@@ -87,8 +107,13 @@ function PrayerCard({ item: p, onStatus }: { item: PublicPrayerRequest; onStatus
 
 export function VisitRequestsAdmin() {
   const [filter, setFilter] = useState<ContactStatus | "all">("novo");
+  const [churchFilter, setChurchFilter] = useState<string>("");
   const { data: items = [] } = useVisitRequests(filter === "all" ? undefined : filter);
+  const { data: churches = [] } = useChurches();
   const qc = useQueryClient();
+
+  const filtered = churchFilter ? items.filter((i) => i.church_id === churchFilter) : items;
+  const churchMap = new Map(churches.map((c) => [c.id, c]));
 
   async function setStatus(id: string, status: ContactStatus) {
     try {
@@ -106,28 +131,43 @@ export function VisitRequestsAdmin() {
           <CardTitle>Solicitações de visita</CardTitle>
           <CardDescription>Recebidas pelo formulário público</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <FilterTabs value={filter} onChange={setFilter} />
+          {churches.length > 1 && (
+            <div className="space-y-1.5">
+              <Label className="text-xs uppercase tracking-wider text-muted">Filtrar por comunidade</Label>
+              <select value={churchFilter} onChange={(e) => setChurchFilter(e.target.value)}
+                className="h-9 w-full rounded-md border bg-background px-3 text-sm sm:w-72">
+                <option value="">Todas as comunidades</option>
+                {churches.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       <div className="space-y-2">
-        {items.length === 0 && <p className="text-sm italic text-muted">Nenhuma solicitação nessa categoria.</p>}
-        {items.map((v) => <VisitCard key={v.id} item={v} onStatus={setStatus} />)}
+        {filtered.length === 0 && <p className="text-sm italic text-muted">Nenhuma solicitação nessa categoria.</p>}
+        {filtered.map((v) => <VisitCard key={v.id} item={v} church={v.church_id ? churchMap.get(v.church_id) : undefined} onStatus={setStatus} />)}
       </div>
     </div>
   );
 }
 
-function VisitCard({ item: v, onStatus }: { item: VisitRequest; onStatus: (id: string, s: ContactStatus) => void }) {
+function VisitCard({ item: v, church, onStatus }: { item: VisitRequest; church?: Church; onStatus: (id: string, s: ContactStatus) => void }) {
   return (
     <Card>
       <CardContent className="pt-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <b className="text-navy">{v.full_name}</b>
               <StatusBadge status={v.status} />
+              {church && (
+                <span className="inline-flex items-center gap-0.5 rounded-full bg-navy-50 px-2 py-0.5 text-[10px] font-bold uppercase text-navy">
+                  <Building2 className="h-2.5 w-2.5" />{church.name}
+                </span>
+              )}
             </div>
             <p className="mt-1 text-[11px] text-muted">{new Date(v.created_at).toLocaleString("pt-BR")}</p>
             <div className="mt-2 flex flex-wrap gap-3 text-xs">

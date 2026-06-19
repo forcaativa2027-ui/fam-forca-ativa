@@ -13,7 +13,7 @@ import { submitPrayer, submitVisit } from "@/services/publicForms";
 import { publicPrayerFormSchema, visitFormSchema,
   type PublicPrayerFormInput, type VisitFormInput } from "@/schemas";
 
-export function PublicContactForms() {
+export function PublicContactForms({ churchId }: { churchId?: string | null } = {}) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-navy">
@@ -29,14 +29,14 @@ export function PublicContactForms() {
           <TabsTrigger value="oracao"><Heart className="mr-1 h-3.5 w-3.5" />Pedido de oração</TabsTrigger>
           <TabsTrigger value="visita"><HomeIcon className="mr-1 h-3.5 w-3.5" />Quero ser visitado</TabsTrigger>
         </TabsList>
-        <TabsContent value="oracao"><PrayerForm /></TabsContent>
-        <TabsContent value="visita"><VisitForm /></TabsContent>
+        <TabsContent value="oracao"><PrayerForm churchId={churchId} /></TabsContent>
+        <TabsContent value="visita"><VisitForm churchId={churchId} /></TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function PrayerForm() {
+function PrayerForm({ churchId }: { churchId?: string | null }) {
   const [done, setDone] = useState(false);
   const [err, setErr] = useState("");
   const { register, handleSubmit, formState: { errors, isSubmitting } } =
@@ -48,6 +48,7 @@ function PrayerForm() {
       await submitPrayer(supabase, {
         full_name: v.full_name, email: v.email, phone: v.phone,
         city: v.city, request: v.request, honeypot: v.website,
+        church_id: churchId,
       });
       setDone(true);
     } catch (e: unknown) {
@@ -104,7 +105,7 @@ function PrayerForm() {
   );
 }
 
-function VisitForm() {
+function VisitForm({ churchId }: { churchId?: string | null }) {
   const [done, setDone] = useState(false);
   const [err, setErr] = useState("");
   const { register, handleSubmit, formState: { errors, isSubmitting } } =
@@ -117,6 +118,7 @@ function VisitForm() {
         full_name: v.full_name, email: v.email, phone: v.phone,
         city: v.city, address: v.address, best_time: v.best_time,
         reason: v.reason, honeypot: v.website,
+        church_id: churchId,
       });
       setDone(true);
     } catch (e: unknown) {

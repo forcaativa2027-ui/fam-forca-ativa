@@ -184,8 +184,10 @@ function SermonsAdmin() {
 
 function EventsAdmin() {
   const { data: events = [] } = useEvents();
+  const { data: churchesList = [] } = useChurches();
   const qc = useQueryClient();
   const [err, setErr] = useState("");
+  const [churchId, setChurchId] = useState<string>("");
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
     useForm<EventInput>({ resolver: zodResolver(eventSchema), defaultValues: { status: "abertas", event_type: "outro" } });
 
@@ -195,6 +197,7 @@ function EventsAdmin() {
       title: v.title, starts_at: new Date(v.starts_at).toISOString(),
       location: v.location || null, status: v.status, event_type: v.event_type,
       registration_url: v.registration_url || null,
+      church_id: churchId || null,
     }).select().single();
     if (error) { setErr(error.message); return; }
     await logAudit(supabase, "insert", "events", data.id, { title: v.title });
@@ -218,6 +221,13 @@ function EventsAdmin() {
         <CardHeader><CardTitle>Adicionar evento</CardTitle></CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            <Field label="Para qual comunidade?">
+              <select value={churchId} onChange={(e) => setChurchId(e.target.value)}
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="">— Global (todas as comunidades) —</option>
+                {churchesList.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </Field>
             <Field label="Título" error={errors.title?.message}><Input {...register("title")} placeholder="Ex: Curso de Noivos" /></Field>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Data e hora" error={errors.starts_at?.message}><Input type="datetime-local" {...register("starts_at")} /></Field>
@@ -461,8 +471,10 @@ function ServiceTimesAdmin() {
 
 function DailyWordsAdmin() {
   const { data: words = [] } = useDailyWords();
+  const { data: dwChurches = [] } = useChurches();
   const qc = useQueryClient();
   const [err, setErr] = useState("");
+  const [churchId, setChurchId] = useState<string>("");
   const today = new Date().toISOString().slice(0,10);
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
     useForm<DailyWordInput>({
@@ -478,6 +490,7 @@ function DailyWordsAdmin() {
       reflection: v.reflection || null,
       prayer: v.prayer || null,
       is_active: true,
+      church_id: churchId || null,
     }).select().single();
     if (error) { setErr(error.message); return; }
     await logAudit(supabase, "insert", "daily_words", data.id, { title: v.title });
@@ -504,6 +517,13 @@ function DailyWordsAdmin() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            <Field label="Para qual comunidade?">
+              <select value={churchId} onChange={(e) => setChurchId(e.target.value)}
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="">— Global (todas as comunidades) —</option>
+                {dwChurches.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </Field>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Data" error={errors.date?.message}><Input type="date" {...register("date")} /></Field>
               <Field label="Título" error={errors.title?.message}><Input {...register("title")} placeholder="Palavra do dia" /></Field>

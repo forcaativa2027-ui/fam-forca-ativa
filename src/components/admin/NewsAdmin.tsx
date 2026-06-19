@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { newsSchema, type NewsInput } from "@/schemas";
-import { useAllNews } from "@/hooks/use-queries";
+import { useAllNews, useChurches } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { createNews, updateNews, deleteNews, slugify } from "@/services/news";
 import { logAudit } from "@/services/audit";
@@ -24,9 +24,11 @@ const CATEGORIES: { value: NewsCategory; label: string }[] = [
 
 export function NewsAdmin() {
   const { data: news = [] } = useAllNews();
+  const { data: churches = [] } = useChurches();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<News | null>(null);
   const [err, setErr] = useState("");
+  const [churchId, setChurchId] = useState<string>("");
 
   const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } =
     useForm<NewsInput>({ resolver: zodResolver(newsSchema), defaultValues: { category: "geral", is_published: false } });
@@ -35,6 +37,7 @@ export function NewsAdmin() {
 
   function startEdit(n: News) {
     setEditing(n); setErr("");
+    setChurchId(n.church_id ?? "");
     reset({
       title: n.title, category: n.category,
       summary: n.summary ?? "", body: n.body ?? "",
@@ -44,7 +47,7 @@ export function NewsAdmin() {
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-  function cancelEdit() { setEditing(null); reset({ category: "geral", is_published: false }); }
+  function cancelEdit() { setEditing(null); setChurchId(""); reset({ category: "geral", is_published: false }); }
 
   async function onSubmit(v: NewsInput) {
     setErr("");
@@ -59,6 +62,7 @@ export function NewsAdmin() {
         meta_title: v.meta_title || v.title,
         meta_description: v.meta_description || v.summary || null,
         og_image_url: v.cover_url || null,
+        church_id: churchId || null,
       };
       if (editing) {
         await updateNews(supabase, editing.id, payload);
@@ -111,6 +115,13 @@ export function NewsAdmin() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            <Field label="Publicar para qual comunidade?">
+              <select value={churchId} onChange={(e) => setChurchId(e.target.value)}
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="">— Global (todas as comunidades) —</option>
+                {churches.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </Field>
             <Field label="Título" error={errors.title?.message}>
               <Input {...register("title")} placeholder="Ex: Conferência de Avivamento 2026" />
             </Field>

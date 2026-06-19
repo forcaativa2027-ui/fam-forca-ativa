@@ -5,6 +5,7 @@ import type { PublicPrayerRequest, VisitRequest, ContactStatus, PendingCounts } 
 export interface PrayerFormInput {
   full_name: string; email?: string; phone?: string;
   city?: string; request: string; honeypot?: string;
+  church_id?: string | null;
 }
 export async function submitPrayer(sb: SupabaseClient, input: PrayerFormInput): Promise<void> {
   if (input.honeypot && input.honeypot.trim() !== "") return; // anti-spam
@@ -14,6 +15,7 @@ export async function submitPrayer(sb: SupabaseClient, input: PrayerFormInput): 
     phone: input.phone || null,
     city: input.city || null,
     request: input.request,
+    church_id: input.church_id || null,
   });
   if (error) throw error;
 }
@@ -35,7 +37,7 @@ export async function updatePrayerStatus(sb: SupabaseClient, id: string, status:
 export interface VisitFormInput {
   full_name: string; email?: string; phone: string;
   city?: string; address?: string; best_time?: string; reason?: string;
-  honeypot?: string;
+  honeypot?: string; church_id?: string | null;
 }
 export async function submitVisit(sb: SupabaseClient, input: VisitFormInput): Promise<void> {
   if (input.honeypot && input.honeypot.trim() !== "") return;
@@ -47,6 +49,7 @@ export async function submitVisit(sb: SupabaseClient, input: VisitFormInput): Pr
     address: input.address || null,
     best_time: input.best_time || null,
     reason: input.reason || null,
+    church_id: input.church_id || null,
   });
   if (error) throw error;
 }
