@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   usePublicSermons, usePublicEvents, useChurches, useCells,
-  useServiceTimes, useTodaysWord, useActiveBanners,
+  useServiceTimes, useTodaysWord, useActiveBanners, useActiveCommunity,
 } from "@/hooks/use-queries";
 import { youtubeThumb } from "@/services/content";
 import { defaultServiceTimes, defaultWord } from "@/services/institutional";
@@ -41,14 +41,16 @@ const WEEKDAY_LABELS: Record<string, string> = {
 
 export default function PublicHome() {
   const [tab, setTab] = useState("inicio");
-  const { data: sermons = [] } = usePublicSermons();
-  const { data: events = [] } = usePublicEvents();
+  const { data: community } = useActiveCommunity();
+  const communityId = community?.id ?? null;
+  const { data: sermons = [] } = usePublicSermons(communityId);
+  const { data: events = [] } = usePublicEvents(communityId);
   const { data: churches = [] } = useChurches();
   const { data: cells = [] } = useCells();
-  const { data: banners = [] } = useActiveBanners();
-  const sede = churches.find((c) => c.type === "sede") ?? churches[0] ?? null;
+  const { data: banners = [] } = useActiveBanners(communityId);
+  const sede = community ?? churches.find((c) => c.type === "sede") ?? churches[0] ?? null;
   const { data: dbServices = [] } = useServiceTimes(sede?.id ?? null);
-  const { data: dbWord } = useTodaysWord();
+  const { data: dbWord } = useTodaysWord(communityId);
 
   // Fallback inteligente: se o banco tem dados use-os; senao mostra defaults.
   const services = dbServices.length > 0 ? dbServices : defaultServiceTimes(sede);
@@ -61,8 +63,14 @@ export default function PublicHome() {
       <header className="sticky top-0 z-20 border-b-[3px] border-gold bg-navy">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-white">
-            <Sparkles className="h-5 w-5 text-gold" />
-            <span className="font-display text-lg font-bold tracking-wide">CEC FAMILY</span>
+            {community?.logo_url ? (
+              <img src={community.logo_url} alt={community.name} className="h-8 w-8 rounded-full object-cover" />
+            ) : (
+              <Sparkles className="h-5 w-5 text-gold" />
+            )}
+            <span className="font-display text-lg font-bold tracking-wide">
+              {community?.name ? community.name.toUpperCase() : "CEC FAMILY"}
+            </span>
           </Link>
           <Button asChild size="sm"><Link href="/entrar">Área do membro</Link></Button>
         </div>
@@ -139,7 +147,7 @@ export default function PublicHome() {
 
         {/* === NOTÍCIAS === */}
         <TabsContent value="noticias">
-          <PublicNewsSection />
+          <PublicNewsSection churchId={communityId} />
         </TabsContent>
 
         {/* === CULTOS === */}
@@ -219,7 +227,10 @@ export default function PublicHome() {
       </Tabs>
 
       <footer className="container flex flex-wrap items-center justify-between gap-3 border-t py-6">
-        <p className="text-xs text-muted">CEC Manaus · Comunidade Evangélica Cristã</p>
+        <p className="text-xs text-muted">
+          {community?.name ?? "CEC Manaus"} · Comunidade Evangélica Cristã
+          {community?.whatsapp_phone && <> · WhatsApp: <a href={`https://wa.me/${community.whatsapp_phone.replace(/\D/g, '')}`} className="hover:underline">{community.whatsapp_phone}</a></>}
+        </p>
         <Link href="/entrar" className="text-xs font-bold text-gold hover:underline">Área do membro →</Link>
       </footer>
     </div>

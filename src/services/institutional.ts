@@ -29,12 +29,18 @@ export async function listAllServiceTimes(sb: SupabaseClient): Promise<ChurchInf
   } catch { return []; }
 }
 
-/** Palavra do dia (mais recente ate hoje). */
-export async function getTodaysWord(sb: SupabaseClient): Promise<DailyWord | null> {
+/** Palavra do dia (mais recente ate hoje) — escopada por comunidade (ou global). */
+export async function getTodaysWord(sb: SupabaseClient, churchId?: string | null): Promise<DailyWord | null> {
   try {
-    const { data, error } = await sb.rpc("get_todays_word");
+    let q = sb.from("daily_words").select("*")
+      .eq("is_active", true)
+      .lte("date", new Date().toISOString().slice(0, 10))
+      .order("date", { ascending: false })
+      .limit(1);
+    if (churchId) q = q.or(`church_id.eq.${churchId},church_id.is.null`);
+    const { data, error } = await q.maybeSingle();
     if (error || !data) return null;
-    return data as unknown as DailyWord;
+    return data as DailyWord;
   } catch { return null; }
 }
 

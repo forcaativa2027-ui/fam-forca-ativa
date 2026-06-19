@@ -52,7 +52,15 @@ export interface Finance {
   created_at: string;
 }
 
-export interface Church { id:string; name:string; type:ChurchType; parent_id:string|null; address:string|null; city:string|null; state:string|null; }
+export interface Church {
+  id:string; name:string; type:ChurchType; parent_id:string|null;
+  address:string|null; city:string|null; state:string|null;
+  slug:string|null; pastor_id:string|null;
+  logo_url:string|null; banner_url:string|null;
+  primary_color:string|null; secondary_color:string|null;
+  short_description:string|null; site_url:string|null; whatsapp_phone:string|null;
+  is_active?:boolean;
+}
 export interface District { id:string; church_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
 export interface Area { id:string; district_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
 export interface Sector { id:string; area_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }

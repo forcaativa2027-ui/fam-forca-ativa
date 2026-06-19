@@ -1,12 +1,21 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Banner } from "@/types/domain";
 
-/** Lista banners ativos e dentro do periodo (publico). */
-export async function listActiveBanners(sb: SupabaseClient): Promise<Banner[]> {
+/** Lista banners ativos da comunidade (ou globais). */
+export async function listActiveBanners(sb: SupabaseClient, churchId?: string | null): Promise<Banner[]> {
   try {
-    const { data, error } = await sb.rpc("get_active_banners");
-    if (error || !data) return [];
-    return data as Banner[];
+    let q = sb.from("banners").select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    if (churchId) q = q.or(`church_id.eq.${churchId},church_id.is.null`);
+    const { data, error } = await q;
+    if (error) return [];
+    const now = new Date();
+    return (data ?? []).filter((b: Banner) => {
+      if (b.starts_at && new Date(b.starts_at) > now) return false;
+      if (b.ends_at && new Date(b.ends_at) < now) return false;
+      return true;
+    }) as Banner[];
   } catch { return []; }
 }
 

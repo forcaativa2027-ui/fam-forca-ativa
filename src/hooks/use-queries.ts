@@ -19,8 +19,8 @@ export const useAreas          = () => useQuery({ queryKey: ["areas"],      quer
 export const useSectors        = () => useQuery({ queryKey: ["sectors"],    queryFn: () => C.listSectors(supabase) });
 export const useCells          = () => useQuery({ queryKey: ["cells"],      queryFn: () => C.listCells(supabase) });
 export const useMdaAlerts      = () => useQuery({ queryKey: ["mda-alerts"], queryFn: () => C.listMdaAlerts(supabase) });
-export const usePublicSermons  = () => useQuery({ queryKey: ["public-sermons"], queryFn: () => Co.listPublicSermons(supabase) });
-export const usePublicEvents   = () => useQuery({ queryKey: ["public-events"],  queryFn: () => Co.listPublicEvents(supabase) });
+export const usePublicSermons  = (churchId?: string|null) => useQuery({ queryKey: ["public-sermons", churchId ?? "all"], queryFn: () => Co.listPublicSermons(supabase, churchId) });
+export const usePublicEvents   = (churchId?: string|null) => useQuery({ queryKey: ["public-events", churchId ?? "all"],  queryFn: () => Co.listPublicEvents(supabase, churchId) });
 export const useSermons        = () => useQuery({ queryKey: ["sermons"], queryFn: () => Co.listSermons(supabase) });
 export const useEvents         = () => useQuery({ queryKey: ["events"],  queryFn: () => Co.listEvents(supabase) });
 export const useAuditLogs      = () => useQuery({ queryKey: ["audit-logs"], queryFn: () => A.listAuditLogs(supabase) });
@@ -29,7 +29,7 @@ export const useDashboard      = (churchId: string|null) => useQuery({ queryKey:
 // B2 — conteudo institucional
 export const useServiceTimes   = (churchId: string|null) => useQuery({ queryKey: ["service-times", churchId ?? "none"], queryFn: () => I.listServiceTimes(supabase, churchId) });
 export const useAllServiceTimes= () => useQuery({ queryKey: ["service-times-all"], queryFn: () => I.listAllServiceTimes(supabase) });
-export const useTodaysWord     = () => useQuery({ queryKey: ["todays-word"], queryFn: () => I.getTodaysWord(supabase) });
+export const useTodaysWord     = (churchId?: string|null) => useQuery({ queryKey: ["todays-word", churchId ?? "all"], queryFn: () => I.getTodaysWord(supabase, churchId) });
 export const useDailyWords     = () => useQuery({ queryKey: ["daily-words"], queryFn: () => I.listDailyWords(supabase) });
 
 // B3 — Area do membro
@@ -112,10 +112,10 @@ export const useFinances = (churchId: string | null, year: number, month: number
 import * as N from "@/services/news";
 import * as Pf from "@/services/publicForms";
 
-export const usePublicNews = (category?: import("@/types/domain").NewsCategory) =>
+export const usePublicNews = (category?: import("@/types/domain").NewsCategory, churchId?: string|null) =>
   useQuery({
-    queryKey: ["public-news", category ?? "all"],
-    queryFn: () => N.listPublicNews(supabase, category),
+    queryKey: ["public-news", category ?? "all", churchId ?? "all"],
+    queryFn: () => N.listPublicNews(supabase, category, churchId),
   });
 export const useAllNews = () => useQuery({
   queryKey: ["all-news"], queryFn: () => N.listAllNews(supabase),
@@ -138,12 +138,20 @@ export const usePendingCounts = () => useQuery({
 
 // M1b — Banners
 import * as Bn from "@/services/banners";
-export const useActiveBanners = () => useQuery({
-  queryKey: ["active-banners"],
-  queryFn: () => Bn.listActiveBanners(supabase),
+export const useActiveBanners = (churchId?: string|null) => useQuery({
+  queryKey: ["active-banners", churchId ?? "all"],
+  queryFn: () => Bn.listActiveBanners(supabase, churchId),
   refetchInterval: 60_000,
 });
 export const useAllBanners = () => useQuery({
   queryKey: ["all-banners"],
   queryFn: () => Bn.listAllBanners(supabase),
+});
+
+// M2a — Multicomunidade
+import * as Com from "@/services/community";
+export const useActiveCommunity = () => useQuery({
+  queryKey: ["active-community"],
+  queryFn: () => Com.resolveCommunity(supabase),
+  staleTime: 5 * 60 * 1000, // 5min — muda raramente
 });

@@ -29,6 +29,7 @@ import { FinanceAdmin } from "./FinanceAdmin";
 import { NewsAdmin } from "./NewsAdmin";
 import { PublicPrayerRequestsAdmin, VisitRequestsAdmin } from "./ContactRequestsAdmin";
 import { BannersAdmin } from "./BannersAdmin";
+import { CommunitiesAdmin } from "./CommunitiesAdmin";
 import { usePendingCounts } from "@/hooks/use-queries";
 
 export default function AdminPanel() {
@@ -56,6 +57,7 @@ export default function AdminPanel() {
           <TabsList className="mb-6 min-w-max">
             <TabsTrigger value="sermons">Pregações</TabsTrigger>
             <TabsTrigger value="events">Agenda</TabsTrigger>
+            <TabsTrigger value="communities">Comunidades</TabsTrigger>
             <TabsTrigger value="news">Notícias</TabsTrigger>
             <TabsTrigger value="banners">Banners</TabsTrigger>
             <TabsTrigger value="services">Cultos</TabsTrigger>
@@ -74,6 +76,7 @@ export default function AdminPanel() {
         </div>
         <TabsContent value="sermons"><SermonsAdmin /></TabsContent>
         <TabsContent value="events"><EventsAdmin /></TabsContent>
+        <TabsContent value="communities"><CommunitiesAdmin /></TabsContent>
         <TabsContent value="news"><NewsAdmin /></TabsContent>
         <TabsContent value="banners"><BannersAdmin /></TabsContent>
         <TabsContent value="services"><ServiceTimesAdmin /></TabsContent>

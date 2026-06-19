@@ -1,17 +1,25 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Sermon, EventItem } from "@/types/domain";
 
-export async function listPublicSermons(sb: SupabaseClient): Promise<Sermon[]> {
+export async function listPublicSermons(sb: SupabaseClient, churchId?: string | null): Promise<Sermon[]> {
+  let q = sb.from("sermons").select("*").eq("is_published", true).order("published_at", { ascending: false });
+  if (churchId) q = q.or(`church_id.eq.${churchId},church_id.is.null`);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as Sermon[];
+}
+export async function listPublicEvents(sb: SupabaseClient, churchId?: string | null): Promise<EventItem[]> {
+  let q = sb.from("events").select("*").eq("is_published", true).order("starts_at");
+  if (churchId) q = q.or(`church_id.eq.${churchId},church_id.is.null`);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as EventItem[];
+}
+export async function listSermons(sb: SupabaseClient) {
   const { data, error } = await sb.from("sermons").select("*").eq("is_published", true).order("published_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as Sermon[];
 }
-export async function listPublicEvents(sb: SupabaseClient): Promise<EventItem[]> {
-  const { data, error } = await sb.from("events").select("*").eq("is_published", true).order("starts_at");
-  if (error) throw error;
-  return (data ?? []) as EventItem[];
-}
-export async function listSermons(sb: SupabaseClient) { return listPublicSermons(sb); }
 export async function listEvents(sb: SupabaseClient) {
   const { data, error } = await sb.from("events").select("*").order("starts_at");
   if (error) throw error;

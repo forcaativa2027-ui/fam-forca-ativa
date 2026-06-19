@@ -1,9 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { News, NewsCategory } from "@/types/domain";
 
-export async function listPublicNews(sb: SupabaseClient, category?: NewsCategory): Promise<News[]> {
+export async function listPublicNews(sb: SupabaseClient, category?: NewsCategory, churchId?: string | null): Promise<News[]> {
   let q = sb.from("news").select("*").eq("is_published", true).order("published_at", { ascending: false });
   if (category) q = q.eq("category", category);
+  if (churchId) q = q.or(`church_id.eq.${churchId},church_id.is.null`);
   const { data, error } = await q;
   if (error) return [];
   return (data ?? []) as News[];

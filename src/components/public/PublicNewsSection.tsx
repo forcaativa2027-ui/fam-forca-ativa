@@ -13,9 +13,9 @@ const CATEGORIES: { value: NewsCategory; label: string }[] = [
   { value: "geral",            label: "Gerais" },
 ];
 
-export function PublicNewsSection() {
+export function PublicNewsSection({ churchId }: { churchId?: string | null } = {}) {
   const [cat, setCat] = useState<NewsCategory | "todas">("todas");
-  const { data: all = [] } = usePublicNews();
+  const { data: all = [] } = usePublicNews(undefined, churchId);
   const filtered = cat === "todas" ? all : all.filter((n) => n.category === cat);
 
   return (
