@@ -10,6 +10,7 @@ export interface PipelineCreateInput {
   state?: string;
   city?: string;
   cep?: string;
+  life_group_id?: string;
 }
 
 /** Cria entrada no pipeline. Requer usuario autenticado (apos signUp). */
@@ -23,6 +24,7 @@ export async function createPipelineEntry(sb: SupabaseClient, input: PipelineCre
     p_state: input.state ?? null,
     p_city: input.city ?? null,
     p_cep: input.cep ?? null,
+    p_life_group_id: input.life_group_id ?? null,
   });
   if (error) throw error;
   return data as string;

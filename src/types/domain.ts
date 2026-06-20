@@ -146,6 +146,7 @@ export type PipelineStage = "novo"|"aguardando_contato"|"contato_realizado"|"con
 export type PipelineIntent = "lifegroup"|"discipulado"|"acompanhamento_pastoral"|"visita"|"conhecer"|"batismo"|"servir"|"outro";
 export interface VisitorPipeline {
   id: string; user_id: string | null; profile_id: string | null; community_id: string | null;
+  life_group_id: string | null;
   full_name: string; phone: string | null; email: string | null;
   state: string | null; city: string | null; cep: string | null;
   intent: PipelineIntent; stage: PipelineStage; source: string | null;

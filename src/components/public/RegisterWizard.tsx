@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase/client";
-import { useChurches, useActiveCommunity } from "@/hooks/use-queries";
+import { useChurches, useActiveCommunity, useCells } from "@/hooks/use-queries";
 import { lookupCep, maskPhone, maskCep, createPipelineEntry } from "@/services/pipeline";
 import type { PipelineIntent } from "@/types/domain";
 
@@ -35,6 +35,7 @@ interface State {
   state: string;
   city: string;
   community_id: string;
+  life_group_id: string;
   intent: PipelineIntent;
   password: string;
 }
@@ -43,7 +44,7 @@ const INITIAL_STATE: State = {
   step: 1,
   full_name: "", phone: "", email: "",
   cep: "", state: "", city: "",
-  community_id: "", intent: "conhecer",
+  community_id: "", life_group_id: "", intent: "conhecer",
   password: "",
 };
 
@@ -51,6 +52,7 @@ export default function RegisterWizard() {
   const params = useSearchParams();
   const initialIntent = (params.get("intent") as PipelineIntent | null) ?? "conhecer";
   const { data: churches = [] } = useChurches();
+  const { data: cells = [] } = useCells();
   const { data: activeCommunity } = useActiveCommunity();
   const [s, setS] = useState<State>({ ...INITIAL_STATE, intent: initialIntent });
   const [done, setDone] = useState(false);
@@ -100,7 +102,7 @@ export default function RegisterWizard() {
 
             {s.step === 1 && <Step1 s={s} update={update} onNext={() => setS({ ...s, step: 2 })} />}
             {s.step === 2 && <Step2 s={s} update={update} onBack={() => setS({ ...s, step: 1 })} onNext={() => setS({ ...s, step: 3 })} />}
-            {s.step === 3 && <Step3 s={s} update={update} churches={churches} onBack={() => setS({ ...s, step: 2 })} onNext={() => setS({ ...s, step: 4 })} />}
+            {s.step === 3 && <Step3 s={s} update={update} churches={churches} cells={cells} onBack={() => setS({ ...s, step: 2 })} onNext={() => setS({ ...s, step: 4 })} />}
             {s.step === 4 && <Step4 s={s} update={update} onBack={() => setS({ ...s, step: 3 })} onNext={() => setS({ ...s, step: 5 })} />}
             {s.step === 5 && <Step5 s={s} update={update} onBack={() => setS({ ...s, step: 4 })} onDone={() => setDone(true)} setGlobalErr={setGlobalErr} />}
           </CardContent>
@@ -201,13 +203,31 @@ function Step2({ s, update, onBack, onNext }: { s: State; update: <K extends key
 // ============================================================
 // ETAPA 3 — Comunidade
 // ============================================================
-function Step3({ s, update, churches, onBack, onNext }: { s: State; update: <K extends keyof State>(k: K, v: State[K]) => void; churches: { id: string; name: string; type: string; city: string | null; state: string | null }[]; onBack: () => void; onNext: () => void }) {
+function Step3({ s, update, churches, cells, onBack, onNext }: {
+  s: State;
+  update: <K extends keyof State>(k: K, v: State[K]) => void;
+  churches: { id: string; name: string; type: string; city: string | null; state: string | null }[];
+  cells: { id: string; name: string; church_id: string | null; state: string | null; city: string | null; neighborhood: string | null; meeting_weekday: string | null; meeting_time: string | null; is_active: boolean }[];
+  onBack: () => void; onNext: () => void;
+}) {
   const [err, setErr] = useState("");
 
   function next() {
     if (!s.community_id) { setErr("Selecione uma comunidade"); return; }
     onNext();
   }
+
+  // Filtra LGs pela comunidade escolhida + (se houver) cidade/estado da Etapa 2
+  const lgsAll = cells.filter((c) => c.is_active && c.church_id === s.community_id);
+  // Prioriza LGs da MESMA cidade do CEP (se houver)
+  const lgsSameCity   = s.city  ? lgsAll.filter((c) => c.city  && c.city.toLowerCase()  === s.city.toLowerCase())   : [];
+  const lgsSameState  = s.state ? lgsAll.filter((c) => c.state && c.state.toUpperCase() === s.state.toUpperCase() && !lgsSameCity.find(x => x.id === c.id)) : [];
+  const lgsOthers     = lgsAll.filter((c) => !lgsSameCity.find(x => x.id === c.id) && !lgsSameState.find(x => x.id === c.id));
+
+  const WEEKDAYS: Record<string, string> = {
+    domingo: "Dom", segunda: "Seg", terca: "Ter", quarta: "Qua",
+    quinta: "Qui", sexta: "Sex", sabado: "Sáb",
+  };
 
   return (
     <div className="space-y-4">
@@ -220,7 +240,11 @@ function Step3({ s, update, churches, onBack, onNext }: { s: State; update: <K e
         {churches.map((c) => {
           const selected = s.community_id === c.id;
           return (
-            <button key={c.id} type="button" onClick={() => { update("community_id", c.id); setErr(""); }}
+            <button key={c.id} type="button"
+              onClick={() => {
+                if (s.community_id !== c.id) update("life_group_id", ""); // reseta LG se trocar comunidade
+                update("community_id", c.id); setErr("");
+              }}
               className={`flex w-full items-start gap-3 rounded-xl border-2 p-4 text-left transition ${selected ? "border-gold bg-gold/5" : "border-border bg-card hover:border-navy/30"}`}>
               <div className={`mt-0.5 h-5 w-5 shrink-0 rounded-full border-2 ${selected ? "border-gold bg-gold" : "border-border"}`}>
                 {selected && <Check className="h-4 w-4 text-navy" />}
@@ -234,8 +258,68 @@ function Step3({ s, update, churches, onBack, onNext }: { s: State; update: <K e
         })}
       </div>
 
+      {/* === Sub-seção: Life Group (aparece após selecionar comunidade) === */}
+      {s.community_id && lgsAll.length > 0 && (
+        <div className="rounded-xl border-2 border-dashed border-gold/40 bg-gold/5 p-4">
+          <h3 className="font-display text-base text-navy">Encontre seu Life Group</h3>
+          <p className="text-xs text-muted">
+            Opcional — você pode escolher agora ou pular e a liderança te ajuda depois
+          </p>
+
+          {lgsSameCity.length > 0 && (
+            <LgGroup label={`Em ${s.city}`} cells={lgsSameCity} selected={s.life_group_id} onSelect={(id) => update("life_group_id", id)} weekdays={WEEKDAYS} />
+          )}
+          {lgsSameState.length > 0 && (
+            <LgGroup label={s.state ? `Em outras cidades de ${s.state}` : "Outras"} cells={lgsSameState} selected={s.life_group_id} onSelect={(id) => update("life_group_id", id)} weekdays={WEEKDAYS} />
+          )}
+          {lgsOthers.length > 0 && lgsSameCity.length === 0 && lgsSameState.length === 0 && (
+            <LgGroup label="Todos os Life Groups" cells={lgsOthers} selected={s.life_group_id} onSelect={(id) => update("life_group_id", id)} weekdays={WEEKDAYS} />
+          )}
+
+          <button type="button" onClick={() => update("life_group_id", "")}
+            className={`mt-3 w-full rounded-lg border-2 p-3 text-left text-sm transition ${!s.life_group_id ? "border-gold bg-card" : "border-border bg-card/50 hover:border-navy/30"}`}>
+            <b className="text-navy">Não sei / preciso de ajuda</b>
+            <p className="text-xs text-muted">A liderança vai entrar em contato pra te indicar o LG ideal</p>
+          </button>
+        </div>
+      )}
+
       {err && <p className="text-xs text-destructive">{err}</p>}
       <NavButtons onBack={onBack} onNext={next} />
+    </div>
+  );
+}
+
+function LgGroup({ label, cells, selected, onSelect, weekdays }: {
+  label: string;
+  cells: { id: string; name: string; neighborhood: string | null; city: string | null; meeting_weekday: string | null; meeting_time: string | null }[];
+  selected: string;
+  onSelect: (id: string) => void;
+  weekdays: Record<string, string>;
+}) {
+  return (
+    <div className="mt-3">
+      <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-gold">{label}</p>
+      <div className="space-y-1.5">
+        {cells.map((c) => {
+          const isSelected = selected === c.id;
+          return (
+            <button key={c.id} type="button" onClick={() => onSelect(c.id)}
+              className={`flex w-full items-start gap-3 rounded-lg border-2 p-2.5 text-left transition ${isSelected ? "border-gold bg-card" : "border-border bg-card/50 hover:border-navy/30"}`}>
+              <div className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 ${isSelected ? "border-gold bg-gold" : "border-border"}`}>
+                {isSelected && <Check className="h-3 w-3 text-navy" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <b className="block text-sm text-navy">{c.name}</b>
+                <p className="text-[11px] text-muted">
+                  {[c.neighborhood, c.city].filter(Boolean).join(", ")}
+                  {c.meeting_weekday && c.meeting_time && ` · ${weekdays[c.meeting_weekday] ?? c.meeting_weekday} às ${c.meeting_time.slice(0,5)}`}
+                </p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -315,6 +399,7 @@ function Step5({ s, update, onBack, onDone, setGlobalErr }: { s: State; update: 
         state: s.state || undefined,
         city: s.city || undefined,
         cep: s.cep || undefined,
+        life_group_id: s.life_group_id || undefined,
       });
 
       onDone();
@@ -350,6 +435,7 @@ function Step5({ s, update, onBack, onDone, setGlobalErr }: { s: State; update: 
           <p><b>Telefone:</b> {s.phone}</p>
           {(s.city || s.state) && <p><b>Cidade:</b> {[s.city, s.state].filter(Boolean).join(" / ")}</p>}
           <p><b>Intenção:</b> {INTENT_LABELS[s.intent].label}</p>
+          <p><b>Life Group:</b> {s.life_group_id ? "Selecionado ✓" : "A definir com a liderança"}</p>
         </div>
       </details>
 

@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { usePipeline, useChurches } from "@/hooks/use-queries";
+import { usePipeline, useChurches, useCells } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { updatePipelineStage, deletePipeline } from "@/services/pipeline";
 import { logAudit } from "@/services/audit";
@@ -121,9 +121,11 @@ export function CrmPipelineAdmin() {
 
 export function PipelineCard({ item: it, church }: { item: VisitorPipeline; church?: Church }) {
   const qc = useQueryClient();
+  const { data: cells = [] } = useCells();
   const [expanded, setExpanded] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notes, setNotes] = useState(it.internal_notes ?? "");
+  const lg = it.life_group_id ? cells.find((c) => c.id === it.life_group_id) : null;
 
   async function moveTo(stage: PipelineStage) {
     setBusy(true);
@@ -159,6 +161,11 @@ export function PipelineCard({ item: it, church }: { item: VisitorPipeline; chur
               <b className="text-navy">{it.full_name}</b>
               <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${STAGE_COLORS[it.stage]}`}>{STAGE_LABELS[it.stage]}</span>
               <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase text-gold">{INTENT_LABELS[it.intent]}</span>
+              {lg && (
+                <span className="inline-flex items-center gap-0.5 rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-bold uppercase text-purple-700 border border-purple-200">
+                  LG: {lg.name}
+                </span>
+              )}
               {church && (
                 <span className="inline-flex items-center gap-0.5 rounded-full bg-navy-50 px-2 py-0.5 text-[10px] font-bold uppercase text-navy">
                   <Building2 className="h-2.5 w-2.5" />{church.name}
