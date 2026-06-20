@@ -69,3 +69,59 @@ export function maskCep(value: string): string {
   if (d.length <= 5) return d;
   return `${d.slice(0,5)}-${d.slice(5)}`;
 }
+
+// ============================================================
+// M4 — CRM Pastoral (admin)
+// ============================================================
+import type { VisitorPipeline, PipelineStage } from "@/types/domain";
+
+export async function listPipeline(sb: SupabaseClient, opts?: { stage?: PipelineStage; communityId?: string | null }): Promise<VisitorPipeline[]> {
+  let q = sb.from("visitor_pipeline").select("*").order("created_at", { ascending: false });
+  if (opts?.stage) q = q.eq("stage", opts.stage);
+  if (opts?.communityId) q = q.eq("community_id", opts.communityId);
+  const { data, error } = await q;
+  if (error) return [];
+  return (data ?? []) as VisitorPipeline[];
+}
+
+export async function updatePipelineStage(sb: SupabaseClient, id: string, stage: PipelineStage, notes?: string): Promise<void> {
+  const { error } = await sb.rpc("pipeline_update_stage", {
+    p_pipeline_id: id, p_new_stage: stage, p_notes: notes ?? null,
+  });
+  if (error) throw error;
+}
+
+export async function assignPipeline(sb: SupabaseClient, id: string, profileId: string | null): Promise<void> {
+  const { error } = await sb.rpc("pipeline_assign", {
+    p_pipeline_id: id, p_assigned_to: profileId,
+  });
+  if (error) throw error;
+}
+
+export async function deletePipeline(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("visitor_pipeline").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ============================================================
+// M5 — Central de Acolhimento (views)
+// ============================================================
+const VIEW_BY_KEY: Record<string, string> = {
+  novos: "acolhimento_novos",
+  sem_contato: "acolhimento_sem_contato",
+  sem_lifegroup: "acolhimento_sem_lifegroup",
+  sem_discipulador: "acolhimento_sem_discipulador",
+  sem_batismo: "acolhimento_sem_batismo",
+  em_consolidacao: "acolhimento_em_consolidacao",
+  integrados: "acolhimento_integrados",
+};
+
+export async function listAcolhimento(sb: SupabaseClient, key: keyof typeof VIEW_BY_KEY): Promise<VisitorPipeline[]> {
+  const viewName = VIEW_BY_KEY[key];
+  if (!viewName) return [];
+  try {
+    const { data, error } = await sb.from(viewName).select("*");
+    if (error) return [];
+    return (data ?? []) as VisitorPipeline[];
+  } catch { return []; }
+}

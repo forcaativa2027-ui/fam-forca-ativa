@@ -30,6 +30,8 @@ import { NewsAdmin } from "./NewsAdmin";
 import { PublicPrayerRequestsAdmin, VisitRequestsAdmin } from "./ContactRequestsAdmin";
 import { BannersAdmin } from "./BannersAdmin";
 import { CommunitiesAdmin } from "./CommunitiesAdmin";
+import { CrmPipelineAdmin } from "./CrmPipelineAdmin";
+import { AcolhimentoAdmin } from "./AcolhimentoAdmin";
 import { usePendingCounts } from "@/hooks/use-queries";
 
 export default function AdminPanel() {
@@ -70,6 +72,8 @@ export default function AdminPanel() {
             <TabsTrigger value="finance">Financeiro</TabsTrigger>
             <TabsTrigger value="prayer-requests"><BadgeTab label="Pedidos" count={counts?.prayer_pending ?? 0} /></TabsTrigger>
             <TabsTrigger value="visit-requests"><BadgeTab label="Visitas" count={counts?.visit_pending ?? 0} /></TabsTrigger>
+            <TabsTrigger value="crm"><BadgeTab label="CRM" count={counts?.pipeline_new ?? 0} /></TabsTrigger>
+            <TabsTrigger value="acolhimento">Acolhimento</TabsTrigger>
             <TabsTrigger value="mda">Estrutura MDA</TabsTrigger>
             <TabsTrigger value="audit">Auditoria</TabsTrigger>
           </TabsList>
@@ -89,6 +93,8 @@ export default function AdminPanel() {
         <TabsContent value="finance"><FinanceAdmin /></TabsContent>
         <TabsContent value="prayer-requests"><PublicPrayerRequestsAdmin /></TabsContent>
         <TabsContent value="visit-requests"><VisitRequestsAdmin /></TabsContent>
+        <TabsContent value="crm"><CrmPipelineAdmin /></TabsContent>
+        <TabsContent value="acolhimento"><AcolhimentoAdmin /></TabsContent>
         <TabsContent value="mda"><MdaStructure /></TabsContent>
         <TabsContent value="audit"><AuditView /></TabsContent>
       </Tabs>

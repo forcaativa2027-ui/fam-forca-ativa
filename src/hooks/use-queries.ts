@@ -155,3 +155,18 @@ export const useActiveCommunity = () => useQuery({
   queryFn: () => Com.resolveCommunity(supabase),
   staleTime: 5 * 60 * 1000, // 5min — muda raramente
 });
+
+// M4 — CRM Pastoral
+import * as Pp from "@/services/pipeline";
+export const usePipeline = (opts?: { stage?: import("@/types/domain").PipelineStage; communityId?: string|null }) =>
+  useQuery({
+    queryKey: ["pipeline", opts?.stage ?? "all", opts?.communityId ?? "all"],
+    queryFn: () => Pp.listPipeline(supabase, opts),
+  });
+
+// M5 — Central de Acolhimento
+export const useAcolhimento = (key: string) =>
+  useQuery({
+    queryKey: ["acolhimento", key],
+    queryFn: () => Pp.listAcolhimento(supabase, key as Parameters<typeof Pp.listAcolhimento>[1]),
+  });
