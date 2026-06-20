@@ -117,6 +117,8 @@ grant execute on function public.visitor_pipeline_create(uuid, pipeline_intent, 
 
 -- ---------- 4) Update do get_pending_counts ----------
 -- Inclui visitantes novos no contador de pendentes
+-- (Drop antes do recreate porque o tipo de retorno mudou de 2 para 3 colunas)
+drop function if exists public.get_pending_counts();
 create or replace function public.get_pending_counts()
 returns table(prayer_pending bigint, visit_pending bigint, pipeline_new bigint)
 language sql stable security definer set search_path=public as $$

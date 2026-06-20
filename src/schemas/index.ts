@@ -41,6 +41,20 @@ export const memberSchema = z.object({
 });
 export type MemberInput = z.infer<typeof memberSchema>;
 
+// Para criar membro com acesso (auth.user). Exige email + filtros geo.
+export const memberCreateSchema = z.object({
+  full_name: reqText("Nome completo", 3),
+  email: z.string({required_error:"E-mail obrigatorio"}).email("E-mail invalido"),
+  phone: optionalText,
+  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data invalida").optional().or(z.literal("")),
+  state: optionalText,
+  city: optionalText,
+  church_id: optionalText,
+  life_group_id: z.string().uuid().optional().or(z.literal("")),
+  journey_stage: z.enum(["visitante","novo_convertido","consolidacao","discipulado","batismo","membro_ativo","servo","lider_formacao","lider","supervisor","missionario"]).default("visitante"),
+});
+export type MemberCreateInput = z.infer<typeof memberCreateSchema>;
+
 export const cellSchema = z.object({
   name: reqText("Nome da celula"),
   sector_id: z.string().uuid("Setor invalido"),
