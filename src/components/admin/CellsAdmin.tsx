@@ -46,6 +46,7 @@ export function CellsAdmin() {
       leader_id: null,
       host_id: null,
       multiplication_target: c.multiplication_target ?? 12,
+      target_audience: (c.target_audience as "misto") ?? "misto",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -64,6 +65,7 @@ export function CellsAdmin() {
         meeting_weekday: v.meeting_weekday ?? null,
         meeting_time: v.meeting_time || null,
         multiplication_target: v.multiplication_target ?? 12,
+        target_audience: v.target_audience ?? "misto",
       };
       if (editing) {
         await updateCell(supabase, editing.id, payload);
@@ -132,6 +134,19 @@ export function CellsAdmin() {
             </div>
             <Field label="Meta de multiplicação (membros ativos)" error={errors.multiplication_target?.message}>
               <Input type="number" min={3} max={50} {...register("multiplication_target")} placeholder="12" />
+            </Field>
+            <Field label="Público-alvo (define para quem o LG é recomendado)">
+              <select {...register("target_audience")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="misto">Misto — todas as idades e perfis</option>
+                <option value="jovens">Jovens</option>
+                <option value="adolescentes">Adolescentes</option>
+                <option value="adultos">Adultos</option>
+                <option value="casais">Casais</option>
+                <option value="terceira_idade">Terceira idade</option>
+                <option value="mulheres">Mulheres</option>
+                <option value="homens">Homens</option>
+                <option value="outro">Outro</option>
+              </select>
             </Field>
             <Field label="Endereço" error={errors.address?.message}>
               <Input {...register("address")} placeholder="Rua, número, complemento" />

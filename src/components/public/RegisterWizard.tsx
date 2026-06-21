@@ -71,7 +71,7 @@ export default function RegisterWizard() {
 
   const TOTAL_STEPS = 5;
 
-  if (done) return <FinishedScreen />;
+  if (done) return <FinishedScreen hasLg={!!s.life_group_id} />;
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_30%_20%,#16345A,#0E2A47_60%)] p-4">
@@ -453,17 +453,25 @@ function Step5({ s, update, onBack, onDone, setGlobalErr }: { s: State; update: 
 // ============================================================
 // TELA FINAL
 // ============================================================
-function FinishedScreen() {
+function FinishedScreen({ hasLg }: { hasLg: boolean }) {
   return (
     <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_30%_20%,#16345A,#0E2A47_60%)] p-5">
       <Card className="max-w-md text-center">
         <CardContent className="space-y-3 px-8 py-10">
           <Check className="mx-auto h-12 w-12 text-gold" />
           <h1 className="font-display text-2xl text-navy">Cadastro recebido!</h1>
-          <p className="text-sm text-muted">
-            Sua conta foi criada e sua intenção foi registrada com a liderança.
-            Em breve um líder entrará em contato com você.
-          </p>
+          {hasLg ? (
+            <p className="text-sm text-muted">
+              Sua conta foi criada e sua intenção foi registrada com a liderança.
+              Em breve um líder entrará em contato com você.
+            </p>
+          ) : (
+            <p className="text-sm text-muted">
+              Sua conta foi criada e sua intenção foi registrada com a liderança.
+              <br /><br />
+              <b className="text-navy">Um(a) pastor(a) entrará em contato em breve</b> para te indicar o Life Group ideal pra você.
+            </p>
+          )}
           <div className="flex flex-col gap-2 pt-2">
             <Button asChild><Link href="/painel">Entrar na área do membro</Link></Button>
             <Button asChild variant="outline"><Link href="/">Voltar à página inicial</Link></Button>

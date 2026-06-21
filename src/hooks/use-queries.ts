@@ -231,3 +231,11 @@ export const useMinistryPosts = (ministryId?: string|null) =>
     queryKey: ["ministry-posts", ministryId ?? "all"],
     queryFn: () => Mn.listMinistryPosts(supabase, ministryId),
   });
+
+// M6 — Sugestão de LG
+export const useLgSuggestions = (pipelineId: string | null) =>
+  useQuery({
+    queryKey: ["lg-suggestions", pipelineId],
+    queryFn: () => pipelineId ? Pp.suggestLifeGroups(supabase, pipelineId) : Promise.resolve([]),
+    enabled: !!pipelineId,
+  });

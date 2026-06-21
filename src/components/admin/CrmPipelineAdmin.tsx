@@ -8,9 +8,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { usePipeline, useChurches, useCells } from "@/hooks/use-queries";
+import { usePipeline, useChurches, useCells, useLgSuggestions } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
-import { updatePipelineStage, deletePipeline } from "@/services/pipeline";
+import { updatePipelineStage, deletePipeline, acceptLgSuggestion } from "@/services/pipeline";
 import { logAudit } from "@/services/audit";
 import type { PipelineStage, PipelineIntent, VisitorPipeline, Church } from "@/types/domain";
 
@@ -206,6 +206,9 @@ export function PipelineCard({ item: it, church }: { item: VisitorPipeline; chur
           <div className="mt-4 space-y-3 border-t pt-4">
             <Timeline item={it} />
 
+            {/* M6 — Sugestão automática de LG, só se ainda não tem LG */}
+            {!it.life_group_id && <LgSuggestionBlock pipelineId={it.id} />}
+
             <div>
               <Label className="mb-1 block text-xs uppercase tracking-wider text-muted">Notas internas</Label>
               <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3}
@@ -367,6 +370,62 @@ function KanbanCard({ item: it, stages, stageLabels, church, onMove }: {
               ))}
             </div>
           </details>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// M6 — Bloco de sugestões automáticas de LG
+// ============================================================
+function LgSuggestionBlock({ pipelineId }: { pipelineId: string }) {
+  const qc = useQueryClient();
+  const { data: suggestions = [], isLoading } = useLgSuggestions(pipelineId);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  async function accept(lgId: string) {
+    setBusy(lgId);
+    try {
+      await acceptLgSuggestion(supabase, pipelineId, lgId);
+      await logAudit(supabase, "update", "visitor_pipeline", pipelineId, { suggested_lg_accepted: lgId });
+      qc.invalidateQueries({ queryKey: ["pipeline"] });
+      qc.invalidateQueries({ queryKey: ["acolhimento"] });
+    } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }
+    finally { setBusy(null); }
+  }
+
+  return (
+    <div className="rounded-md border-2 border-dashed border-gold/40 bg-gold/5 p-3">
+      <Label className="mb-2 flex items-center gap-1.5 text-xs uppercase tracking-wider text-gold">
+        🤖 Sugestão automática de Life Group
+      </Label>
+      {isLoading ? (
+        <p className="text-xs italic text-muted">Calculando…</p>
+      ) : suggestions.length === 0 ? (
+        <p className="text-xs italic text-muted">Nenhum LG disponível para sugerir nesta comunidade.</p>
+      ) : (
+        <div className="space-y-1.5">
+          {suggestions.map((s, idx) => (
+            <div key={s.lg_id} className="flex items-start gap-2 rounded-md border bg-card p-2.5">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gold/20 text-[10px] font-bold text-gold">
+                #{idx + 1}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <b className="text-sm text-navy">{s.lg_name}</b>
+                  <span className="rounded-full bg-navy-50 px-1.5 py-0.5 text-[10px] font-bold text-navy">
+                    Match {Math.round(s.adjusted_score)}
+                  </span>
+                </div>
+                <p className="mt-0.5 text-[11px] text-muted">{s.reason}</p>
+              </div>
+              <button onClick={() => accept(s.lg_id)} disabled={busy !== null}
+                className="shrink-0 rounded-md bg-gold px-2.5 py-1 text-[11px] font-bold text-navy hover:bg-gold/80 disabled:opacity-50">
+                {busy === s.lg_id ? "..." : "Aceitar"}
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>

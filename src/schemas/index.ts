@@ -67,6 +67,7 @@ export const cellSchema = z.object({
   leader_id: z.string().uuid().optional().nullable(),
   host_id: z.string().uuid().optional().nullable(),
   multiplication_target: z.coerce.number().int().min(3, "Minimo 3").max(50, "Maximo 50").default(12),
+  target_audience: z.enum(["misto","jovens","adolescentes","adultos","casais","terceira_idade","mulheres","homens","outro"]).default("misto"),
 });
 export type CellInput = z.infer<typeof cellSchema>;
 

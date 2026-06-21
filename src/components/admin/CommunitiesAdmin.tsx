@@ -84,21 +84,30 @@ export function CommunitiesAdmin() {
         site_url: v.site_url || null, whatsapp_phone: v.whatsapp_phone || null,
         is_active: true,
       };
+      console.log("[CommunitiesAdmin] Payload:", payload);
+
       if (editing) {
         const { error } = await supabase.from("churches").update(payload).eq("id", editing.id);
-        if (error) throw error;
+        if (error) {
+          console.error("[CommunitiesAdmin] UPDATE error:", { code: error.code, message: error.message, details: error.details, hint: error.hint });
+          throw error;
+        }
         await logAudit(supabase, "update", "churches", editing.id, { name: v.name });
       } else {
         const { data, error } = await supabase.from("churches").insert(payload).select().single();
-        if (error) throw error;
+        if (error) {
+          console.error("[CommunitiesAdmin] INSERT error:", { code: error.code, message: error.message, details: error.details, hint: error.hint });
+          throw error;
+        }
+        console.log("[CommunitiesAdmin] Created:", data?.id);
         await logAudit(supabase, "insert", "churches", data.id, { name: v.name });
       }
       cancelEdit();
       qc.invalidateQueries({ queryKey: ["churches"] });
       qc.invalidateQueries({ queryKey: ["active-community"] });
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Erro";
-      setErr(msg.includes("duplicate") && msg.includes("slug") ? "Já existe uma comunidade com esse slug. Escolha outro." : msg);
+      console.error("[CommunitiesAdmin] Erro completo ao salvar comunidade:", e);
+      setErr(friendlyError(e));
     }
   }
 
@@ -106,11 +115,15 @@ export function CommunitiesAdmin() {
     if (!confirm(`Apagar comunidade "${c.name}"?\n\nIsso pode quebrar referências em conteúdos vinculados a ela.`)) return;
     try {
       const { error } = await supabase.from("churches").delete().eq("id", c.id);
-      if (error) throw error;
+      if (error) {
+        console.error("[CommunitiesAdmin] DELETE error:", { code: error.code, message: error.message, details: error.details, hint: error.hint });
+        throw error;
+      }
       await logAudit(supabase, "delete", "churches", c.id, { name: c.name });
       qc.invalidateQueries({ queryKey: ["churches"] });
     } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Erro");
+      console.error("[CommunitiesAdmin] Erro ao apagar:", e);
+      alert(friendlyError(e));
     }
   }
 
@@ -203,9 +216,21 @@ export function CommunitiesAdmin() {
               </div>
             </details>
 
-            {err && <p className="text-sm text-destructive">{err}</p>}
+            {err && (
+              <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive whitespace-pre-line">
+                {err}
+                <p className="mt-1 text-[11px] opacity-70">Detalhes técnicos foram registrados no console do navegador (F12 → Console).</p>
+              </div>
+            )}
             <Button type="submit" disabled={isSubmitting} className="gap-2">
-              <Plus className="h-4 w-4" />{editing ? "Salvar alterações" : "Criar comunidade"}
+              {isSubmitting ? (
+                <>
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  {editing ? "Salvando…" : "Criando…"}
+                </>
+              ) : (
+                <><Plus className="h-4 w-4" />{editing ? "Salvar alterações" : "Criar comunidade"}</>
+              )}
             </Button>
           </form>
         </CardContent>
@@ -252,4 +277,38 @@ function Field({ label, error, children }: { label: string; error?: string; chil
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
+}
+
+/**
+ * Traduz erros do Postgres/Supabase em mensagens amigáveis ao usuário.
+ * Mantém o detalhe técnico no console.error (já feito antes de chamar isto).
+ */
+function friendlyError(e: unknown): string {
+  if (typeof e !== "object" || e === null) return "Não foi possível salvar. Tente novamente.";
+  const err = e as { code?: string; message?: string; details?: string; hint?: string };
+  const msg = (err.message ?? "").toLowerCase();
+
+  // Códigos Postgres conhecidos
+  switch (err.code) {
+    case "23505": // unique_violation
+      if (msg.includes("slug")) return "Já existe uma comunidade com esse slug. Escolha outro.";
+      return "Já existe uma comunidade com esses dados. Verifique os campos.";
+    case "23503": // foreign_key_violation
+      return "Comunidade pai inválida. Selecione outra ou deixe vazio.";
+    case "23502": // not_null_violation
+      return `Campo obrigatório ausente${err.details ? `: ${err.details}` : ""}.`;
+    case "42501": // insufficient_privilege (RLS)
+      return "Você não tem permissão para criar comunidades. Confirme que seu cargo é apóstolo ou pastor.";
+    case "PGRST301": // RLS no Supabase
+      return "Permissão negada pelo banco. RLS pode estar bloqueando.";
+  }
+
+  // Sem código? Tenta inferir do texto
+  if (msg.includes("row-level security") || msg.includes("permission") || msg.includes("policy")) {
+    return "Permissão negada. Seu usuário não tem acesso para criar comunidades.";
+  }
+  if (msg.includes("duplicate")) return "Já existe uma comunidade com esses dados.";
+
+  // Mensagem genérica amigável + dica de ver console
+  return `Não foi possível criar a comunidade. Verifique os dados ou tente novamente.${err.message ? `\n(${err.message})` : ""}`;
 }

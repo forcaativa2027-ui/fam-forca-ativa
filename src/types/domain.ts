@@ -64,6 +64,7 @@ export interface Church {
 export interface District { id:string; church_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
 export interface Area { id:string; district_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
 export interface Sector { id:string; area_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
+export type TargetAudience = "misto"|"jovens"|"adolescentes"|"adultos"|"casais"|"terceira_idade"|"mulheres"|"homens"|"outro";
 export interface Cell {
   id:string; name:string; sector_id:string|null; church_id:string|null;
   leader_id:string|null; coleader_id:string|null; host_id:string|null; supervisor_id:string|null;
@@ -72,6 +73,7 @@ export interface Cell {
   latitude:number|null; longitude:number|null;
   meeting_weekday:Weekday|null; meeting_time:string|null; is_active:boolean;
   multiplication_target?:number;
+  target_audience?:TargetAudience;
 }
 export interface Profile { id:string; full_name:string; email:string|null; phone:string|null; role:UserRole; avatar_url:string|null; church_id:string|null; }
 export interface Member {
@@ -226,5 +228,20 @@ export interface VisitorPipeline {
   first_contact_at: string | null; life_group_invite_at: string | null;
   discipleship_started_at: string | null;
   baptism_date: string | null; member_date: string | null;
+  // M6 — sugestão automática de LG
+  suggested_lg_id: string | null;
+  suggestion_score: number | null;
+  suggestion_reason: string | null;
+  suggestion_calculated_at: string | null;
   created_at: string;
+}
+
+export interface LgSuggestion {
+  lg_id: string;
+  lg_name: string;
+  raw_score: number;
+  adjusted_score: number;
+  members_count: number;
+  target: number;
+  reason: string;
 }

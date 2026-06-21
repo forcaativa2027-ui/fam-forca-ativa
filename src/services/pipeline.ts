@@ -127,3 +127,35 @@ export async function listAcolhimento(sb: SupabaseClient, key: keyof typeof VIEW
     return (data ?? []) as VisitorPipeline[];
   } catch { return []; }
 }
+
+// ============================================================
+// M6 — Sugestão automática de Life Group
+// ============================================================
+import type { LgSuggestion } from "@/types/domain";
+
+export async function suggestLifeGroups(sb: SupabaseClient, pipelineId: string): Promise<LgSuggestion[]> {
+  try {
+    const { data, error } = await sb.rpc("suggest_life_groups_for_pipeline", {
+      p_pipeline_id: pipelineId,
+    });
+    if (error || !data) return [];
+    return data as LgSuggestion[];
+  } catch { return []; }
+}
+
+export async function acceptLgSuggestion(sb: SupabaseClient, pipelineId: string, lgId: string): Promise<void> {
+  const { error } = await sb.rpc("pipeline_accept_lg_suggestion", {
+    p_pipeline_id: pipelineId, p_lg_id: lgId,
+  });
+  if (error) throw error;
+}
+
+export async function computeTopSuggestion(sb: SupabaseClient, pipelineId: string): Promise<string | null> {
+  try {
+    const { data, error } = await sb.rpc("compute_top_suggestion_for_pipeline", {
+      p_pipeline_id: pipelineId,
+    });
+    if (error) return null;
+    return (data as string) ?? null;
+  } catch { return null; }
+}

@@ -217,7 +217,7 @@ function MyCellTab({ member }: { member: Member | null }) {
   const { data: companions = [] } = useCellMembers(myCell?.id ?? null, member?.id ?? null);
 
   if (!member) return <NotLinkedMessage subject="a uma célula"/>;
-  if (!myCell)  return <NotLinkedMessage subject="a nenhuma célula"/>;
+  if (!myCell)  return <AwaitingLgMessage/>;
 
   const mapsUrl = myCell.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(myCell.address)}` : null;
 
@@ -506,6 +506,24 @@ function NotLinkedMessage({ subject }: { subject: string }) {
       <CardContent className="pt-8 pb-8 text-center">
         <p className="text-sm text-muted">Você ainda não está vinculado {subject}.</p>
         <p className="mt-1 text-xs text-muted">Fale com a liderança da sua célula para ser cadastrado.</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AwaitingLgMessage() {
+  return (
+    <Card className="border-2 border-dashed border-gold/40 bg-gradient-to-br from-gold/5 to-card">
+      <CardContent className="pt-8 pb-8 text-center">
+        <Sparkles className="mx-auto h-10 w-10 text-gold" />
+        <p className="mt-3 font-display text-lg text-navy">Aguardando indicação do seu Life Group</p>
+        <p className="mt-2 text-sm text-muted max-w-md mx-auto">
+          A liderança pastoral está cuidando de te indicar para o Life Group mais alinhado com o seu perfil e localização.
+          Em breve um pastor(a) entrará em contato.
+        </p>
+        <p className="mt-3 text-xs text-muted">
+          Enquanto isso, navegue pelos demais conteúdos da plataforma.
+        </p>
       </CardContent>
     </Card>
   );
