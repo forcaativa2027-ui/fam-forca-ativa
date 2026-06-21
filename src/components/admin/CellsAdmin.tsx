@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase/client";
 import { createCell, updateCell, deleteCell } from "@/services/cells";
 import { logAudit } from "@/services/audit";
 import type { Cell } from "@/types/domain";
+import { LgEngagementCard } from "./LgEngagementCard";
 
 const WEEKDAYS: [string, string][] = [
   ["domingo","Domingo"],["segunda","Segunda"],["terca","Terça"],
@@ -44,6 +45,7 @@ export function CellsAdmin() {
       meeting_time: c.meeting_time ? c.meeting_time.slice(0,5) : "",
       leader_id: null,
       host_id: null,
+      multiplication_target: c.multiplication_target ?? 12,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -61,6 +63,7 @@ export function CellsAdmin() {
         neighborhood: v.neighborhood || null,
         meeting_weekday: v.meeting_weekday ?? null,
         meeting_time: v.meeting_time || null,
+        multiplication_target: v.multiplication_target ?? 12,
       };
       if (editing) {
         await updateCell(supabase, editing.id, payload);
@@ -127,6 +130,9 @@ export function CellsAdmin() {
                 <Input type="time" {...register("meeting_time")} />
               </Field>
             </div>
+            <Field label="Meta de multiplicação (membros ativos)" error={errors.multiplication_target?.message}>
+              <Input type="number" min={3} max={50} {...register("multiplication_target")} placeholder="12" />
+            </Field>
             <Field label="Endereço" error={errors.address?.message}>
               <Input {...register("address")} placeholder="Rua, número, complemento" />
             </Field>
@@ -179,7 +185,7 @@ export function CellsAdmin() {
 function CellCard({ cell: c, onEdit, onRemove }: { cell: Cell; onEdit: (c: Cell) => void; onRemove: (c: Cell) => void }) {
   return (
     <Card className="border-l-4 border-l-gold">
-      <CardContent className="pt-4">
+      <CardContent className="pt-4 space-y-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <b className="block truncate text-navy">{c.name}</b>
@@ -193,6 +199,7 @@ function CellCard({ cell: c, onEdit, onRemove }: { cell: Cell; onEdit: (c: Cell)
             <Button onClick={() => onRemove(c)} variant="destructive" size="sm"><Trash2 className="h-3.5 w-3.5" /></Button>
           </div>
         </div>
+        <LgEngagementCard lgId={c.id} />
       </CardContent>
     </Card>
   );

@@ -71,6 +71,7 @@ export interface Cell {
   state:string|null; city:string|null; neighborhood:string|null;
   latitude:number|null; longitude:number|null;
   meeting_weekday:Weekday|null; meeting_time:string|null; is_active:boolean;
+  multiplication_target?:number;
 }
 export interface Profile { id:string; full_name:string; email:string|null; phone:string|null; role:UserRole; avatar_url:string|null; church_id:string|null; }
 export interface Member {
@@ -140,6 +141,19 @@ export interface VisitRequest {
   church_id: string | null; created_at: string;
 }
 export interface PendingCounts { prayer_pending: number; visit_pending: number; pipeline_new: number; }
+
+// Engajamento — evasão, badges, multiplicação
+export interface MemberAtRisk {
+  member_id: string; full_name: string; life_group_id: string | null;
+  church_id: string | null; phone: string | null; email: string | null;
+  presences_in_last_3: number; reports_count: number; last_seen_at: string | null;
+}
+export interface LgBadge {
+  key: string; label: string; description: string; icon: string;
+}
+export interface LgMultiplicationProgress {
+  current_count: number; target: number; percent: number;
+}
 
 // M3 — Cadastro inteligente / Visitor Pipeline
 export type PipelineStage = "novo"|"aguardando_contato"|"contato_realizado"|"convidado_culto"|"convidado_life_group"|"participou"|"discipulado"|"consolidacao"|"batizado"|"membro"|"servo"|"lider";

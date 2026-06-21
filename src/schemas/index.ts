@@ -66,6 +66,7 @@ export const cellSchema = z.object({
   meeting_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora invalida (HH:MM)").optional().or(z.literal("")),
   leader_id: z.string().uuid().optional().nullable(),
   host_id: z.string().uuid().optional().nullable(),
+  multiplication_target: z.coerce.number().int().min(3, "Minimo 3").max(50, "Maximo 50").default(12),
 });
 export type CellInput = z.infer<typeof cellSchema>;
 

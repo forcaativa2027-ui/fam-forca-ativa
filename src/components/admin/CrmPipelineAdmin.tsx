@@ -64,6 +64,7 @@ const STAGES: PipelineStage[] = [
 export function CrmPipelineAdmin() {
   const [stageFilter, setStageFilter] = useState<PipelineStage | "">("");
   const [churchFilter, setChurchFilter] = useState<string>("");
+  const [view, setView] = useState<"lista" | "kanban">("lista");
   const { data: items = [] } = usePipeline({ stage: stageFilter || undefined, communityId: churchFilter || null });
   const { data: churches = [] } = useChurches();
   const churchMap = new Map(churches.map((c) => [c.id, c]));
@@ -108,13 +109,30 @@ export function CrmPipelineAdmin() {
               ))}
             </div>
           </div>
+
+          {/* Toggle de visualização */}
+          <div className="flex items-center justify-end gap-1 border-t pt-3">
+            <span className="mr-2 text-[11px] font-bold uppercase tracking-wider text-muted">Visualizar:</span>
+            <button onClick={() => setView("lista")}
+              className={`rounded-md px-3 py-1 text-xs font-bold transition ${view === "lista" ? "bg-navy text-white" : "bg-card text-muted hover:bg-navy-50"}`}>
+              Lista
+            </button>
+            <button onClick={() => setView("kanban")}
+              className={`rounded-md px-3 py-1 text-xs font-bold transition ${view === "kanban" ? "bg-navy text-white" : "bg-card text-muted hover:bg-navy-50"}`}>
+              Kanban
+            </button>
+          </div>
         </CardContent>
       </Card>
 
-      <div className="space-y-2">
-        {items.length === 0 && <p className="text-sm italic text-muted">Nenhum visitante neste estágio.</p>}
-        {items.map((it) => <PipelineCard key={it.id} item={it} church={it.community_id ? churchMap.get(it.community_id) : undefined} />)}
-      </div>
+      {view === "lista" ? (
+        <div className="space-y-2">
+          {items.length === 0 && <p className="text-sm italic text-muted">Nenhum visitante neste estágio.</p>}
+          {items.map((it) => <PipelineCard key={it.id} item={it} church={it.community_id ? churchMap.get(it.community_id) : undefined} />)}
+        </div>
+      ) : (
+        <PipelineKanban items={stageFilter ? items : allByStage} stages={STAGES} stageLabels={STAGE_LABELS} stageColors={STAGE_COLORS} churchMap={churchMap} />
+      )}
     </div>
   );
 }
@@ -246,6 +264,111 @@ function Timeline({ item: it }: { item: VisitorPipeline }) {
           </li>
         ))}
       </ol>
+    </div>
+  );
+}
+
+// ============================================================
+// PIPELINE KANBAN — visualização alternativa em colunas
+// ============================================================
+function PipelineKanban({ items, stages, stageLabels, stageColors, churchMap }: {
+  items: VisitorPipeline[];
+  stages: PipelineStage[];
+  stageLabels: Record<PipelineStage, string>;
+  stageColors: Record<PipelineStage, string>;
+  churchMap: Map<string, Church>;
+}) {
+  const qc = useQueryClient();
+
+  async function moveTo(id: string, stage: PipelineStage) {
+    try {
+      await updatePipelineStage(supabase, id, stage);
+      await logAudit(supabase, "update", "visitor_pipeline", id, { stage });
+      qc.invalidateQueries({ queryKey: ["pipeline"] });
+      qc.invalidateQueries({ queryKey: ["acolhimento"] });
+      qc.invalidateQueries({ queryKey: ["pending-counts"] });
+    } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }
+  }
+
+  const byStage = stages.reduce<Record<PipelineStage, VisitorPipeline[]>>((acc, st) => {
+    acc[st] = items.filter((i) => i.stage === st);
+    return acc;
+  }, {} as Record<PipelineStage, VisitorPipeline[]>);
+
+  return (
+    <div className="overflow-x-auto pb-2">
+      <div className="flex min-w-max gap-3">
+        {stages.map((st) => {
+          const stItems = byStage[st];
+          return (
+            <div key={st} className="w-64 shrink-0">
+              <div className={`rounded-t-lg border-2 border-b-0 px-3 py-2 ${stageColors[st]}`}>
+                <div className="flex items-center justify-between">
+                  <b className="text-[10px] font-bold uppercase tracking-wider">{stageLabels[st]}</b>
+                  <span className="rounded-full bg-white/40 px-2 py-0.5 text-[10px] font-bold">{stItems.length}</span>
+                </div>
+              </div>
+              <div className="min-h-[200px] rounded-b-lg border-2 border-t-0 border-border bg-navy-50/30 p-2 space-y-1.5">
+                {stItems.length === 0 ? (
+                  <p className="py-4 text-center text-[11px] italic text-muted">vazio</p>
+                ) : (
+                  stItems.map((it) => <KanbanCard key={it.id} item={it} stages={stages} stageLabels={stageLabels} church={it.community_id ? churchMap.get(it.community_id) : undefined} onMove={moveTo} />)
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function KanbanCard({ item: it, stages, stageLabels, church, onMove }: {
+  item: VisitorPipeline;
+  stages: PipelineStage[];
+  stageLabels: Record<PipelineStage, string>;
+  church?: Church;
+  onMove: (id: string, stage: PipelineStage) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const idx = stages.indexOf(it.stage);
+  const next = idx >= 0 && idx < stages.length - 1 ? stages[idx + 1] : null;
+
+  return (
+    <div className="rounded-md border bg-card p-2 text-xs hover:shadow-md transition">
+      <button onClick={() => setOpen((o) => !o)} className="w-full text-left">
+        <b className="block truncate text-navy">{it.full_name}</b>
+        <p className="truncate text-[10px] text-muted">{INTENT_LABELS[it.intent]}</p>
+        {church && <p className="truncate text-[10px] text-muted">🏢 {church.name}</p>}
+        {(it.city || it.state) && <p className="truncate text-[10px] text-muted">📍 {[it.city, it.state].filter(Boolean).join(", ")}</p>}
+      </button>
+      {open && (
+        <div className="mt-2 border-t pt-2 space-y-1">
+          {it.phone && (
+            <a href={`https://wa.me/${it.phone.replace(/\D/g, '')}`} target="_blank" rel="noreferrer"
+              className="block rounded bg-green-50 px-2 py-1 text-[10px] font-bold text-green-700 hover:bg-green-100 text-center">
+              WhatsApp · {it.phone}
+            </a>
+          )}
+          {next && (
+            <button onClick={() => onMove(it.id, next)}
+              className="block w-full rounded bg-navy px-2 py-1 text-[10px] font-bold text-white hover:bg-navy-600">
+              Avançar → {stageLabels[next]}
+            </button>
+          )}
+          <details className="text-[10px]">
+            <summary className="cursor-pointer text-muted hover:text-navy">Mover para…</summary>
+            <div className="mt-1 grid grid-cols-2 gap-1">
+              {stages.filter((s) => s !== it.stage && s !== next).map((s) => (
+                <button key={s} onClick={() => onMove(it.id, s)}
+                  className="rounded bg-card px-1.5 py-1 text-[9px] font-semibold text-navy border hover:bg-navy-50">
+                  {stageLabels[s]}
+                </button>
+              ))}
+            </div>
+          </details>
+        </div>
+      )}
     </div>
   );
 }

@@ -170,3 +170,23 @@ export const useAcolhimento = (key: string) =>
     queryKey: ["acolhimento", key],
     queryFn: () => Pp.listAcolhimento(supabase, key as Parameters<typeof Pp.listAcolhimento>[1]),
   });
+
+// Engajamento — evasão, badges, multiplicação
+import * as Eg from "@/services/engagement";
+export const useMembersAtRisk = (opts?: { churchId?: string|null; lgId?: string|null }) =>
+  useQuery({
+    queryKey: ["members-at-risk", opts?.churchId ?? "all", opts?.lgId ?? "all"],
+    queryFn: () => Eg.listMembersAtRisk(supabase, opts),
+  });
+export const useLgBadges = (lgId: string | null) =>
+  useQuery({
+    queryKey: ["lg-badges", lgId],
+    queryFn: () => lgId ? Eg.getLgBadges(supabase, lgId) : Promise.resolve([]),
+    enabled: !!lgId,
+  });
+export const useLgMultiplicationProgress = (lgId: string | null) =>
+  useQuery({
+    queryKey: ["lg-progress", lgId],
+    queryFn: () => lgId ? Eg.getLgMultiplicationProgress(supabase, lgId) : Promise.resolve(null),
+    enabled: !!lgId,
+  });
