@@ -27,3 +27,34 @@ export async function getLgMultiplicationProgress(sb: SupabaseClient, lgId: stri
     return row as LgMultiplicationProgress;
   } catch { return null; }
 }
+
+// ============================================================
+// IA-1 — Indicadores Objetivos
+// ============================================================
+import type { LgIndicators, AggregateIndicators, AggregateLevel } from "@/types/domain";
+
+export async function getLgIndicators(sb: SupabaseClient, lgId: string): Promise<LgIndicators | null> {
+  try {
+    const { data, error } = await sb.rpc("get_lg_indicators", { p_lg_id: lgId });
+    if (error || !data) return null;
+    const row = Array.isArray(data) ? data[0] : data;
+    return row as LgIndicators;
+  } catch { return null; }
+}
+
+export async function getAllLgIndicators(sb: SupabaseClient, communityId?: string | null): Promise<LgIndicators[]> {
+  try {
+    const { data, error } = await sb.rpc("get_all_lg_indicators", { p_community_id: communityId ?? null });
+    if (error || !data) return [];
+    return data as LgIndicators[];
+  } catch { return []; }
+}
+
+export async function getAggregateIndicators(sb: SupabaseClient, level: AggregateLevel, scopeId: string): Promise<AggregateIndicators | null> {
+  try {
+    const { data, error } = await sb.rpc("get_aggregate_indicators", { p_level: level, p_scope_id: scopeId });
+    if (error || !data) return null;
+    const row = Array.isArray(data) ? data[0] : data;
+    return row as AggregateIndicators;
+  } catch { return null; }
+}

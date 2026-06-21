@@ -33,6 +33,8 @@ import { CommunitiesAdmin } from "./CommunitiesAdmin";
 import { CrmPipelineAdmin } from "./CrmPipelineAdmin";
 import { AcolhimentoAdmin } from "./AcolhimentoAdmin";
 import { EvasionAdmin } from "./EvasionAdmin";
+import { MinistriesAdmin } from "./MinistriesAdmin";
+import { HealthAdmin } from "./HealthAdmin";
 import { usePendingCounts } from "@/hooks/use-queries";
 
 export default function AdminPanel() {
@@ -76,6 +78,8 @@ export default function AdminPanel() {
             <TabsTrigger value="crm"><BadgeTab label="CRM" count={counts?.pipeline_new ?? 0} /></TabsTrigger>
             <TabsTrigger value="acolhimento">Acolhimento</TabsTrigger>
             <TabsTrigger value="evasao">Em risco</TabsTrigger>
+            <TabsTrigger value="ministerios">Ministérios</TabsTrigger>
+            <TabsTrigger value="saude">Saúde</TabsTrigger>
             <TabsTrigger value="mda">Estrutura MDA</TabsTrigger>
             <TabsTrigger value="audit">Auditoria</TabsTrigger>
           </TabsList>
@@ -98,6 +102,8 @@ export default function AdminPanel() {
         <TabsContent value="crm"><CrmPipelineAdmin /></TabsContent>
         <TabsContent value="acolhimento"><AcolhimentoAdmin /></TabsContent>
         <TabsContent value="evasao"><EvasionAdmin /></TabsContent>
+        <TabsContent value="ministerios"><MinistriesAdmin /></TabsContent>
+        <TabsContent value="saude"><HealthAdmin /></TabsContent>
         <TabsContent value="mda"><MdaStructure /></TabsContent>
         <TabsContent value="audit"><AuditView /></TabsContent>
       </Tabs>

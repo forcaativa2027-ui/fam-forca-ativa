@@ -225,3 +225,20 @@ export type WizardStep2Input = z.infer<typeof wizardStep2Schema>;
 export type WizardStep3Input = z.infer<typeof wizardStep3Schema>;
 export type WizardStep4Input = z.infer<typeof wizardStep4Schema>;
 export type WizardStep5Input = z.infer<typeof wizardStep5Schema>;
+
+// Ministérios
+export const ministrySchema = z.object({
+  name: reqText("Nome do ministério", 2),
+  description: optionalText,
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor hex inválida").optional().or(z.literal("")),
+  icon: optionalText,
+});
+export type MinistryInput = z.infer<typeof ministrySchema>;
+
+export const ministryPostSchema = z.object({
+  title: reqText("Título", 3),
+  body: optionalText,
+  cover_url: z.string().url("URL inválida").optional().or(z.literal("")),
+  is_published: z.boolean().default(true),
+});
+export type MinistryPostInput = z.infer<typeof ministryPostSchema>;

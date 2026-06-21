@@ -19,8 +19,8 @@ comment on column public.life_groups.multiplication_target is
 create or replace view public.members_at_risk_evasion as
 with last_3_reports_per_lg as (
   -- Pega os IDs dos últimos 3 relatórios de cada LG
-  select id, life_group_id, report_date,
-         row_number() over (partition by life_group_id order by report_date desc) as rn
+  select id, life_group_id, meeting_date,
+         row_number() over (partition by life_group_id order by meeting_date desc) as rn
   from public.meeting_reports
 ),
 recent_3 as (
@@ -46,7 +46,7 @@ member_presence_recent as (
       select count(*) from recent_3 r3 where r3.life_group_id = m.life_group_id
     ) as reports_count,
     (
-      select max(r.report_date)
+      select max(r.meeting_date)
       from public.report_attendance ra
       join public.meeting_reports r on r.id = ra.report_id
       where ra.member_id = m.id and ra.present = true
@@ -107,7 +107,7 @@ begin
   select count(*) into v_consecutive_reports
   from public.meeting_reports
   where life_group_id = p_lg_id
-    and report_date >= now() - interval '90 days';
+    and meeting_date >= now() - interval '90 days';
 
   -- Badges
   -- A: Casa Cheia — 10+ membros ativos

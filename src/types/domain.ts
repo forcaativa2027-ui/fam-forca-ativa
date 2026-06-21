@@ -155,6 +155,64 @@ export interface LgMultiplicationProgress {
   current_count: number; target: number; percent: number;
 }
 
+// Ministérios
+export type MinistryRole = "lider" | "vice" | "membro";
+export interface Ministry {
+  id: string; church_id: string;
+  name: string; slug: string | null; description: string | null;
+  leader_id: string | null; vice_leader_id: string | null;
+  color: string | null; icon: string | null; is_active: boolean;
+  created_at: string;
+}
+export interface MinistryMember {
+  id: string; ministry_id: string; member_id: string;
+  role: MinistryRole; joined_at: string; is_active: boolean;
+}
+export interface MinistryPost {
+  id: string; ministry_id: string; author_id: string | null;
+  title: string; body: string | null; cover_url: string | null;
+  is_published: boolean; published_at: string | null; created_at: string;
+}
+
+// IA-1 — Indicadores objetivos
+export interface LgIndicators {
+  life_group_id: string;
+  life_group_name?: string;
+  church_id?: string | null;
+  attendance_avg_last_4: number;
+  attendance_avg_last_12: number;
+  members_now: number;
+  members_30d_ago: number;
+  members_90d_ago: number;
+  growth_30d_pct: number;
+  growth_90d_pct: number;
+  new_converts_90d: number;
+  discipleship_rate_pct: number;
+  report_consistency_pct: number;
+  visitors_avg_last_4: number;
+  decisions_90d: number;
+  visits_made_90d: number;
+  multiplication_target: number;
+  multiplication_pct: number;
+  last_report_date: string | null;
+  reports_last_90d: number;
+}
+export type AggregateLevel = "sector" | "area" | "district" | "church";
+export interface AggregateIndicators {
+  level: AggregateLevel;
+  scope_id: string;
+  total_lgs: number;
+  total_members: number;
+  total_new_converts_90d: number;
+  attendance_avg: number;
+  growth_30d_pct: number;
+  discipleship_rate_pct: number;
+  decisions_90d: number;
+  visits_made_90d: number;
+  multiplication_pct_avg: number;
+  report_consistency_pct: number;
+}
+
 // M3 — Cadastro inteligente / Visitor Pipeline
 export type PipelineStage = "novo"|"aguardando_contato"|"contato_realizado"|"convidado_culto"|"convidado_life_group"|"participou"|"discipulado"|"consolidacao"|"batizado"|"membro"|"servo"|"lider";
 export type PipelineIntent = "lifegroup"|"discipulado"|"acompanhamento_pastoral"|"visita"|"conhecer"|"batismo"|"servir"|"outro";

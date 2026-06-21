@@ -190,3 +190,44 @@ export const useLgMultiplicationProgress = (lgId: string | null) =>
     queryFn: () => lgId ? Eg.getLgMultiplicationProgress(supabase, lgId) : Promise.resolve(null),
     enabled: !!lgId,
   });
+
+// IA-1 — Indicadores objetivos
+export const useLgIndicators = (lgId: string | null) => useQuery({
+  queryKey: ["lg-indicators", lgId],
+  queryFn: () => lgId ? Eg.getLgIndicators(supabase, lgId) : Promise.resolve(null),
+  enabled: !!lgId,
+});
+export const useAllLgIndicators = (communityId?: string | null) => useQuery({
+  queryKey: ["all-lg-indicators", communityId ?? "all"],
+  queryFn: () => Eg.getAllLgIndicators(supabase, communityId),
+});
+export const useAggregateIndicators = (level: import("@/types/domain").AggregateLevel | null, scopeId: string | null) =>
+  useQuery({
+    queryKey: ["aggregate-indicators", level, scopeId],
+    queryFn: () => (level && scopeId) ? Eg.getAggregateIndicators(supabase, level, scopeId) : Promise.resolve(null),
+    enabled: !!level && !!scopeId,
+  });
+
+// Ministérios
+import * as Mn from "@/services/ministries";
+export const useMinistries = (churchId?: string|null) =>
+  useQuery({
+    queryKey: ["ministries", churchId ?? "all"],
+    queryFn: () => Mn.listMinistries(supabase, churchId),
+  });
+export const useMyMinistries = () =>
+  useQuery({
+    queryKey: ["my-ministries"],
+    queryFn: () => Mn.listMyMinistries(supabase),
+  });
+export const useMinistryMembers = (ministryId: string | null) =>
+  useQuery({
+    queryKey: ["ministry-members", ministryId],
+    queryFn: () => ministryId ? Mn.listMinistryMembers(supabase, ministryId) : Promise.resolve([]),
+    enabled: !!ministryId,
+  });
+export const useMinistryPosts = (ministryId?: string|null) =>
+  useQuery({
+    queryKey: ["ministry-posts", ministryId ?? "all"],
+    queryFn: () => Mn.listMinistryPosts(supabase, ministryId),
+  });

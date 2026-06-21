@@ -7,12 +7,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   LogOut, Sparkles, AlertTriangle, BarChart3, Users, Heart, Map,
   Clock, MessageSquareHeart, User, Check, Plus, Calendar as Cal,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { MyMinistriesPanel } from "./MyMinistriesPanel";
 import { supabase } from "@/lib/supabase/client";
 import {
   useMyProfile, useDashboard, useChurches, useMdaAlerts,
@@ -94,6 +96,7 @@ export default function PanelDashboard() {
               <TabsTrigger value="discipulado"><Heart className="mr-1 h-4 w-4" />Discipulado</TabsTrigger>
               <TabsTrigger value="jornada"><Map className="mr-1 h-4 w-4" />Minha jornada</TabsTrigger>
               <TabsTrigger value="oracao"><MessageSquareHeart className="mr-1 h-4 w-4" />Oração</TabsTrigger>
+              <TabsTrigger value="ministerio"><Award className="mr-1 h-4 w-4" />Ministério</TabsTrigger>
               <TabsTrigger value="perfil"><User className="mr-1 h-4 w-4" />Meu perfil</TabsTrigger>
             </TabsList>
           </div>
@@ -103,6 +106,7 @@ export default function PanelDashboard() {
           <TabsContent value="discipulado"><DiscipleshipTab member={member ?? null} /></TabsContent>
           <TabsContent value="jornada"><JourneyTab member={member ?? null} /></TabsContent>
           <TabsContent value="oracao"><PrayerTab member={member ?? null} /></TabsContent>
+          <TabsContent value="ministerio"><MyMinistriesPanel /></TabsContent>
           <TabsContent value="perfil"><ProfileTab /></TabsContent>
         </Tabs>
       </main>
