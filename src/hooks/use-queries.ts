@@ -239,3 +239,12 @@ export const useLgSuggestions = (pipelineId: string | null) =>
     queryFn: () => pipelineId ? Pp.suggestLifeGroups(supabase, pipelineId) : Promise.resolve([]),
     enabled: !!pipelineId,
   });
+
+// Tela detalhada do relatório semanal
+import { getReportFull } from "@/services/weeklyReports";
+export const useReportFull = (reportId: string | null) =>
+  useQuery({
+    queryKey: ["report-full", reportId],
+    queryFn: () => reportId ? getReportFull(supabase, reportId) : Promise.resolve(null),
+    enabled: !!reportId,
+  });

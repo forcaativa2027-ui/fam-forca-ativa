@@ -23,6 +23,23 @@ export interface MeetingReport {
   visitors_count: number; visits_made: number; decisions_count: number;
   needs: string | null; summary: string | null; created_at: string;
 }
+
+// Tela detalhada: relatório + nomes/dados ao redor
+export interface ReportAttendanceRow {
+  id: string; member_id: string; member_name: string;
+  present: boolean; kind: string | null; absence_reason: string | null;
+}
+export interface ReportVisitRow {
+  id: string; visitor_name: string; phone: string | null; notes: string | null;
+}
+export interface ReportFull {
+  report: MeetingReport;
+  cell: Cell | null;
+  leader_name: string | null;
+  reporter_name: string | null;
+  attendance: ReportAttendanceRow[];
+  visits: ReportVisitRow[];
+}
 export interface MonthlyReport {
   id: string; life_group_id: string; year: number; month: number;
   nucleo: string | null; closed_at: string | null; created_at: string;

@@ -3,7 +3,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, ClipboardList } from "lucide-react";
+import { Plus, Trash2, ClipboardList, Eye } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -224,14 +225,19 @@ export function WeeklyReportsAdmin() {
             {reports.length === 0 && <p className="text-sm italic text-muted">Nenhum relatório salvo para esta célula.</p>}
             {reports.map((r) => (
               <div key={r.id} className="flex items-center justify-between rounded-xl border bg-card p-3">
-                <div>
+                <div className="min-w-0 flex-1">
                   <b className="text-navy">{new Date(r.meeting_date).toLocaleDateString("pt-BR")}</b>
                   {r.share_theme && <p className="text-xs text-muted">{r.share_theme}</p>}
                   <p className="mt-1 text-[11px] text-muted">
                     {r.total_present ?? r.attendance_count} presentes · {r.visitors_count} visita(s) · {r.decisions_count} decisão(ões)
                   </p>
                 </div>
-                <Button onClick={() => remove(r.id)} variant="destructive" size="sm"><Trash2 className="h-3.5 w-3.5" /></Button>
+                <div className="flex gap-1">
+                  <Button asChild variant="outline" size="sm" className="gap-1">
+                    <Link href={`/admin/relatorio/${r.id}`}><Eye className="h-3.5 w-3.5" />Ver</Link>
+                  </Button>
+                  <Button onClick={() => remove(r.id)} variant="destructive" size="sm"><Trash2 className="h-3.5 w-3.5" /></Button>
+                </div>
               </div>
             ))}
           </div>
