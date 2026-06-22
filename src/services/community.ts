@@ -72,3 +72,29 @@ export function fallbackCommunity(): Church {
     is_active: true,
   };
 }
+
+// ============================================================
+// C13b — Estrutura Organizacional
+// ============================================================
+import type { ChurchDependencies } from "@/types/domain";
+
+export async function getChurchDependencies(sb: SupabaseClient, churchId: string): Promise<ChurchDependencies | null> {
+  try {
+    const { data, error } = await sb.rpc("church_dependencies", { p_church_id: churchId });
+    if (error || !data) return null;
+    return data as ChurchDependencies;
+  } catch { return null; }
+}
+
+export async function moveChurch(sb: SupabaseClient, churchId: string, newParentId: string | null): Promise<void> {
+  const { error } = await sb.rpc("move_church", {
+    p_church_id: churchId,
+    p_new_parent_id: newParentId,
+  });
+  if (error) throw error;
+}
+
+export async function deleteChurch(sb: SupabaseClient, churchId: string): Promise<void> {
+  const { error } = await sb.from("churches").delete().eq("id", churchId);
+  if (error) throw error;
+}

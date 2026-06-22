@@ -30,6 +30,17 @@ const communitySchema = z.object({
   secondary_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor hex inválida").optional().or(z.literal("")),
   site_url: z.string().url("URL inválida").optional().or(z.literal("")),
   whatsapp_phone: z.string().trim().optional().or(z.literal("")),
+  // C13b
+  phone_primary: z.string().trim().optional().or(z.literal("")),
+  phone_secondary: z.string().trim().optional().or(z.literal("")),
+  email: z.string().email("E-mail inválido").optional().or(z.literal("")),
+  cep: z.string().regex(/^\d{5}-?\d{3}$/, "CEP inválido").optional().or(z.literal("")),
+  numero: z.string().trim().optional().or(z.literal("")),
+  complemento: z.string().trim().optional().or(z.literal("")),
+  referencia: z.string().trim().optional().or(z.literal("")),
+  founded_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida").optional().or(z.literal("")),
+  status_admin: z.enum(["ativa","em_implantacao","inativa"]).default("ativa"),
+  observations: z.string().trim().optional().or(z.literal("")),
 });
 type CommunityInput = z.infer<typeof communitySchema>;
 
@@ -63,12 +74,22 @@ export function CommunitiesAdmin() {
       secondary_color: c.secondary_color ?? "#C9A227",
       site_url: c.site_url ?? "",
       whatsapp_phone: c.whatsapp_phone ?? "",
+      phone_primary: c.phone_primary ?? "",
+      phone_secondary: c.phone_secondary ?? "",
+      email: c.email ?? "",
+      cep: c.cep ?? "",
+      numero: c.numero ?? "",
+      complemento: c.complemento ?? "",
+      referencia: c.referencia ?? "",
+      founded_at: c.founded_at ?? "",
+      status_admin: (c.status_admin as "ativa") ?? "ativa",
+      observations: c.observations ?? "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   function cancelEdit() {
     setEditing(null);
-    reset({ type: "sede", primary_color: "#0E2A47", secondary_color: "#C9A227" });
+    reset({ type: "sede", primary_color: "#0E2A47", secondary_color: "#C9A227", status_admin: "ativa" });
   }
 
   async function onSubmit(v: CommunityInput) {
@@ -82,7 +103,17 @@ export function CommunitiesAdmin() {
         logo_url: v.logo_url || null, banner_url: v.banner_url || null,
         primary_color: v.primary_color || null, secondary_color: v.secondary_color || null,
         site_url: v.site_url || null, whatsapp_phone: v.whatsapp_phone || null,
-        is_active: true,
+        phone_primary: v.phone_primary || null,
+        phone_secondary: v.phone_secondary || null,
+        email: v.email || null,
+        cep: v.cep || null,
+        numero: v.numero || null,
+        complemento: v.complemento || null,
+        referencia: v.referencia || null,
+        founded_at: v.founded_at || null,
+        status_admin: v.status_admin || "ativa",
+        observations: v.observations || null,
+        is_active: v.status_admin !== "inativa",
       };
       console.log("[CommunitiesAdmin] Payload:", payload);
 
@@ -164,7 +195,7 @@ export function CommunitiesAdmin() {
                   <option value="igreja_local">Igreja Local</option>
                 </select>
               </Field>
-              <Field label="Comunidade pai (vincula a uma sede)">
+              <Field label="Comunidade Mãe (vincula a uma sede)">
                 <select {...register("parent_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
                   <option value="">— Nenhuma —</option>
                   {possibleParents.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -176,10 +207,77 @@ export function CommunitiesAdmin() {
               <Input {...register("short_description")} placeholder="Frase que aparece no footer e meta tags" />
             </Field>
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Field label="Estado"><Input {...register("state")} placeholder="DF" maxLength={3} /></Field>
-              <Field label="Cidade"><Input {...register("city")} placeholder="Brasília" /></Field>
-              <Field label="Endereço"><Input {...register("address")} /></Field>
+            {/* Endereço estruturado */}
+            <div className="rounded-xl border bg-navy-50/30 p-3 space-y-3">
+              <Label className="block font-bold uppercase tracking-wider text-navy-600 text-xs">Endereço</Label>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Field label="CEP" error={errors.cep?.message}>
+                  <Input {...register("cep")} placeholder="00000-000" maxLength={9} />
+                </Field>
+                <Field label="Estado">
+                  <Input {...register("state")} placeholder="DF" maxLength={3} />
+                </Field>
+                <Field label="Cidade">
+                  <Input {...register("city")} placeholder="Brasília" />
+                </Field>
+              </div>
+              <Field label="Logradouro">
+                <Input {...register("address")} placeholder="Rua, Avenida..." />
+              </Field>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Número">
+                  <Input {...register("numero")} placeholder="123" />
+                </Field>
+                <Field label="Complemento">
+                  <Input {...register("complemento")} placeholder="Sala, andar..." />
+                </Field>
+              </div>
+              <Field label="Ponto de referência">
+                <Input {...register("referencia")} placeholder="Em frente ao mercado X" />
+              </Field>
+            </div>
+
+            {/* Contato */}
+            <div className="rounded-xl border bg-gold/5 p-3 space-y-3">
+              <Label className="block font-bold uppercase tracking-wider text-gold text-xs">Contato</Label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Telefone principal">
+                  <Input {...register("phone_primary")} placeholder="(00) 0000-0000" />
+                </Field>
+                <Field label="Telefone secundário">
+                  <Input {...register("phone_secondary")} placeholder="(00) 0000-0000" />
+                </Field>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="WhatsApp">
+                  <Input {...register("whatsapp_phone")} placeholder="(00) 90000-0000" />
+                </Field>
+                <Field label="E-mail" error={errors.email?.message}>
+                  <Input type="email" {...register("email")} placeholder="contato@comunidade.com" />
+                </Field>
+              </div>
+            </div>
+
+            {/* Informações administrativas */}
+            <div className="rounded-xl border bg-card p-3 space-y-3">
+              <Label className="block font-bold uppercase tracking-wider text-navy-600 text-xs">Informações administrativas</Label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Data de fundação" error={errors.founded_at?.message}>
+                  <Input type="date" {...register("founded_at")} />
+                </Field>
+                <Field label="Situação">
+                  <select {...register("status_admin")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                    <option value="ativa">🟢 Ativa</option>
+                    <option value="em_implantacao">🟡 Em Implantação</option>
+                    <option value="inativa">⚪ Inativa</option>
+                  </select>
+                </Field>
+              </div>
+              <Field label="Observações">
+                <textarea {...register("observations")} rows={2}
+                  className="w-full rounded-md border bg-background p-2 text-sm"
+                  placeholder="Observações livres" />
+              </Field>
             </div>
 
             <details className="rounded-md border bg-navy-50/50 p-3" open>

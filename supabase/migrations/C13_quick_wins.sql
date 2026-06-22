@@ -32,6 +32,29 @@ comment on column public.life_groups.founded_at is 'Data de fundação do LG';
 -- ---------- 3) Seed de comunidades (Sedes + Núcleos) ----------
 -- Usa slug como chave de idempotência. Repetir o SQL não duplica.
 
+-- Backfill defensivo: gera slug a partir do nome se estiver vazio
+-- (evita falha no índice unique se houver linhas antigas sem slug)
+update public.churches
+   set slug = lower(regexp_replace(name, '[^a-zA-Z0-9]+', '-', 'g'))
+ where slug is null or slug = '';
+
+-- Remove índice parcial anterior se existir (criado em tentativa anterior com WHERE).
+-- ON CONFLICT precisa de constraint ou índice unique COMPLETO.
+drop index if exists public.ux_churches_slug;
+
+-- Cria constraint UNIQUE explícita (mais robusta que índice solto para ON CONFLICT).
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname  = 'ux_churches_slug_uniq'
+      and conrelid = 'public.churches'::regclass
+  ) then
+    alter table public.churches
+      add constraint ux_churches_slug_uniq unique (slug);
+  end if;
+end $$;
+
 -- Helper: insere ou atualiza uma comunidade
 do $$
 declare

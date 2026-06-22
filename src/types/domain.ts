@@ -104,6 +104,7 @@ export interface Finance {
   created_at: string;
 }
 
+export type ChurchStatus = "ativa"|"em_implantacao"|"inativa";
 export interface Church {
   id:string; name:string; type:ChurchType; parent_id:string|null;
   address:string|null; city:string|null; state:string|null;
@@ -112,6 +113,20 @@ export interface Church {
   primary_color:string|null; secondary_color:string|null;
   short_description:string|null; site_url:string|null; whatsapp_phone:string|null;
   is_active?:boolean;
+  // Caderno C13b
+  phone_primary?:string|null;
+  phone_secondary?:string|null;
+  email?:string|null;
+  cep?:string|null;
+  numero?:string|null;
+  complemento?:string|null;
+  referencia?:string|null;
+  founded_at?:string|null;
+  status_admin?:ChurchStatus;
+  observations?:string|null;
+}
+export interface ChurchDependencies {
+  children:number; life_groups:number; members:number; reports:number; total:number;
 }
 export interface District { id:string; church_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
 export interface Area { id:string; district_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
