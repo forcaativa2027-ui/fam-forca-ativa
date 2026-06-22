@@ -59,15 +59,22 @@ export const cellSchema = z.object({
   name: reqText("Nome da celula"),
   sector_id: z.string().uuid("Setor invalido"),
   address: optionalText,
+  cep: z.string().regex(/^\d{5}-?\d{3}$/, "CEP invalido (00000-000)").optional().or(z.literal("")),
+  numero: optionalText,
+  complemento: optionalText,
   state: optionalText,
   city: optionalText,
   neighborhood: optionalText,
   meeting_weekday: z.enum(["domingo","segunda","terca","quarta","quinta","sexta","sabado"]).optional().nullable(),
   meeting_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora invalida (HH:MM)").optional().or(z.literal("")),
   leader_id: z.string().uuid().optional().nullable(),
+  coleader_id: z.string().uuid().optional().nullable(),
   host_id: z.string().uuid().optional().nullable(),
+  host_assistant_id: z.string().uuid().optional().nullable(),
   multiplication_target: z.coerce.number().int().min(3, "Minimo 3").max(50, "Maximo 50").default(12),
   target_audience: z.enum(["misto","jovens","adolescentes","adultos","casais","terceira_idade","mulheres","homens","outro"]).default("misto"),
+  status_lg: z.enum(["em_formacao","ativo","em_multiplicacao","multiplicado","encerrado"]).default("ativo"),
+  founded_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data invalida").optional().or(z.literal("")),
 });
 export type CellInput = z.infer<typeof cellSchema>;
 

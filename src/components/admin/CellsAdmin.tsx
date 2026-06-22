@@ -44,9 +44,16 @@ export function CellsAdmin() {
       meeting_weekday: c.meeting_weekday,
       meeting_time: c.meeting_time ? c.meeting_time.slice(0,5) : "",
       leader_id: null,
-      host_id: null,
+      coleader_id: c.coleader_id,
+      host_id: c.host_id,
+      host_assistant_id: c.host_assistant_id ?? null,
       multiplication_target: c.multiplication_target ?? 12,
       target_audience: (c.target_audience as "misto") ?? "misto",
+      status_lg: (c.status_lg as "ativo") ?? "ativo",
+      cep: c.cep ?? "",
+      numero: c.numero ?? "",
+      complemento: c.complemento ?? "",
+      founded_at: c.founded_at ?? "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -66,6 +73,14 @@ export function CellsAdmin() {
         meeting_time: v.meeting_time || null,
         multiplication_target: v.multiplication_target ?? 12,
         target_audience: v.target_audience ?? "misto",
+        status_lg: v.status_lg ?? "ativo",
+        cep: v.cep || null,
+        numero: v.numero || null,
+        complemento: v.complemento || null,
+        coleader_id: v.coleader_id || null,
+        host_id: v.host_id || null,
+        host_assistant_id: v.host_assistant_id || null,
+        founded_at: v.founded_at || null,
       };
       if (editing) {
         await updateCell(supabase, editing.id, payload);
@@ -148,19 +163,93 @@ export function CellsAdmin() {
                 <option value="outro">Outro</option>
               </select>
             </Field>
-            <Field label="Endereço" error={errors.address?.message}>
-              <Input {...register("address")} placeholder="Rua, número, complemento" />
+
+            {/* Status do LG (Caderno 13) */}
+            <Field label="Status do Life Group">
+              <select {...register("status_lg")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="em_formacao">🟡 Em Formação</option>
+                <option value="ativo">🟢 Ativo</option>
+                <option value="em_multiplicacao">✂️ Em Multiplicação</option>
+                <option value="multiplicado">⭐ Multiplicado</option>
+                <option value="encerrado">⚪ Encerrado</option>
+              </select>
             </Field>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Field label="Estado" error={errors.state?.message}>
-                <Input {...register("state")} placeholder="Ex: AM" maxLength={3} />
-              </Field>
-              <Field label="Cidade" error={errors.city?.message}>
-                <Input {...register("city")} placeholder="Ex: Manaus" />
-              </Field>
-              <Field label="Bairro" error={errors.neighborhood?.message}>
-                <Input {...register("neighborhood")} placeholder="Ex: Praça 14" />
-              </Field>
+
+            <Field label="Data de fundação" error={errors.founded_at?.message}>
+              <Input type="date" {...register("founded_at")} />
+            </Field>
+
+            {/* Endereço estruturado (Caderno 13) */}
+            <div className="rounded-xl border bg-navy-50/30 p-3 space-y-3">
+              <Label className="block font-bold uppercase tracking-wider text-navy-600 text-xs">Endereço</Label>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Field label="CEP" error={errors.cep?.message}>
+                  <Input {...register("cep")} placeholder="00000-000" maxLength={9} />
+                </Field>
+                <Field label="Estado" error={errors.state?.message}>
+                  <Input {...register("state")} placeholder="AM" maxLength={3} />
+                </Field>
+                <Field label="Cidade" error={errors.city?.message}>
+                  <Input {...register("city")} placeholder="Manaus" />
+                </Field>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Bairro" error={errors.neighborhood?.message}>
+                  <Input {...register("neighborhood")} placeholder="Centro" />
+                </Field>
+                <Field label="Logradouro" error={errors.address?.message}>
+                  <Input {...register("address")} placeholder="Rua / Avenida" />
+                </Field>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Número" error={errors.numero?.message}>
+                  <Input {...register("numero")} placeholder="123" />
+                </Field>
+                <Field label="Complemento" error={errors.complemento?.message}>
+                  <Input {...register("complemento")} placeholder="Apto 201, bloco B" />
+                </Field>
+              </div>
+            </div>
+            {/* Equipe do LG (Caderno 13) */}
+            <div className="rounded-xl border bg-gold/5 p-3 space-y-3">
+              <Label className="block font-bold uppercase tracking-wider text-gold text-xs">Equipe do Life Group</Label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Líder">
+                  <select {...register("leader_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                    <option value="">— Sem líder definido —</option>
+                    {members.filter(m => m.profile_id).map(m =>
+                      <option key={m.id} value={m.profile_id ?? ""}>{m.full_name}</option>
+                    )}
+                  </select>
+                </Field>
+                <Field label="Co-líder">
+                  <select {...register("coleader_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                    <option value="">— Sem co-líder —</option>
+                    {members.filter(m => m.profile_id).map(m =>
+                      <option key={m.id} value={m.profile_id ?? ""}>{m.full_name}</option>
+                    )}
+                  </select>
+                </Field>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Anfitrião principal">
+                  <select {...register("host_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                    <option value="">— Sem anfitrião —</option>
+                    {members.filter(m => m.profile_id).map(m =>
+                      <option key={m.id} value={m.profile_id ?? ""}>{m.full_name}</option>
+                    )}
+                  </select>
+                </Field>
+                <Field label="Anfitrião auxiliar">
+                  <select {...register("host_assistant_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                    <option value="">— Sem auxiliar —</option>
+                    {members.filter(m => m.profile_id).map(m =>
+                      <option key={m.id} value={m.profile_id ?? ""}>{m.full_name}</option>
+                    )}
+                  </select>
+                </Field>
+              </div>
+              <p className="text-[10px] text-muted">Anfitriões podem ser o próprio líder, co-líder ou membros distintos.</p>
             </div>
             {err && <p className="text-sm text-destructive">{err}</p>}
             <Button type="submit" disabled={isSubmitting} className="gap-2">
@@ -204,6 +293,7 @@ function CellCard({ cell: c, onEdit, onRemove }: { cell: Cell; onEdit: (c: Cell)
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <b className="block truncate text-navy">{c.name}</b>
+            {c.status_lg && <LgStatusBadge status={c.status_lg} />}
             {c.meeting_weekday && c.meeting_time && (
               <p className="mt-1 flex items-center gap-1 text-xs text-muted"><Clock className="h-3 w-3" />{WEEKDAYS.find(([v])=>v===c.meeting_weekday)?.[1]} às {c.meeting_time.slice(0,5)}</p>
             )}
@@ -226,5 +316,23 @@ function Field({ label, error, children }: { label: string; error?: string; chil
       <Label>{label}</Label>{children}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
+  );
+}
+
+const LG_STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
+  em_formacao:      { label: "Em Formação",      cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
+  ativo:            { label: "Ativo",            cls: "bg-green-50 text-green-700 border-green-200" },
+  em_multiplicacao: { label: "Em Multiplicação", cls: "bg-gold/15 text-gold border-gold/30" },
+  multiplicado:     { label: "Multiplicado",     cls: "bg-purple-50 text-purple-700 border-purple-200" },
+  encerrado:        { label: "Encerrado",        cls: "bg-gray-100 text-gray-600 border-gray-300" },
+};
+
+function LgStatusBadge({ status }: { status: string }) {
+  const cfg = LG_STATUS_CONFIG[status];
+  if (!cfg) return null;
+  return (
+    <span className={`mt-1 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase ${cfg.cls}`}>
+      {cfg.label}
+    </span>
   );
 }

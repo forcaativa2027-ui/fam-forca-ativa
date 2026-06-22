@@ -117,15 +117,20 @@ export interface District { id:string; church_id:string; name:string; mother_id:
 export interface Area { id:string; district_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
 export interface Sector { id:string; area_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
 export type TargetAudience = "misto"|"jovens"|"adolescentes"|"adultos"|"casais"|"terceira_idade"|"mulheres"|"homens"|"outro";
+export type LgStatus = "em_formacao"|"ativo"|"em_multiplicacao"|"multiplicado"|"encerrado";
 export interface Cell {
   id:string; name:string; sector_id:string|null; church_id:string|null;
   leader_id:string|null; coleader_id:string|null; host_id:string|null; supervisor_id:string|null;
+  host_assistant_id?:string|null;
   mother_cell_id:string|null; address:string|null;
+  cep?:string|null; numero?:string|null; complemento?:string|null;
   state:string|null; city:string|null; neighborhood:string|null;
   latitude:number|null; longitude:number|null;
   meeting_weekday:Weekday|null; meeting_time:string|null; is_active:boolean;
   multiplication_target?:number;
   target_audience?:TargetAudience;
+  status_lg?:LgStatus;
+  founded_at?:string|null;
 }
 export interface Profile { id:string; full_name:string; email:string|null; phone:string|null; role:UserRole; avatar_url:string|null; church_id:string|null; }
 export interface Member {
