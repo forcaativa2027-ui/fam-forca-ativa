@@ -15,6 +15,8 @@ export type AuditAction = "insert"|"update"|"delete"|"login"|"logout"|"export"|"
 
 // B4b — Relatorios
 export type WeeklyAttendanceKind = "membro" | "frequentador";
+export type LgHealth = "muito_saudavel" | "saudavel" | "atencao" | "necessita_apoio";
+
 export interface MeetingReport {
   id: string; life_group_id: string; meeting_date: string; weekday: Weekday | null;
   share_theme: string | null; bible_text: string | null;
@@ -22,12 +24,45 @@ export interface MeetingReport {
   attendance_count: number; frequentadores_count: number; total_present: number | null;
   visitors_count: number; visits_made: number; decisions_count: number;
   needs: string | null; summary: string | null; created_at: string;
+  // Indicadores semanais (Caderno 11-B parte 1)
+  members_with_disciplers?: number;
+  mda_15_dias_happened?: boolean;
+  mda_15_dias_count?: number;
+  ge_happened?: boolean;
+  ge_location?: string | null;
+  ge_when?: string | null;
+  oferta_pix?: number;
+  oferta_especie?: number;
+  ebd_count?: number;
+  cc_count?: number;
+  cel_count?: number;
+  kg_amor?: number;
+  // Discipulado
+  disc_realizados?: number; disc_ativos?: number; disc_encontros?: number;
+  disc_interrompidos?: number; disc_novos?: number;
+  // Consolidação
+  cons_retornantes?: number; cons_acompanhamento?: number;
+  cons_integrados?: number; cons_novos_membros?: number;
+  // Liderança
+  lid_aux_treinamento?: boolean; lid_em_formacao?: boolean;
+  lid_potencial_multiplicador?: boolean; lid_observacoes?: string | null;
+  // Multiplicação
+  mult_filha_preparacao?: boolean; mult_nova_lideranca?: boolean; mult_potencial?: boolean;
+  // Saúde
+  saude_status?: LgHealth | null; saude_comentarios?: string | null;
+  // Necessidades pastorais
+  nec_oracao_urgente?: boolean; nec_visita_pastoral?: boolean;
+  nec_problema_familiar?: boolean; nec_problema_espiritual?: boolean;
+  nec_encaminhar_supervisor?: boolean;
 }
 
 // Tela detalhada: relatório + nomes/dados ao redor
 export interface ReportAttendanceRow {
   id: string; member_id: string; member_name: string;
   present: boolean; kind: string | null; absence_reason: string | null;
+  had_mda_15_dias?: boolean;
+  had_cc?: boolean;
+  had_cel?: boolean;
 }
 export interface ReportVisitRow {
   id: string; visitor_name: string; phone: string | null; notes: string | null;

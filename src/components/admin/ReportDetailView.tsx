@@ -119,6 +119,54 @@ export function ReportDetailView({ reportId }: { reportId: string }) {
           <Stat label="Decisões por Cristo" value={report.decisions_count} icon={<Heart />} accent="red" />
         </section>
 
+        {/* Indicadores da semana (Caderno 11-B) */}
+        <Section icon={<BookOpen />} title="Indicadores da semana">
+          <div className="grid gap-2 sm:grid-cols-4">
+            <SmallStat label="Membros c/ discipuladores" value={report.members_with_disciplers ?? 0} />
+            <SmallStat label="EBD (membros)" value={report.ebd_count ?? 0} />
+            <SmallStat label="CC — Cap. da Casa" value={report.cc_count ?? 0} />
+            <SmallStat label="CEL — Cap. da Célula" value={report.cel_count ?? 0} />
+          </div>
+
+          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+            <div className="rounded-md border bg-card p-2">
+              <p className="text-[10px] uppercase tracking-wider text-muted">Oferta PIX</p>
+              <p className="text-xl font-bold text-navy">R$ {(report.oferta_pix ?? 0).toFixed(2).replace(".", ",")}</p>
+            </div>
+            <div className="rounded-md border bg-card p-2">
+              <p className="text-[10px] uppercase tracking-wider text-muted">Oferta em espécie</p>
+              <p className="text-xl font-bold text-navy">R$ {(report.oferta_especie ?? 0).toFixed(2).replace(".", ",")}</p>
+            </div>
+            <div className="rounded-md border bg-card p-2">
+              <p className="text-[10px] uppercase tracking-wider text-muted">KG do Amor</p>
+              <p className="text-xl font-bold text-navy">{(report.kg_amor ?? 0).toFixed(1).replace(".", ",")} kg</p>
+            </div>
+          </div>
+
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <div className={`rounded-md border-l-4 p-2 ${report.mda_15_dias_happened ? "border-l-green-500 bg-green-50/50" : "border-l-gray-300 bg-gray-50/30"}`}>
+              <p className="text-[10px] uppercase tracking-wider text-muted">MDA 15 dias</p>
+              <p className="text-sm">
+                {report.mda_15_dias_happened
+                  ? <b className="text-green-700">Sim — {report.mda_15_dias_count ?? 0} membro(s) participaram</b>
+                  : <span className="text-muted italic">Não houve nesta semana</span>}
+              </p>
+            </div>
+            <div className={`rounded-md border-l-4 p-2 ${report.ge_happened ? "border-l-green-500 bg-green-50/50" : "border-l-gray-300 bg-gray-50/30"}`}>
+              <p className="text-[10px] uppercase tracking-wider text-muted">Grupo de Evangelismo (GE)</p>
+              {report.ge_happened ? (
+                <p className="text-sm text-green-700">
+                  <b>Sim</b>
+                  {report.ge_location && <> — em <b>{report.ge_location}</b></>}
+                  {report.ge_when && <> — <b>{report.ge_when}</b></>}
+                </p>
+              ) : (
+                <p className="text-sm italic text-muted">Não houve nesta semana</p>
+              )}
+            </div>
+          </div>
+        </Section>
+
         {/* Conteúdo da reunião */}
         <Section icon={<BookOpen />} title="Conteúdo da reunião">
           {report.share_theme && (
@@ -151,6 +199,79 @@ export function ReportDetailView({ reportId }: { reportId: string }) {
           </Section>
         )}
 
+        {/* Saúde do LG (avaliação do líder) — destaque */}
+        {report.saude_status && (
+          <Section icon={<Heart />} title="Saúde do Life Group">
+            <HealthBadge status={report.saude_status} />
+            {report.saude_comentarios && (
+              <p className="mt-2 rounded-md border bg-card p-3 text-sm whitespace-pre-wrap">{report.saude_comentarios}</p>
+            )}
+          </Section>
+        )}
+
+        {/* Discipulado */}
+        {(report.disc_realizados || report.disc_ativos || report.disc_encontros || report.disc_interrompidos || report.disc_novos) ? (
+          <Section icon={<BookOpen />} title="Discipulado">
+            <div className="grid gap-2 sm:grid-cols-5">
+              <SmallStat label="Realizados" value={report.disc_realizados ?? 0} />
+              <SmallStat label="Ativos" value={report.disc_ativos ?? 0} />
+              <SmallStat label="Encontros" value={report.disc_encontros ?? 0} />
+              <SmallStat label="Interrompidos" value={report.disc_interrompidos ?? 0} />
+              <SmallStat label="Novos" value={report.disc_novos ?? 0} />
+            </div>
+          </Section>
+        ) : null}
+
+        {/* Consolidação */}
+        {(report.cons_retornantes || report.cons_acompanhamento || report.cons_integrados || report.cons_novos_membros) ? (
+          <Section icon={<Users />} title="Consolidação">
+            <div className="grid gap-2 sm:grid-cols-4">
+              <SmallStat label="Visitantes retornantes" value={report.cons_retornantes ?? 0} />
+              <SmallStat label="Em acompanhamento" value={report.cons_acompanhamento ?? 0} />
+              <SmallStat label="Integrados ao LG" value={report.cons_integrados ?? 0} />
+              <SmallStat label="Novos membros" value={report.cons_novos_membros ?? 0} />
+            </div>
+          </Section>
+        ) : null}
+
+        {/* Formação de Liderança */}
+        {(report.lid_aux_treinamento || report.lid_em_formacao || report.lid_potencial_multiplicador || report.lid_observacoes) ? (
+          <Section icon={<Sparkles />} title="Formação de Liderança">
+            <div className="flex flex-wrap gap-1.5">
+              {report.lid_aux_treinamento && <Pill color="gold">Auxiliar em treinamento</Pill>}
+              {report.lid_em_formacao && <Pill color="gold">Líder em formação</Pill>}
+              {report.lid_potencial_multiplicador && <Pill color="green">Potencial multiplicador</Pill>}
+            </div>
+            {report.lid_observacoes && (
+              <p className="mt-2 rounded-md border bg-card p-3 text-sm whitespace-pre-wrap">{report.lid_observacoes}</p>
+            )}
+          </Section>
+        ) : null}
+
+        {/* Multiplicação */}
+        {(report.mult_filha_preparacao || report.mult_nova_lideranca || report.mult_potencial) ? (
+          <Section icon={<Sparkles />} title="Multiplicação">
+            <div className="flex flex-wrap gap-1.5">
+              {report.mult_filha_preparacao && <Pill color="gold">Célula filha em preparação</Pill>}
+              {report.mult_nova_lideranca && <Pill color="gold">Nova liderança sendo preparada</Pill>}
+              {report.mult_potencial && <Pill color="green">Possui potencial de multiplicação</Pill>}
+            </div>
+          </Section>
+        ) : null}
+
+        {/* Necessidades pastorais marcadas */}
+        {(report.nec_oracao_urgente || report.nec_visita_pastoral || report.nec_problema_familiar || report.nec_problema_espiritual || report.nec_encaminhar_supervisor) ? (
+          <Section icon={<AlertTriangle />} title="Necessidades pastorais sinalizadas">
+            <div className="flex flex-wrap gap-1.5">
+              {report.nec_oracao_urgente && <Pill color="red">🙏 Pedido urgente de oração</Pill>}
+              {report.nec_visita_pastoral && <Pill color="red">Necessidade de visita pastoral</Pill>}
+              {report.nec_problema_familiar && <Pill color="red">Problema familiar</Pill>}
+              {report.nec_problema_espiritual && <Pill color="red">Problema espiritual</Pill>}
+              {report.nec_encaminhar_supervisor && <Pill color="red">Encaminhar ao supervisor</Pill>}
+            </div>
+          </Section>
+        ) : null}
+
         {/* Visitantes detalhados */}
         {visits.length > 0 && (
           <Section icon={<Sparkles />} title={`Visitantes (${visits.length})`}>
@@ -179,6 +300,14 @@ export function ReportDetailView({ reportId }: { reportId: string }) {
                     <span className={a.present ? "text-navy" : "text-muted line-through"}>{a.member_name}</span>
                     {!a.present && a.absence_reason && (
                       <p className="text-[11px] italic text-muted">Motivo: {a.absence_reason}</p>
+                    )}
+                    {/* Marcações individuais MDA/CC/CEL */}
+                    {a.present && (a.had_mda_15_dias || a.had_cc || a.had_cel) && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {a.had_mda_15_dias && <span className="rounded bg-gold/15 px-1.5 py-0.5 text-[9px] font-bold text-gold">MDA</span>}
+                        {a.had_cc && <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[9px] font-bold text-blue-700">CC</span>}
+                        {a.had_cel && <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[9px] font-bold text-purple-700">CEL</span>}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -261,6 +390,35 @@ function FlowedBadge({ flowed }: { flowed: boolean | null }) {
     }`}>
       {flowed ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
       {flowed ? "A reunião fluiu" : "Reunião teve dificuldades"}
+    </span>
+  );
+}
+
+const HEALTH_LABELS: Record<string, { label: string; color: string; emoji: string }> = {
+  muito_saudavel:  { label: "Muito saudável",  color: "bg-green-100 text-green-800 border-green-300", emoji: "🟢🟢" },
+  saudavel:        { label: "Saudável",        color: "bg-green-50 text-green-700 border-green-200",  emoji: "🟢" },
+  atencao:         { label: "Atenção",         color: "bg-yellow-50 text-yellow-700 border-yellow-200", emoji: "🟡" },
+  necessita_apoio: { label: "Necessita apoio", color: "bg-red-50 text-red-700 border-red-200",        emoji: "🔴" },
+};
+
+function HealthBadge({ status }: { status: string }) {
+  const cfg = HEALTH_LABELS[status];
+  if (!cfg) return null;
+  return (
+    <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-bold ${cfg.color}`}>
+      <span className="text-base">{cfg.emoji}</span>{cfg.label}
+    </span>
+  );
+}
+
+function Pill({ color, children }: { color: "gold"|"green"|"red"|"blue"; children: React.ReactNode }) {
+  const cls = color === "gold"  ? "bg-gold/15 text-gold border-gold/30"
+            : color === "green" ? "bg-green-50 text-green-700 border-green-200"
+            : color === "red"   ? "bg-red-50 text-red-700 border-red-200"
+                                : "bg-blue-50 text-blue-700 border-blue-200";
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-semibold ${cls}`}>
+      {children}
     </span>
   );
 }

@@ -169,6 +169,48 @@ export const weeklyReportSchema = z.object({
   decisions_count: z.coerce.number().int().min(0).default(0),
   needs: optionalText,
   summary: optionalText,
+  // Indicadores semanais (Caderno 11-B parte 1)
+  members_with_disciplers: z.coerce.number().int().min(0).default(0),
+  mda_15_dias_happened: z.coerce.boolean().default(false),
+  mda_15_dias_count: z.coerce.number().int().min(0).default(0),
+  ge_happened: z.coerce.boolean().default(false),
+  ge_location: optionalText,
+  ge_when: optionalText,
+  oferta_pix: z.coerce.number().min(0).default(0),
+  oferta_especie: z.coerce.number().min(0).default(0),
+  ebd_count: z.coerce.number().int().min(0).default(0),
+  cc_count: z.coerce.number().int().min(0).default(0),
+  cel_count: z.coerce.number().int().min(0).default(0),
+  kg_amor: z.coerce.number().min(0).default(0),
+  // Discipulado
+  disc_realizados: z.coerce.number().int().min(0).default(0),
+  disc_ativos: z.coerce.number().int().min(0).default(0),
+  disc_encontros: z.coerce.number().int().min(0).default(0),
+  disc_interrompidos: z.coerce.number().int().min(0).default(0),
+  disc_novos: z.coerce.number().int().min(0).default(0),
+  // Consolidação
+  cons_retornantes: z.coerce.number().int().min(0).default(0),
+  cons_acompanhamento: z.coerce.number().int().min(0).default(0),
+  cons_integrados: z.coerce.number().int().min(0).default(0),
+  cons_novos_membros: z.coerce.number().int().min(0).default(0),
+  // Liderança
+  lid_aux_treinamento: z.coerce.boolean().default(false),
+  lid_em_formacao: z.coerce.boolean().default(false),
+  lid_potencial_multiplicador: z.coerce.boolean().default(false),
+  lid_observacoes: optionalText,
+  // Multiplicação
+  mult_filha_preparacao: z.coerce.boolean().default(false),
+  mult_nova_lideranca: z.coerce.boolean().default(false),
+  mult_potencial: z.coerce.boolean().default(false),
+  // Saúde
+  saude_status: z.enum(["muito_saudavel","saudavel","atencao","necessita_apoio",""]).default(""),
+  saude_comentarios: optionalText,
+  // Necessidades pastorais
+  nec_oracao_urgente: z.coerce.boolean().default(false),
+  nec_visita_pastoral: z.coerce.boolean().default(false),
+  nec_problema_familiar: z.coerce.boolean().default(false),
+  nec_problema_espiritual: z.coerce.boolean().default(false),
+  nec_encaminhar_supervisor: z.coerce.boolean().default(false),
 });
 export type WeeklyReportFormInput = z.infer<typeof weeklyReportSchema>;
 
