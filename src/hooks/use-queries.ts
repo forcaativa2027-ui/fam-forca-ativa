@@ -248,3 +248,16 @@ export const useReportFull = (reportId: string | null) =>
     queryFn: () => reportId ? getReportFull(supabase, reportId) : Promise.resolve(null),
     enabled: !!reportId,
   });
+
+// Permissões hierárquicas — escopo dos pastores
+import * as Ps from "@/services/pastorScope";
+export const usePastors = () =>
+  useQuery({
+    queryKey: ["pastors"],
+    queryFn: () => Ps.listPastors(supabase),
+  });
+export const usePastorsWithoutScopeCount = () =>
+  useQuery({
+    queryKey: ["pastors-without-scope-count"],
+    queryFn: () => Ps.countPastorsWithoutScope(supabase),
+  });

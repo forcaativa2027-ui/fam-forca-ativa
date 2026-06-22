@@ -31,6 +31,7 @@ import { PublicPrayerRequestsAdmin, VisitRequestsAdmin } from "./ContactRequests
 import { BannersAdmin } from "./BannersAdmin";
 import { CommunitiesAdmin } from "./CommunitiesAdmin";
 import { OrgStructureAdmin } from "./OrgStructureAdmin";
+import { PermissionsAdmin } from "./PermissionsAdmin";
 import { CrmPipelineAdmin } from "./CrmPipelineAdmin";
 import { AcolhimentoAdmin } from "./AcolhimentoAdmin";
 import { EvasionAdmin } from "./EvasionAdmin";
@@ -65,6 +66,7 @@ export default function AdminPanel() {
             <TabsTrigger value="events">Agenda</TabsTrigger>
             <TabsTrigger value="communities">Comunidades</TabsTrigger>
             <TabsTrigger value="structure">Estrutura</TabsTrigger>
+            <TabsTrigger value="permissions">Permissões</TabsTrigger>
             <TabsTrigger value="news">Notícias</TabsTrigger>
             <TabsTrigger value="banners">Banners</TabsTrigger>
             <TabsTrigger value="services">Cultos</TabsTrigger>
@@ -90,6 +92,7 @@ export default function AdminPanel() {
         <TabsContent value="events"><EventsAdmin /></TabsContent>
         <TabsContent value="communities"><CommunitiesAdmin /></TabsContent>
         <TabsContent value="structure"><OrgStructureAdmin /></TabsContent>
+        <TabsContent value="permissions"><PermissionsAdmin /></TabsContent>
         <TabsContent value="news"><NewsAdmin /></TabsContent>
         <TabsContent value="banners"><BannersAdmin /></TabsContent>
         <TabsContent value="services"><ServiceTimesAdmin /></TabsContent>
