@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { supabase } from "@/lib/supabase/client";
 import { useChurches, useActiveCommunity, useCells } from "@/hooks/use-queries";
 import { lookupCep, maskPhone, maskCep, createPipelineEntry } from "@/services/pipeline";
@@ -368,12 +370,16 @@ function Step5({ s, update, onBack, onDone, setGlobalErr }: { s: State; update: 
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [err, setErr] = useState<Record<string,string>>({});
   const [busy, setBusy] = useState(false);
+  const [lgpdAccepted, setLgpdAccepted] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   async function finish() {
     const errs: Record<string,string> = {};
     if (!/^\S+@\S+\.\S+$/.test(email)) errs.email = "E-mail inválido";
     if (s.password.length < 6) errs.password = "Senha precisa ter ao menos 6 caracteres";
     if (s.password !== passwordConfirm) errs.password_confirm = "Senhas não conferem";
+    if (!lgpdAccepted) errs.lgpd = "Você precisa aceitar os Termos e a Política de Privacidade para continuar.";
+    if (!captchaToken) errs.captcha = "Confirme que você não é um robô.";
     setErr(errs);
     if (Object.keys(errs).length > 0) return;
 
@@ -382,7 +388,7 @@ function Step5({ s, update, onBack, onDone, setGlobalErr }: { s: State; update: 
       // 1) signUp no Supabase Auth (trigger cria o profile)
       const { error: signError } = await supabase.auth.signUp({
         email, password: s.password,
-        options: { data: { full_name: s.full_name } },
+        options: { data: { full_name: s.full_name }, captchaToken: captchaToken ?? undefined },
       });
       if (signError) {
         setGlobalErr(signError.message.includes("already") ? "Este e-mail já está cadastrado. Tente fazer login." : signError.message);
@@ -439,6 +445,43 @@ function Step5({ s, update, onBack, onDone, setGlobalErr }: { s: State; update: 
         </div>
       </details>
 
+      {/* Captcha Turnstile */}
+      {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+        <div className="space-y-1">
+          <Turnstile
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+            onSuccess={(token) => { setCaptchaToken(token); setErr((e) => ({ ...e, captcha: "" })); }}
+            onExpire={() => setCaptchaToken(null)}
+            options={{ theme: "light", language: "pt-BR" }}
+          />
+          {err.captcha && <p className="text-xs text-destructive">{err.captcha}</p>}
+        </div>
+      )}
+
+      {/* Aceite LGPD */}
+      <div className="rounded-lg border border-[#C9A227]/40 bg-amber-50/50 p-3 space-y-2">
+        <div className="flex items-start gap-3">
+          <Checkbox
+            id="lgpd"
+            checked={lgpdAccepted}
+            onCheckedChange={(v) => setLgpdAccepted(!!v)}
+            className="mt-0.5"
+          />
+          <label htmlFor="lgpd" className="text-xs text-gray-700 leading-relaxed cursor-pointer">
+            Li e aceito os{" "}
+            <Link href="/termos" target="_blank" className="font-semibold text-[#0E2A47] underline hover:text-[#C9A227]">
+              Termos de Uso
+            </Link>{" "}
+            e a{" "}
+            <Link href="/privacidade" target="_blank" className="font-semibold text-[#0E2A47] underline hover:text-[#C9A227]">
+              Política de Privacidade
+            </Link>{" "}
+            da CEC Family, e autorizo o tratamento dos meus dados pessoais para fins pastorais, conforme a LGPD.
+          </label>
+        </div>
+        {err.lgpd && <p className="text-xs text-destructive pl-7">{err.lgpd}</p>}
+      </div>
+
       <div className="flex justify-between gap-2">
         <Button type="button" variant="outline" onClick={onBack} className="gap-2"><ArrowLeft className="h-4 w-4" /> Voltar</Button>
         <Button type="button" onClick={finish} disabled={busy} className="gap-2">
@@ -460,20 +503,31 @@ function FinishedScreen({ hasLg }: { hasLg: boolean }) {
         <CardContent className="space-y-3 px-8 py-10">
           <Check className="mx-auto h-12 w-12 text-gold" />
           <h1 className="font-display text-2xl text-navy">Cadastro recebido!</h1>
+
+          {/* Aviso de verificação de e-mail */}
+          <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-800 text-left space-y-1">
+            <p className="font-semibold">📧 Verifique seu e-mail</p>
+            <p>
+              Enviamos um link de confirmação para o e-mail informado.
+              Clique no link para ativar sua conta antes de fazer login.
+            </p>
+            <p className="text-xs text-blue-600">Não recebeu? Verifique a pasta de spam.</p>
+          </div>
+
           {hasLg ? (
             <p className="text-sm text-muted">
-              Sua conta foi criada e sua intenção foi registrada com a liderança.
+              Sua intenção foi registrada com a liderança.
               Em breve um líder entrará em contato com você.
             </p>
           ) : (
             <p className="text-sm text-muted">
-              Sua conta foi criada e sua intenção foi registrada com a liderança.
+              Sua intenção foi registrada com a liderança.
               <br /><br />
               <b className="text-navy">Um(a) pastor(a) entrará em contato em breve</b> para te indicar o Life Group ideal pra você.
             </p>
           )}
           <div className="flex flex-col gap-2 pt-2">
-            <Button asChild><Link href="/painel">Entrar na área do membro</Link></Button>
+            <Button asChild><Link href="/entrar">Ir para o login</Link></Button>
             <Button asChild variant="outline"><Link href="/">Voltar à página inicial</Link></Button>
           </div>
         </CardContent>

@@ -40,9 +40,12 @@ export default function LoginForm() {
       </Link>
 
       <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl">
-        <div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-gold" /><h1 className="font-display text-2xl text-navy">Área do membro</h1></div>
-        <div className="my-3 h-[3px] w-16 rounded bg-gold" />
-        <p className="mb-6 text-xs text-muted">Discipulado, células, núcleos e gestão</p>
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-[#C9A227]" />
+          <h1 className="font-display text-2xl text-[#0E2A47]">Área do membro</h1>
+        </div>
+        <div className="my-3 h-[3px] w-16 rounded bg-[#C9A227]" />
+        <p className="mb-6 text-xs text-muted-foreground">Discipulado, células, núcleos e gestão</p>
 
         <div className="space-y-3">
           <div>
@@ -58,8 +61,34 @@ export default function LoginForm() {
         </div>
 
         {err && <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{err}</p>}
-        <Button type="submit" disabled={isSubmitting} className="mt-4 w-full">{isSubmitting ? "Entrando…" : "Entrar"}</Button>
-        <p className="mt-4 text-center text-xs text-muted">Sem acesso? Fale com a liderança da sua célula.</p>
+
+        <Button type="submit" disabled={isSubmitting} className="mt-5 w-full bg-[#0E2A47] hover:bg-[#16345A]">
+          {isSubmitting ? "Entrando…" : "Entrar"}
+        </Button>
+
+        {/* Link recuperar senha — destaque claro */}
+        <div className="mt-3 text-center">
+          <Link
+            href="/recuperar-senha"
+            className="text-sm font-semibold text-[#0E2A47] underline underline-offset-2 hover:text-[#C9A227] transition-colors"
+          >
+            Esqueceu a senha?
+          </Link>
+        </div>
+
+        {/* Divisor + link de cadastro */}
+        <div className="mt-5 border-t border-gray-200 pt-5 text-center space-y-2">
+          <p className="text-sm text-muted-foreground">Ainda não tem conta?</p>
+          <Link href="/cadastrar">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full border-[#0E2A47] text-[#0E2A47] hover:bg-[#0E2A47] hover:text-white transition-colors"
+            >
+              Criar conta gratuita
+            </Button>
+          </Link>
+        </div>
       </form>
     </main>
   );
