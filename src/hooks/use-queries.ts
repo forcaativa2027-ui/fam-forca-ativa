@@ -323,3 +323,22 @@ export const useAssetPhotos = (assetId: string | null) =>
   });
 export const usePatrimonySummary = () =>
   useQuery({ queryKey: ["patrimony-summary"], queryFn: () => Pt.getPatrimonySummary(supabase) });
+
+// C16 — Inteligência Ministerial
+import * as Intel from "@/services/intelligence";
+export const useLgScores = (churchId?: string) =>
+  useQuery({ queryKey: ["lg-scores", churchId], queryFn: () => Intel.getLgScores(supabase, churchId) });
+export const useLgRankings = (churchId?: string) =>
+  useQuery({ queryKey: ["lg-rankings", churchId], queryFn: () => Intel.getLgRankings(supabase, churchId) });
+export const useRetentionFunnel = () =>
+  useQuery({ queryKey: ["retention-funnel"], queryFn: () => Intel.getRetentionFunnel(supabase) });
+export const useRetentionFunnelByChurch = () =>
+  useQuery({ queryKey: ["retention-funnel-church"], queryFn: () => Intel.getRetentionFunnelByChurch(supabase) });
+export const useLgReliability = (churchId?: string) =>
+  useQuery({ queryKey: ["lg-reliability", churchId], queryFn: () => Intel.getLgReliability(supabase, churchId) });
+export const useReliabilitySummary = () =>
+  useQuery({ queryKey: ["reliability-summary"], queryFn: () => Intel.getReliabilitySummary(supabase) });
+export const useMonthlyConsolidation = (churchId?: string, mes?: string) =>
+  useQuery({ queryKey: ["monthly-consolidation", churchId, mes], queryFn: () => Intel.getMonthlyConsolidation(supabase, { churchId, mes }) });
+export const useGrowthVariation = () =>
+  useQuery({ queryKey: ["growth-variation"], queryFn: () => Intel.getGrowthVariation(supabase) });
