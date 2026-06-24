@@ -342,3 +342,10 @@ export const useMonthlyConsolidation = (churchId?: string, mes?: string) =>
   useQuery({ queryKey: ["monthly-consolidation", churchId, mes], queryFn: () => Intel.getMonthlyConsolidation(supabase, { churchId, mes }) });
 export const useGrowthVariation = () =>
   useQuery({ queryKey: ["growth-variation"], queryFn: () => Intel.getGrowthVariation(supabase) });
+
+// C17 — Central de Metas
+import * as Goals from "@/services/goals";
+export const useGoals = (year?: number) =>
+  useQuery({ queryKey: ["goals", year], queryFn: () => Goals.listGoals(supabase, year) });
+export const useGoalsVsActual = (year?: number) =>
+  useQuery({ queryKey: ["goals-vs-actual", year], queryFn: () => Goals.listGoalsVsActual(supabase, year) });

@@ -35,6 +35,7 @@ import { PermissionsAdmin } from "./PermissionsAdmin";
 import { MdaHealthAdmin } from "./MdaHealthAdmin";
 import { OrgDashboardAdmin } from "./OrgDashboardAdmin";
 import { IntelligenceAdmin } from "./IntelligenceAdmin";
+import { MinisterialReportsAdmin } from "./MinisterialReportsAdmin";
 import { GenealogyAdmin } from "./GenealogyAdmin";
 import { ExpansionMapAdmin } from "./ExpansionMapAdmin";
 import { PatrimonyAdmin } from "./PatrimonyAdmin";
@@ -78,6 +79,7 @@ export default function AdminPanel() {
             <TabsTrigger value="mda-health">Saúde MDA</TabsTrigger>
             <TabsTrigger value="org-dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="intelligence">🧠 Inteligência</TabsTrigger>
+            <TabsTrigger value="ministerial-reports">📊 Relatórios</TabsTrigger>
             <TabsTrigger value="genealogy">Genealogia</TabsTrigger>
             <TabsTrigger value="expansion-map">Mapa</TabsTrigger>
             <TabsTrigger value="patrimony">Patrimônio</TabsTrigger>
@@ -111,6 +113,7 @@ export default function AdminPanel() {
         <TabsContent value="mda-health"><MdaHealthAdmin /></TabsContent>
         <TabsContent value="org-dashboard"><OrgDashboardAdmin /></TabsContent>
         <TabsContent value="intelligence"><IntelligenceAdmin /></TabsContent>
+        <TabsContent value="ministerial-reports"><MinisterialReportsAdmin /></TabsContent>
         <TabsContent value="genealogy"><GenealogyAdmin /></TabsContent>
         <TabsContent value="expansion-map"><ExpansionMapAdmin /></TabsContent>
         <TabsContent value="patrimony"><PatrimonyAdmin /></TabsContent>

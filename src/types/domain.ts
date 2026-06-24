@@ -586,3 +586,32 @@ export interface GrowthVariation {
   var_pct_visitantes: number | null;
   var_pct_lgs_reportaram: number | null;
 }
+
+// C17 — Central de Metas
+export type GoalScope = "nacional" | "sede" | "nucleo" | "distrito" | "area" | "setor" | "lg";
+export type GoalIndicator =
+  | "membros_ativos" | "visitantes" | "decisoes" | "batismos"
+  | "multiplicacoes" | "lgs_ativos" | "disc_ativos" | "integrados"
+  | "relatorios_enviados" | "novos_membros";
+export type GoalStatus = "atingido" | "no_caminho" | "atencao";
+
+export interface MinistryGoal {
+  id: string;
+  scope: GoalScope;
+  scope_id: string | null;
+  scope_name: string;
+  year: number;
+  month: number | null;
+  indicator: GoalIndicator;
+  target_value: number;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GoalVsActual extends MinistryGoal {
+  actual_value: number;
+  pct_atingido: number;
+  status_meta: GoalStatus;
+}
