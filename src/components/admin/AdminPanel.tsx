@@ -32,6 +32,12 @@ import { BannersAdmin } from "./BannersAdmin";
 import { CommunitiesAdmin } from "./CommunitiesAdmin";
 import { OrgStructureAdmin } from "./OrgStructureAdmin";
 import { PermissionsAdmin } from "./PermissionsAdmin";
+import { MdaHealthAdmin } from "./MdaHealthAdmin";
+import { OrgDashboardAdmin } from "./OrgDashboardAdmin";
+import { GenealogyAdmin } from "./GenealogyAdmin";
+import { ExpansionMapAdmin } from "./ExpansionMapAdmin";
+import { PatrimonyAdmin } from "./PatrimonyAdmin";
+import { SupervisionDashboard } from "./SupervisionDashboard";
 import { CrmPipelineAdmin } from "./CrmPipelineAdmin";
 import { AcolhimentoAdmin } from "./AcolhimentoAdmin";
 import { EvasionAdmin } from "./EvasionAdmin";
@@ -59,14 +65,20 @@ export default function AdminPanel() {
 
   return (
     <Shell>
-      <Tabs defaultValue="sermons">
+      <Tabs defaultValue="supervision">
         <div className="overflow-x-auto">
           <TabsList className="mb-6 min-w-max">
+            <TabsTrigger value="supervision">📊 Supervisão</TabsTrigger>
             <TabsTrigger value="sermons">Pregações</TabsTrigger>
             <TabsTrigger value="events">Agenda</TabsTrigger>
             <TabsTrigger value="communities">Comunidades</TabsTrigger>
             <TabsTrigger value="structure">Estrutura</TabsTrigger>
             <TabsTrigger value="permissions">Permissões</TabsTrigger>
+            <TabsTrigger value="mda-health">Saúde MDA</TabsTrigger>
+            <TabsTrigger value="org-dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="genealogy">Genealogia</TabsTrigger>
+            <TabsTrigger value="expansion-map">Mapa</TabsTrigger>
+            <TabsTrigger value="patrimony">Patrimônio</TabsTrigger>
             <TabsTrigger value="news">Notícias</TabsTrigger>
             <TabsTrigger value="banners">Banners</TabsTrigger>
             <TabsTrigger value="services">Cultos</TabsTrigger>
@@ -88,11 +100,17 @@ export default function AdminPanel() {
             <TabsTrigger value="audit">Auditoria</TabsTrigger>
           </TabsList>
         </div>
+        <TabsContent value="supervision"><SupervisionDashboard /></TabsContent>
         <TabsContent value="sermons"><SermonsAdmin /></TabsContent>
         <TabsContent value="events"><EventsAdmin /></TabsContent>
         <TabsContent value="communities"><CommunitiesAdmin /></TabsContent>
         <TabsContent value="structure"><OrgStructureAdmin /></TabsContent>
         <TabsContent value="permissions"><PermissionsAdmin /></TabsContent>
+        <TabsContent value="mda-health"><MdaHealthAdmin /></TabsContent>
+        <TabsContent value="org-dashboard"><OrgDashboardAdmin /></TabsContent>
+        <TabsContent value="genealogy"><GenealogyAdmin /></TabsContent>
+        <TabsContent value="expansion-map"><ExpansionMapAdmin /></TabsContent>
+        <TabsContent value="patrimony"><PatrimonyAdmin /></TabsContent>
         <TabsContent value="news"><NewsAdmin /></TabsContent>
         <TabsContent value="banners"><BannersAdmin /></TabsContent>
         <TabsContent value="services"><ServiceTimesAdmin /></TabsContent>

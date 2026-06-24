@@ -261,3 +261,65 @@ export const usePastorsWithoutScopeCount = () =>
     queryKey: ["pastors-without-scope-count"],
     queryFn: () => Ps.countPastorsWithoutScope(supabase),
   });
+
+// Supervisão hierárquica
+import * as Sv from "@/services/supervision";
+type SupLevel = "national" | "church_tree" | "church" | "district" | "area" | "sector";
+export const useScopeMetrics = (level: SupLevel, id?: string | null) =>
+  useQuery({
+    queryKey: ["scope-metrics", level, id ?? "self"],
+    queryFn: () => Sv.getScopeMetrics(supabase, level, id),
+  });
+export const useLgsWithHealth = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["lgs-with-health", churchId ?? "all"],
+    queryFn: () => Sv.listLgsWithHealth(supabase, churchId),
+  });
+
+// MDA Health (Caderno 11-B)
+import { getMdaHealthDashboard } from "@/services/mdaHealth";
+export const useMdaHealth = () =>
+  useQuery({
+    queryKey: ["mda-health"],
+    queryFn: () => getMdaHealthDashboard(supabase),
+  });
+
+// Caderno 13 — Visualizações grandes
+import * as Vz from "@/services/visualizations";
+export const useLgGenealogy = () =>
+  useQuery({ queryKey: ["lg-genealogy"], queryFn: () => Vz.getLgGenealogy(supabase) });
+export const useOrgKpis = () =>
+  useQuery({ queryKey: ["org-kpis"], queryFn: () => Vz.getOrgKpis(supabase) });
+export const useGrowthMonthly = () =>
+  useQuery({ queryKey: ["growth-monthly"], queryFn: () => Vz.getGrowthMonthly(supabase) });
+export const useExpansionCities = () =>
+  useQuery({ queryKey: ["expansion-cities"], queryFn: () => Vz.getExpansionCities(supabase) });
+export const useExpansionStates = () =>
+  useQuery({ queryKey: ["expansion-states"], queryFn: () => Vz.getExpansionStates(supabase) });
+
+// Caderno 12 — Patrimônio
+import * as Pt from "@/services/patrimony";
+export const useProperties = (churchId?: string | null) =>
+  useQuery({ queryKey: ["properties", churchId ?? "all"], queryFn: () => Pt.listProperties(supabase, churchId) });
+export const useAssets = (opts?: { churchId?: string | null; propertyId?: string | null }) =>
+  useQuery({ queryKey: ["assets", opts?.churchId ?? "all", opts?.propertyId ?? "all"], queryFn: () => Pt.listAssets(supabase, opts) });
+export const usePropertyDocs = (propertyId: string | null) =>
+  useQuery({
+    queryKey: ["property-docs", propertyId],
+    queryFn: () => propertyId ? Pt.listPropertyDocs(supabase, propertyId) : Promise.resolve([]),
+    enabled: !!propertyId,
+  });
+export const useAssetDocs = (assetId: string | null) =>
+  useQuery({
+    queryKey: ["asset-docs", assetId],
+    queryFn: () => assetId ? Pt.listAssetDocs(supabase, assetId) : Promise.resolve([]),
+    enabled: !!assetId,
+  });
+export const useAssetPhotos = (assetId: string | null) =>
+  useQuery({
+    queryKey: ["asset-photos", assetId],
+    queryFn: () => assetId ? Pt.listAssetPhotos(supabase, assetId) : Promise.resolve([]),
+    enabled: !!assetId,
+  });
+export const usePatrimonySummary = () =>
+  useQuery({ queryKey: ["patrimony-summary"], queryFn: () => Pt.getPatrimonySummary(supabase) });

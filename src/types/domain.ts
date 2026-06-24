@@ -128,9 +128,90 @@ export interface Church {
 export interface ChurchDependencies {
   children:number; life_groups:number; members:number; reports:number; total:number;
 }
+
+// Classificação e dashboard hierárquico
+export type MdaHealth = "saudavel" | "atencao" | "necessita_intervencao";
+export interface ScopeMetrics {
+  total_lgs: number;
+  active_lgs: number;
+  reported_30d: number;
+  with_leader: number;
+  multiplicando: number;
+  multiplicado: number;
+  in_formation: number;
+  members: number;
+  visitors_30d: number;
+  decisions_30d: number;
+  evasion_count: number;
+  reporting_rate: number;
+  leader_coverage: number;
+  health_score: number;
+  health_class: MdaHealth;
+}
+export interface LgWithHealth {
+  lg_id: string;
+  lg_name: string;
+  church_id: string | null;
+  status_lg: string;
+  members_count: number;
+  last_report_date: string | null;
+  evasion_count: number;
+  health_class: MdaHealth;
+}
 export interface District { id:string; church_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
 export interface Area { id:string; district_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
 export interface Sector { id:string; area_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
+
+// MDA Health (Caderno 11-B)
+export type MdaStatus = "saudavel" | "atencao" | "necessita";
+export interface MdaHealthRow {
+  church_id: string; church_name: string; church_type: string;
+  district_id: string | null; district_name: string | null;
+  area_id: string | null; area_name: string | null;
+  sector_id: string | null; sector_name: string | null;
+  lg_id: string | null; lg_name: string | null; lg_status_lg: string | null;
+  lg_health: MdaStatus | null;
+  sector_health: MdaStatus | null;
+  area_health: MdaStatus | null;
+  district_health: MdaStatus | null;
+  church_health: MdaStatus;
+  lg_members_count: number | null;
+  lg_last_report_date: string | null;
+}
+
+// Caderno 13 — Visualizações grandes
+export interface LgGenealogyNode {
+  id: string; name: string; mother_cell_id: string | null;
+  church_id: string | null; leader_id: string | null;
+  status_lg: string | null; founded_at: string | null;
+  generation: number;
+  members_count: number; direct_children_count: number;
+}
+export interface OrgDashboardKpis {
+  total_churches: number; total_sedes: number; total_nucleos: number; total_locais: number;
+  estados_alcancados: number; cidades_alcancadas: number;
+  total_distritos: number; total_areas: number; total_setores: number;
+  total_lgs: number; lgs_em_multiplicacao: number; lgs_multiplicados: number;
+  total_membros_ativos: number; novos_convertidos: number;
+  novos_membros_30d: number; novos_membros_12m: number;
+  relatorios_ultima_semana: number; relatorios_ultimo_mes: number;
+  total_ministerios: number;
+  multiplicacoes_ano: number; multiplicacoes_12m: number;
+}
+export interface GrowthMonthlyRow {
+  month_label: string; month_date: string;
+  new_members: number; new_lgs: number;
+}
+export interface CityExpansion {
+  state: string; city: string;
+  churches_count: number; lgs_count: number; members_count: number;
+  church_names: string[]; church_types: string[];
+}
+export interface StateExpansion {
+  state: string;
+  churches_count: number; cities_count: number;
+  lgs_count: number; members_count: number;
+}
 export type TargetAudience = "misto"|"jovens"|"adolescentes"|"adultos"|"casais"|"terceira_idade"|"mulheres"|"homens"|"outro";
 export type LgStatus = "em_formacao"|"ativo"|"em_multiplicacao"|"multiplicado"|"encerrado";
 export interface Cell {
@@ -316,4 +397,56 @@ export interface LgSuggestion {
   members_count: number;
   target: number;
   reason: string;
+}
+
+// Caderno 12 — Patrimônio
+export type OccupationType = "proprio"|"alugado"|"cedido"|"comodato"|"em_regularizacao";
+export type AssetCategory = "mobiliario"|"equipamentos"|"som_multimidia"|"infraestrutura"|"nao_duravel";
+export type AssetCondition = "novo"|"otimo"|"bom"|"regular"|"ruim"|"inutilizado"|"baixado";
+export type AssetOrigin = "compra_nf"|"doacao"|"sem_nf"|"transferencia"|"comodato"|"outro";
+
+export interface Property {
+  id: string; church_id: string; name: string; occupation_type: OccupationType;
+  cep: string | null; state: string | null; city: string | null; neighborhood: string | null;
+  address: string | null; numero: string | null; complemento: string | null;
+  latitude: number | null; longitude: number | null;
+  acquired_at: string | null; contract_end_at: string | null; iptu_due_at: string | null;
+  owner_name: string | null; owner_document: string | null; owner_phone: string | null;
+  observations: string | null; is_active: boolean;
+  created_at: string;
+}
+
+export interface Asset {
+  id: string; church_id: string; property_id: string | null;
+  patrimony_code: string | null; tag_number: string | null;
+  name: string; category: AssetCategory; subcategory: string | null;
+  description: string | null; manufacturer: string | null; model: string | null;
+  serial_number: string | null; responsible_id: string | null; location_text: string | null;
+  acquired_at: string | null; acquisition_value: number | null; origin: AssetOrigin;
+  condition: AssetCondition; is_durable: boolean; is_active: boolean;
+  observations: string | null;
+  created_at: string;
+}
+
+export interface PropertyDocument {
+  id: string; property_id: string; doc_type: string; title: string;
+  storage_path: string | null; size_bytes: number | null; mime_type: string | null;
+  uploaded_at: string; observations: string | null;
+}
+
+export interface AssetDocument {
+  id: string; asset_id: string; doc_type: string; title: string;
+  storage_path: string | null; size_bytes: number | null; mime_type: string | null;
+  uploaded_at: string; observations: string | null;
+}
+
+export interface AssetPhoto {
+  id: string; asset_id: string; photo_year: number | null; taken_at: string | null;
+  storage_path: string; caption: string | null; uploaded_at: string;
+}
+
+export interface PatrimonySummary {
+  church_id: string; church_name: string;
+  properties_count: number; assets_count: number;
+  total_acquisition_value: number; contracts_expiring_90d: number;
 }

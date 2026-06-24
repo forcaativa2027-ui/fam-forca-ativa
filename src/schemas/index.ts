@@ -292,3 +292,47 @@ export const ministryPostSchema = z.object({
   is_published: z.boolean().default(true),
 });
 export type MinistryPostInput = z.infer<typeof ministryPostSchema>;
+
+// Caderno 12 — Patrimônio
+export const propertySchema = z.object({
+  church_id: z.string().uuid("Comunidade obrigatória"),
+  name: reqText("Nome do imóvel", 2),
+  occupation_type: z.enum(["proprio","alugado","cedido","comodato","em_regularizacao"]).default("proprio"),
+  cep: z.string().regex(/^\d{5}-?\d{3}$/, "CEP inválido").optional().or(z.literal("")),
+  state: optionalText,
+  city: optionalText,
+  neighborhood: optionalText,
+  address: optionalText,
+  numero: optionalText,
+  complemento: optionalText,
+  acquired_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida").optional().or(z.literal("")),
+  contract_end_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida").optional().or(z.literal("")),
+  iptu_due_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida").optional().or(z.literal("")),
+  owner_name: optionalText,
+  owner_document: optionalText,
+  owner_phone: optionalText,
+  observations: optionalText,
+});
+export type PropertyInput = z.infer<typeof propertySchema>;
+
+export const assetSchema = z.object({
+  church_id: z.string().uuid("Comunidade obrigatória"),
+  property_id: z.string().uuid().optional().or(z.literal("")),
+  patrimony_code: optionalText,
+  tag_number: optionalText,
+  name: reqText("Nome do bem", 2),
+  category: z.enum(["mobiliario","equipamentos","som_multimidia","infraestrutura","nao_duravel"]),
+  subcategory: optionalText,
+  description: optionalText,
+  manufacturer: optionalText,
+  model: optionalText,
+  serial_number: optionalText,
+  location_text: optionalText,
+  acquired_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida").optional().or(z.literal("")),
+  acquisition_value: z.coerce.number().min(0, "Valor inválido").default(0),
+  origin: z.enum(["compra_nf","doacao","sem_nf","transferencia","comodato","outro"]).default("outro"),
+  condition: z.enum(["novo","otimo","bom","regular","ruim","inutilizado","baixado"]).default("bom"),
+  is_durable: z.coerce.boolean().default(true),
+  observations: optionalText,
+});
+export type AssetInput = z.infer<typeof assetSchema>;
