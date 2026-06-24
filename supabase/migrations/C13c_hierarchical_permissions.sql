@@ -275,7 +275,7 @@ create policy news_scoped_write on public.news for all to authenticated
 do $$
 declare pol record;
 begin
-  for pol in select policyname from pg_policies where tablename in ('ministries','ministry_members','ministry_posts') and schemaname = 'public' loop
+  for pol in select policyname, tablename from pg_policies where tablename in ('ministries','ministry_members','ministry_posts') and schemaname = 'public' loop
     execute format('drop policy if exists %I on public.%I', pol.policyname, pol.tablename);
   end loop;
 end $$;

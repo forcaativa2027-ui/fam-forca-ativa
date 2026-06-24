@@ -1,267 +1,165 @@
 -- ============================================================
--- CEC FAMILY — IA-1: Indicadores Objetivos (sem LLM)
--- Functions Postgres puras que calculam saude ministerial.
--- - get_lg_indicators(lg_id, ref_date)
--- - get_lg_indicators_all(community_id?)  -- lista todos LGs
--- - get_aggregate_indicators(level, scope_id) -- agregacao bottom-up
--- Idempotente.
+-- CEC FAMILY — Classificação 🟢🟡🔴 e Dashboard Hierárquico
+-- (Fecha Caderno 11-B itens 18 e 19, sem dependência de IA)
 -- ============================================================
 
--- ============================================================
--- 1) INDICADORES DE UM LIFE GROUP
--- ============================================================
-create or replace function public.get_lg_indicators(
-  p_lg_id uuid,
-  p_ref_date date default current_date
-)
-returns table(
-  life_group_id           uuid,
-  -- frequencia
-  attendance_avg_last_4   numeric,
-  attendance_avg_last_12  numeric,
-  -- crescimento
-  members_now             int,
-  members_30d_ago         int,
-  members_90d_ago         int,
-  growth_30d_pct          numeric,
-  growth_90d_pct          numeric,
-  -- novos convertidos
-  new_converts_90d        int,
-  -- discipulado
-  discipleship_rate_pct   numeric,
-  -- consistencia de relatos: % de semanas com relatorio nos ultimos 12
-  report_consistency_pct  numeric,
-  -- visitantes
-  visitors_avg_last_4     numeric,
-  -- producao do GE (decisoes, visitas)
-  decisions_90d           int,
-  visits_made_90d         int,
-  -- multiplicacao
-  multiplication_target   int,
-  multiplication_pct      numeric,
-  -- meta-dados
-  last_report_date        date,
-  reports_last_90d        int
-)
-language plpgsql stable security definer set search_path = public as $$
-begin
-  return query
-  with
-  -- relatórios recentes do LG
-  reports as (
-    select id, meeting_date, attendance_count, visitors_count,
-           total_present, decisions_count, visits_made
-    from public.meeting_reports
-    where life_group_id = p_lg_id
-      and meeting_date <= p_ref_date
-    order by meeting_date desc
-  ),
-  reports_last_4  as (select * from reports limit 4),
-  reports_last_12 as (select * from reports limit 12),
-  -- ativos hoje
-  active_now as (
-    select count(*)::int as n from public.members
-    where life_group_id = p_lg_id and status = 'ativo'
-  ),
-  -- ativos há 30 e 90 dias (estimativa por joined_at)
-  active_30 as (
-    select count(*)::int as n from public.members
-    where life_group_id = p_lg_id and status = 'ativo'
-      and (joined_at is null or joined_at <= p_ref_date - interval '30 days')
-  ),
-  active_90 as (
-    select count(*)::int as n from public.members
-    where life_group_id = p_lg_id and status = 'ativo'
-      and (joined_at is null or joined_at <= p_ref_date - interval '90 days')
-  ),
-  -- novos convertidos nos últimos 90 dias
-  converts as (
-    select count(*)::int as n from public.members
-    where life_group_id = p_lg_id
-      and journey_stage = 'novo_convertido'
-      and created_at >= (p_ref_date - interval '90 days')
-  ),
-  -- discipulado ativo (membros como disciple em discipleships ativos)
-  disc as (
-    select
-      (select count(*)::int from public.discipleships d
-        join public.members m on m.id = d.disciple_id
-       where m.life_group_id = p_lg_id and d.status = 'ativo') as n_in_discipleship,
-      (select count(*)::int from public.members
-        where life_group_id = p_lg_id and status = 'ativo') as n_active
-  ),
-  -- meta de multiplicacao
-  lg_target as (
-    select coalesce(multiplication_target, 12) as t
-    from public.life_groups where id = p_lg_id
-  ),
-  -- agregados
-  agg as (
-    select
-      (select avg(total_present)::numeric(10,1) from reports_last_4)  as att4,
-      (select avg(total_present)::numeric(10,1) from reports_last_12) as att12,
-      (select avg(visitors_count)::numeric(10,1) from reports_last_4) as vis4,
-      (select sum(decisions_count)::int from reports where meeting_date >= (p_ref_date - interval '90 days')) as dec90,
-      (select sum(visits_made)::int    from reports where meeting_date >= (p_ref_date - interval '90 days')) as vmd90,
-      (select count(*)::int            from reports where meeting_date >= (p_ref_date - interval '90 days')) as r90,
-      (select max(meeting_date)        from reports) as last_rep
-  )
-  select
-    p_lg_id,
-    coalesce(agg.att4, 0),
-    coalesce(agg.att12, 0),
-    active_now.n,
-    active_30.n,
-    active_90.n,
-    case when active_30.n > 0
-      then ((active_now.n - active_30.n)::numeric / active_30.n * 100)::numeric(10,1)
-      else 0::numeric(10,1) end,
-    case when active_90.n > 0
-      then ((active_now.n - active_90.n)::numeric / active_90.n * 100)::numeric(10,1)
-      else 0::numeric(10,1) end,
-    converts.n,
-    case when disc.n_active > 0
-      then (disc.n_in_discipleship::numeric / disc.n_active * 100)::numeric(10,1)
-      else 0::numeric(10,1) end,
-    -- consistencia: relatos de 12 semanas (ideal: 12)
-    case when 12 > 0
-      then (least((select count(*) from reports_last_12), 12)::numeric / 12 * 100)::numeric(10,1)
-      else 0::numeric(10,1) end,
-    coalesce(agg.vis4, 0),
-    coalesce(agg.dec90, 0),
-    coalesce(agg.vmd90, 0),
-    lg_target.t,
-    case when lg_target.t > 0
-      then least(100, (active_now.n::numeric / lg_target.t * 100))::numeric(10,1)
-      else 0::numeric(10,1) end,
-    agg.last_rep,
-    coalesce(agg.r90, 0)
-  from agg, active_now, active_30, active_90, converts, disc, lg_target;
-end; $$;
+do $$ begin
+  create type mda_health as enum ('saudavel', 'atencao', 'necessita_intervencao');
+exception when duplicate_object then null; end $$;
 
-grant execute on function public.get_lg_indicators(uuid, date) to authenticated;
-
--- ============================================================
--- 2) LISTAR INDICADORES DE TODOS OS LGs (filtrado por comunidade)
--- ============================================================
-create or replace function public.get_all_lg_indicators(p_community_id uuid default null)
-returns table(
-  life_group_id           uuid,
-  life_group_name         text,
-  church_id               uuid,
-  attendance_avg_last_4   numeric,
-  attendance_avg_last_12  numeric,
-  members_now             int,
-  members_30d_ago         int,
-  members_90d_ago         int,
-  growth_30d_pct          numeric,
-  growth_90d_pct          numeric,
-  new_converts_90d        int,
-  discipleship_rate_pct   numeric,
-  report_consistency_pct  numeric,
-  visitors_avg_last_4     numeric,
-  decisions_90d           int,
-  visits_made_90d         int,
-  multiplication_target   int,
-  multiplication_pct      numeric,
-  last_report_date        date,
-  reports_last_90d        int
-)
-language plpgsql stable security definer set search_path = public as $$
-begin
-  return query
-  select
-    lg.id, lg.name, lg.church_id,
-    ind.attendance_avg_last_4, ind.attendance_avg_last_12,
-    ind.members_now, ind.members_30d_ago, ind.members_90d_ago,
-    ind.growth_30d_pct, ind.growth_90d_pct,
-    ind.new_converts_90d, ind.discipleship_rate_pct,
-    ind.report_consistency_pct, ind.visitors_avg_last_4,
-    ind.decisions_90d, ind.visits_made_90d,
-    ind.multiplication_target, ind.multiplication_pct,
-    ind.last_report_date, ind.reports_last_90d
-  from public.life_groups lg
-  cross join lateral public.get_lg_indicators(lg.id) ind
-  where lg.is_active
-    and (p_community_id is null or lg.church_id = p_community_id);
-end; $$;
-
-grant execute on function public.get_all_lg_indicators(uuid) to authenticated;
-
--- ============================================================
--- 3) INDICADORES AGREGADOS POR ESCOPO HIERARQUICO
--- Agregação dos LGs filhos de um setor/área/distrito/igreja.
--- ============================================================
-create or replace function public.get_aggregate_indicators(
-  p_level text,             -- 'sector','area','district','church'
-  p_scope_id uuid
-)
-returns table(
-  level                  text,
-  scope_id               uuid,
-  total_lgs              int,
-  total_members          int,
-  total_new_converts_90d int,
-  attendance_avg         numeric,
-  growth_30d_pct         numeric,
-  discipleship_rate_pct  numeric,
-  decisions_90d          int,
-  visits_made_90d        int,
-  multiplication_pct_avg numeric,
-  report_consistency_pct numeric
-)
+-- ---------- Função-base: métricas de um conjunto de LGs ----------
+create or replace function public.lg_set_metrics(p_lg_ids uuid[])
+returns jsonb
 language plpgsql stable security definer set search_path = public as $$
 declare
-  v_lg_ids uuid[];
+  v_total int; v_active int; v_reported_30d int; v_with_leader int;
+  v_multiplicando int; v_multiplicado int; v_in_formation int;
+  v_members int; v_visitors_30d int; v_decisions_30d int;
+  v_evasion_count int; v_health_score int;
 begin
-  -- coleta os IDs dos LGs sob o escopo
-  if p_level = 'sector' then
-    select array_agg(id) into v_lg_ids
-    from public.life_groups
-    where sector_id = p_scope_id and is_active;
-  elsif p_level = 'area' then
-    select array_agg(lg.id) into v_lg_ids
-    from public.life_groups lg
-    join public.sectors s on s.id = lg.sector_id
-    where s.area_id = p_scope_id and lg.is_active;
-  elsif p_level = 'district' then
-    select array_agg(lg.id) into v_lg_ids
-    from public.life_groups lg
-    join public.sectors s on s.id = lg.sector_id
-    join public.areas a   on a.id = s.area_id
-    where a.district_id = p_scope_id and lg.is_active;
-  elsif p_level = 'church' then
-    select array_agg(id) into v_lg_ids
-    from public.life_groups
-    where church_id = p_scope_id and is_active;
-  else
-    raise exception 'invalid level: %', p_level;
+  if array_length(p_lg_ids, 1) is null then
+    return jsonb_build_object('total_lgs', 0, 'active_lgs', 0, 'health_class', 'necessita_intervencao', 'health_score', 0);
   end if;
 
-  if v_lg_ids is null or array_length(v_lg_ids, 1) is null then
-    return query select p_level, p_scope_id, 0, 0, 0, 0::numeric, 0::numeric, 0::numeric, 0, 0, 0::numeric, 0::numeric;
-    return;
+  select count(*) into v_total from public.life_groups where id = any(p_lg_ids);
+  select count(*) into v_active from public.life_groups
+    where id = any(p_lg_ids) and is_active and coalesce(status_lg::text,'ativo') <> 'encerrado';
+  select count(*) into v_with_leader from public.life_groups where id = any(p_lg_ids) and leader_id is not null;
+  select count(*) into v_multiplicando from public.life_groups where id = any(p_lg_ids) and status_lg::text = 'em_multiplicacao';
+  select count(*) into v_multiplicado from public.life_groups where id = any(p_lg_ids) and status_lg::text = 'multiplicado';
+  select count(*) into v_in_formation from public.life_groups where id = any(p_lg_ids) and status_lg::text = 'em_formacao';
+
+  select count(distinct life_group_id) into v_reported_30d
+    from public.meeting_reports
+    where life_group_id = any(p_lg_ids) and meeting_date >= current_date - 30;
+
+  select count(*) into v_members from public.members
+    where life_group_id = any(p_lg_ids) and status = 'ativo';
+
+  select coalesce(sum(visitors_count), 0), coalesce(sum(decisions_count), 0)
+    into v_visitors_30d, v_decisions_30d
+    from public.meeting_reports
+    where life_group_id = any(p_lg_ids) and meeting_date >= current_date - 30;
+
+  select count(*) into v_evasion_count
+    from public.members_at_risk_evasion
+    where life_group_id = any(p_lg_ids);
+
+  if v_active = 0 then
+    v_health_score := 0;
+  else
+    v_health_score :=
+      (v_reported_30d::numeric / nullif(v_active, 0) * 50)::int +
+      (v_with_leader::numeric  / nullif(v_active, 0) * 30)::int +
+      coalesce((greatest(0, 1 - (v_evasion_count::numeric / nullif(v_members, 0))) * 20)::int, 20);
+  end if;
+
+  return jsonb_build_object(
+    'total_lgs', v_total,
+    'active_lgs', v_active,
+    'reported_30d', v_reported_30d,
+    'with_leader', v_with_leader,
+    'multiplicando', v_multiplicando,
+    'multiplicado', v_multiplicado,
+    'in_formation', v_in_formation,
+    'members', v_members,
+    'visitors_30d', v_visitors_30d,
+    'decisions_30d', v_decisions_30d,
+    'evasion_count', v_evasion_count,
+    'reporting_rate', case when v_active = 0 then 0 else round(v_reported_30d::numeric / v_active * 100, 1) end,
+    'leader_coverage', case when v_active = 0 then 0 else round(v_with_leader::numeric  / v_active * 100, 1) end,
+    'health_score', v_health_score,
+    'health_class', case
+      when v_active = 0 then 'necessita_intervencao'
+      when v_health_score >= 75 then 'saudavel'
+      when v_health_score >= 50 then 'atencao'
+      else 'necessita_intervencao'
+    end
+  );
+end; $$;
+grant execute on function public.lg_set_metrics(uuid[]) to authenticated;
+
+-- ---------- Métricas por nível MDA ----------
+create or replace function public.sector_metrics(p_sector_id uuid)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select public.lg_set_metrics(array(select id from public.life_groups where sector_id = p_sector_id));
+$$;
+grant execute on function public.sector_metrics(uuid) to authenticated;
+
+create or replace function public.area_metrics(p_area_id uuid)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select public.lg_set_metrics(array(
+    select lg.id from public.life_groups lg
+    join public.sectors s on s.id = lg.sector_id
+    where s.area_id = p_area_id));
+$$;
+grant execute on function public.area_metrics(uuid) to authenticated;
+
+create or replace function public.district_metrics(p_district_id uuid)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select public.lg_set_metrics(array(
+    select lg.id from public.life_groups lg
+    join public.sectors s on s.id = lg.sector_id
+    join public.areas a   on a.id = s.area_id
+    where a.district_id = p_district_id));
+$$;
+grant execute on function public.district_metrics(uuid) to authenticated;
+
+create or replace function public.church_metrics(p_church_id uuid)
+returns jsonb language sql stable security definer set search_path = public as $$
+  select public.lg_set_metrics(array(select id from public.life_groups where church_id = p_church_id));
+$$;
+grant execute on function public.church_metrics(uuid) to authenticated;
+
+create or replace function public.church_tree_metrics(p_church_id uuid)
+returns jsonb language sql stable security definer set search_path = public as $$
+  with recursive descendants as (
+    select id from public.churches where id = p_church_id
+    union all
+    select c.id from public.churches c
+    inner join descendants d on c.parent_id = d.id
+  )
+  select public.lg_set_metrics(array(
+    select id from public.life_groups where church_id in (select id from descendants)));
+$$;
+grant execute on function public.church_tree_metrics(uuid) to authenticated;
+
+create or replace function public.national_metrics()
+returns jsonb language sql stable security definer set search_path = public as $$
+  select public.lg_set_metrics(array(select id from public.life_groups));
+$$;
+grant execute on function public.national_metrics() to authenticated;
+
+-- ---------- Lista de LGs com classificação ----------
+create or replace function public.lgs_with_health(p_church_id uuid default null)
+returns table (
+  lg_id uuid, lg_name text, church_id uuid, status_lg text,
+  members_count int, last_report_date date, evasion_count int, health_class text
+)
+language plpgsql stable security definer set search_path = public as $$
+declare v_lg_ids uuid[];
+begin
+  if p_church_id is null then
+    v_lg_ids := array(select id from public.life_groups);
+  else
+    with recursive descendants as (
+      select id from public.churches where id = p_church_id
+      union all
+      select c.id from public.churches c
+      inner join descendants d on c.parent_id = d.id
+    )
+    select array(select id from public.life_groups where church_id in (select id from descendants))
+    into v_lg_ids;
   end if;
 
   return query
-  with lg_inds as (
-    select ind.* from unnest(v_lg_ids) as lg(id)
-    cross join lateral public.get_lg_indicators(lg.id) ind
-  )
   select
-    p_level,
-    p_scope_id,
-    array_length(v_lg_ids, 1) as total_lgs,
-    coalesce(sum(members_now), 0)::int,
-    coalesce(sum(new_converts_90d), 0)::int,
-    coalesce(avg(attendance_avg_last_4), 0)::numeric(10,1),
-    coalesce(avg(growth_30d_pct), 0)::numeric(10,1),
-    coalesce(avg(discipleship_rate_pct), 0)::numeric(10,1),
-    coalesce(sum(decisions_90d), 0)::int,
-    coalesce(sum(visits_made_90d), 0)::int,
-    coalesce(avg(multiplication_pct), 0)::numeric(10,1),
-    coalesce(avg(report_consistency_pct), 0)::numeric(10,1)
-  from lg_inds;
+    lg.id, lg.name, lg.church_id, coalesce(lg.status_lg::text, 'ativo'),
+    (select count(*)::int from public.members where life_group_id = lg.id and status = 'ativo'),
+    (select max(meeting_date) from public.meeting_reports where life_group_id = lg.id),
+    (select count(*)::int from public.members_at_risk_evasion where life_group_id = lg.id),
+    (public.lg_set_metrics(array[lg.id])->>'health_class')::text
+  from public.life_groups lg
+  where lg.id = any(v_lg_ids);
 end; $$;
-
-grant execute on function public.get_aggregate_indicators(text, uuid) to authenticated;
+grant execute on function public.lgs_with_health(uuid) to authenticated;
