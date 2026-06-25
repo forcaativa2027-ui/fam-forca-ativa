@@ -357,3 +357,21 @@ export const useControlTowerAlerts = (opts?: { severity?: AlertSeverity; alertTy
   useQuery({ queryKey: ["control-tower-alerts", opts], queryFn: () => CT.getControlTowerAlerts(supabase, opts), refetchInterval: 60000 });
 export const useControlTowerSummary = () =>
   useQuery({ queryKey: ["control-tower-summary"], queryFn: () => CT.getControlTowerSummary(supabase), refetchInterval: 60000 });
+
+// C19 — Governança por Delegação
+import * as Del from "@/services/delegations";
+import type { DelegationModule } from "@/types/domain";
+export const useCouncilMembers = () =>
+  useQuery({ queryKey: ["council-members"], queryFn: () => Del.listCouncilMembers(supabase) });
+export const useDelegations = (opts?: { status?: string; module?: DelegationModule; profile_id?: string }) =>
+  useQuery({ queryKey: ["delegations", opts], queryFn: () => Del.listDelegations(supabase, opts) });
+export const useRoleDelegations = () =>
+  useQuery({ queryKey: ["role-delegations"], queryFn: () => Del.listRoleDelegations(supabase) });
+export const useEmergencyAccess = () =>
+  useQuery({ queryKey: ["emergency-access"], queryFn: () => Del.listEmergencyAccess(supabase) });
+export const useComplianceDashboard = () =>
+  useQuery({ queryKey: ["compliance-dashboard"], queryFn: () => Del.getComplianceDashboard(supabase), refetchInterval: 60000 });
+export const useModuleRanking = () =>
+  useQuery({ queryKey: ["module-ranking"], queryFn: () => Del.getModuleRanking(supabase) });
+export const useModuleAccess = (module: DelegationModule) =>
+  useQuery({ queryKey: ["module-access", module], queryFn: () => Del.checkModuleAccess(supabase, module), staleTime: 60000 });
