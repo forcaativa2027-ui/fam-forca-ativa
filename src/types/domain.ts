@@ -672,3 +672,91 @@ export interface FinanceBudgetVsActual extends FinanceBudget {
   pct_realizado: number;
   status: "atingido" | "no_caminho" | "atencao";
 }
+
+// C12 Blocos 2-5 — Patrimônio Avançado
+export type DepreciationMethod = "linear" | "acelerado" | "soma_digitos";
+export type MaintenanceType = "preventiva" | "corretiva" | "emergencial" | "revisao";
+export type MaintenanceStatus = "agendada" | "em_andamento" | "concluida" | "cancelada";
+export type InventoryStatus = "encontrado" | "nao_encontrado" | "divergente" | "baixado";
+
+export interface AssetDepreciation {
+  id: string; asset_id: string;
+  method: DepreciationMethod;
+  useful_life_years: number;
+  residual_value: number;
+  start_date: string;
+  notes: string | null;
+  created_at: string; updated_at: string;
+}
+
+export interface AssetDepreciationSummary {
+  asset_id: string; asset_name: string;
+  church_id: string; category: string; condition: string;
+  acquisition_value: number | null; acquired_at: string | null;
+  method: string; useful_life_years: number; residual_value: number; start_date: string;
+  anos_decorridos: number; depreciacao_anual: number;
+  depreciacao_acumulada: number; valor_atual_liquido: number;
+  pct_depreciado: number; status_depreciacao: string;
+}
+
+export interface AssetMaintenance {
+  id: string; asset_id: string;
+  type: MaintenanceType; status: MaintenanceStatus;
+  scheduled_at: string; completed_at: string | null;
+  next_maintenance: string | null; cost: number | null;
+  provider_name: string | null; provider_phone: string | null;
+  description: string; result: string | null;
+  responsible_id: string | null; created_by: string | null;
+  created_at: string; updated_at: string;
+}
+
+export interface MaintenanceUpcoming extends AssetMaintenance {
+  asset_name: string; church_id: string; church_name: string | null;
+  category: string; dias_para_manutencao: number;
+}
+
+export interface MaintenanceHistory extends AssetMaintenance {
+  asset_name: string; church_id: string; church_name: string | null; category: string;
+}
+
+export interface AssetInventory {
+  id: string; campaign_name: string;
+  church_id: string | null; inventory_date: string;
+  asset_id: string; status: InventoryStatus;
+  found_condition: string | null; found_location: string | null;
+  notes: string | null; checked_by: string | null; created_at: string;
+}
+
+export interface AssetLastInventory {
+  asset_id: string; campaign_name: string; inventory_date: string;
+  last_status: string; found_condition: string | null; found_location: string | null;
+  notes: string | null; asset_name: string; church_id: string;
+  church_name: string | null; category: string; current_condition: string;
+}
+
+export interface InventoryCampaignSummary {
+  campaign_name: string; church_id: string | null; inventory_date: string;
+  total_bens: number; encontrados: number; nao_encontrados: number;
+  divergentes: number; baixados: number; pct_encontrados: number;
+}
+
+export interface PatrimonyAccounting {
+  church_id: string; church_name: string | null; category: string;
+  total_bens: number; bens_duraveis: number;
+  valor_aquisicao_total: number; depreciacao_acumulada_total: number; valor_atual_total: number;
+  custo_manutencao_ano: number;
+  cond_novo: number; cond_otimo: number; cond_bom: number; cond_regular: number; cond_ruim: number;
+}
+
+export interface PatrimonyNationalSummary {
+  igrejas_com_patrimonio: number; total_imoveis: number; total_bens: number;
+  valor_total_aquisicao: number; depreciacao_total: number; valor_liquido_total: number;
+  manutencoes_pendentes: number; bens_nao_encontrados: number; bens_depreciados: number;
+}
+
+export interface PatrimonyAlert {
+  alert_type: string; severity: string;
+  asset_id: string | null; asset_name: string;
+  church_id: string | null; church_name: string | null;
+  detail: string; days_overdue: number;
+}
