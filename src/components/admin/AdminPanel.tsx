@@ -42,6 +42,7 @@ import { GenealogyAdmin } from "./GenealogyAdmin";
 import { ExpansionMapAdmin } from "./ExpansionMapAdmin";
 import { PatrimonyAdmin } from "./PatrimonyAdmin";
 import { PatrimonyAdvancedAdmin } from "./PatrimonyAdvancedAdmin";
+import { ExportAdmin } from "./ExportAdmin";
 import { SupervisionDashboard } from "./SupervisionDashboard";
 import { CrmPipelineAdmin } from "./CrmPipelineAdmin";
 import { AcolhimentoAdmin } from "./AcolhimentoAdmin";
@@ -89,6 +90,7 @@ export default function AdminPanel() {
             <TabsTrigger value="expansion-map">Mapa</TabsTrigger>
             <TabsTrigger value="patrimony">Patrimônio</TabsTrigger>
             <TabsTrigger value="patrimony-advanced">🏛️ Patrimônio+</TabsTrigger>
+            <TabsTrigger value="export">📥 Exportar</TabsTrigger>
             <TabsTrigger value="news">Notícias</TabsTrigger>
             <TabsTrigger value="banners">Banners</TabsTrigger>
             <TabsTrigger value="services">Cultos</TabsTrigger>
@@ -126,6 +128,7 @@ export default function AdminPanel() {
         <TabsContent value="expansion-map"><ExpansionMapAdmin /></TabsContent>
         <TabsContent value="patrimony"><PatrimonyAdmin /></TabsContent>
         <TabsContent value="patrimony-advanced"><PatrimonyAdvancedAdmin /></TabsContent>
+        <TabsContent value="export"><ExportAdmin /></TabsContent>
         <TabsContent value="news"><NewsAdmin /></TabsContent>
         <TabsContent value="banners"><BannersAdmin /></TabsContent>
         <TabsContent value="services"><ServiceTimesAdmin /></TabsContent>
