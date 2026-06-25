@@ -375,3 +375,16 @@ export const useModuleRanking = () =>
   useQuery({ queryKey: ["module-ranking"], queryFn: () => Del.getModuleRanking(supabase) });
 export const useModuleAccess = (module: DelegationModule) =>
   useQuery({ queryKey: ["module-access", module], queryFn: () => Del.checkModuleAccess(supabase, module), staleTime: 60000 });
+
+// C20 — Score do Membro + Aniversariantes
+import * as MS from "@/services/memberScore";
+export const useMemberScores = (opts?: { churchId?: string; lgId?: string; band?: string }) =>
+  useQuery({ queryKey: ["member-scores", opts], queryFn: () => MS.getMemberScores(supabase, opts) });
+export const useMemberScoreById = (memberId: string) =>
+  useQuery({ queryKey: ["member-score", memberId], queryFn: () => MS.getMemberScoreById(supabase, memberId), enabled: !!memberId });
+export const useBirthdaysToday = (churchId?: string) =>
+  useQuery({ queryKey: ["birthdays-today", churchId], queryFn: () => MS.getBirthdaysToday(supabase, churchId), refetchInterval: 3600000 });
+export const useBirthdaysMonth = (opts?: { churchId?: string; lgId?: string }) =>
+  useQuery({ queryKey: ["birthdays-month", opts], queryFn: () => MS.getBirthdaysMonth(supabase, opts) });
+export const useBirthdaysUpcoming = (churchId?: string) =>
+  useQuery({ queryKey: ["birthdays-upcoming", churchId], queryFn: () => MS.getBirthdaysUpcoming(supabase, churchId) });
