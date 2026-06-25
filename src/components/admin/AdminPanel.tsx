@@ -43,6 +43,7 @@ import { ExpansionMapAdmin } from "./ExpansionMapAdmin";
 import { PatrimonyAdmin } from "./PatrimonyAdmin";
 import { PatrimonyAdvancedAdmin } from "./PatrimonyAdvancedAdmin";
 import { ExportAdmin } from "./ExportAdmin";
+import { GlobalSearch } from "./GlobalSearch";
 import { SupervisionDashboard } from "./SupervisionDashboard";
 import { CrmPipelineAdmin } from "./CrmPipelineAdmin";
 import { AcolhimentoAdmin } from "./AcolhimentoAdmin";
@@ -57,6 +58,8 @@ export default function AdminPanel() {
   const isAdmin = me && ["apostolo","pastor"].includes(me.role);
 
   if (isLoading) return <main className="grid h-screen place-items-center text-muted">Carregando…</main>;
+  const [activeTab, setActiveTab] = useState("supervision");
+
   if (!isAdmin) return (
     <Shell>
       <Card className="mx-auto max-w-md text-center">
@@ -71,7 +74,8 @@ export default function AdminPanel() {
 
   return (
     <Shell>
-      <Tabs defaultValue="supervision">
+      <GlobalSearch onNavigate={setActiveTab} />
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="overflow-x-auto">
           <TabsList className="mb-6 min-w-max">
             <TabsTrigger value="supervision">📊 Supervisão</TabsTrigger>
