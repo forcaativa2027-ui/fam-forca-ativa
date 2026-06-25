@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { MyMinistriesPanel } from "./MyMinistriesPanel";
+import { NotificationsPanel, useNotificationCount, NotificationBadge } from "./NotificationsPanel";
 import { supabase } from "@/lib/supabase/client";
 import {
   useMyProfile, useDashboard, useChurches, useMdaAlerts,
@@ -52,6 +53,7 @@ export default function PanelDashboard() {
   const { data: profile } = useMyProfile();
   const { data: member } = useMyMember();
   const isAdmin = profile?.role === "apostolo" || profile?.role === "pastor";
+  const notifCount = useNotificationCount();
 
   async function signOut() {
     if (profile) await logAudit(supabase, "logout", "auth", profile.id);
@@ -92,6 +94,7 @@ export default function PanelDashboard() {
           <div className="overflow-x-auto">
             <TabsList className="mb-6 min-w-max">
               {isAdmin && <TabsTrigger value="geral"><BarChart3 className="mr-1 h-4 w-4" />Visão geral</TabsTrigger>}
+              {isAdmin && <TabsTrigger value="alertas"><NotificationBadge count={notifCount} /></TabsTrigger>}
               <TabsTrigger value="celula"><Users className="mr-1 h-4 w-4" />Minha célula</TabsTrigger>
               <TabsTrigger value="discipulado"><Heart className="mr-1 h-4 w-4" />Discipulado</TabsTrigger>
               <TabsTrigger value="jornada"><Map className="mr-1 h-4 w-4" />Minha jornada</TabsTrigger>
@@ -102,6 +105,7 @@ export default function PanelDashboard() {
           </div>
 
           {isAdmin && <TabsContent value="geral"><GeneralView /></TabsContent>}
+          {isAdmin && <TabsContent value="alertas"><NotificationsPanel /></TabsContent>}
           <TabsContent value="celula"><MyCellTab member={member ?? null} /></TabsContent>
           <TabsContent value="discipulado"><DiscipleshipTab member={member ?? null} /></TabsContent>
           <TabsContent value="jornada"><JourneyTab member={member ?? null} /></TabsContent>
