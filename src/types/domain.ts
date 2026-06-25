@@ -558,3 +558,52 @@ export interface ControlTowerSummary {
   lgs_afetados: number;
   igrejas_afetadas: number;
 }
+
+// C19 — Governança por Delegação
+export type DelegationModule = "intelligence"|"reports"|"control_tower"|"finance"|"patrimony"|"audit";
+export type DelegationScope  = "lg"|"setor"|"area"|"distrito"|"nucleo"|"sede"|"nacional";
+export type DelegationStatus = "pendente"|"ativo"|"rejeitado"|"revogado"|"expirado";
+export type CouncilVote      = "aprovado"|"reprovado"|"abstencao";
+
+export interface CouncilMember {
+  id: string; profile_id: string; cargo: string; is_active: boolean;
+  created_at: string; updated_at: string;
+}
+export interface ModuleDelegation {
+  id: string; profile_id: string; module: DelegationModule;
+  trust_level: number; scope: DelegationScope; scope_id: string|null; scope_name: string;
+  status: DelegationStatus; expires_at: string|null;
+  requested_by: string|null; requested_at: string; request_reason: string;
+  is_critical: boolean; council_pauta: boolean; council_pauta_at: string|null;
+  reviewed_by: string|null; reviewed_at: string|null; review_notes: string|null;
+  revoked_by: string|null; revoked_at: string|null; revoke_reason: string|null;
+  created_at: string; updated_at: string;
+}
+export interface DelegationPanel extends ModuleDelegation {
+  profile_name: string; profile_email: string; profile_role: string;
+  profile_church_id: string|null; profile_church_name: string|null;
+  requested_by_name: string|null; reviewed_by_name: string|null; revoked_by_name: string|null;
+  votes_yes: number; votes_no: number; votes_abstain: number; votes_total: number;
+  days_remaining: number|null;
+}
+export interface DelegationApproval {
+  id: string; delegation_id: string; director_id: string;
+  vote: CouncilVote; observation: string|null; created_at: string;
+}
+export interface RoleDelegation {
+  id: string; role_name: string; module: DelegationModule;
+  trust_level: number; scope: string; description: string|null; is_active: boolean;
+}
+export interface EmergencyAccess {
+  id: string; profile_id: string; module: DelegationModule;
+  reason: string; approved_by: string|null; starts_at: string; expires_at: string; is_active: boolean;
+}
+export interface ComplianceDashboard {
+  total_delegacoes: number; ativas: number; pendentes: number; expiradas: number; revogadas: number;
+  vencendo_7d: number; vencendo_15d: number; vencendo_30d: number;
+  permanentes: number; criticas_ativas: number; nivel_estrategico: number; aguardando_conselho: number;
+}
+export interface ModuleDelegationRanking {
+  module: DelegationModule; delegacoes_ativas: number; pendentes: number;
+  total_historico: number; nivel_medio: number;
+}
