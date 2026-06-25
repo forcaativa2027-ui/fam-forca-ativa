@@ -388,3 +388,12 @@ export const useBirthdaysMonth = (opts?: { churchId?: string; lgId?: string }) =
   useQuery({ queryKey: ["birthdays-month", opts], queryFn: () => MS.getBirthdaysMonth(supabase, opts) });
 export const useBirthdaysUpcoming = (churchId?: string) =>
   useQuery({ queryKey: ["birthdays-upcoming", churchId], queryFn: () => MS.getBirthdaysUpcoming(supabase, churchId) });
+
+// C21 — Financeiro Completo
+import * as Fn2 from "@/services/finance";
+export const useFinanceFlow = (churchId: string) =>
+  useQuery({ queryKey: ["finance-flow", churchId], queryFn: () => Fn2.getMonthlyFlow(supabase, churchId), enabled: !!churchId });
+export const useFinanceCategories = (churchId: string, year: number, month?: number) =>
+  useQuery({ queryKey: ["finance-categories", churchId, year, month], queryFn: () => Fn2.getCategoryBreakdown(supabase, churchId, year, month), enabled: !!churchId });
+export const useFinanceBudgets = (churchId: string, year: number) =>
+  useQuery({ queryKey: ["finance-budgets", churchId, year], queryFn: () => Fn2.getBudgets(supabase, churchId, year), enabled: !!churchId });
