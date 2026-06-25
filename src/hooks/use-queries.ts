@@ -390,10 +390,30 @@ export const useBirthdaysUpcoming = (churchId?: string) =>
   useQuery({ queryKey: ["birthdays-upcoming", churchId], queryFn: () => MS.getBirthdaysUpcoming(supabase, churchId) });
 
 // C21 — Financeiro Completo
-import * as Fn2 from "@/services/finance";
 export const useFinanceFlow = (churchId: string) =>
-  useQuery({ queryKey: ["finance-flow", churchId], queryFn: () => Fn2.getMonthlyFlow(supabase, churchId), enabled: !!churchId });
+  useQuery({ queryKey: ["finance-flow", churchId], queryFn: () => import("@/services/finance").then(m => m.getMonthlyFlow(supabase, churchId)), enabled: !!churchId });
 export const useFinanceCategories = (churchId: string, year: number, month?: number) =>
-  useQuery({ queryKey: ["finance-categories", churchId, year, month], queryFn: () => Fn2.getCategoryBreakdown(supabase, churchId, year, month), enabled: !!churchId });
+  useQuery({ queryKey: ["finance-categories", churchId, year, month], queryFn: () => import("@/services/finance").then(m => m.getCategoryBreakdown(supabase, churchId, year, month)), enabled: !!churchId });
 export const useFinanceBudgets = (churchId: string, year: number) =>
-  useQuery({ queryKey: ["finance-budgets", churchId, year], queryFn: () => Fn2.getBudgets(supabase, churchId, year), enabled: !!churchId });
+  useQuery({ queryKey: ["finance-budgets", churchId, year], queryFn: () => import("@/services/finance").then(m => m.getBudgets(supabase, churchId, year)), enabled: !!churchId });
+
+// C12 Blocos 2-5 — Patrimônio Avançado
+import * as PA from "@/services/patrimonyAdvanced";
+export const useDepreciationSummary = (churchId?: string) =>
+  useQuery({ queryKey: ["depreciation-summary", churchId], queryFn: () => PA.getDepreciationSummary(supabase, churchId) });
+export const useDepreciation = (assetId: string) =>
+  useQuery({ queryKey: ["depreciation", assetId], queryFn: () => PA.getDepreciation(supabase, assetId), enabled: !!assetId });
+export const useMaintenanceUpcoming = (churchId?: string) =>
+  useQuery({ queryKey: ["maintenance-upcoming", churchId], queryFn: () => PA.getMaintenanceUpcoming(supabase, churchId) });
+export const useMaintenanceHistory = (churchId?: string) =>
+  useQuery({ queryKey: ["maintenance-history", churchId], queryFn: () => PA.getMaintenanceHistory(supabase, churchId) });
+export const useInventoryCampaigns = (churchId?: string) =>
+  useQuery({ queryKey: ["inventory-campaigns", churchId], queryFn: () => PA.getCampaigns(supabase, churchId) });
+export const useLastInventory = (churchId?: string) =>
+  useQuery({ queryKey: ["last-inventory", churchId], queryFn: () => PA.getLastInventory(supabase, churchId) });
+export const usePatrimonyAccounting = (churchId?: string) =>
+  useQuery({ queryKey: ["patrimony-accounting", churchId], queryFn: () => PA.getPatrimonyAccounting(supabase, churchId) });
+export const usePatrimonyNationalSummary = () =>
+  useQuery({ queryKey: ["patrimony-national-summary"], queryFn: () => PA.getPatrimonyNationalSummary(supabase) });
+export const usePatrimonyAlerts = (churchId?: string) =>
+  useQuery({ queryKey: ["patrimony-alerts", churchId], queryFn: () => PA.getPatrimonyAlerts(supabase, churchId) });
