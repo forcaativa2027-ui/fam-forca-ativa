@@ -37,12 +37,11 @@ import { OrgDashboardAdmin } from "./OrgDashboardAdmin";
 import { IntelligenceAdmin } from "./IntelligenceAdmin";
 import { ControlTowerAdmin } from "./ControlTowerAdmin";
 import { DelegationsAdmin } from "./DelegationsAdmin";
-import { MemberScoreAdmin } from "./MemberScoreAdmin";
-import { BirthdaysAdmin } from "./BirthdaysAdmin";
 import { MinisterialReportsAdmin } from "./MinisterialReportsAdmin";
 import { GenealogyAdmin } from "./GenealogyAdmin";
 import { ExpansionMapAdmin } from "./ExpansionMapAdmin";
 import { PatrimonyAdmin } from "./PatrimonyAdmin";
+import { PatrimonyAdvancedAdmin } from "./PatrimonyAdvancedAdmin";
 import { SupervisionDashboard } from "./SupervisionDashboard";
 import { CrmPipelineAdmin } from "./CrmPipelineAdmin";
 import { AcolhimentoAdmin } from "./AcolhimentoAdmin";
@@ -83,14 +82,13 @@ export default function AdminPanel() {
             <TabsTrigger value="mda-health">Saúde MDA</TabsTrigger>
             <TabsTrigger value="org-dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="delegations">🔐 Delegações</TabsTrigger>
-            <TabsTrigger value="member-score">⭐ Score</TabsTrigger>
-            <TabsTrigger value="birthdays">🎂 Aniversariantes</TabsTrigger>
             <TabsTrigger value="control-tower">🗼 Torre de Controle</TabsTrigger>
             <TabsTrigger value="intelligence">🧠 Inteligência</TabsTrigger>
             <TabsTrigger value="ministerial-reports">📊 Relatórios</TabsTrigger>
             <TabsTrigger value="genealogy">Genealogia</TabsTrigger>
             <TabsTrigger value="expansion-map">Mapa</TabsTrigger>
             <TabsTrigger value="patrimony">Patrimônio</TabsTrigger>
+            <TabsTrigger value="patrimony-advanced">🏛️ Patrimônio+</TabsTrigger>
             <TabsTrigger value="news">Notícias</TabsTrigger>
             <TabsTrigger value="banners">Banners</TabsTrigger>
             <TabsTrigger value="services">Cultos</TabsTrigger>
@@ -121,14 +119,13 @@ export default function AdminPanel() {
         <TabsContent value="mda-health"><MdaHealthAdmin /></TabsContent>
         <TabsContent value="org-dashboard"><OrgDashboardAdmin /></TabsContent>
         <TabsContent value="delegations"><DelegationsAdmin /></TabsContent>
-        <TabsContent value="member-score"><MemberScoreAdmin /></TabsContent>
-        <TabsContent value="birthdays"><BirthdaysAdmin /></TabsContent>
         <TabsContent value="control-tower"><ControlTowerAdmin /></TabsContent>
         <TabsContent value="intelligence"><IntelligenceAdmin /></TabsContent>
         <TabsContent value="ministerial-reports"><MinisterialReportsAdmin /></TabsContent>
         <TabsContent value="genealogy"><GenealogyAdmin /></TabsContent>
         <TabsContent value="expansion-map"><ExpansionMapAdmin /></TabsContent>
         <TabsContent value="patrimony"><PatrimonyAdmin /></TabsContent>
+        <TabsContent value="patrimony-advanced"><PatrimonyAdvancedAdmin /></TabsContent>
         <TabsContent value="news"><NewsAdmin /></TabsContent>
         <TabsContent value="banners"><BannersAdmin /></TabsContent>
         <TabsContent value="services"><ServiceTimesAdmin /></TabsContent>
