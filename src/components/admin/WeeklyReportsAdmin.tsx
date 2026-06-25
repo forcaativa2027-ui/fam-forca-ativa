@@ -507,7 +507,7 @@ export function WeeklyReportsAdmin() {
               </Field>
 
               {err && <p className="text-sm text-destructive">{err}</p>}
-              <Button type="submit" disabled={isSubmitting || attendance.length === 0} className="gap-2">
+              <Button type="submit" disabled={isSubmitting} className="gap-2">
                 <Plus className="h-4 w-4" />Salvar relatório
               </Button>
             </form>
