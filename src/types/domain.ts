@@ -456,162 +456,105 @@ export type HealthBand = "saudavel" | "atencao" | "critico";
 export type ReliabilityBand = "confiavel" | "atencao" | "critico";
 
 export interface LgScoreMinisterial {
-  id: string;
-  name: string;
-  church_id: string;
-  leader_id: string | null;
-  status_lg: string;
-  founded_at: string | null;
-  mother_cell_id: string | null;
-  direct_children: number;
-  members_count: number;
-  total_relatorios: number | null;
-  media_presentes: number | null;
-  total_visitantes: number | null;
-  total_decisoes: number | null;
-  total_disc_ativos: number | null;
-  total_integrados: number | null;
-  total_novos_membros: number | null;
-  ultimo_relatorio: string | null;
-  pts_reporte: number;
-  pts_frequencia: number;
-  pts_retencao: number;
-  pts_discipulado: number;
-  pts_evangelismo: number;
-  pts_multiplicacao: number;
-  score_total: number;
-  health_band: HealthBand;
+  id: string; name: string; church_id: string; leader_id: string | null;
+  status_lg: string; founded_at: string | null; mother_cell_id: string | null;
+  direct_children: number; members_count: number;
+  total_relatorios: number | null; media_presentes: number | null;
+  total_visitantes: number | null; total_decisoes: number | null;
+  total_disc_ativos: number | null; total_integrados: number | null;
+  total_novos_membros: number | null; ultimo_relatorio: string | null;
+  pts_reporte: number; pts_frequencia: number; pts_retencao: number;
+  pts_discipulado: number; pts_evangelismo: number; pts_multiplicacao: number;
+  score_total: number; health_band: HealthBand;
 }
-
 export interface LgRanking extends LgScoreMinisterial {
   church_name: string | null;
-  rank_geral: number;
-  rank_frequencia: number;
-  rank_evangelismo: number;
-  rank_multiplicacao: number;
-  rank_discipulado: number;
-  rank_visitantes: number;
-  rank_membros: number;
+  rank_geral: number; rank_frequencia: number; rank_evangelismo: number;
+  rank_multiplicacao: number; rank_discipulado: number; rank_visitantes: number; rank_membros: number;
 }
-
 export interface RetentionFunnel {
-  visitantes: number;
-  consolidacao: number;
-  discipulado: number;
-  batismo: number;
-  membros_ativos: number;
-  servos_e_formacao: number;
-  lideres: number;
-  total: number;
+  visitantes: number; consolidacao: number; discipulado: number; batismo: number;
+  membros_ativos: number; servos_e_formacao: number; lideres: number; total: number;
 }
-
 export interface RetentionFunnelByChurch extends RetentionFunnel {
-  church_id: string;
-  church_name: string | null;
+  church_id: string; church_name: string | null;
 }
-
 export interface LgReliabilityIndex {
-  id: string;
-  name: string;
-  church_id: string;
-  church_name: string | null;
-  members_count: number;
-  relatorios_90d: number;
-  ultimo_relatorio: string | null;
-  dias_sem_relatorio: number;
-  taxa_reporte_pct: number;
-  flag_sem_relatorio_recente: boolean;
-  flag_reporte_irregular: boolean;
-  flag_dados_suspeitos: boolean;
-  flag_sem_membros: boolean;
-  total_flags: number;
-  reliability_band: ReliabilityBand;
+  id: string; name: string; church_id: string; church_name: string | null;
+  members_count: number; relatorios_90d: number; ultimo_relatorio: string | null;
+  dias_sem_relatorio: number; taxa_reporte_pct: number;
+  flag_sem_relatorio_recente: boolean; flag_reporte_irregular: boolean;
+  flag_dados_suspeitos: boolean; flag_sem_membros: boolean;
+  total_flags: number; reliability_band: ReliabilityBand;
 }
-
 export interface ReliabilitySummary {
-  total_lgs: number;
-  lgs_confiaveis: number;
-  lgs_atencao: number;
-  lgs_criticos: number;
-  lgs_sem_relatorio_recente: number;
-  lgs_reporte_irregular: number;
-  lgs_dados_suspeitos: number;
-  lgs_sem_membros: number;
-  taxa_reporte_media_pct: number;
-  pct_confiaveis: number;
+  total_lgs: number; lgs_confiaveis: number; lgs_atencao: number; lgs_criticos: number;
+  lgs_sem_relatorio_recente: number; lgs_reporte_irregular: number;
+  lgs_dados_suspeitos: number; lgs_sem_membros: number;
+  taxa_reporte_media_pct: number; pct_confiaveis: number;
 }
-
 export interface MonthlyConsolidation {
-  mes: string;
-  mes_label: string;
-  church_id: string;
-  church_name: string | null;
-  church_type: string | null;
-  church_parent_id: string | null;
-  sector_id: string | null;
-  sector_name: string | null;
-  area_id: string | null;
-  area_name: string | null;
-  district_id: string | null;
-  district_name: string | null;
-  lgs_reportaram: number;
-  total_relatorios: number;
-  total_presentes: number;
-  total_frequentadores: number;
-  total_visitantes: number;
-  total_decisoes: number;
-  total_disc_ativos: number;
-  total_disc_novos: number;
-  total_integrados: number;
-  total_novos_membros: number;
-  total_ebd: number;
-  total_ge: number;
-  total_oferta: number;
-  lgs_em_preparacao_mult: number;
-  lgs_nova_lideranca: number;
-  total_oracao_urgente: number;
-  total_visita_pastoral: number;
+  mes: string; mes_label: string; church_id: string; church_name: string | null;
+  church_type: string | null; church_parent_id: string | null;
+  sector_id: string | null; sector_name: string | null;
+  area_id: string | null; area_name: string | null;
+  district_id: string | null; district_name: string | null;
+  lgs_reportaram: number; total_relatorios: number;
+  total_presentes: number; total_frequentadores: number;
+  total_visitantes: number; total_decisoes: number;
+  total_disc_ativos: number; total_disc_novos: number;
+  total_integrados: number; total_novos_membros: number;
+  lgs_em_preparacao_mult: number; lgs_nova_lideranca: number;
+  total_oracao_urgente: number; total_visita_pastoral: number;
 }
-
 export interface GrowthVariation {
-  mes_label: string;
-  mes: string;
-  presentes: number;
-  visitantes: number;
-  decisoes: number;
-  integrados: number;
-  disc_ativos: number;
-  lgs_reportaram: number;
-  var_pct_presentes: number | null;
-  var_pct_visitantes: number | null;
-  var_pct_lgs_reportaram: number | null;
+  mes_label: string; mes: string;
+  presentes: number; visitantes: number; decisoes: number;
+  integrados: number; disc_ativos: number; lgs_reportaram: number;
+  var_pct_presentes: number | null; var_pct_visitantes: number | null; var_pct_lgs_reportaram: number | null;
 }
 
 // C17 — Central de Metas
-export type GoalScope = "nacional" | "sede" | "nucleo" | "distrito" | "area" | "setor" | "lg";
-export type GoalIndicator =
-  | "membros_ativos" | "visitantes" | "decisoes" | "batismos"
-  | "multiplicacoes" | "lgs_ativos" | "disc_ativos" | "integrados"
-  | "relatorios_enviados" | "novos_membros";
-export type GoalStatus = "atingido" | "no_caminho" | "atencao";
-
+export type GoalScope = "nacional"|"sede"|"nucleo"|"distrito"|"area"|"setor"|"lg";
+export type GoalIndicator = "membros_ativos"|"visitantes"|"decisoes"|"batismos"|"multiplicacoes"|"lgs_ativos"|"disc_ativos"|"integrados"|"relatorios_enviados"|"novos_membros";
+export type GoalStatus = "atingido"|"no_caminho"|"atencao";
 export interface MinistryGoal {
-  id: string;
-  scope: GoalScope;
-  scope_id: string | null;
-  scope_name: string;
-  year: number;
-  month: number | null;
-  indicator: GoalIndicator;
-  target_value: number;
-  notes: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
+  id: string; scope: GoalScope; scope_id: string | null; scope_name: string;
+  year: number; month: number | null; indicator: GoalIndicator;
+  target_value: number; notes: string | null; created_by: string | null;
+  created_at: string; updated_at: string;
+}
+export interface GoalVsActual extends MinistryGoal {
+  actual_value: number; pct_atingido: number; status_meta: GoalStatus;
 }
 
-export interface GoalVsActual extends MinistryGoal {
-  actual_value: number;
-  pct_atingido: number;
-  status_meta: GoalStatus;
+// C18 — Torre de Controle
+export type AlertType = "sem_relatorio"|"oracao_urgente"|"visita_pastoral"|"score_critico"|"sem_membros"|"meta_atrasada";
+export type AlertSeverity = "critico"|"atencao";
+
+export interface ControlTowerAlert {
+  alert_type: AlertType;
+  severity: AlertSeverity;
+  category: string;
+  lg_id: string | null;
+  lg_name: string;
+  church_id: string | null;
+  church_name: string | null;
+  detail: string;
+  severity_score: number;
+  alert_date: string;
+}
+
+export interface ControlTowerSummary {
+  total_criticos: number;
+  total_atencao: number;
+  total_alertas: number;
+  alertas_sem_relatorio: number;
+  alertas_oracao_urgente: number;
+  alertas_visita_pastoral: number;
+  alertas_score_critico: number;
+  alertas_sem_membros: number;
+  alertas_meta_atrasada: number;
+  lgs_afetados: number;
+  igrejas_afetadas: number;
 }
