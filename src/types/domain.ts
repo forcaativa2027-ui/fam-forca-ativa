@@ -607,3 +607,50 @@ export interface ModuleDelegationRanking {
   module: DelegationModule; delegacoes_ativas: number; pendentes: number;
   total_historico: number; nivel_medio: number;
 }
+
+// C20 — Score do Membro + Aniversariantes
+export type EngagementBand = "engajado" | "ativo" | "em_risco";
+
+export interface MemberScore {
+  id: string;
+  full_name: string;
+  birth_date: string | null;
+  journey_stage: string;
+  status: string;
+  life_group_id: string | null;
+  church_id: string | null;
+  joined_at: string | null;
+  discipler_id: string | null;
+  reunioes_presente_90d: number;
+  reunioes_total_90d: number;
+  disc_ativos: number;
+  disc_concluidos: number;
+  total_ministerios: number;
+  pts_estagio: number;
+  pts_progressao: number;
+  pts_discipulado: number;
+  pts_presenca: number;
+  pts_ministerio: number;
+  score_total: number;
+  engagement_band: EngagementBand;
+  proximo_estagio: string | null;
+}
+
+export interface BirthdayMember {
+  id: string;
+  full_name: string;
+  birth_date: string;
+  phone: string | null;
+  email: string | null;
+  journey_stage: string | null;
+  life_group_id: string | null;
+  church_id: string | null;
+  lg_name: string | null;
+  church_name: string | null;
+  idade: number;
+  dia?: number;
+  mes?: number;
+  dias_ate_aniversario?: number;
+  dias_restantes?: number;
+  aniversario_este_ano?: string;
+}
