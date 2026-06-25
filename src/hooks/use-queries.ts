@@ -349,3 +349,11 @@ export const useGoals = (year?: number) =>
   useQuery({ queryKey: ["goals", year], queryFn: () => Goals.listGoals(supabase, year) });
 export const useGoalsVsActual = (year?: number) =>
   useQuery({ queryKey: ["goals-vs-actual", year], queryFn: () => Goals.listGoalsVsActual(supabase, year) });
+
+// C18 — Torre de Controle
+import * as CT from "@/services/controlTower";
+import type { AlertType, AlertSeverity } from "@/types/domain";
+export const useControlTowerAlerts = (opts?: { severity?: AlertSeverity; alertType?: AlertType; churchId?: string }) =>
+  useQuery({ queryKey: ["control-tower-alerts", opts], queryFn: () => CT.getControlTowerAlerts(supabase, opts), refetchInterval: 60000 });
+export const useControlTowerSummary = () =>
+  useQuery({ queryKey: ["control-tower-summary"], queryFn: () => CT.getControlTowerSummary(supabase), refetchInterval: 60000 });
