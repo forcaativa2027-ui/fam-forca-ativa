@@ -633,3 +633,42 @@ export interface BirthdayMember {
   dias_ate_aniversario?: number; dias_restantes?: number;
   aniversario_este_ano?: string;
 }
+
+// C21 — Financeiro Completo
+export interface FinanceMonthlyFlow {
+  mes: string; mes_label: string; mes_curto: string;
+  church_id: string;
+  entradas: number; saidas: number; saldo: number;
+}
+
+export interface FinanceByCategory {
+  church_id: string; church_name: string | null;
+  direction: string; kind: string;
+  ano: number; mes: number; mes_label: string;
+  qtd_lancamentos: number; total: number; media: number;
+  minimo: number; maximo: number;
+}
+
+export interface FinanceNationalMonthly {
+  mes_label: string; mes: string;
+  igrejas_reportaram: number;
+  total_entradas: number; total_saidas: number; saldo: number;
+  dizimo: number; oferta: number; primicia: number;
+  missoes: number; construcao: number; outras_entradas: number;
+  salario: number; aluguel: number; energia: number;
+  evangelismo: number; evento: number; investimento: number; outras_saidas: number;
+}
+
+export interface FinanceBudget {
+  id: string; church_id: string; year: number;
+  kind: string; direction: string;
+  amount: number; notes: string | null;
+  created_by: string | null; created_at: string; updated_at: string;
+}
+
+export interface FinanceBudgetVsActual extends FinanceBudget {
+  church_name: string | null;
+  budgeted: number; actual: number;
+  pct_realizado: number;
+  status: "atingido" | "no_caminho" | "atencao";
+}
