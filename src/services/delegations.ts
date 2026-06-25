@@ -1,0 +1,173 @@
+"use client";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type {
+  DelegationPanel, ModuleDelegation, DelegationApproval, RoleDelegation,
+  EmergencyAccess, ComplianceDashboard, ModuleDelegationRanking,
+  CouncilMember, DelegationModule, DelegationScope, CouncilVote,
+} from "@/types/domain";
+
+// ── Conselho Diretor ──────────────────────────────────────────
+export async function listCouncilMembers(sb: SupabaseClient): Promise<(CouncilMember & { full_name: string; email: string })[]> {
+  const { data, error } = await sb
+    .from("council_members")
+    .select("*, profiles(full_name, email)")
+    .order("created_at");
+  if (error) { console.error("[council]", error); return []; }
+  return (data ?? []).map((r: any) => ({
+    ...r, full_name: r.profiles?.full_name, email: r.profiles?.email,
+  }));
+}
+
+export async function addCouncilMember(sb: SupabaseClient, profile_id: string, cargo: string): Promise<void> {
+  const { error } = await sb.from("council_members").insert({ profile_id, cargo });
+  if (error) throw error;
+}
+
+export async function removeCouncilMember(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("council_members").update({ is_active: false }).eq("id", id);
+  if (error) throw error;
+}
+
+// ── Delegações ────────────────────────────────────────────────
+export async function listDelegations(
+  sb: SupabaseClient,
+  opts?: { status?: string; module?: DelegationModule; profile_id?: string }
+): Promise<DelegationPanel[]> {
+  let q = sb.from("delegation_panel").select("*").order("requested_at", { ascending: false });
+  if (opts?.status)     q = q.eq("status", opts.status);
+  if (opts?.module)     q = q.eq("module", opts.module);
+  if (opts?.profile_id) q = q.eq("profile_id", opts.profile_id);
+  const { data, error } = await q;
+  if (error) { console.error("[delegations]", error); return []; }
+  return (data ?? []) as DelegationPanel[];
+}
+
+export async function requestDelegation(sb: SupabaseClient, payload: {
+  profile_id: string; module: DelegationModule; trust_level: number;
+  scope: DelegationScope; scope_id?: string|null; scope_name: string;
+  request_reason: string; expires_at?: string|null;
+}): Promise<ModuleDelegation> {
+  const { data, error } = await sb
+    .from("module_delegations").insert(payload).select().single();
+  if (error) throw error;
+  return data as ModuleDelegation;
+}
+
+export async function pautarConselho(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("module_delegations")
+    .update({ council_pauta: true, council_pauta_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function approveDelegation(sb: SupabaseClient, id: string, opts: {
+  trust_level: number; scope: DelegationScope; scope_name: string;
+  review_notes?: string; expires_at?: string|null;
+}): Promise<void> {
+  const { error } = await sb.from("module_delegations").update({
+    status: "ativo",
+    trust_level: opts.trust_level,
+    scope: opts.scope,
+    scope_name: opts.scope_name,
+    review_notes: opts.review_notes ?? null,
+    expires_at: opts.expires_at ?? null,
+    reviewed_at: new Date().toISOString(),
+  }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function rejectDelegation(sb: SupabaseClient, id: string, review_notes: string): Promise<void> {
+  const { error } = await sb.from("module_delegations")
+    .update({ status: "rejeitado", review_notes, reviewed_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function revokeDelegation(sb: SupabaseClient, id: string, revoke_reason: string): Promise<void> {
+  const { error } = await sb.from("module_delegations")
+    .update({ status: "revogado", revoke_reason, revoked_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+// ── Votos do Conselho ────────────────────────────────────────
+export async function castVote(sb: SupabaseClient, delegation_id: string, vote: CouncilVote, observation?: string): Promise<void> {
+  const { error } = await sb.from("delegation_approvals")
+    .upsert({ delegation_id, director_id: (await sb.auth.getUser()).data.user?.id, vote, observation: observation ?? null },
+             { onConflict: "delegation_id,director_id" });
+  if (error) throw error;
+}
+
+export async function listVotes(sb: SupabaseClient, delegation_id: string): Promise<(DelegationApproval & { director_name: string })[]> {
+  const { data, error } = await sb
+    .from("delegation_approvals")
+    .select("*, profiles(full_name)")
+    .eq("delegation_id", delegation_id);
+  if (error) { console.error("[votes]", error); return []; }
+  return (data ?? []).map((r: any) => ({ ...r, director_name: r.profiles?.full_name }));
+}
+
+// ── Delegação por cargo ──────────────────────────────────────
+export async function listRoleDelegations(sb: SupabaseClient): Promise<RoleDelegation[]> {
+  const { data, error } = await sb.from("role_delegations").select("*").order("role_name").order("module");
+  if (error) { console.error("[role_del]", error); return []; }
+  return (data ?? []) as RoleDelegation[];
+}
+
+export async function upsertRoleDelegation(sb: SupabaseClient, payload: {
+  role_name: string; module: DelegationModule; trust_level: number; scope: string; description?: string;
+}): Promise<void> {
+  const { error } = await sb.from("role_delegations")
+    .upsert(payload, { onConflict: "role_name,module" });
+  if (error) throw error;
+}
+
+// ── Acesso Emergencial ────────────────────────────────────────
+export async function listEmergencyAccess(sb: SupabaseClient): Promise<any[]> {
+  const { data, error } = await sb.from("active_emergency_access").select("*");
+  if (error) { console.error("[emergency]", error); return []; }
+  return data ?? [];
+}
+
+export async function grantEmergencyAccess(sb: SupabaseClient, payload: {
+  profile_id: string; module: DelegationModule; reason: string; expires_at: string;
+}): Promise<void> {
+  const user = (await sb.auth.getUser()).data.user;
+  const { error } = await sb.from("emergency_access")
+    .insert({ ...payload, approved_by: user?.id });
+  if (error) throw error;
+}
+
+export async function revokeEmergencyAccess(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("emergency_access").update({ is_active: false }).eq("id", id);
+  if (error) throw error;
+}
+
+// ── Dashboard Compliance ─────────────────────────────────────
+export async function getComplianceDashboard(sb: SupabaseClient): Promise<ComplianceDashboard | null> {
+  const { data, error } = await sb.from("compliance_dashboard").select("*").single();
+  if (error) { console.error("[compliance]", error); return null; }
+  return data as ComplianceDashboard;
+}
+
+export async function getModuleRanking(sb: SupabaseClient): Promise<ModuleDelegationRanking[]> {
+  const { data, error } = await sb.from("module_delegation_ranking").select("*");
+  if (error) { console.error("[ranking]", error); return []; }
+  return (data ?? []) as ModuleDelegationRanking[];
+}
+
+// ── Verificar acesso ─────────────────────────────────────────
+export async function checkModuleAccess(sb: SupabaseClient, module: DelegationModule): Promise<boolean> {
+  const user = (await sb.auth.getUser()).data.user;
+  if (!user) return false;
+  const { data, error } = await sb.rpc("has_module_access", {
+    p_profile_id: user.id, p_module: module,
+  });
+  if (error) return false;
+  return !!data;
+}
+
+// ── Expirar delegações vencidas ──────────────────────────────
+export async function expireDelegations(sb: SupabaseClient): Promise<void> {
+  await sb.rpc("expire_delegations");
+}
