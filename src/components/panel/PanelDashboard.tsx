@@ -94,7 +94,12 @@ export default function PanelDashboard() {
           <div className="overflow-x-auto">
             <TabsList className="mb-6 min-w-max">
               {isAdmin && <TabsTrigger value="geral"><BarChart3 className="mr-1 h-4 w-4" />Visão geral</TabsTrigger>}
-              {isAdmin && <TabsTrigger value="alertas"><NotificationBadge count={notifCount} /></TabsTrigger>}
+              {isAdmin && (
+                <TabsTrigger value="alertas" className="flex items-center gap-1.5">
+                  <NotificationBadge count={notifCount} />
+                  <span>Alertas{notifCount > 0 ? ` (${notifCount})` : ""}</span>
+                </TabsTrigger>
+              )}
               <TabsTrigger value="celula"><Users className="mr-1 h-4 w-4" />Minha célula</TabsTrigger>
               <TabsTrigger value="discipulado"><Heart className="mr-1 h-4 w-4" />Discipulado</TabsTrigger>
               <TabsTrigger value="jornada"><Map className="mr-1 h-4 w-4" />Minha jornada</TabsTrigger>
