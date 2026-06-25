@@ -36,6 +36,7 @@ import { MdaHealthAdmin } from "./MdaHealthAdmin";
 import { OrgDashboardAdmin } from "./OrgDashboardAdmin";
 import { IntelligenceAdmin } from "./IntelligenceAdmin";
 import { ControlTowerAdmin } from "./ControlTowerAdmin";
+import { DelegationsAdmin } from "./DelegationsAdmin";
 import { MinisterialReportsAdmin } from "./MinisterialReportsAdmin";
 import { GenealogyAdmin } from "./GenealogyAdmin";
 import { ExpansionMapAdmin } from "./ExpansionMapAdmin";
@@ -79,6 +80,7 @@ export default function AdminPanel() {
             <TabsTrigger value="permissions">Permissões</TabsTrigger>
             <TabsTrigger value="mda-health">Saúde MDA</TabsTrigger>
             <TabsTrigger value="org-dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="delegations">🔐 Delegações</TabsTrigger>
             <TabsTrigger value="control-tower">🗼 Torre de Controle</TabsTrigger>
             <TabsTrigger value="intelligence">🧠 Inteligência</TabsTrigger>
             <TabsTrigger value="ministerial-reports">📊 Relatórios</TabsTrigger>
@@ -114,6 +116,7 @@ export default function AdminPanel() {
         <TabsContent value="permissions"><PermissionsAdmin /></TabsContent>
         <TabsContent value="mda-health"><MdaHealthAdmin /></TabsContent>
         <TabsContent value="org-dashboard"><OrgDashboardAdmin /></TabsContent>
+        <TabsContent value="delegations"><DelegationsAdmin /></TabsContent>
         <TabsContent value="control-tower"><ControlTowerAdmin /></TabsContent>
         <TabsContent value="intelligence"><IntelligenceAdmin /></TabsContent>
         <TabsContent value="ministerial-reports"><MinisterialReportsAdmin /></TabsContent>
