@@ -25,7 +25,7 @@ export default function LoginForm() {
   }, [envOk]);
 
   async function onSubmit(values: LoginInput) {
-    if (!envOk) { setErr("Configure as variaveis de ambiente do Supabase na Vercel."); return; }
+    if (!envOk) { setErr("Configure as variáveis de ambiente do Supabase."); return; }
     setErr("");
     const { error, data } = await supabase.auth.signInWithPassword(values);
     if (error) { setErr(error.message); return; }
@@ -38,7 +38,6 @@ export default function LoginForm() {
       <Link href="/" className="absolute left-5 top-5 flex items-center gap-2 text-sm font-semibold text-white/80 hover:text-white">
         <ArrowLeft className="h-4 w-4" /> Voltar ao início
       </Link>
-
       <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-[#C9A227]" />
@@ -46,7 +45,6 @@ export default function LoginForm() {
         </div>
         <div className="my-3 h-[3px] w-16 rounded bg-[#C9A227]" />
         <p className="mb-6 text-xs text-muted-foreground">Discipulado, células, núcleos e gestão</p>
-
         <div className="space-y-3">
           <div>
             <Label htmlFor="email">E-mail</Label>
@@ -59,32 +57,19 @@ export default function LoginForm() {
             {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
           </div>
         </div>
-
         {err && <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{err}</p>}
-
         <Button type="submit" disabled={isSubmitting} className="mt-5 w-full bg-[#0E2A47] hover:bg-[#16345A]">
           {isSubmitting ? "Entrando…" : "Entrar"}
         </Button>
-
-        {/* Link recuperar senha — destaque claro */}
         <div className="mt-3 text-center">
-          <Link
-            href="/recuperar-senha"
-            className="text-sm font-semibold text-[#0E2A47] underline underline-offset-2 hover:text-[#C9A227] transition-colors"
-          >
+          <Link href="/recuperar-senha" className="text-sm font-semibold text-[#0E2A47] underline underline-offset-2 hover:text-[#C9A227] transition-colors">
             Esqueceu a senha?
           </Link>
         </div>
-
-        {/* Divisor + link de cadastro */}
         <div className="mt-5 border-t border-gray-200 pt-5 text-center space-y-2">
           <p className="text-sm text-muted-foreground">Ainda não tem conta?</p>
           <Link href="/cadastrar">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full border-[#0E2A47] text-[#0E2A47] hover:bg-[#0E2A47] hover:text-white transition-colors"
-            >
+            <Button type="button" variant="outline" className="w-full border-[#0E2A47] text-[#0E2A47] hover:bg-[#0E2A47] hover:text-white transition-colors">
               Criar conta gratuita
             </Button>
           </Link>
