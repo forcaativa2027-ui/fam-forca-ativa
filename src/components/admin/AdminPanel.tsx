@@ -1,21 +1,21 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Trash2, Plus } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { sermonSchema, eventSchema, serviceTimeSchema, dailyWordSchema,
   type SermonInput, type EventInput, type ServiceTimeInput, type DailyWordInput } from "@/schemas";
 import {
   useMyProfile, useSermons, useEvents, useAuditLogs,
   useDistricts, useAreas, useSectors, useCells,
   useChurches, useAllServiceTimes, useDailyWords,
+  usePendingCounts,
 } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { youtubeThumb } from "@/services/content";
@@ -50,131 +50,196 @@ import { AcolhimentoAdmin } from "./AcolhimentoAdmin";
 import { EvasionAdmin } from "./EvasionAdmin";
 import { MinistriesAdmin } from "./MinistriesAdmin";
 import { HealthAdmin } from "./HealthAdmin";
-import { usePendingCounts } from "@/hooks/use-queries";
+import { AdminSidebar, type TabKey } from "./AdminSidebar";
 
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
   const { data: counts } = usePendingCounts();
-  const isAdmin = me && ["apostolo","pastor"].includes(me.role);
+  const isAdmin = me && ["apostolo", "pastor"].includes(me.role);
 
-  if (isLoading) return <main className="grid h-screen place-items-center text-muted">Carregando…</main>;
-  const [activeTab, setActiveTab] = useState("supervision");
+  const [activeTab, setActiveTab] = useState<TabKey>("org-dashboard");
 
-  if (!isAdmin) return (
-    <Shell>
-      <Card className="mx-auto max-w-md text-center">
-        <CardContent className="pt-8 pb-8">
-          <h2 className="font-display text-xl text-navy">Acesso restrito</h2>
-          <p className="mt-2 text-sm text-muted">O painel administrativo é exclusivo para liderança apostólica (apóstolo ou pastor).</p>
-          <Button asChild variant="link" className="mt-4"><Link href="/painel">← Voltar ao painel</Link></Button>
-        </CardContent>
-      </Card>
-    </Shell>
-  );
+  const handleNavigate = useCallback((tab: TabKey) => {
+    setActiveTab(tab);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <main className="grid h-screen place-items-center text-muted">Carregando…</main>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-background grid place-items-center">
+        <Card className="mx-auto max-w-md text-center">
+          <CardContent className="pt-8 pb-8">
+            <h2 className="font-display text-xl text-navy">Acesso restrito</h2>
+            <p className="mt-2 text-sm text-muted">
+              O painel administrativo é exclusivo para liderança apostólica (apóstolo ou pastor).
+            </p>
+            <Button asChild variant="link" className="mt-4">
+              <Link href="/painel">← Voltar ao painel</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <Shell>
-      <GlobalSearch onNavigate={setActiveTab} />
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="overflow-x-auto">
-          <TabsList className="mb-6 min-w-max">
-            <TabsTrigger value="supervision">📊 Supervisão</TabsTrigger>
-            <TabsTrigger value="sermons">Pregações</TabsTrigger>
-            <TabsTrigger value="events">Agenda</TabsTrigger>
-            <TabsTrigger value="communities">Comunidades</TabsTrigger>
-            <TabsTrigger value="structure">Estrutura</TabsTrigger>
-            <TabsTrigger value="permissions">Permissões</TabsTrigger>
-            <TabsTrigger value="mda-health">Saúde MDA</TabsTrigger>
-            <TabsTrigger value="org-dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="delegations">🔐 Delegações</TabsTrigger>
-            <TabsTrigger value="control-tower">🗼 Torre de Controle</TabsTrigger>
-            <TabsTrigger value="intelligence">🧠 Inteligência</TabsTrigger>
-            <TabsTrigger value="ministerial-reports">📊 Relatórios</TabsTrigger>
-            <TabsTrigger value="genealogy">Genealogia</TabsTrigger>
-            <TabsTrigger value="expansion-map">Mapa</TabsTrigger>
-            <TabsTrigger value="patrimony">Patrimônio</TabsTrigger>
-            <TabsTrigger value="patrimony-advanced">🏛️ Patrimônio+</TabsTrigger>
-            <TabsTrigger value="export">📥 Exportar</TabsTrigger>
-            <TabsTrigger value="news">Notícias</TabsTrigger>
-            <TabsTrigger value="banners">Banners</TabsTrigger>
-            <TabsTrigger value="services">Cultos</TabsTrigger>
-            <TabsTrigger value="word">Palavra</TabsTrigger>
-            <TabsTrigger value="members">Membros</TabsTrigger>
-            <TabsTrigger value="cells">Células</TabsTrigger>
-            <TabsTrigger value="discipleship">Discipulado</TabsTrigger>
-            <TabsTrigger value="weekly">Rel. semanal</TabsTrigger>
-            <TabsTrigger value="monthly">Rel. mensal</TabsTrigger>
-            <TabsTrigger value="finance">Financeiro</TabsTrigger>
-            <TabsTrigger value="prayer-requests"><BadgeTab label="Pedidos" count={counts?.prayer_pending ?? 0} /></TabsTrigger>
-            <TabsTrigger value="visit-requests"><BadgeTab label="Visitas" count={counts?.visit_pending ?? 0} /></TabsTrigger>
-            <TabsTrigger value="crm"><BadgeTab label="CRM" count={counts?.pipeline_new ?? 0} /></TabsTrigger>
-            <TabsTrigger value="acolhimento">Acolhimento</TabsTrigger>
-            <TabsTrigger value="evasao">Em risco</TabsTrigger>
-            <TabsTrigger value="ministerios">Ministérios</TabsTrigger>
-            <TabsTrigger value="saude">Saúde</TabsTrigger>
-            <TabsTrigger value="mda">Estrutura MDA</TabsTrigger>
-            <TabsTrigger value="audit">Auditoria</TabsTrigger>
-          </TabsList>
-        </div>
-        <TabsContent value="supervision"><SupervisionDashboard /></TabsContent>
-        <TabsContent value="sermons"><SermonsAdmin /></TabsContent>
-        <TabsContent value="events"><EventsAdmin /></TabsContent>
-        <TabsContent value="communities"><CommunitiesAdmin /></TabsContent>
-        <TabsContent value="structure"><OrgStructureAdmin /></TabsContent>
-        <TabsContent value="permissions"><PermissionsAdmin /></TabsContent>
-        <TabsContent value="mda-health"><MdaHealthAdmin /></TabsContent>
-        <TabsContent value="org-dashboard"><OrgDashboardAdmin /></TabsContent>
-        <TabsContent value="delegations"><DelegationsAdmin /></TabsContent>
-        <TabsContent value="control-tower"><ControlTowerAdmin /></TabsContent>
-        <TabsContent value="intelligence"><IntelligenceAdmin /></TabsContent>
-        <TabsContent value="ministerial-reports"><MinisterialReportsAdmin /></TabsContent>
-        <TabsContent value="genealogy"><GenealogyAdmin /></TabsContent>
-        <TabsContent value="expansion-map"><ExpansionMapAdmin /></TabsContent>
-        <TabsContent value="patrimony"><PatrimonyAdmin /></TabsContent>
-        <TabsContent value="patrimony-advanced"><PatrimonyAdvancedAdmin /></TabsContent>
-        <TabsContent value="export"><ExportAdmin /></TabsContent>
-        <TabsContent value="news"><NewsAdmin /></TabsContent>
-        <TabsContent value="banners"><BannersAdmin /></TabsContent>
-        <TabsContent value="services"><ServiceTimesAdmin /></TabsContent>
-        <TabsContent value="word"><DailyWordsAdmin /></TabsContent>
-        <TabsContent value="members"><MembersAdmin /></TabsContent>
-        <TabsContent value="cells"><CellsAdmin /></TabsContent>
-        <TabsContent value="discipleship"><DiscipleshipAdmin /></TabsContent>
-        <TabsContent value="weekly"><WeeklyReportsAdmin /></TabsContent>
-        <TabsContent value="monthly"><MonthlyReportAdmin /></TabsContent>
-        <TabsContent value="finance"><FinanceAdmin /></TabsContent>
-        <TabsContent value="prayer-requests"><PublicPrayerRequestsAdmin /></TabsContent>
-        <TabsContent value="visit-requests"><VisitRequestsAdmin /></TabsContent>
-        <TabsContent value="crm"><CrmPipelineAdmin /></TabsContent>
-        <TabsContent value="acolhimento"><AcolhimentoAdmin /></TabsContent>
-        <TabsContent value="evasao"><EvasionAdmin /></TabsContent>
-        <TabsContent value="ministerios"><MinistriesAdmin /></TabsContent>
-        <TabsContent value="saude"><HealthAdmin /></TabsContent>
-        <TabsContent value="mda"><MdaStructure /></TabsContent>
-        <TabsContent value="audit"><AuditView /></TabsContent>
-      </Tabs>
-    </Shell>
-  );
-}
+    <div className="flex h-screen overflow-hidden bg-background">
+      {/* ── Sidebar (desktop: fixa; mobile: via drawer interno) ── */}
+      <AdminSidebar
+        activeTab={activeTab}
+        onNavigate={handleNavigate}
+        counts={{
+          prayer_pending: counts?.prayer_pending ?? 0,
+          visit_pending: counts?.visit_pending ?? 0,
+          pipeline_new: counts?.pipeline_new ?? 0,
+        }}
+        userName={me?.name ?? me?.full_name ?? undefined}
+        userRole={me?.role ?? undefined}
+      />
 
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b-[3px] border-gold bg-navy">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2 text-white">
-            <span className="text-gold">✦</span><span className="font-display text-lg font-bold">CEC FAMILY</span>
-            <span className="ml-2 border-l border-white/20 pl-3 text-xs font-semibold text-white/70">Administração</span>
+      {/* ── Área principal ── */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Header — apenas mobile (desktop usa sidebar lateral) */}
+        <header className="border-b-[3px] border-gold bg-navy md:hidden">
+          <div className="flex h-14 items-center justify-between px-4">
+            <div className="flex items-center gap-3 text-white">
+              {/* Botão hamburger renderizado pelo AdminSidebar mobileOnly */}
+              <AdminSidebar
+                activeTab={activeTab}
+                onNavigate={handleNavigate}
+                counts={{
+                  prayer_pending: counts?.prayer_pending ?? 0,
+                  visit_pending: counts?.visit_pending ?? 0,
+                  pipeline_new: counts?.pipeline_new ?? 0,
+                }}
+                userName={me?.name ?? me?.full_name ?? undefined}
+                userRole={me?.role ?? undefined}
+                mobileOnly
+              />
+              <span className="font-display text-sm font-semibold text-white/70">CEC Family</span>
+            </div>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
+            >
+              <Link href="/painel">
+                <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Painel
+              </Link>
+            </Button>
           </div>
-          <Button asChild variant="outline" size="sm" className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white">
-            <Link href="/painel"><ArrowLeft className="mr-1 h-3.5 w-3.5" /> Painel</Link>
-          </Button>
-        </div>
-      </header>
-      <main className="container py-8">{children}</main>
+        </header>
+
+        {/* Busca global — sempre montada para capturar Ctrl+K */}
+        <GlobalSearch
+          onNavigate={(tab) => {
+            handleNavigate(tab as TabKey);
+          }}
+        />
+
+        {/* Conteúdo */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="container py-8">
+            <TabContent activeTab={activeTab} />
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
+
+// ─── Roteador de conteúdo ─────────────────────────────────────────────────────
+
+function TabContent({ activeTab }: { activeTab: TabKey }) {
+  switch (activeTab) {
+    case "org-dashboard":       return <OrgDashboardAdmin />;
+    case "supervision":         return <SupervisionDashboard />;
+    case "control-tower":       return <ControlTowerAdmin />;
+    case "intelligence":        return <IntelligenceAdmin />;
+    case "ministerial-reports": return <MinisterialReportsAdmin />;
+    case "metas":               return <MetasPlaceholder />;
+    case "members":             return <MembersAdmin />;
+    case "scores-birthdays":    return <ScoresBirthdaysPlaceholder />;
+    case "cells":               return <CellsAdmin />;
+    case "discipleship":        return <DiscipleshipAdmin />;
+    case "acolhimento":         return <AcolhimentoAdmin />;
+    case "evasao":              return <EvasionAdmin />;
+    case "crm":                 return <CrmPipelineAdmin />;
+    case "prayer-requests":     return <PublicPrayerRequestsAdmin />;
+    case "visit-requests":      return <VisitRequestsAdmin />;
+    case "communities":         return <CommunitiesAdmin />;
+    case "structure":           return <OrgStructureAdmin />;
+    case "genealogy":           return <GenealogyAdmin />;
+    case "expansion-map":       return <ExpansionMapAdmin />;
+    case "ministerios":         return <MinistriesAdmin />;
+    case "mda-health":          return <MdaHealthAdmin />;
+    case "saude":               return <HealthAdmin />;
+    case "mda":                 return <MdaStructure />;
+    case "permissions":         return <PermissionsAdmin />;
+    case "weekly":              return <WeeklyReportsAdmin />;
+    case "monthly":             return <MonthlyReportAdmin />;
+    case "news":                return <NewsAdmin />;
+    case "banners":             return <BannersAdmin />;
+    case "sermons":             return <SermonsAdmin />;
+    case "events":              return <EventsAdmin />;
+    case "services":            return <ServiceTimesAdmin />;
+    case "word":                return <DailyWordsAdmin />;
+    case "finance":             return <FinanceAdmin />;
+    case "patrimony":           return <PatrimonyAdmin />;
+    case "patrimony-advanced":  return <PatrimonyAdvancedAdmin />;
+    case "rh":                  return <RhPlaceholder />;
+    case "delegations":         return <DelegationsAdmin />;
+    case "audit":               return <AuditView />;
+    case "export":              return <ExportAdmin />;
+    default:                    return null;
+  }
+}
+
+// ─── Placeholders para módulos novos ─────────────────────────────────────────
+
+function MetasPlaceholder() {
+  return (
+    <Card>
+      <CardContent className="pt-8 pb-8 text-center">
+        <p className="text-2xl mb-2">🎯</p>
+        <h2 className="font-display text-xl text-navy">Central de Metas</h2>
+        <p className="mt-2 text-sm text-muted">Módulo C17 — disponível neste painel.</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ScoresBirthdaysPlaceholder() {
+  return (
+    <Card>
+      <CardContent className="pt-8 pb-8 text-center">
+        <p className="text-2xl mb-2">⭐</p>
+        <h2 className="font-display text-xl text-navy">Score & Aniversários</h2>
+        <p className="mt-2 text-sm text-muted">Módulo C20 — disponível neste painel.</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function RhPlaceholder() {
+  return (
+    <Card>
+      <CardContent className="pt-8 pb-8 text-center">
+        <p className="text-2xl mb-2">👥</p>
+        <h2 className="font-display text-xl text-navy">Recursos Humanos</h2>
+        <p className="mt-2 text-sm text-muted">Módulo RH em desenvolvimento — aguardando definição de tipo de vínculo (CLT / RPA / pró-labore).</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Subcomponentes internos (mantidos 100% intactos) ─────────────────────────
 
 function SermonsAdmin() {
   const { data: sermons = [] } = useSermons();
@@ -224,7 +289,6 @@ function SermonsAdmin() {
           </form>
         </CardContent>
       </Card>
-
       <h3 className="font-display text-lg text-navy">Pregações publicadas ({sermons.length})</h3>
       <div className="space-y-3">
         {sermons.map((s) => (
@@ -319,7 +383,6 @@ function EventsAdmin() {
           </form>
         </CardContent>
       </Card>
-
       <h3 className="font-display text-lg text-navy">Próximos eventos ({events.length})</h3>
       <div className="space-y-3">
         {events.map((ev) => (
@@ -359,7 +422,6 @@ function MdaStructure() {
           </div>
         </CardContent>
       </Card>
-
       <Card>
         <CardHeader><CardTitle>Hierarquia</CardTitle></CardHeader>
         <CardContent className="space-y-2">
@@ -505,7 +567,6 @@ function ServiceTimesAdmin() {
           </form>
         </CardContent>
       </Card>
-
       <h3 className="font-display text-lg text-navy">Cultos cadastrados ({services.length})</h3>
       <div className="space-y-2">
         {services.length === 0 && <p className="text-sm italic text-muted">Nenhum culto cadastrado. A página pública usará os horários padrão.</p>}
@@ -606,7 +667,6 @@ function DailyWordsAdmin() {
           </form>
         </CardContent>
       </Card>
-
       <h3 className="font-display text-lg text-navy">Palavras cadastradas ({words.length})</h3>
       <div className="space-y-2">
         {words.length === 0 && <p className="text-sm italic text-muted">Nenhuma palavra cadastrada. A página pública usará o conteúdo padrão.</p>}
@@ -630,16 +690,7 @@ function DailyWordsAdmin() {
   );
 }
 
-function BadgeTab({ label, count }: { label: string; count: number }) {
-  return (
-    <span className="flex items-center gap-1.5">
-      {label}
-      {count > 0 && (
-        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-gold px-1.5 text-[10px] font-bold text-navy">{count}</span>
-      )}
-    </span>
-  );
-}
+// ─── Utilitários ──────────────────────────────────────────────────────────────
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
@@ -649,6 +700,7 @@ function Field({ label, error, children }: { label: string; error?: string; chil
     </div>
   );
 }
+
 function MdaCount({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border bg-card p-4 text-center">
