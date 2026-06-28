@@ -422,9 +422,9 @@ function VinculosTab({ churches }: { churches: { id: string; name: string }[] })
       .from("gpv_remuneracoes")
       .select("*, forma:gpv_formas_remuneracao(nome)")
       .eq("vinculo_id", vinculoId);
-    const rows = (data ?? []).map((r: Record<string, unknown>) => ({
+    const rows = (data ?? []).map((r: unknown) => ({
       ...(r as GpvRemuneracao),
-      forma_nome: (r.forma as { nome?: string } | null)?.nome,
+      forma_nome: ((r as { forma?: { nome?: string } | null }).forma)?.nome,
     }));
     setRemuneracoes((prev) => ({ ...prev, [vinculoId]: rows }));
   }
@@ -761,12 +761,12 @@ function PagamentosTab() {
       .order("created_at", { ascending: false })
       .limit(100);
 
-    const mapped = (todos ?? []).map((p: Record<string, unknown>) => ({
+    const mapped = (todos ?? []).map((p: unknown) => ({
       ...(p as GpvPagamento),
-      pessoa_nome: ((p.vinculo as { pessoa?: { full_name?: string } } | null)?.pessoa?.full_name),
-      tipo_vinculo: ((p.vinculo as { tipo?: { nome?: string } } | null)?.tipo?.nome),
-      church_name: ((p.vinculo as { church?: { name?: string } } | null)?.church?.name),
-      forma_nome: ((p.forma as { nome?: string } | null)?.nome),
+      pessoa_nome: ((p as { vinculo?: { pessoa?: { full_name?: string } } | null }).vinculo?.pessoa?.full_name),
+      tipo_vinculo: ((p as { vinculo?: { tipo?: { nome?: string } } | null }).vinculo?.tipo?.nome),
+      church_name: ((p as { vinculo?: { church?: { name?: string } } | null }).vinculo?.church?.name),
+      forma_nome: ((p as { forma?: { nome?: string } | null }).forma?.nome),
     }));
 
     setPagamentos(mapped);
