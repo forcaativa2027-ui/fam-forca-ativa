@@ -22,6 +22,7 @@ import {
 } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import * as PA from "@/services/patrimonyAdvanced";
+import type { DepreciationMethod, MaintenanceType, MaintenanceStatus, InventoryStatus } from "@/types/domain";
 import {
   createProperty, updateProperty, deleteProperty,
   createAsset, updateAsset, deleteAsset,
