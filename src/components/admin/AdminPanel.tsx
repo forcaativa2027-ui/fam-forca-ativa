@@ -21,7 +21,6 @@ import { supabase } from "@/lib/supabase/client";
 import { youtubeThumb } from "@/services/content";
 import { logAudit } from "@/services/audit";
 import { MembersAdmin } from "./MembersAdmin";
-import { CellsAdmin } from "./CellsAdmin";
 import { DiscipleshipAdmin } from "./DiscipleshipAdmin";
 import { WeeklyReportsAdmin } from "./WeeklyReportsAdmin";
 import { MonthlyReportAdmin } from "./MonthlyReportAdmin";
@@ -41,8 +40,9 @@ import { MinisterialReportsAdmin } from "./MinisterialReportsAdmin";
 import { GenealogyAdmin } from "./GenealogyAdmin";
 import { ExpansionMapAdmin } from "./ExpansionMapAdmin";
 import { PatrimonyAdmin } from "./PatrimonyAdmin";
-import { PatrimonyAdvancedAdmin } from "./PatrimonyAdvancedAdmin";
 import { ExportAdmin } from "./ExportAdmin";
+import { GpvAdmin } from "./GpvAdmin";
+import { CellsAdmin } from "./CellsAdmin";
 import { GlobalSearch } from "./GlobalSearch";
 import { SupervisionDashboard } from "./SupervisionDashboard";
 import { CrmPipelineAdmin } from "./CrmPipelineAdmin";
@@ -166,7 +166,6 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
     case "metas":               return <MetasPlaceholder />;
     case "members":             return <MembersAdmin />;
     case "scores-birthdays":    return <ScoresBirthdaysPlaceholder />;
-    case "cells":               return <CellsAdmin />;
     case "discipleship":        return <DiscipleshipAdmin />;
     case "acolhimento":         return <AcolhimentoAdmin />;
     case "evasao":              return <EvasionAdmin />;
@@ -178,6 +177,7 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
     case "genealogy":           return <GenealogyAdmin />;
     case "expansion-map":       return <ExpansionMapAdmin />;
     case "ministerios":         return <MinistriesAdmin />;
+    case "life-groups":         return <CellsAdmin />;
     case "mda-health":          return <MdaHealthAdmin />;
     case "saude":               return <HealthAdmin />;
     case "mda":                 return <MdaStructure />;
@@ -192,8 +192,7 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
     case "word":                return <DailyWordsAdmin />;
     case "finance":             return <FinanceAdmin />;
     case "patrimony":           return <PatrimonyAdmin />;
-    case "patrimony-advanced":  return <PatrimonyAdvancedAdmin />;
-    case "rh":                  return <RhPlaceholder />;
+    case "gpv":                 return <GpvAdmin />;
     case "delegations":         return <DelegationsAdmin />;
     case "audit":               return <AuditView />;
     case "export":              return <ExportAdmin />;
@@ -227,17 +226,7 @@ function ScoresBirthdaysPlaceholder() {
   );
 }
 
-function RhPlaceholder() {
-  return (
-    <Card>
-      <CardContent className="pt-8 pb-8 text-center">
-        <p className="text-2xl mb-2">👥</p>
-        <h2 className="font-display text-xl text-navy">Recursos Humanos</h2>
-        <p className="mt-2 text-sm text-muted">Módulo RH em desenvolvimento — aguardando definição de tipo de vínculo (CLT / RPA / pró-labore).</p>
-      </CardContent>
-    </Card>
-  );
-}
+// RH substituído pelo GPV — ver GpvAdmin.tsx
 
 // ─── Subcomponentes internos (mantidos 100% intactos) ─────────────────────────
 
