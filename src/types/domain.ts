@@ -432,6 +432,9 @@ export interface PropertyDocument {
   id: string; property_id: string; doc_type: string; title: string;
   storage_path: string | null; size_bytes: number | null; mime_type: string | null;
   uploaded_at: string; observations: string | null;
+  doc_number: string | null; issued_at: string | null; expires_at: string | null;
+  issuing_body: string | null; version: number;
+  superseded_by: string | null; is_current: boolean;
 }
 
 export interface AssetDocument {
