@@ -205,7 +205,7 @@ export interface GrowthMonthlyRow {
 export interface CityExpansion {
   state: string; city: string;
   churches_count: number; lgs_count: number; members_count: number;
-  church_names: string[]; church_types: string[];
+  church_names: string[]; church_types: string[]; church_ids: string[];
 }
 export interface StateExpansion {
   state: string;
