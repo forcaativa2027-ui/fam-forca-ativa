@@ -56,7 +56,7 @@ async function searchAll(query: string): Promise<SearchResult[]> {
     title: m.full_name,
     subtitle: [m.email, m.phone].filter(Boolean).join(" · "),
     meta: m.journey_stage,
-    tab: "membros",
+    tab: "members",
   }));
 
   // LGs
@@ -64,7 +64,7 @@ async function searchAll(query: string): Promise<SearchResult[]> {
     id: lg.id, kind: "lg",
     title: lg.name,
     subtitle: lg.status_lg ?? "",
-    tab: "cells",
+    tab: "life-groups",
   }));
 
   // Comunidades
@@ -88,7 +88,7 @@ async function searchAll(query: string): Promise<SearchResult[]> {
     id: f.id, kind: "financeiro",
     title: f.description ?? f.payer_name ?? f.kind,
     subtitle: `${f.direction === "entrada" ? "Entrada" : "Saída"} · R$ ${Number(f.amount).toFixed(2)}`,
-    tab: "financeiro",
+    tab: "finance",
   }));
 
   return results;
