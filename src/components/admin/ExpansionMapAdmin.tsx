@@ -1,51 +1,36 @@
 "use client";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import {
-  Map as MapIcon, Users, Building2, Heart, X, Flame, DollarSign,
-  BarChart3, Calendar, FileText, AlertTriangle, ChevronRight,
-  TrendingUp, Package, Clock,
+  Map as MapIcon, Users, Building2, Flame, X, DollarSign,
+  FileText, AlertTriangle, Package,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useExpansionCities, useExpansionStates } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 
-// ─── Tipos ────────────────────────────────────────────────────
 interface MarkerData {
   city: string; state: string; coords: [number, number];
   churches_count: number; lgs_count: number; members_count: number;
   church_names: string[]; church_ids: string[];
 }
-interface ChurchDetail {
-  id: string; name: string; type: string; city?: string; state?: string;
-  status_admin?: string; created_at?: string; pastor_name?: string;
-}
-interface LgSummary {
-  id: string; name: string; status_lg?: string; members_count?: number;
-}
-interface FinanceSummary {
-  total_entrada: number; total_saida: number; saldo: number;
-}
-interface PatrimonyInfo {
-  properties_count: number; assets_count: number; total_value: number;
-}
-interface ReportStatus {
-  total_lgs: number; lgs_with_weekly: number; lgs_with_monthly: number;
-}
+interface ChurchDetail { id: string; name: string; type: string; status_admin?: string; created_at?: string; }
+interface LgSummary    { id: string; name: string; status_lg?: string; }
+interface FinanceSummary { total_entrada: number; total_saida: number; saldo: number; }
+interface PatrimonyInfo  { properties_count: number; assets_count: number; total_value: number; }
+interface ReportStatus   { total_lgs: number; lgs_with_weekly: number; lgs_with_monthly: number; }
 
-// ─── Coordenadas ──────────────────────────────────────────────
 const CITY_COORDS: Record<string, [number, number]> = {
   "Manaus|AM": [-3.119, -60.021], "Itacoatiara|AM": [-3.143, -58.444],
-  "Tefé|AM": [-3.354, -64.711], "Iranduba|AM": [-3.275, -60.186],
+  "Tefé|AM": [-3.354, -64.711],   "Iranduba|AM": [-3.275, -60.186],
   "Brasília|DF": [-15.793, -47.882], "Águas Claras|DF": [-15.835, -48.029],
   "Taguatinga|DF": [-15.840, -48.054], "Brazlândia|DF": [-15.683, -48.205],
   "Cascavel|PR": [-24.957, -53.459], "Joinville|SC": [-26.304, -48.846],
   "São Paulo|SP": [-23.550, -46.633], "Rio de Janeiro|RJ": [-22.907, -43.173],
-  "Belo Horizonte|MG": [-19.916, -43.934], "Salvador|BA": [-12.971, -38.501],
-  "Fortaleza|CE": [-3.731, -38.526], "Recife|PE": [-8.047, -34.876],
-  "Porto Alegre|RS": [-30.034, -51.217], "Curitiba|PR": [-25.428, -49.273],
-  "Belém|PA": [-1.456, -48.502], "Goiânia|GO": [-16.679, -49.255],
+  "Belo Horizonte|MG": [-19.916, -43.934], "Curitiba|PR": [-25.428, -49.273],
+  "Porto Alegre|RS": [-30.034, -51.217], "Goiânia|GO": [-16.679, -49.255],
+  "Belém|PA": [-1.456, -48.502], "Fortaleza|CE": [-3.731, -38.526],
 };
 const STATE_COORDS: Record<string, [number, number]> = {
   AM: [-4.0, -63.0], DF: [-15.78, -47.93], PR: [-25.0, -51.5], SC: [-27.5, -50.0],
@@ -57,13 +42,11 @@ function getCoord(city: string, state: string): [number, number] | null {
   return CITY_COORDS[`${city}|${state}`] ?? STATE_COORDS[state] ?? null;
 }
 
-// ─── Leaflet dinâmico ─────────────────────────────────────────
 const LeafletMapInteractive = dynamic(
   () => import("./ExpansionMapLeafletInteractive"),
-  { ssr: false, loading: () => <div className="h-[500px] w-full rounded-md border bg-gray-50 grid place-items-center text-sm text-muted">Carregando mapa…</div> }
+  { ssr: false, loading: () => <div className="h-[520px] w-full rounded-md border bg-gray-50 grid place-items-center text-sm text-muted">Carregando mapa…</div> }
 );
 
-// ─── Painel lateral da localidade ─────────────────────────────
 function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () => void }) {
   const [churches,  setChurches]  = useState<ChurchDetail[]>([]);
   const [lgs,       setLgs]       = useState<LgSummary[]>([]);
@@ -71,27 +54,21 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
   const [patrimony, setPatrimony] = useState<PatrimonyInfo | null>(null);
   const [reports,   setReports]   = useState<ReportStatus | null>(null);
   const [loading,   setLoading]   = useState(true);
-  const [activeSection, setActiveSection] = useState<string>("overview");
+  const [section,   setSection]   = useState("overview");
 
   const load = useCallback(async () => {
     setLoading(true);
-    const churchIds = marker.church_ids ?? [];
-    if (churchIds.length === 0) { setLoading(false); return; }
+    const ids = marker.church_ids ?? [];
+    if (ids.length === 0) { setLoading(false); return; }
 
     await Promise.all([
-      // Comunidades detalhadas
-      supabase.from("churches").select("id, name, type, city, state, status_admin, created_at")
-        .in("id", churchIds)
+      supabase.from("churches").select("id, name, type, status_admin, created_at").in("id", ids)
         .then(({ data }) => setChurches((data as ChurchDetail[]) ?? [])),
 
-      // Life Groups
-      supabase.from("life_groups").select("id, name, status_lg")
-        .in("church_id", churchIds).eq("is_active", true).order("name")
+      supabase.from("life_groups").select("id, name, status_lg").in("church_id", ids).eq("is_active", true).order("name")
         .then(({ data }) => setLgs((data as LgSummary[]) ?? [])),
 
-      // Financeiro — últimos 12 meses
-      supabase.from("finances").select("direction, amount")
-        .in("church_id", churchIds)
+      supabase.from("finances").select("direction, amount").in("church_id", ids)
         .then(({ data }) => {
           const rows = data ?? [];
           const entrada = rows.filter((r: { direction: string }) => r.direction === "entrada").reduce((s: number, r: { amount: number }) => s + Number(r.amount), 0);
@@ -99,51 +76,52 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
           setFinance({ total_entrada: entrada, total_saida: saida, saldo: entrada - saida });
         }),
 
-      // Patrimônio
-      supabase.from("assets").select("id, acquisition_value").in("church_id", churchIds).eq("is_active", true)
+      supabase.from("assets").select("id, acquisition_value").in("church_id", ids).eq("is_active", true)
         .then(async ({ data: assets }) => {
-          const { data: props } = await supabase.from("properties").select("id").in("church_id", churchIds).eq("is_active", true);
-          const totalValue = (assets ?? []).reduce((s: number, a: { acquisition_value: number }) => s + Number(a.acquisition_value ?? 0), 0);
-          setPatrimony({ properties_count: (props ?? []).length, assets_count: (assets ?? []).length, total_value: totalValue });
+          const { data: props } = await supabase.from("properties").select("id").in("church_id", ids).eq("is_active", true);
+          setPatrimony({
+            properties_count: (props ?? []).length,
+            assets_count: (assets ?? []).length,
+            total_value: (assets ?? []).reduce((s: number, a: { acquisition_value: number }) => s + Number(a.acquisition_value ?? 0), 0),
+          });
         }),
     ]);
-
     setLoading(false);
   }, [marker]);
 
   useEffect(() => { load(); }, [load]);
 
-  // Status de relatórios
   useEffect(() => {
     if (lgs.length === 0) return;
     const lgIds = lgs.map(lg => lg.id);
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
     Promise.all([
       supabase.from("meeting_reports").select("life_group_id").in("life_group_id", lgIds),
-      supabase.from("monthly_reports").select("life_group_id").in("life_group_id", lgIds).eq("year", year).eq("month", month),
-    ]).then(([weekly, monthly]) => {
-      const withWeekly  = new Set((weekly.data ?? []).map((r: { life_group_id: string }) => r.life_group_id)).size;
-      const withMonthly = new Set((monthly.data ?? []).map((r: { life_group_id: string }) => r.life_group_id)).size;
-      setReports({ total_lgs: lgIds.length, lgs_with_weekly: withWeekly, lgs_with_monthly: withMonthly });
+      supabase.from("monthly_reports").select("life_group_id").in("life_group_id", lgIds)
+        .eq("year", now.getFullYear()).eq("month", now.getMonth() + 1),
+    ]).then(([w, m]) => {
+      setReports({
+        total_lgs: lgIds.length,
+        lgs_with_weekly:  new Set((w.data ?? []).map((r: { life_group_id: string }) => r.life_group_id)).size,
+        lgs_with_monthly: new Set((m.data ?? []).map((r: { life_group_id: string }) => r.life_group_id)).size,
+      });
     });
   }, [lgs]);
 
   const fmt = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
-  const pct = (n: number, total: number) => total > 0 ? Math.round((n / total) * 100) : 0;
+  const pct = (n: number, t: number) => t > 0 ? Math.round((n / t) * 100) : 0;
 
   const SECTIONS = [
-    { id: "overview",   label: "Visão Geral",   icon: <MapIcon size={14} /> },
-    { id: "lgs",        label: "Life Groups",   icon: <Flame size={14} /> },
-    { id: "financial",  label: "Financeiro",    icon: <DollarSign size={14} /> },
-    { id: "patrimony",  label: "Patrimônio",    icon: <Package size={14} /> },
-    { id: "reports",    label: "Relatórios",    icon: <FileText size={14} /> },
+    { id: "overview",  label: "Visão Geral" },
+    { id: "lgs",       label: "Life Groups" },
+    { id: "financial", label: "Financeiro" },
+    { id: "patrimony", label: "Patrimônio" },
+    { id: "reports",   label: "Relatórios" },
   ];
 
   return (
     <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl overflow-hidden">
-      {/* Header */}
+      {/* Header navy */}
       <div className="bg-navy px-4 py-4 text-white">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -152,36 +130,34 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
               {marker.churches_count} comunidade{marker.churches_count !== 1 ? "s" : ""} · {marker.lgs_count} LG{marker.lgs_count !== 1 ? "s" : ""} · {marker.members_count} membros
             </p>
           </div>
-          <Button onClick={onClose} variant="ghost" size="sm" className="text-white hover:bg-white/10 shrink-0">
+          <Button onClick={onClose} variant="ghost" size="sm" className="text-white hover:bg-white/10 shrink-0 p-1.5">
             <X size={16} />
           </Button>
         </div>
 
-        {/* KPIs rápidos */}
+        {/* KPIs */}
         <div className="mt-3 grid grid-cols-3 gap-2">
-          <div className="rounded-md bg-white/10 p-2 text-center">
-            <p className="text-lg font-bold text-gold">{marker.churches_count}</p>
-            <p className="text-[10px] text-white/60">Comunidades</p>
-          </div>
-          <div className="rounded-md bg-white/10 p-2 text-center">
-            <p className="text-lg font-bold text-gold">{marker.lgs_count}</p>
-            <p className="text-[10px] text-white/60">Life Groups</p>
-          </div>
-          <div className="rounded-md bg-white/10 p-2 text-center">
-            <p className="text-lg font-bold text-gold">{marker.members_count}</p>
-            <p className="text-[10px] text-white/60">Membros</p>
-          </div>
+          {[
+            { label: "Comunidades", value: marker.churches_count },
+            { label: "Life Groups", value: marker.lgs_count },
+            { label: "Membros",     value: marker.members_count },
+          ].map(k => (
+            <div key={k.label} className="rounded-md bg-white/10 p-2 text-center">
+              <p className="text-lg font-bold text-gold">{k.value}</p>
+              <p className="text-[10px] text-white/60">{k.label}</p>
+            </div>
+          ))}
         </div>
 
-        {/* Navegação por seções */}
+        {/* Nav seções */}
         <div className="mt-3 flex gap-1 overflow-x-auto pb-1 scrollbar-none">
           {SECTIONS.map(s => (
-            <button key={s.id} onClick={() => setActiveSection(s.id)}
+            <button key={s.id} onClick={() => setSection(s.id)}
               className={[
-                "flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-                activeSection === s.id ? "bg-gold text-navy" : "bg-white/10 text-white/70 hover:bg-white/20",
+                "flex shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                section === s.id ? "bg-gold text-navy" : "bg-white/10 text-white/70 hover:bg-white/20",
               ].join(" ")}>
-              {s.icon}{s.label}
+              {s.label}
             </button>
           ))}
         </div>
@@ -189,12 +165,11 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
 
       {/* Conteúdo */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {loading && <p className="text-sm text-muted italic text-center py-8">Carregando dados…</p>}
+        {loading && <p className="py-8 text-center text-sm text-muted italic">Carregando dados…</p>}
 
         {!loading && (
           <>
-            {/* VISÃO GERAL */}
-            {activeSection === "overview" && (
+            {section === "overview" && (
               <div className="space-y-3">
                 <h3 className="font-semibold text-navy text-sm">Comunidades</h3>
                 {churches.map(c => (
@@ -207,13 +182,13 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
                           {c.status_admin && ` · ${c.status_admin}`}
                         </p>
                         {c.created_at && (
-                          <p className="text-[10px] text-muted mt-0.5">
+                          <p className="text-[10px] text-muted">
                             Desde {new Date(c.created_at).toLocaleDateString("pt-BR", { month: "short", year: "numeric" })}
                           </p>
                         )}
                       </div>
                       <span className={[
-                        "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase border",
+                        "rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase",
                         c.type === "sede" ? "bg-gold/10 text-gold border-gold/30" :
                         c.type === "nucleo" ? "bg-blue-50 text-blue-700 border-blue-200" :
                         "bg-green-50 text-green-700 border-green-200",
@@ -223,57 +198,42 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
                     </div>
                   </div>
                 ))}
-
-                {/* Indicadores operacionais rápidos */}
                 {reports && (
                   <div className="rounded-md border bg-card p-3 space-y-2">
                     <p className="text-xs font-bold uppercase text-muted">Indicadores Operacionais</p>
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted">Relatórios semanais</span>
-                        <span className={`font-bold ${pct(reports.lgs_with_weekly, reports.total_lgs) >= 80 ? "text-green-600" : "text-yellow-600"}`}>
-                          {reports.lgs_with_weekly}/{reports.total_lgs} LGs ({pct(reports.lgs_with_weekly, reports.total_lgs)}%)
-                        </span>
+                    {[
+                      { label: "Rel. semanais",        n: reports.lgs_with_weekly,  color: "bg-green-500" },
+                      { label: "Rel. mensais (mês)",   n: reports.lgs_with_monthly, color: "bg-blue-500" },
+                    ].map(item => (
+                      <div key={item.label}>
+                        <div className="flex items-center justify-between text-xs mb-1">
+                          <span className="text-muted">{item.label}</span>
+                          <span className="font-bold text-navy">{item.n}/{reports.total_lgs} ({pct(item.n, reports.total_lgs)}%)</span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-gray-100">
+                          <div className={`h-1.5 rounded-full ${item.color}`} style={{ width: `${pct(item.n, reports.total_lgs)}%` }} />
+                        </div>
                       </div>
-                      <div className="h-1.5 w-full rounded-full bg-gray-100">
-                        <div className="h-1.5 rounded-full bg-green-500 transition-all"
-                          style={{ width: `${pct(reports.lgs_with_weekly, reports.total_lgs)}%` }} />
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted">Relatórios mensais (mês atual)</span>
-                        <span className={`font-bold ${pct(reports.lgs_with_monthly, reports.total_lgs) >= 80 ? "text-green-600" : "text-yellow-600"}`}>
-                          {reports.lgs_with_monthly}/{reports.total_lgs} LGs ({pct(reports.lgs_with_monthly, reports.total_lgs)}%)
-                        </span>
-                      </div>
-                      <div className="h-1.5 w-full rounded-full bg-gray-100">
-                        <div className="h-1.5 rounded-full bg-blue-500 transition-all"
-                          style={{ width: `${pct(reports.lgs_with_monthly, reports.total_lgs)}%` }} />
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 )}
               </div>
             )}
 
-            {/* LIFE GROUPS */}
-            {activeSection === "lgs" && (
+            {section === "lgs" && (
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-navy text-sm">{lgs.length} Life Group{lgs.length !== 1 ? "s" : ""}</h3>
-                </div>
+                <h3 className="font-semibold text-navy text-sm">{lgs.length} Life Group{lgs.length !== 1 ? "s" : ""}</h3>
                 {lgs.length === 0 && <p className="text-sm italic text-muted">Nenhum Life Group ativo.</p>}
                 {lgs.map(lg => (
                   <div key={lg.id} className="flex items-center gap-3 rounded-md border bg-card p-2.5">
                     <Flame className="h-4 w-4 shrink-0 text-orange-500" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-navy truncate">{lg.name}</p>
-                    </div>
+                    <span className="flex-1 text-sm font-medium text-navy truncate">{lg.name}</span>
                     {lg.status_lg && (
                       <span className={[
                         "rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0",
                         lg.status_lg === "muito_saudavel" ? "bg-green-100 text-green-700" :
-                        lg.status_lg === "saudavel" ? "bg-green-50 text-green-600" :
-                        lg.status_lg === "atencao" ? "bg-yellow-100 text-yellow-700" :
+                        lg.status_lg === "saudavel"       ? "bg-green-50 text-green-600" :
+                        lg.status_lg === "atencao"        ? "bg-yellow-100 text-yellow-700" :
                         "bg-red-100 text-red-700",
                       ].join(" ")}>
                         {lg.status_lg.replace(/_/g, " ")}
@@ -284,38 +244,29 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
               </div>
             )}
 
-            {/* FINANCEIRO */}
-            {activeSection === "financial" && (
+            {section === "financial" && (
               <div className="space-y-3">
                 <h3 className="font-semibold text-navy text-sm">Financeiro — Acumulado</h3>
                 {finance ? (
-                  <>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="rounded-md border-l-4 border-l-green-500 bg-card p-3">
-                        <p className="text-[10px] text-muted uppercase">Entradas</p>
-                        <p className="font-bold text-green-700 text-sm mt-1">{fmt(finance.total_entrada)}</p>
-                      </div>
-                      <div className="rounded-md border-l-4 border-l-red-400 bg-card p-3">
-                        <p className="text-[10px] text-muted uppercase">Saídas</p>
-                        <p className="font-bold text-red-600 text-sm mt-1">{fmt(finance.total_saida)}</p>
-                      </div>
-                      <div className={`rounded-md border-l-4 ${finance.saldo >= 0 ? "border-l-blue-500" : "border-l-orange-500"} bg-card p-3`}>
-                        <p className="text-[10px] text-muted uppercase">Saldo</p>
-                        <p className={`font-bold text-sm mt-1 ${finance.saldo >= 0 ? "text-blue-700" : "text-orange-600"}`}>{fmt(finance.saldo)}</p>
-                      </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-md border-l-4 border-l-green-500 bg-card p-3">
+                      <p className="text-[10px] text-muted uppercase">Entradas</p>
+                      <p className="font-bold text-green-700 text-sm mt-1">{fmt(finance.total_entrada)}</p>
                     </div>
-                    {finance.total_entrada === 0 && finance.total_saida === 0 && (
-                      <p className="text-xs italic text-muted">Sem lançamentos financeiros registrados.</p>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-sm italic text-muted">Sem dados financeiros.</p>
-                )}
+                    <div className="rounded-md border-l-4 border-l-red-400 bg-card p-3">
+                      <p className="text-[10px] text-muted uppercase">Saídas</p>
+                      <p className="font-bold text-red-600 text-sm mt-1">{fmt(finance.total_saida)}</p>
+                    </div>
+                    <div className={`rounded-md border-l-4 ${finance.saldo >= 0 ? "border-l-blue-500" : "border-l-orange-500"} bg-card p-3`}>
+                      <p className="text-[10px] text-muted uppercase">Saldo</p>
+                      <p className={`font-bold text-sm mt-1 ${finance.saldo >= 0 ? "text-blue-700" : "text-orange-600"}`}>{fmt(finance.saldo)}</p>
+                    </div>
+                  </div>
+                ) : <p className="text-sm italic text-muted">Sem dados financeiros.</p>}
               </div>
             )}
 
-            {/* PATRIMÔNIO */}
-            {activeSection === "patrimony" && (
+            {section === "patrimony" && (
               <div className="space-y-3">
                 <h3 className="font-semibold text-navy text-sm">Patrimônio</h3>
                 {patrimony ? (
@@ -329,47 +280,36 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
                       <p className="text-[10px] text-muted">Bens</p>
                     </div>
                     <div className="rounded-md border bg-card p-3 text-center">
-                      <p className="font-display text-lg font-bold text-gold">{fmt(patrimony.total_value)}</p>
+                      <p className="font-display text-sm font-bold text-gold">{fmt(patrimony.total_value)}</p>
                       <p className="text-[10px] text-muted">Valor total</p>
                     </div>
                   </div>
-                ) : (
-                  <p className="text-sm italic text-muted">Sem dados patrimoniais.</p>
-                )}
+                ) : <p className="text-sm italic text-muted">Sem dados patrimoniais.</p>}
               </div>
             )}
 
-            {/* RELATÓRIOS */}
-            {activeSection === "reports" && (
+            {section === "reports" && (
               <div className="space-y-3">
                 <h3 className="font-semibold text-navy text-sm">Status de Relatórios</h3>
                 {reports ? (
                   <div className="space-y-3">
                     <div className="rounded-md border bg-card p-3 space-y-3">
-                      <div>
-                        <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="font-medium text-navy">Relatórios Semanais</span>
-                          <span className="font-bold text-green-600">{pct(reports.lgs_with_weekly, reports.total_lgs)}%</span>
+                      {[
+                        { label: "Relatórios Semanais",           n: reports.lgs_with_weekly,  color: "bg-green-500", textColor: "text-green-600" },
+                        { label: "Relatórios Mensais (mês atual)", n: reports.lgs_with_monthly, color: "bg-blue-500",  textColor: "text-blue-600" },
+                      ].map(item => (
+                        <div key={item.label}>
+                          <div className="flex items-center justify-between text-xs mb-1">
+                            <span className="font-medium text-navy">{item.label}</span>
+                            <span className={`font-bold ${item.textColor}`}>{pct(item.n, reports.total_lgs)}%</span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-gray-100">
+                            <div className={`h-2 rounded-full ${item.color}`} style={{ width: `${pct(item.n, reports.total_lgs)}%` }} />
+                          </div>
+                          <p className="text-[10px] text-muted mt-1">{item.n} de {reports.total_lgs} LGs</p>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-gray-100">
-                          <div className="h-2 rounded-full bg-green-500"
-                            style={{ width: `${pct(reports.lgs_with_weekly, reports.total_lgs)}%` }} />
-                        </div>
-                        <p className="text-[10px] text-muted mt-1">{reports.lgs_with_weekly} de {reports.total_lgs} LGs enviaram</p>
-                      </div>
-                      <div>
-                        <div className="flex items-center justify-between text-xs mb-1">
-                          <span className="font-medium text-navy">Relatórios Mensais</span>
-                          <span className="font-bold text-blue-600">{pct(reports.lgs_with_monthly, reports.total_lgs)}%</span>
-                        </div>
-                        <div className="h-2 w-full rounded-full bg-gray-100">
-                          <div className="h-2 rounded-full bg-blue-500"
-                            style={{ width: `${pct(reports.lgs_with_monthly, reports.total_lgs)}%` }} />
-                        </div>
-                        <p className="text-[10px] text-muted mt-1">{reports.lgs_with_monthly} de {reports.total_lgs} LGs (mês atual)</p>
-                      </div>
+                      ))}
                     </div>
-
                     {pct(reports.lgs_with_weekly, reports.total_lgs) < 80 && (
                       <div className="flex items-start gap-2 rounded-md border-l-4 border-l-yellow-400 bg-yellow-50 p-3">
                         <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" />
@@ -379,9 +319,7 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
                       </div>
                     )}
                   </div>
-                ) : (
-                  <p className="text-sm italic text-muted">Carregando status…</p>
-                )}
+                ) : <p className="text-sm italic text-muted">Carregando…</p>}
               </div>
             )}
           </>
@@ -391,7 +329,6 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
   );
 }
 
-// ─── Componente principal ──────────────────────────────────────
 export function ExpansionMapAdmin() {
   const { data: cities = [] } = useExpansionCities();
   const { data: states = [] } = useExpansionStates();
@@ -411,44 +348,40 @@ export function ExpansionMapAdmin() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapIcon className="h-5 w-5 text-gold" />Mapa de Expansão
-          </CardTitle>
-          <CardDescription>
-            Painel Executivo Territorial — clique em qualquer marcador para ver o painel completo da localidade
-          </CardDescription>
+          <CardTitle className="flex items-center gap-2"><MapIcon className="h-5 w-5 text-gold" />Mapa de Expansão</CardTitle>
+          <CardDescription>Painel Executivo Territorial — clique em um marcador para ver o painel completo da localidade</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-4">
-            <StatCard icon={<Building2 />} label="Cidades" value={cities.length} />
-            <StatCard icon={<MapIcon />} label="Estados" value={states.length} />
-            <StatCard icon={<Flame />} label="Life Groups" value={totalLgs} />
-            <StatCard icon={<Users />} label="Membros ativos" value={totalMembers.toLocaleString("pt-BR")} />
+            {[
+              { icon: <Building2 />, label: "Cidades",        value: cities.length },
+              { icon: <MapIcon />,   label: "Estados",        value: states.length },
+              { icon: <Flame />,     label: "Life Groups",    value: totalLgs },
+              { icon: <Users />,     label: "Membros ativos", value: totalMembers.toLocaleString("pt-BR") },
+            ].map(s => (
+              <div key={s.label} className="rounded-md border bg-card p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-gold [&>svg]:h-4 [&>svg]:w-4">{s.icon}</span>
+                  <p className="text-[10px] uppercase tracking-wider text-muted">{s.label}</p>
+                </div>
+                <p className="mt-1 text-2xl font-bold text-navy">{s.value}</p>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Mapa */}
       <Card>
         <CardContent className="pt-4">
-          <LeafletMapInteractive
-            markers={cityMarkers}
-            onMarkerClick={setSelectedMarker}
-          />
-          <p className="mt-2 text-[11px] text-muted text-center">
-            Clique em um marcador para abrir o Painel da Localidade
-          </p>
+          <LeafletMapInteractive markers={cityMarkers} onMarkerClick={setSelectedMarker} />
+          <p className="mt-2 text-[11px] text-center text-muted">Clique em um marcador para abrir o Painel da Localidade</p>
         </CardContent>
       </Card>
 
-      {/* Resumo por estado */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Resumo por estado</CardTitle>
-        </CardHeader>
+        <CardHeader><CardTitle className="text-base">Resumo por estado</CardTitle></CardHeader>
         <CardContent>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {states.sort((a, b) => b.members_count - a.members_count).map(s => (
@@ -469,26 +402,12 @@ export function ExpansionMapAdmin() {
         </CardContent>
       </Card>
 
-      {/* Painel lateral */}
       {selectedMarker && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
-            onClick={() => setSelectedMarker(null)} />
+          <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={() => setSelectedMarker(null)} />
           <LocationPanel marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
         </>
       )}
-    </div>
-  );
-}
-
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number | string }) {
-  return (
-    <div className="rounded-md border bg-card p-3">
-      <div className="flex items-center gap-2 text-navy">
-        <span className="text-gold [&>svg]:h-4 [&>svg]:w-4">{icon}</span>
-        <p className="text-[10px] uppercase tracking-wider text-muted">{label}</p>
-      </div>
-      <p className="mt-1 text-2xl font-bold text-navy">{value}</p>
     </div>
   );
 }
