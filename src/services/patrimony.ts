@@ -65,7 +65,17 @@ export async function deleteAsset(sb: SupabaseClient, id: string): Promise<void>
 // DOCUMENTS — property
 // ============================================================
 export async function listPropertyDocs(sb: SupabaseClient, propertyId: string): Promise<PropertyDocument[]> {
-  const { data, error } = await sb.from("property_documents").select("*").eq("property_id", propertyId).order("uploaded_at", { ascending: false });
+  const { data, error } = await sb.from("property_documents").select("*")
+    .eq("property_id", propertyId).eq("is_current", true)
+    .order("uploaded_at", { ascending: false });
+  if (error) return [];
+  return (data ?? []) as PropertyDocument[];
+}
+
+export async function listPropertyDocHistory(sb: SupabaseClient, propertyId: string, docType: string): Promise<PropertyDocument[]> {
+  const { data, error } = await sb.from("property_documents").select("*")
+    .eq("property_id", propertyId).eq("doc_type", docType)
+    .order("version", { ascending: false });
   if (error) return [];
   return (data ?? []) as PropertyDocument[];
 }
@@ -74,6 +84,38 @@ export async function createPropertyDoc(sb: SupabaseClient, input: Partial<Prope
   const { data, error } = await sb.from("property_documents").insert(input).select().single();
   if (error) throw error;
   return data as PropertyDocument;
+}
+
+/** Cria uma nova versão de um documento existente, marcando a anterior como superada */
+export async function createPropertyDocVersion(
+  sb: SupabaseClient,
+  previousDocId: string,
+  input: Partial<PropertyDocument>
+): Promise<PropertyDocument> {
+  const { data: prev, error: prevErr } = await sb.from("property_documents")
+    .select("version").eq("id", previousDocId).single();
+  if (prevErr) throw prevErr;
+
+  const nextVersion = ((prev as { version: number })?.version ?? 1) + 1;
+
+  const { data: created, error } = await sb.from("property_documents")
+    .insert({ ...input, version: nextVersion, is_current: true })
+    .select().single();
+  if (error) throw error;
+
+  await sb.from("property_documents")
+    .update({ is_current: false, superseded_by: (created as { id: string }).id })
+    .eq("id", previousDocId);
+
+  return created as PropertyDocument;
+}
+
+export async function getExpiringPropertyDocs(sb: SupabaseClient, churchId?: string) {
+  let query = sb.from("vw_property_docs_expiring").select("*");
+  if (churchId) query = query.eq("church_id", churchId);
+  const { data, error } = await query;
+  if (error) return [];
+  return data ?? [];
 }
 
 export async function deletePropertyDoc(sb: SupabaseClient, id: string, storagePath: string | null): Promise<void> {
