@@ -120,7 +120,7 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
   ];
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl overflow-hidden">
+    <div className="flex h-full w-full flex-col bg-white shadow-2xl overflow-hidden">
       {/* Header navy */}
       <div className="bg-navy px-4 py-4 text-white">
         <div className="flex items-start justify-between gap-3">
@@ -404,8 +404,14 @@ export function ExpansionMapAdmin() {
 
       {selectedMarker && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={() => setSelectedMarker(null)} />
-          <LocationPanel marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
+          <div
+            className="fixed inset-0 bg-black/30 backdrop-blur-sm"
+            style={{ zIndex: 2000 }}
+            onClick={() => setSelectedMarker(null)}
+          />
+          <div style={{ zIndex: 2001, position: "fixed", inset: "0 0 0 auto", width: "100%", maxWidth: 420 }}>
+            <LocationPanel marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
+          </div>
         </>
       )}
     </div>
