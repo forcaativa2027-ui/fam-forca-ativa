@@ -210,37 +210,26 @@ function SingleLgReport({ lgId, lgName, year, month, allMembers }: {
 }) {
   const qc = useQueryClient();
   const [reportId, setReportId] = useState<string | null>(null);
-  const [userSelected, setUserSelected] = useState(false);
-
-  // Resetar seleção ao trocar de LG ou período
-  useEffect(() => {
-    setReportId(null);
-    setUserSelected(false);
-  }, [lgId, month, year]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const { data: reports = [] } = useMonthlyReports(lgId);
   const { data: full } = useMonthlyReportFull(reportId);
   const memberMap = new Map(allMembers.map(m => [m.id, m]));
 
-  // Auto-selecionar relatório do mês/ano se existir — mas não sobrescrever se já foi setado pelo prefill
+  // Auto-selecionar relatório existente do mês/ano — apenas se não houver seleção manual ativa
   useEffect(() => {
-    if (userSelected) return;
     const existing = reports.find(r => r.month === month && r.year === year);
-    if (existing) setReportId(existing.id);
-    else setReportId(null);
-  }, [reports, month, year, userSelected]);
+    if (existing && !reportId) setReportId(existing.id);
+  }, [reports]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function doPrefill() {
     setBusy(true); setErr("");
     try {
       const id = await prefillMonthlyReport(supabase, lgId, year, month);
       await logAudit(supabase, "custom", "monthly_reports", id, { action: "prefill", year, month });
-      await qc.invalidateQueries({ queryKey: ["monthly-reports", lgId] });
-      await qc.invalidateQueries({ queryKey: ["monthly-report-full", id] });
-      await qc.invalidateQueries({ queryKey: ["monthly-report-full", "none"] });
-      setUserSelected(true);
       setReportId(id);
+      await qc.invalidateQueries({ queryKey: ["monthly-reports", lgId] });
+      await qc.refetchQueries({ queryKey: ["monthly-report-full", id] });
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Erro ao gerar");
     } finally { setBusy(false); }
@@ -274,7 +263,7 @@ function SingleLgReport({ lgId, lgName, year, month, allMembers }: {
             </div>
             <div className="flex gap-2 flex-wrap">
               {reports.map(r => (
-                <Button key={r.id} onClick={() => { setUserSelected(true); setReportId(r.id); }}
+                <Button key={r.id} onClick={() => setReportId(r.id)}
                   variant={reportId === r.id ? "default" : "outline"} size="sm" className="text-xs">
                   {MONTHS[r.month-1]}/{r.year}{r.closed_at ? " 🔒" : ""}
                 </Button>
