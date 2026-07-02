@@ -491,10 +491,10 @@ function ExportacaoTab({ churchId, year, month, churchName }: { churchId:string;
 }
 
 // ── MASTER ────────────────────────────────────────────────────
-export function FinanceAdmin() {
+export function FinanceAdmin({ initialChurchId = "" }: { initialChurchId?: string } = {}) {
   const { data:churches=[] } = useChurches();
   const today = new Date();
-  const [churchId, setChurchId] = useState("");
+  const [churchId, setChurchId] = useState(initialChurchId);
   const [year,  setYear]  = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth()+1);
   const effectiveId = churchId||churches.find(c=>c.type==="sede")?.id||churches[0]?.id||"";
