@@ -74,8 +74,9 @@ export function InviteLinksAdmin() {
       qc.invalidateQueries({ queryKey: ["invite-links"] });
       setOpen(false);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Erro ao criar convite. Verifique sua permissão para este tipo de link.");
-    } finally {
+  const msg = (e as { message?: string })?.message ?? "Erro ao criar convite. Verifique sua permissão para este tipo de link.";
+  setErr(msg);
+} finally {
       setSaving(false);
     }
   }
