@@ -7,12 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Link2, Copy, Ban, Plus, Loader2, CheckCircle2 } from "lucide-react";
+import { Link2, Copy, Ban, Plus, Loader2, CheckCircle2, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import {
   useInviteLinks, useChurches, useSectors, useCells, useMinistries, useMyProfile,
 } from "@/hooks/use-queries";
-import { createInviteLink, revokeInviteLink, inviteLinkUrl } from "@/services/invites";
+import { createInviteLink, revokeInviteLink, deleteInviteLink, inviteLinkUrl } from "@/services/invites";
 import type { InviteLinkKind, InviteValidity, UserRole, InviteLinkStatus } from "@/types/domain";
 
 const KIND_LABELS: Record<InviteLinkKind, string> = {
@@ -74,9 +74,9 @@ export function InviteLinksAdmin() {
       qc.invalidateQueries({ queryKey: ["invite-links"] });
       setOpen(false);
     } catch (e) {
-  const msg = (e as { message?: string })?.message ?? "Erro ao criar convite. Verifique sua permissão para este tipo de link.";
-  setErr(msg);
-} finally {
+      const msg = (e as { message?: string })?.message ?? "Erro ao criar convite. Verifique sua permissão para este tipo de link.";
+      setErr(msg);
+    } finally {
       setSaving(false);
     }
   }
@@ -87,6 +87,16 @@ export function InviteLinksAdmin() {
       qc.invalidateQueries({ queryKey: ["invite-links"] });
     } catch {
       setErr("Erro ao revogar link");
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Excluir este link permanentemente? Essa ação não pode ser desfeita.")) return;
+    try {
+      await deleteInviteLink(supabase, id);
+      qc.invalidateQueries({ queryKey: ["invite-links"] });
+    } catch {
+      setErr("Erro ao excluir link");
     }
   }
 
@@ -144,6 +154,9 @@ export function InviteLinksAdmin() {
                             <Ban size={14} className="text-destructive" />
                           </Button>
                         )}
+                        <Button size="icon" variant="ghost" onClick={() => handleDelete(l.id)} title="Excluir">
+                          <Trash2 size={14} className="text-muted-foreground hover:text-destructive" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -186,56 +199,4 @@ export function InviteLinksAdmin() {
                 <Select value={lgId} onValueChange={setLgId}>
                   <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
                   <SelectContent>
-                    {cells.filter(c => c.church_id === churchId).map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {needsMinistry && (
-              <div>
-                <Label>Ministério</Label>
-                <Select value={ministryId} onValueChange={setMinistryId}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {ministries.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <div>
-              <Label>Validade</Label>
-              <Select value={validity} onValueChange={(v) => setValidity(v as InviteValidity)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="permanente">Permanente</SelectItem>
-                  <SelectItem value="24h">24 horas</SelectItem>
-                  <SelectItem value="7d">7 dias</SelectItem>
-                  <SelectItem value="30d">30 dias</SelectItem>
-                  <SelectItem value="90d">90 dias</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Limite de usos (vazio = ilimitado, 1 = uso único)</Label>
-              <input
-                type="number" min={1} value={maxUses} onChange={(e) => setMaxUses(e.target.value)}
-                className="w-full h-9 rounded-md border px-3 text-sm"
-                placeholder="Ilimitado"
-              />
-            </div>
-
-            <Button onClick={handleCreate} disabled={saving} className="w-full gap-1.5">
-              {saving ? <Loader2 size={16} className="animate-spin" /> : <Link2 size={16} />}
-              Gerar e copiar link
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+                    {cells.filter(c =>
