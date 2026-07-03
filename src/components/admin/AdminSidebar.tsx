@@ -10,7 +10,7 @@ import {
   Download, Search, Bell,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ export type TabKey =
   | "weekly" | "monthly"
   | "news" | "banners" | "sermons" | "events" | "services" | "word"
   | "finance" | "patrimony" | "gpv"
-  | "delegations" | "audit"
+  | "delegations" | "invites" | "audit"
   | "export";
 
 interface NavItem {
@@ -147,6 +147,7 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       icon: <Lock size={16} />,
       items: [
         { key: "delegations", label: "Delegações", icon: <Gavel size={15} /> },
+        { key: "invites",     label: "Convites",   icon: <Link2 size={15} /> },
         { key: "audit",       label: "Auditoria",  icon: <ClipboardList size={15} /> },
       ],
     },
