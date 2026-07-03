@@ -763,3 +763,40 @@ export interface PatrimonyAlert {
   church_id: string | null; church_name: string | null;
   detail: string; days_overdue: number;
 }
+
+// CT-002 — Central Inteligente de Convites e Cadastro
+export type InviteLinkKind =
+  | "membro" | "visitante" | "lider_lg" | "pastor" | "diretor_financeiro"
+  | "secretario" | "lider_jovens" | "lider_casais" | "lider_criancas"
+  | "musico" | "administrador";
+export type InviteLinkStatus = "ativo" | "expirado" | "esgotado" | "revogado";
+export type InviteValidity = "permanente" | "24h" | "7d" | "30d" | "90d";
+
+export interface InviteLinkCreateInput {
+  kind: InviteLinkKind;
+  church_id: string;
+  district_id?: string | null;
+  area_id?: string | null;
+  sector_id?: string | null;
+  life_group_id?: string | null;
+  ministry_id?: string | null;
+  target_role: UserRole;
+  discipler_id?: string | null;
+  validity: InviteValidity;
+  max_uses?: number | null;
+  allowed_ip_cidr?: string | null;
+}
+
+export interface InviteLinkRow {
+  id: string; token: string; kind: InviteLinkKind; status: InviteLinkStatus;
+  church_name: string | null; life_group_name: string | null; target_role: UserRole;
+  max_uses: number | null; uses_count: number; expires_at: string | null;
+  created_by_name: string | null; created_at: string;
+}
+
+export interface InviteTokenValidation {
+  valid: boolean; reason: string | null;
+  kind: InviteLinkKind | null; church_name: string | null;
+  life_group_name: string | null; ministry_name: string | null;
+  target_role: UserRole | null;
+}
