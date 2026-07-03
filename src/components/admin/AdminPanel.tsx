@@ -1,5 +1,4 @@
 "use client";
-import { DelegationsAdmin } from "./DelegationsAdmin";
 import { InviteLinksAdmin } from "./InviteLinksAdmin";
 import { useState, useCallback } from "react";
 import Link from "next/link";
