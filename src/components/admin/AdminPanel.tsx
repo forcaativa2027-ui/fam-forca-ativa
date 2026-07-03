@@ -1,4 +1,6 @@
 "use client";
+import { DelegationsAdmin } from "./DelegationsAdmin";
+import { InviteLinksAdmin } from "./InviteLinksAdmin";
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -160,6 +162,9 @@ export default function AdminPanel() {
 
 function TabContent({ activeTab }: { activeTab: TabKey }) {
   switch (activeTab) {
+    case "delegations":         return <DelegationsAdmin />;
+    case "invites":             return <InviteLinksAdmin />;
+    case "audit":               return <AuditView />;
     case "org-dashboard":       return <OrgDashboardAdmin />;
     case "supervision":         return <SupervisionDashboard />;
     case "control-tower":       return <ControlTowerAdmin />;
