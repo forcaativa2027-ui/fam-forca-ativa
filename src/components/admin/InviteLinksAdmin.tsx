@@ -199,4 +199,56 @@ export function InviteLinksAdmin() {
                 <Select value={lgId} onValueChange={setLgId}>
                   <SelectTrigger><SelectValue placeholder="Nenhum" /></SelectTrigger>
                   <SelectContent>
-                    {cells.filter(c =>
+                    {cells.filter(c => c.church_id === churchId).map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {needsMinistry && (
+              <div>
+                <Label>Ministério</Label>
+                <Select value={ministryId} onValueChange={setMinistryId}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {ministries.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div>
+              <Label>Validade</Label>
+              <Select value={validity} onValueChange={(v) => setValidity(v as InviteValidity)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="permanente">Permanente</SelectItem>
+                  <SelectItem value="24h">24 horas</SelectItem>
+                  <SelectItem value="7d">7 dias</SelectItem>
+                  <SelectItem value="30d">30 dias</SelectItem>
+                  <SelectItem value="90d">90 dias</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Limite de usos (vazio = ilimitado, 1 = uso único)</Label>
+              <input
+                type="number" min={1} value={maxUses} onChange={(e) => setMaxUses(e.target.value)}
+                className="w-full h-9 rounded-md border px-3 text-sm"
+                placeholder="Ilimitado"
+              />
+            </div>
+
+            <Button onClick={handleCreate} disabled={saving} className="w-full gap-1.5">
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <Link2 size={16} />}
+              Gerar e copiar link
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
