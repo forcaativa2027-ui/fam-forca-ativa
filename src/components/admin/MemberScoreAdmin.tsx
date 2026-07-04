@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
-import { Star, TrendingUp, Users, Target, BookOpen, Church, ChevronRight } from "lucide-react";
+import { Star, TrendingUp, Users, Target, BookOpen, Church, ChevronRight, MessageCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMemberScores, useChurches, useCells } from "@/hooks/use-queries";
+import { useMemberScores, useChurches, useCells, useAllMembers } from "@/hooks/use-queries";
 import type { MemberScore, EngagementBand } from "@/types/domain";
+import { TEMPLATE_ENCORAJAMENTO, buildWhatsAppLink } from "@/lib/whatsapp-templates";
 
 // ── Config visual ─────────────────────────────────────────────
 const BAND_CONFIG: Record<EngagementBand, { color: string; bg: string; border: string; icon: string; label: string }> = {
@@ -39,7 +40,7 @@ function ScoreBar({ value, max = 100, color = "bg-[#C9A227]" }: { value: number;
 }
 
 // ── Card de membro ────────────────────────────────────────────
-function MemberScoreCard({ m }: { m: MemberScore }) {
+function MemberScoreCard({ m, phone }: { m: MemberScore; phone?: string | null }) {
   const [open, setOpen] = useState(false);
   const cfg = BAND_CONFIG[m.engagement_band];
 
@@ -69,6 +70,17 @@ function MemberScoreCard({ m }: { m: MemberScore }) {
           </div>
           <div className="mt-2"><ScoreBar value={m.score_total} /></div>
         </button>
+
+        {m.engagement_band === "em_risco" && phone && (
+          <a
+            href={buildWhatsAppLink(phone, TEMPLATE_ENCORAJAMENTO(m.full_name))}
+            target="_blank" rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="mt-3 flex items-center justify-center gap-1.5 rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-800 hover:bg-red-100"
+          >
+            <MessageCircle className="h-3.5 w-3.5" /> Enviar mensagem de encorajamento
+          </a>
+        )}
 
         {/* Detalhes expandidos */}
         {open && (
@@ -163,6 +175,7 @@ function RankingTab({ scores }: { scores: MemberScore[] }) {
 // ══════════════════════════════════════════════════════════════
 export function MemberScoreAdmin() {
   const { data: churches = [] } = useChurches();
+  const { data: allMembers = [] } = useAllMembers();
   const [churchFilter, setChurchFilter] = useState("");
   const [lgFilter,     setLgFilter]     = useState("");
   const [bandFilter,   setBandFilter]   = useState("");
@@ -172,6 +185,8 @@ export function MemberScoreAdmin() {
     lgId:     lgFilter     || undefined,
     band:     bandFilter   || undefined,
   });
+
+  const phoneById = new Map(allMembers.map((m) => [m.id, m.phone]));
 
   const engajados  = scores.filter(s => s.engagement_band === "engajado").length;
   const ativos     = scores.filter(s => s.engagement_band === "ativo").length;
@@ -234,7 +249,7 @@ export function MemberScoreAdmin() {
           <TabsContent value="list">
             {isLoading && <p className="py-8 text-center text-sm text-muted-foreground">Calculando scores…</p>}
             <div className="space-y-2">
-              {scores.map(m => <MemberScoreCard key={m.id} m={m} />)}
+              {scores.map(m => <MemberScoreCard key={m.id} m={m} phone={phoneById.get(m.id)} />)}
               {!isLoading && scores.length === 0 && (
                 <p className="py-10 text-center text-sm text-muted-foreground">Nenhum membro encontrado.</p>
               )}
