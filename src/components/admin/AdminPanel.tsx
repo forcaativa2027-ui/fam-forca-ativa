@@ -200,6 +200,8 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
     case "finance":             return <FinanceAdmin />;
     case "patrimony":           return <PatrimonyAdmin />;
     case "gpv":                 return <GpvAdmin />;
+    case "delegations":         return <DelegationsAdmin />;
+    case "audit":               return <AuditView />;
     case "export":              return <ExportAdmin />;
     default:                    return null;
   }
