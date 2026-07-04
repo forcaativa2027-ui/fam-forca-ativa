@@ -248,7 +248,15 @@ export interface Banner {
 export interface PrayerRequest { id:string; life_group_id:string|null; member_id:string|null; request:string; is_answered:boolean; created_at:string; }
 export interface Discipleship { id:string; discipler_id:string; disciple_id:string; status:DiscipleshipStatus; started_on:string; ended_on:string|null; current_module:string|null; notes:string|null; }
 export type TimelineEventType = "conversao"|"batismo"|"consolidacao"|"discipulado"|"curso"|"ministerio"|"encontro"|"mudanca_etapa"|"observacao";
-export interface PastoralTimeline { id:string; member_id:string; event_type:TimelineEventType; title:string; description:string|null; event_date:string; created_at:string; }
+export interface PastoralTimeline {
+  id:string; member_id:string; event_type:TimelineEventType; title:string; description:string|null;
+  from_stage?:string|null; to_stage?:string|null; is_progression?:boolean|null;
+  event_date:string; created_at:string;
+}
+export interface RecentEvolution {
+  id: string; member_id: string; from_stage: string; to_stage: string; event_date: string;
+  full_name: string; phone: string | null; church_id: string | null;
+}
 export interface AuditLog { id:string; actor_id:string|null; actor_email:string|null; action:AuditAction; entity:string; entity_id:string|null; created_at:string; }
 export interface MdaMinAlert { nivel:"distrito"|"area"|"setor"; id:string; nome:string; filhos:number; }
 export interface DashboardStats {

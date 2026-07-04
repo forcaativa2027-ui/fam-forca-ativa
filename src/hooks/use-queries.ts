@@ -58,6 +58,11 @@ export const useMyTimeline = (memberId: string|null) =>
     queryFn: () => Tl.listMemberTimeline(supabase, memberId),
     enabled: !!memberId,
   });
+export const useRecentEvolutions = (days = 7) =>
+  useQuery({
+    queryKey: ["recent-evolutions", days],
+    queryFn: () => Tl.listRecentEvolutions(supabase, days),
+  });
 export const useCellPrayers = (cellId: string|null) =>
   useQuery({
     queryKey: ["cell-prayers", cellId ?? "none"],
