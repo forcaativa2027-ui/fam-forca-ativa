@@ -251,6 +251,7 @@ export type TimelineEventType = "conversao"|"batismo"|"consolidacao"|"discipulad
 export interface PastoralTimeline {
   id:string; member_id:string; event_type:TimelineEventType; title:string; description:string|null;
   from_stage?:string|null; to_stage?:string|null; is_progression?:boolean|null;
+  milestone_key?:string|null;
   event_date:string; created_at:string;
 }
 export interface RecentEvolution {
