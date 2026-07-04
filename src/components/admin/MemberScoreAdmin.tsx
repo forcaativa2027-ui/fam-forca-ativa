@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMemberScores, useChurches, useCells, useAllMembers, useRecentEvolutions } from "@/hooks/use-queries";
 import type { MemberScore, EngagementBand } from "@/types/domain";
-import { TEMPLATE_ENCORAJAMENTO, TEMPLATE_EVOLUCAO_ETAPA, buildWhatsAppLink } from "@/lib/whatsapp-templates";
+import { TEMPLATE_ENCORAJAMENTO, TEMPLATE_CONTATO_GERAL, TEMPLATE_EVOLUCAO_ETAPA, buildWhatsAppLink } from "@/lib/whatsapp-templates";
 
 // ── Config visual ─────────────────────────────────────────────
 const BAND_CONFIG: Record<EngagementBand, { color: string; bg: string; border: string; icon: string; label: string }> = {
@@ -71,14 +71,22 @@ function MemberScoreCard({ m, phone }: { m: MemberScore; phone?: string | null }
           <div className="mt-2"><ScoreBar value={m.score_total} /></div>
         </button>
 
-        {m.engagement_band === "em_risco" && phone && (
+        {phone && (
           <a
-            href={buildWhatsAppLink(phone, TEMPLATE_ENCORAJAMENTO(m.full_name))}
+            href={buildWhatsAppLink(
+              phone,
+              m.engagement_band === "em_risco" ? TEMPLATE_ENCORAJAMENTO(m.full_name) : TEMPLATE_CONTATO_GERAL(m.full_name)
+            )}
             target="_blank" rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="mt-3 flex items-center justify-center gap-1.5 rounded-md border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-800 hover:bg-red-100"
+            className={`mt-3 flex items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-bold hover:opacity-90 ${
+              m.engagement_band === "em_risco"
+                ? "border-red-300 bg-red-50 text-red-800"
+                : "border-green-300 bg-green-50 text-green-800"
+            }`}
           >
-            <MessageCircle className="h-3.5 w-3.5" /> Enviar mensagem de encorajamento
+            <MessageCircle className="h-3.5 w-3.5" />
+            {m.engagement_band === "em_risco" ? "Enviar mensagem de encorajamento" : "Enviar mensagem no WhatsApp"}
           </a>
         )}
 

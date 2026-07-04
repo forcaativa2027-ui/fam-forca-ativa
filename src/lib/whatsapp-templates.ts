@@ -8,6 +8,9 @@
 export const TEMPLATE_ENCORAJAMENTO = (nome: string) =>
   `Olá ${nome}! 💙 Notamos que você tem estado um pouco distante ultimamente e queremos que saiba que estamos pensando em você e orando por você. Se precisar de algo, estamos aqui. Deus te ama e nós também!`;
 
+export const TEMPLATE_CONTATO_GERAL = (nome: string) =>
+  `Olá ${nome}! 😊 Passando aqui pra saber como você está. Deus te abençoe!`;
+
 export const TEMPLATE_EVOLUCAO_ETAPA = (nome: string, novaEtapa: string) =>
   `Parabéns, ${nome}! 🎉 Ficamos muito felizes em ver seu crescimento — você avançou para "${novaEtapa}" na sua jornada com a CEC Family! Continue firme, estamos orgulhosos de você e orando pela sua caminhada. 🙏`;
 
