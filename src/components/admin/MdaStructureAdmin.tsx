@@ -15,14 +15,23 @@ import {
 } from "@/services/churches";
 import type { District, Area, Sector } from "@/types/domain";
 
-export function MdaStructureAdmin() {
+export function MdaStructureAdmin({ churchId }: { churchId?: string } = {}) {
   const qc = useQueryClient();
-  const { data: churches = [] } = useChurches();
-  const { data: districts = [] } = useDistricts();
-  const { data: areas = [] } = useAreas();
-  const { data: sectors = [] } = useSectors();
-  const { data: cells = [] } = useCells();
+  const { data: allChurches = [] } = useChurches();
+  const { data: allDistricts = [] } = useDistricts();
+  const { data: allAreas = [] } = useAreas();
+  const { data: allSectors = [] } = useSectors();
+  const { data: allCells = [] } = useCells();
   const [err, setErr] = useState("");
+
+  const districts = churchId ? allDistricts.filter((d) => d.church_id === churchId) : allDistricts;
+  const districtIds = new Set(districts.map((d) => d.id));
+  const areas = churchId ? allAreas.filter((a) => districtIds.has(a.district_id)) : allAreas;
+  const areaIds = new Set(areas.map((a) => a.id));
+  const sectors = churchId ? allSectors.filter((s) => areaIds.has(s.area_id)) : allSectors;
+  const sectorIds = new Set(sectors.map((s) => s.id));
+  const cells = churchId ? allCells.filter((c) => c.sector_id && sectorIds.has(c.sector_id)) : allCells;
+  const churches = churchId ? allChurches.filter((c) => c.id === churchId) : allChurches;
 
   function invalidate() {
     qc.invalidateQueries({ queryKey: ["districts"] });
@@ -51,6 +60,7 @@ export function MdaStructureAdmin() {
 
       <DistrictsSection
         churches={churches} districts={districts} areas={areas} sectors={sectors} cells={cells}
+        fixedChurchId={churchId}
         onError={setErr} onChange={invalidate}
       />
     </div>
@@ -66,17 +76,15 @@ function MdaCount({ label, value }: { label: string; value: number }) {
   );
 }
 
-// ─── Distritos (nível 1, com Áreas e Setores aninhados) ──────────────────────
-
 function DistrictsSection({
-  churches, districts, areas, sectors, cells, onError, onChange,
+  churches, districts, areas, sectors, cells, fixedChurchId, onError, onChange,
 }: {
   churches: { id: string; name: string }[]; districts: District[]; areas: Area[]; sectors: Sector[]; cells: { sector_id: string | null }[];
-  onError: (msg: string) => void; onChange: () => void;
+  fixedChurchId?: string; onError: (msg: string) => void; onChange: () => void;
 }) {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
-  const [churchId, setChurchId] = useState(churches[0]?.id ?? "");
+  const [churchId, setChurchId] = useState(fixedChurchId ?? churches[0]?.id ?? "");
   const [busy, setBusy] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -125,13 +133,15 @@ function DistrictsSection({
       <CardContent className="space-y-3">
         {creating && (
           <div className="flex flex-col sm:flex-row gap-2 rounded-md border p-3 bg-muted/30">
-            <div className="flex-1">
-              <Label>Igreja</Label>
-              <select value={churchId} onChange={(e) => setChurchId(e.target.value)}
-                className="h-9 w-full rounded-md border bg-background px-3 text-sm">
-                {churches.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
+            {!fixedChurchId && (
+              <div className="flex-1">
+                <Label>Igreja</Label>
+                <select value={churchId} onChange={(e) => setChurchId(e.target.value)}
+                  className="h-9 w-full rounded-md border bg-background px-3 text-sm">
+                  {churches.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+            )}
             <div className="flex-1">
               <Label>Nome do distrito</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Distrito Norte" />
@@ -185,8 +195,6 @@ function DistrictsSection({
     </Card>
   );
 }
-
-// ─── Áreas (nível 2, dentro de cada distrito) ────────────────────────────────
 
 function AreasSubsection({
   districtId, areas, sectors, cells, onError, onChange,
@@ -287,8 +295,6 @@ function AreasSubsection({
     </ul>
   );
 }
-
-// ─── Setores (nível 3, dentro de cada área) ──────────────────────────────────
 
 function SectorsSubsection({
   areaId, sectors, cells, onError, onChange,
