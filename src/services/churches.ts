@@ -32,16 +32,13 @@ export async function listMdaAlerts(sb: SupabaseClient): Promise<MdaMinAlert[]> 
   return (data ?? []) as MdaMinAlert[];
 }
 
-// ── CRUD de Distrito/Área/Setor (estrutura MDA) ─────────────────────
-
-export async function createDistrict(sb: SupabaseClient, input: { church_id: string; name: string; mother_id?: string | null }): Promise<District> {
-  const { data, error } = await sb.from("districts").insert({
-    church_id: input.church_id, name: input.name, mother_id: input.mother_id ?? null, is_active: true,
-  }).select().single();
+// ── CRUD: Distrito ────────────────────────────────────────────
+export async function createDistrict(sb: SupabaseClient, input: Partial<District>): Promise<District> {
+  const { data, error } = await sb.from("districts").insert(input).select().single();
   if (error) throw error;
   return data as District;
 }
-export async function updateDistrict(sb: SupabaseClient, id: string, input: Partial<Pick<District, "name" | "mother_id" | "is_active">>): Promise<void> {
+export async function updateDistrict(sb: SupabaseClient, id: string, input: Partial<District>): Promise<void> {
   const { error } = await sb.from("districts").update(input).eq("id", id);
   if (error) throw error;
 }
@@ -50,14 +47,13 @@ export async function deleteDistrict(sb: SupabaseClient, id: string): Promise<vo
   if (error) throw error;
 }
 
-export async function createArea(sb: SupabaseClient, input: { district_id: string; name: string; mother_id?: string | null }): Promise<Area> {
-  const { data, error } = await sb.from("areas").insert({
-    district_id: input.district_id, name: input.name, mother_id: input.mother_id ?? null, is_active: true,
-  }).select().single();
+// ── CRUD: Área ─────────────────────────────────────────────────
+export async function createArea(sb: SupabaseClient, input: Partial<Area>): Promise<Area> {
+  const { data, error } = await sb.from("areas").insert(input).select().single();
   if (error) throw error;
   return data as Area;
 }
-export async function updateArea(sb: SupabaseClient, id: string, input: Partial<Pick<Area, "name" | "mother_id" | "is_active">>): Promise<void> {
+export async function updateArea(sb: SupabaseClient, id: string, input: Partial<Area>): Promise<void> {
   const { error } = await sb.from("areas").update(input).eq("id", id);
   if (error) throw error;
 }
@@ -66,14 +62,13 @@ export async function deleteArea(sb: SupabaseClient, id: string): Promise<void> 
   if (error) throw error;
 }
 
-export async function createSector(sb: SupabaseClient, input: { area_id: string; name: string; mother_id?: string | null }): Promise<Sector> {
-  const { data, error } = await sb.from("sectors").insert({
-    area_id: input.area_id, name: input.name, mother_id: input.mother_id ?? null, is_active: true,
-  }).select().single();
+// ── CRUD: Setor ────────────────────────────────────────────────
+export async function createSector(sb: SupabaseClient, input: Partial<Sector>): Promise<Sector> {
+  const { data, error } = await sb.from("sectors").insert(input).select().single();
   if (error) throw error;
   return data as Sector;
 }
-export async function updateSector(sb: SupabaseClient, id: string, input: Partial<Pick<Sector, "name" | "mother_id" | "is_active">>): Promise<void> {
+export async function updateSector(sb: SupabaseClient, id: string, input: Partial<Sector>): Promise<void> {
   const { error } = await sb.from("sectors").update(input).eq("id", id);
   if (error) throw error;
 }
