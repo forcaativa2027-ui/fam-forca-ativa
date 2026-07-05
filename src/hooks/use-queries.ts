@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase/client";
 import * as P from "@/services/profiles";
 import * as Co from "@/services/content";
 import * as C from "@/services/churches";
+import * as EvG from "@/services/evangelismGroups";
 import * as A from "@/services/audit";
 import * as D from "@/services/dashboard";
 import * as I from "@/services/institutional";
@@ -18,6 +19,13 @@ export const useDistricts      = () => useQuery({ queryKey: ["districts"],  quer
 export const useAreas          = () => useQuery({ queryKey: ["areas"],      queryFn: () => C.listAreas(supabase) });
 export const useSectors        = () => useQuery({ queryKey: ["sectors"],    queryFn: () => C.listSectors(supabase) });
 export const useCells          = () => useQuery({ queryKey: ["cells"],      queryFn: () => C.listCells(supabase) });
+export const useEvangelismGroups = () => useQuery({ queryKey: ["evangelism-groups"], queryFn: () => EvG.listEvangelismGroups(supabase) });
+export const useEvangelismParticipants = (groupId: string | null) =>
+  useQuery({
+    queryKey: ["evangelism-participants", groupId ?? "none"],
+    queryFn: () => Pp.listEvangelismParticipants(supabase, groupId!),
+    enabled: !!groupId,
+  });
 export const useMdaAlerts      = () => useQuery({ queryKey: ["mda-alerts"], queryFn: () => C.listMdaAlerts(supabase) });
 export const usePublicSermons  = (churchId?: string|null) => useQuery({ queryKey: ["public-sermons", churchId ?? "all"], queryFn: () => Co.listPublicSermons(supabase, churchId) });
 export const usePublicEvents   = (churchId?: string|null) => useQuery({ queryKey: ["public-events", churchId ?? "all"],  queryFn: () => Co.listPublicEvents(supabase, churchId) });
