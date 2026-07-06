@@ -1,10 +1,11 @@
 "use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Users2, Star, BookOpen, Heart, TrendingDown, Briefcase, Bell, Users,
+  Users2, Star, Cake, BookOpen, Heart, TrendingDown, Briefcase, Bell, Users,
 } from "lucide-react";
 import { MembersAdmin } from "@/components/admin/MembersAdmin";
-import { ScoresBirthdaysAdmin } from "@/components/admin/ScoresBirthdaysAdmin";
+import { MemberScoreAdmin } from "@/components/admin/MemberScoreAdmin";
+import { BirthdaysAdmin } from "@/components/admin/BirthdaysAdmin";
 import { DiscipleshipAdmin } from "@/components/admin/DiscipleshipAdmin";
 import { AcolhimentoAdmin } from "@/components/admin/AcolhimentoAdmin";
 import { EvasionAdmin } from "@/components/admin/EvasionAdmin";
@@ -16,7 +17,8 @@ export function PessoasTabs() {
     <Tabs defaultValue="members" className="space-y-4">
       <TabsList className="flex-wrap h-auto">
         <TabsTrigger value="members" className="gap-1.5"><Users2 size={14} /> Membros</TabsTrigger>
-        <TabsTrigger value="scores-birthdays" className="gap-1.5"><Star size={14} /> Score & Aniversários</TabsTrigger>
+        <TabsTrigger value="score" className="gap-1.5"><Star size={14} /> Score</TabsTrigger>
+        <TabsTrigger value="birthdays" className="gap-1.5"><Cake size={14} /> Aniversários</TabsTrigger>
         <TabsTrigger value="discipleship" className="gap-1.5"><BookOpen size={14} /> Discipulado</TabsTrigger>
         <TabsTrigger value="acolhimento" className="gap-1.5"><Heart size={14} /> Acolhimento</TabsTrigger>
         <TabsTrigger value="evasao" className="gap-1.5"><TrendingDown size={14} /> Em risco</TabsTrigger>
@@ -25,7 +27,8 @@ export function PessoasTabs() {
         <TabsTrigger value="visit-requests" className="gap-1.5"><Users size={14} /> Visitas</TabsTrigger>
       </TabsList>
       <TabsContent value="members"><MembersAdmin /></TabsContent>
-      <TabsContent value="scores-birthdays"><ScoresBirthdaysAdmin /></TabsContent>
+      <TabsContent value="score"><MemberScoreAdmin /></TabsContent>
+      <TabsContent value="birthdays"><BirthdaysAdmin /></TabsContent>
       <TabsContent value="discipleship"><DiscipleshipAdmin /></TabsContent>
       <TabsContent value="acolhimento"><AcolhimentoAdmin /></TabsContent>
       <TabsContent value="evasao"><EvasionAdmin /></TabsContent>

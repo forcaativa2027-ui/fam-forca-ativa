@@ -4,9 +4,9 @@ import { Star, TrendingUp, Users, Target, BookOpen, Church, ChevronRight, Messag
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMemberScores, useChurches, useCells, useAllMembers, useRecentEvolutions } from "@/hooks/use-queries";
+import { useMemberScores, useChurches, useCells, useAllMembers } from "@/hooks/use-queries";
 import type { MemberScore, EngagementBand } from "@/types/domain";
-import { TEMPLATE_ENCORAJAMENTO, TEMPLATE_EVOLUCAO_ETAPA, buildWhatsAppLink } from "@/lib/whatsapp-templates";
+import { TEMPLATE_ENCORAJAMENTO, buildWhatsAppLink } from "@/lib/whatsapp-templates";
 
 // ── Config visual ─────────────────────────────────────────────
 const BAND_CONFIG: Record<EngagementBand, { color: string; bg: string; border: string; icon: string; label: string }> = {
@@ -170,54 +170,6 @@ function RankingTab({ scores }: { scores: MemberScore[] }) {
   );
 }
 
-// ── Card de evoluções recentes ────────────────────────────────
-const STAGE_LABEL_PLAIN: Record<string, string> = {
-  visitante: "Visitante", novo_convertido: "Novo Convertido", consolidacao: "Consolidação",
-  discipulado: "Discipulado", batismo: "Batismo", membro_ativo: "Membro Ativo",
-  servo: "Servo", lider_formacao: "Líder em Formação", lider: "Líder",
-  supervisor: "Supervisor", missionario: "Missionário",
-};
-
-function RecentEvolutionsCard() {
-  const { data: evolutions = [], isLoading } = useRecentEvolutions(7);
-
-  if (isLoading || evolutions.length === 0) return null;
-
-  return (
-    <Card className="border-l-4 border-l-[#C9A227] bg-[#C9A227]/5">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <TrendingUp className="h-4 w-4 text-[#C9A227]" /> Evoluções recentes (últimos 7 dias)
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {evolutions.map((e) => (
-          <div key={e.id} className="flex items-center justify-between gap-3 rounded-md border bg-white p-2.5">
-            <div className="min-w-0">
-              <p className="truncate font-medium text-[#0E2A47]">{e.full_name}</p>
-              <p className="text-xs text-muted-foreground">
-                {STAGE_LABEL_PLAIN[e.from_stage] ?? e.from_stage} → <b className="text-[#0E2A47]">{STAGE_LABEL_PLAIN[e.to_stage] ?? e.to_stage}</b>
-                {" · "}{new Date(e.event_date).toLocaleDateString("pt-BR")}
-              </p>
-            </div>
-            {e.phone ? (
-              <a
-                href={buildWhatsAppLink(e.phone, TEMPLATE_EVOLUCAO_ETAPA(e.full_name, STAGE_LABEL_PLAIN[e.to_stage] ?? e.to_stage))}
-                target="_blank" rel="noreferrer"
-                className="shrink-0 flex items-center gap-1.5 rounded-md border border-[#C9A227] bg-[#C9A227]/10 px-3 py-1.5 text-xs font-bold text-[#8a6d1a] hover:bg-[#C9A227]/20"
-              >
-                <MessageCircle className="h-3.5 w-3.5" /> Parabenizar
-              </a>
-            ) : (
-              <span className="shrink-0 text-xs italic text-muted-foreground">sem telefone</span>
-            )}
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
-
 // ══════════════════════════════════════════════════════════════
 // MASTER — MemberScoreAdmin
 // ══════════════════════════════════════════════════════════════
@@ -250,8 +202,6 @@ export function MemberScoreAdmin() {
           <p className="text-xs text-muted-foreground">Jornada individual · Engajamento · Próximo passo</p>
         </div>
       </div>
-
-      <RecentEvolutionsCard />
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-3">
