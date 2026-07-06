@@ -4,7 +4,7 @@ import {
   Users2, Star, BookOpen, Heart, TrendingDown, Briefcase, Bell, Users,
 } from "lucide-react";
 import { MembersAdmin } from "@/components/admin/MembersAdmin";
-import { ScoresBirthdaysPlaceholder } from "@/components/admin/Placeholders";
+import { ScoresBirthdaysAdmin } from "@/components/admin/ScoresBirthdaysAdmin";
 import { DiscipleshipAdmin } from "@/components/admin/DiscipleshipAdmin";
 import { AcolhimentoAdmin } from "@/components/admin/AcolhimentoAdmin";
 import { EvasionAdmin } from "@/components/admin/EvasionAdmin";
@@ -25,7 +25,7 @@ export function PessoasTabs() {
         <TabsTrigger value="visit-requests" className="gap-1.5"><Users size={14} /> Visitas</TabsTrigger>
       </TabsList>
       <TabsContent value="members"><MembersAdmin /></TabsContent>
-      <TabsContent value="scores-birthdays"><ScoresBirthdaysPlaceholder /></TabsContent>
+      <TabsContent value="scores-birthdays"><ScoresBirthdaysAdmin /></TabsContent>
       <TabsContent value="discipleship"><DiscipleshipAdmin /></TabsContent>
       <TabsContent value="acolhimento"><AcolhimentoAdmin /></TabsContent>
       <TabsContent value="evasao"><EvasionAdmin /></TabsContent>
