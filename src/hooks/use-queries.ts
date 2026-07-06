@@ -58,11 +58,6 @@ export const useMyTimeline = (memberId: string|null) =>
     queryFn: () => Tl.listMemberTimeline(supabase, memberId),
     enabled: !!memberId,
   });
-export const useRecentEvolutions = (days = 7) =>
-  useQuery({
-    queryKey: ["recent-evolutions", days],
-    queryFn: () => Tl.listRecentEvolutions(supabase, days),
-  });
 export const useCellPrayers = (cellId: string|null) =>
   useQuery({
     queryKey: ["cell-prayers", cellId ?? "none"],
@@ -404,7 +399,6 @@ export const useFinanceBudgets = (churchId: string, year: number) =>
 
 // C12 Blocos 2-5 — Patrimônio Avançado
 import * as PA from "@/services/patrimonyAdvanced";
-import * as Inv from "@/services/invites";
 export const useDepreciationSummary = (churchId?: string) =>
   useQuery({ queryKey: ["depreciation-summary", churchId], queryFn: () => PA.getDepreciationSummary(supabase, churchId) });
 export const useDepreciation = (assetId: string) =>
@@ -423,14 +417,3 @@ export const usePatrimonyNationalSummary = () =>
   useQuery({ queryKey: ["patrimony-national-summary"], queryFn: () => PA.getPatrimonyNationalSummary(supabase) });
 export const usePatrimonyAlerts = (churchId?: string) =>
   useQuery({ queryKey: ["patrimony-alerts", churchId], queryFn: () => PA.getPatrimonyAlerts(supabase, churchId) });
-
-// CT-002 — Convites
-export const useInviteLinks = (churchId?: string | null) =>
-  useQuery({ queryKey: ["invite-links", churchId], queryFn: () => Inv.listInviteLinks(supabase, churchId) });
-export const useValidateInviteToken = (token: string) =>
-  useQuery({
-    queryKey: ["invite-token", token],
-    queryFn: () => Inv.validateInviteToken(supabase, token),
-    enabled: !!token,
-    retry: false,
-  });
