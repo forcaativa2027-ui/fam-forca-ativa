@@ -2,11 +2,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useDistricts, useAreas, useSectors, useCells } from "@/hooks/use-queries";
 
-/**
- * Extraídos de AdminPanel.tsx (eram funções internas `MdaStructure` e
- * `MdaCount`) para reutilização em /organizacional. Nenhuma mudança de
- * comportamento.
- */
 export function MdaStructure({ churchId }: { churchId?: string } = {}) {
   const { data: allDistricts = [] } = useDistricts();
   const { data: allAreas = [] } = useAreas();
