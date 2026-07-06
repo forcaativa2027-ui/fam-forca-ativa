@@ -41,8 +41,8 @@ const ROLE_COLORS: Record<MinistryRole, string> = {
   membro: "bg-muted/15 text-muted border-border",
 };
 
-export function MinistriesAdmin({ initialChurchId = "" }: { initialChurchId?: string } = {}) {
-  const [churchFilter, setChurchFilter] = useState<string>(initialChurchId);
+export function MinistriesAdmin() {
+  const [churchFilter, setChurchFilter] = useState<string>("");
   const [selectedMinistry, setSelectedMinistry] = useState<Ministry | null>(null);
   const { data: ministries = [] } = useMinistries(churchFilter || null);
   const { data: churches = [] } = useChurches();

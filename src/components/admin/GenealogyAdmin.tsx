@@ -30,11 +30,11 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
   encerrado:        { label: "Encerrado",        cls: "bg-gray-100 text-gray-600 border-gray-300" },
 };
 
-export function GenealogyAdmin({ initialChurchId = "" }: { initialChurchId?: string } = {}) {
+export function GenealogyAdmin() {
   const { data: nodes = [], isLoading } = useLgGenealogy();
   const { data: churches = [] } = useChurches();
   const churchMap = new Map(churches.map(c => [c.id, c]));
-  const [churchFilter, setChurchFilter] = useState<string>(initialChurchId);
+  const [churchFilter, setChurchFilter] = useState<string>("");
 
   const filtered = churchFilter
     ? nodes.filter(n => n.church_id === churchFilter)
