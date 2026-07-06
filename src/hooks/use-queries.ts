@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase/client";
 import * as P from "@/services/profiles";
 import * as Co from "@/services/content";
 import * as C from "@/services/churches";
+import * as EvG from "@/services/evangelismGroups";
 import * as A from "@/services/audit";
 import * as D from "@/services/dashboard";
 import * as I from "@/services/institutional";
@@ -18,6 +19,13 @@ export const useDistricts      = () => useQuery({ queryKey: ["districts"],  quer
 export const useAreas          = () => useQuery({ queryKey: ["areas"],      queryFn: () => C.listAreas(supabase) });
 export const useSectors        = () => useQuery({ queryKey: ["sectors"],    queryFn: () => C.listSectors(supabase) });
 export const useCells          = () => useQuery({ queryKey: ["cells"],      queryFn: () => C.listCells(supabase) });
+export const useEvangelismGroups = () => useQuery({ queryKey: ["evangelism-groups"], queryFn: () => EvG.listEvangelismGroups(supabase) });
+export const useEvangelismParticipants = (groupId: string | null) =>
+  useQuery({
+    queryKey: ["evangelism-participants", groupId ?? "none"],
+    queryFn: () => Pp.listEvangelismParticipants(supabase, groupId!),
+    enabled: !!groupId,
+  });
 export const useMdaAlerts      = () => useQuery({ queryKey: ["mda-alerts"], queryFn: () => C.listMdaAlerts(supabase) });
 export const usePublicSermons  = (churchId?: string|null) => useQuery({ queryKey: ["public-sermons", churchId ?? "all"], queryFn: () => Co.listPublicSermons(supabase, churchId) });
 export const usePublicEvents   = (churchId?: string|null) => useQuery({ queryKey: ["public-events", churchId ?? "all"],  queryFn: () => Co.listPublicEvents(supabase, churchId) });
@@ -57,6 +65,11 @@ export const useMyTimeline = (memberId: string|null) =>
     queryKey: ["my-timeline", memberId ?? "none"],
     queryFn: () => Tl.listMemberTimeline(supabase, memberId),
     enabled: !!memberId,
+  });
+export const useRecentEvolutions = (days = 7) =>
+  useQuery({
+    queryKey: ["recent-evolutions", days],
+    queryFn: () => Tl.listRecentEvolutions(supabase, days),
   });
 export const useCellPrayers = (cellId: string|null) =>
   useQuery({
@@ -399,6 +412,7 @@ export const useFinanceBudgets = (churchId: string, year: number) =>
 
 // C12 Blocos 2-5 — Patrimônio Avançado
 import * as PA from "@/services/patrimonyAdvanced";
+import * as Inv from "@/services/invites";
 export const useDepreciationSummary = (churchId?: string) =>
   useQuery({ queryKey: ["depreciation-summary", churchId], queryFn: () => PA.getDepreciationSummary(supabase, churchId) });
 export const useDepreciation = (assetId: string) =>
@@ -417,3 +431,14 @@ export const usePatrimonyNationalSummary = () =>
   useQuery({ queryKey: ["patrimony-national-summary"], queryFn: () => PA.getPatrimonyNationalSummary(supabase) });
 export const usePatrimonyAlerts = (churchId?: string) =>
   useQuery({ queryKey: ["patrimony-alerts", churchId], queryFn: () => PA.getPatrimonyAlerts(supabase, churchId) });
+
+// CT-002 — Convites
+export const useInviteLinks = (churchId?: string | null) =>
+  useQuery({ queryKey: ["invite-links", churchId], queryFn: () => Inv.listInviteLinks(supabase, churchId) });
+export const useValidateInviteToken = (token: string) =>
+  useQuery({
+    queryKey: ["invite-token", token],
+    queryFn: () => Inv.validateInviteToken(supabase, token),
+    enabled: !!token,
+    retry: false,
+  });
