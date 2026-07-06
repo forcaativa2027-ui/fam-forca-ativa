@@ -248,7 +248,15 @@ export interface Banner {
 export interface PrayerRequest { id:string; life_group_id:string|null; member_id:string|null; request:string; is_answered:boolean; created_at:string; }
 export interface Discipleship { id:string; discipler_id:string; disciple_id:string; status:DiscipleshipStatus; started_on:string; ended_on:string|null; current_module:string|null; notes:string|null; }
 export type TimelineEventType = "conversao"|"batismo"|"consolidacao"|"discipulado"|"curso"|"ministerio"|"encontro"|"mudanca_etapa"|"observacao";
-export interface PastoralTimeline { id:string; member_id:string; event_type:TimelineEventType; title:string; description:string|null; event_date:string; created_at:string; }
+export interface PastoralTimeline {
+  id:string; member_id:string; event_type:TimelineEventType; title:string; description:string|null;
+  from_stage?:string|null; to_stage?:string|null; is_progression?:boolean|null;
+  event_date:string; created_at:string;
+}
+export interface RecentEvolution {
+  id: string; member_id: string; from_stage: string; to_stage: string; event_date: string;
+  full_name: string; phone: string | null; church_id: string | null;
+}
 export interface AuditLog { id:string; actor_id:string|null; actor_email:string|null; action:AuditAction; entity:string; entity_id:string|null; created_at:string; }
 export interface MdaMinAlert { nivel:"distrito"|"area"|"setor"; id:string; nome:string; filhos:number; }
 export interface DashboardStats {
@@ -762,4 +770,41 @@ export interface PatrimonyAlert {
   asset_id: string | null; asset_name: string;
   church_id: string | null; church_name: string | null;
   detail: string; days_overdue: number;
+}
+
+// CT-002 — Central Inteligente de Convites e Cadastro
+export type InviteLinkKind =
+  | "membro" | "visitante" | "lider_lg" | "pastor" | "diretor_financeiro"
+  | "secretario" | "lider_jovens" | "lider_casais" | "lider_criancas"
+  | "musico" | "administrador";
+export type InviteLinkStatus = "ativo" | "expirado" | "esgotado" | "revogado";
+export type InviteValidity = "permanente" | "24h" | "7d" | "30d" | "90d";
+
+export interface InviteLinkCreateInput {
+  kind: InviteLinkKind;
+  church_id: string;
+  district_id?: string | null;
+  area_id?: string | null;
+  sector_id?: string | null;
+  life_group_id?: string | null;
+  ministry_id?: string | null;
+  target_role: UserRole;
+  discipler_id?: string | null;
+  validity: InviteValidity;
+  max_uses?: number | null;
+  allowed_ip_cidr?: string | null;
+}
+
+export interface InviteLinkRow {
+  id: string; token: string; kind: InviteLinkKind; status: InviteLinkStatus;
+  church_name: string | null; life_group_name: string | null; target_role: UserRole;
+  max_uses: number | null; uses_count: number; expires_at: string | null;
+  created_by_name: string | null; created_at: string;
+}
+
+export interface InviteTokenValidation {
+  valid: boolean; reason: string | null;
+  kind: InviteLinkKind | null; church_name: string | null;
+  life_group_name: string | null; ministry_name: string | null;
+  target_role: UserRole | null;
 }
