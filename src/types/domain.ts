@@ -228,6 +228,18 @@ export interface Cell {
   status_lg?:LgStatus;
   founded_at?:string|null;
 }
+
+// Grupo de Evangelismo — subdivisão de um Life Group (C24)
+export interface EvangelismGroup {
+  id:string; cell_id:string; name:string;
+  address:string|null; neighborhood:string|null; city:string|null; state:string|null;
+  meeting_weekday:Weekday|null; meeting_time:string|null; is_active:boolean;
+  created_at:string;
+  leader_ids?: string[];       // preenchido no service, a partir de evangelism_group_leaders
+  leader_names?: string[];     // idem, nomes já resolvidos
+}
+export interface EvangelismGroupLeader { id:string; group_id:string; member_id:string; created_at:string; }
+
 export interface Profile { id:string; full_name:string; email:string|null; phone:string|null; role:UserRole; avatar_url:string|null; church_id:string|null; }
 export interface Member {
   id:string; profile_id:string|null; full_name:string; email:string|null; phone:string|null;
@@ -395,6 +407,7 @@ export interface VisitorPipeline {
   suggestion_score: number | null;
   suggestion_reason: string | null;
   suggestion_calculated_at: string | null;
+  evangelism_group_id?: string | null;
   created_at: string;
 }
 
