@@ -1,0 +1,810 @@
+/** Tipos de dominio do CEC FAMILY (espelham o schema do Supabase). */
+
+export type UserRole = "apostolo"|"pastor"|"supervisor"|"lider"|"anfitriao"|"discipulador"|"membro"|"visitante";
+export type ChurchType = "sede"|"nucleo"|"igreja_local";
+export type JourneyStage = "visitante"|"novo_convertido"|"consolidacao"|"discipulado"|"batismo"|"membro_ativo"|"servo"|"lider_formacao"|"lider"|"supervisor"|"missionario";
+export type MemberStatus = "ativo"|"inativo"|"afastado";
+export type Weekday = "domingo"|"segunda"|"terca"|"quarta"|"quinta"|"sexta"|"sabado";
+export type EventStatus = "abertas"|"encerradas"|"esgotado"|"em_breve";
+export type EventTypeKind = "culto"|"congresso"|"conferencia"|"encontro"|"ebd"|"outro";
+export type AttendeeKind = "membro"|"frequentador";
+export type FinanceKind = "dizimo"|"oferta"|"primicia"|"missoes"|"construcao"|"outras_entradas"|"salario"|"aluguel"|"energia"|"evangelismo"|"evento"|"investimento"|"outras_saidas";
+export type FinanceDirection = "entrada"|"saida";
+export type DiscipleshipStatus = "ativo"|"pausado"|"concluido"|"desistente";
+export type AuditAction = "insert"|"update"|"delete"|"login"|"logout"|"export"|"custom";
+
+// B4b — Relatorios
+export type WeeklyAttendanceKind = "membro" | "frequentador";
+export type LgHealth = "muito_saudavel" | "saudavel" | "atencao" | "necessita_apoio";
+
+export interface MeetingReport {
+  id: string; life_group_id: string; meeting_date: string; weekday: Weekday | null;
+  share_theme: string | null; bible_text: string | null;
+  flowed: boolean | null; flowed_reason: string | null;
+  attendance_count: number; frequentadores_count: number; total_present: number | null;
+  visitors_count: number; visits_made: number; decisions_count: number;
+  needs: string | null; summary: string | null; created_at: string;
+  // Indicadores semanais (Caderno 11-B parte 1)
+  members_with_disciplers?: number;
+  mda_15_dias_happened?: boolean;
+  mda_15_dias_count?: number;
+  ge_happened?: boolean;
+  ge_location?: string | null;
+  ge_when?: string | null;
+  oferta_pix?: number;
+  oferta_especie?: number;
+  ebd_count?: number;
+  cc_count?: number;
+  cel_count?: number;
+  kg_amor?: number;
+  // Discipulado
+  disc_realizados?: number; disc_ativos?: number; disc_encontros?: number;
+  disc_interrompidos?: number; disc_novos?: number;
+  // Consolidação
+  cons_retornantes?: number; cons_acompanhamento?: number;
+  cons_integrados?: number; cons_novos_membros?: number;
+  // Liderança
+  lid_aux_treinamento?: boolean; lid_em_formacao?: boolean;
+  lid_potencial_multiplicador?: boolean; lid_observacoes?: string | null;
+  // Multiplicação
+  mult_filha_preparacao?: boolean; mult_nova_lideranca?: boolean; mult_potencial?: boolean;
+  // Saúde
+  saude_status?: LgHealth | null; saude_comentarios?: string | null;
+  // Necessidades pastorais
+  nec_oracao_urgente?: boolean; nec_visita_pastoral?: boolean;
+  nec_problema_familiar?: boolean; nec_problema_espiritual?: boolean;
+  nec_encaminhar_supervisor?: boolean;
+}
+
+// Tela detalhada: relatório + nomes/dados ao redor
+export interface ReportAttendanceRow {
+  id: string; member_id: string; member_name: string;
+  present: boolean; kind: string | null; absence_reason: string | null;
+  had_mda_15_dias?: boolean;
+  had_cc?: boolean;
+  had_cel?: boolean;
+}
+export interface ReportVisitRow {
+  id: string; visitor_name: string; phone: string | null; notes: string | null;
+}
+export interface ReportFull {
+  report: MeetingReport;
+  cell: Cell | null;
+  leader_name: string | null;
+  reporter_name: string | null;
+  attendance: ReportAttendanceRow[];
+  visits: ReportVisitRow[];
+}
+export interface MonthlyReport {
+  id: string; life_group_id: string; year: number; month: number;
+  nucleo: string | null; closed_at: string | null; created_at: string;
+}
+export interface MonthlyReportWeek {
+  id: string; report_id: string; week_number: number;
+  num_membros: number; memb_c_discipuladores: number;
+  mda_15_dias: number; ge: number; visitantes: number;
+  oferta_pix: number; oferta_especie: number;
+  ebd: number; cc: number; cel: number; kg_amor: number;
+}
+export interface MonthlyReportMember {
+  id: string; report_id: string; member_id: string;
+  discipulador_id: string | null; discipulador_nome: string | null;
+}
+export interface MonthlyReportMemberWeek {
+  id: string; monthly_report_member_id: string; week_number: number;
+  mda: number; cc: number; cel: number;
+}
+
+// Finance
+export interface Finance {
+  id: string; church_id: string; sector_id: string | null;
+  kind: FinanceKind; direction: FinanceDirection; amount: number;
+  description: string | null; occurred_on: string;
+  payer_name: string | null; payer_member_id: string | null;
+  created_at: string;
+}
+
+export type ChurchStatus = "ativa"|"em_implantacao"|"inativa";
+export interface Church {
+  id:string; name:string; type:ChurchType; parent_id:string|null;
+  address:string|null; city:string|null; state:string|null;
+  slug:string|null; pastor_id:string|null;
+  logo_url:string|null; banner_url:string|null;
+  primary_color:string|null; secondary_color:string|null;
+  short_description:string|null; site_url:string|null; whatsapp_phone:string|null;
+  is_active?:boolean;
+  // Caderno C13b
+  phone_primary?:string|null;
+  phone_secondary?:string|null;
+  email?:string|null;
+  cep?:string|null;
+  numero?:string|null;
+  complemento?:string|null;
+  referencia?:string|null;
+  founded_at?:string|null;
+  status_admin?:ChurchStatus;
+  observations?:string|null;
+}
+export interface ChurchDependencies {
+  children:number; life_groups:number; members:number; reports:number; total:number;
+}
+
+// Classificação e dashboard hierárquico
+export type MdaHealth = "saudavel" | "atencao" | "necessita_intervencao";
+export interface ScopeMetrics {
+  total_lgs: number;
+  active_lgs: number;
+  reported_30d: number;
+  with_leader: number;
+  multiplicando: number;
+  multiplicado: number;
+  in_formation: number;
+  members: number;
+  visitors_30d: number;
+  decisions_30d: number;
+  evasion_count: number;
+  reporting_rate: number;
+  leader_coverage: number;
+  health_score: number;
+  health_class: MdaHealth;
+}
+export interface LgWithHealth {
+  lg_id: string;
+  lg_name: string;
+  church_id: string | null;
+  status_lg: string;
+  members_count: number;
+  last_report_date: string | null;
+  evasion_count: number;
+  health_class: MdaHealth;
+}
+export interface District { id:string; church_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
+export interface Area { id:string; district_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
+export interface Sector { id:string; area_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
+
+// MDA Health (Caderno 11-B)
+export type MdaStatus = "saudavel" | "atencao" | "necessita";
+export interface MdaHealthRow {
+  church_id: string; church_name: string; church_type: string;
+  district_id: string | null; district_name: string | null;
+  area_id: string | null; area_name: string | null;
+  sector_id: string | null; sector_name: string | null;
+  lg_id: string | null; lg_name: string | null; lg_status_lg: string | null;
+  lg_health: MdaStatus | null;
+  sector_health: MdaStatus | null;
+  area_health: MdaStatus | null;
+  district_health: MdaStatus | null;
+  church_health: MdaStatus;
+  lg_members_count: number | null;
+  lg_last_report_date: string | null;
+}
+
+// Caderno 13 — Visualizações grandes
+export interface LgGenealogyNode {
+  id: string; name: string; mother_cell_id: string | null;
+  church_id: string | null; leader_id: string | null;
+  status_lg: string | null; founded_at: string | null;
+  generation: number;
+  members_count: number; direct_children_count: number;
+}
+export interface OrgDashboardKpis {
+  total_churches: number; total_sedes: number; total_nucleos: number; total_locais: number;
+  estados_alcancados: number; cidades_alcancadas: number;
+  total_distritos: number; total_areas: number; total_setores: number;
+  total_lgs: number; lgs_em_multiplicacao: number; lgs_multiplicados: number;
+  total_membros_ativos: number; novos_convertidos: number;
+  novos_membros_30d: number; novos_membros_12m: number;
+  relatorios_ultima_semana: number; relatorios_ultimo_mes: number;
+  total_ministerios: number;
+  multiplicacoes_ano: number; multiplicacoes_12m: number;
+}
+export interface GrowthMonthlyRow {
+  month_label: string; month_date: string;
+  new_members: number; new_lgs: number;
+}
+export interface CityExpansion {
+  state: string; city: string;
+  churches_count: number; lgs_count: number; members_count: number;
+  church_names: string[]; church_types: string[]; church_ids: string[];
+}
+export interface StateExpansion {
+  state: string;
+  churches_count: number; cities_count: number;
+  lgs_count: number; members_count: number;
+}
+export type TargetAudience = "misto"|"jovens"|"adolescentes"|"adultos"|"casais"|"terceira_idade"|"mulheres"|"homens"|"outro";
+export type LgStatus = "em_formacao"|"ativo"|"em_multiplicacao"|"multiplicado"|"encerrado";
+export interface Cell {
+  id:string; name:string; sector_id:string|null; church_id:string|null;
+  leader_id:string|null; coleader_id:string|null; host_id:string|null; supervisor_id:string|null;
+  host_assistant_id?:string|null;
+  mother_cell_id:string|null; address:string|null;
+  cep?:string|null; numero?:string|null; complemento?:string|null;
+  state:string|null; city:string|null; neighborhood:string|null;
+  latitude:number|null; longitude:number|null;
+  meeting_weekday:Weekday|null; meeting_time:string|null; is_active:boolean;
+  multiplication_target?:number;
+  target_audience?:TargetAudience;
+  status_lg?:LgStatus;
+  founded_at?:string|null;
+}
+export interface Profile { id:string; full_name:string; email:string|null; phone:string|null; role:UserRole; avatar_url:string|null; church_id:string|null; }
+export interface Member {
+  id:string; profile_id:string|null; full_name:string; email:string|null; phone:string|null;
+  birth_date:string|null; life_group_id:string|null; church_id:string|null;
+  journey_stage:JourneyStage; status:MemberStatus; joined_at:string|null;
+}
+export interface Sermon { id:string; title:string; reference:string|null; speaker:string|null; youtube_url:string; thumbnail_url:string|null; category:string|null; published_at:string; is_featured:boolean; is_published:boolean; church_id:string|null; }
+export interface EventItem { id:string; title:string; description:string|null; starts_at:string; ends_at:string|null; location:string|null; image_url:string|null; registration_url:string|null; status:EventStatus; event_type:EventTypeKind; is_published:boolean; church_id:string|null; }
+
+// M1b — Banners (Hero Carousel)
+export interface Banner {
+  id: string; title: string; subtitle: string | null;
+  image_url: string | null; cta_label: string | null; cta_url: string | null;
+  sort_order: number; is_active: boolean;
+  starts_at: string | null; ends_at: string | null;
+  created_at: string;
+}
+export interface PrayerRequest { id:string; life_group_id:string|null; member_id:string|null; request:string; is_answered:boolean; created_at:string; }
+export interface Discipleship { id:string; discipler_id:string; disciple_id:string; status:DiscipleshipStatus; started_on:string; ended_on:string|null; current_module:string|null; notes:string|null; }
+export type TimelineEventType = "conversao"|"batismo"|"consolidacao"|"discipulado"|"curso"|"ministerio"|"encontro"|"mudanca_etapa"|"observacao";
+export interface PastoralTimeline {
+  id:string; member_id:string; event_type:TimelineEventType; title:string; description:string|null;
+  from_stage?:string|null; to_stage?:string|null; is_progression?:boolean|null;
+  event_date:string; created_at:string;
+}
+export interface RecentEvolution {
+  id: string; member_id: string; from_stage: string; to_stage: string; event_date: string;
+  full_name: string; phone: string | null; church_id: string | null;
+}
+export interface AuditLog { id:string; actor_id:string|null; actor_email:string|null; action:AuditAction; entity:string; entity_id:string|null; created_at:string; }
+export interface MdaMinAlert { nivel:"distrito"|"area"|"setor"; id:string; nome:string; filhos:number; }
+export interface DashboardStats {
+  total_members:number; total_visitors:number; total_groups:number;
+  total_reports:number; baptisms:number;
+  by_stage: Record<string,number>;
+  reports_trend: { week:string; attendance:number; visitors:number }[];
+}
+
+/** Conteudo institucional (vindo das tabelas `church_info` e `daily_words`). */
+export interface ChurchInfo {
+  id: string; church_id: string; weekday: Weekday; time: string;
+  description: string | null; is_active: boolean; sort_order: number;
+}
+export type ServiceTime = ChurchInfo; // alias usado no front
+export interface DailyWord {
+  id: string; date: string; title: string;
+  verse_ref: string | null; verse_text: string | null; reflection: string | null;
+  prayer: string | null;
+  is_active: boolean;
+}
+
+// M1a — Conteudo publico e formularios
+export type NewsCategory = "minha_comunidade" | "cec_manaus" | "cec_brasilia" | "geral";
+export type ContactStatus = "novo" | "em_andamento" | "concluido" | "spam";
+export interface News {
+  id: string; slug: string; category: NewsCategory;
+  title: string; summary: string | null; body: string | null;
+  cover_url: string | null; author_name: string | null;
+  church_id: string | null;
+  is_published: boolean; published_at: string | null;
+  meta_title: string | null; meta_description: string | null; og_image_url: string | null;
+  created_at: string; updated_at: string;
+}
+export interface PublicPrayerRequest {
+  id: string; full_name: string; email: string | null; phone: string | null;
+  city: string | null; request: string; status: ContactStatus;
+  internal_notes: string | null; church_id: string | null; created_at: string;
+}
+export interface VisitRequest {
+  id: string; full_name: string; email: string | null; phone: string;
+  city: string | null; address: string | null;
+  best_time: string | null; reason: string | null;
+  status: ContactStatus; internal_notes: string | null;
+  church_id: string | null; created_at: string;
+}
+export interface PendingCounts { prayer_pending: number; visit_pending: number; pipeline_new: number; }
+
+// Engajamento — evasão, badges, multiplicação
+export interface MemberAtRisk {
+  member_id: string; full_name: string; life_group_id: string | null;
+  church_id: string | null; phone: string | null; email: string | null;
+  presences_in_last_3: number; reports_count: number; last_seen_at: string | null;
+}
+export interface LgBadge {
+  key: string; label: string; description: string; icon: string;
+}
+export interface LgMultiplicationProgress {
+  current_count: number; target: number; percent: number;
+}
+
+// Ministérios
+export type MinistryRole = "lider" | "vice" | "membro";
+export interface Ministry {
+  id: string; church_id: string;
+  name: string; slug: string | null; description: string | null;
+  leader_id: string | null; vice_leader_id: string | null;
+  color: string | null; icon: string | null; is_active: boolean;
+  created_at: string;
+}
+export interface MinistryMember {
+  id: string; ministry_id: string; member_id: string;
+  role: MinistryRole; joined_at: string; is_active: boolean;
+}
+export interface MinistryPost {
+  id: string; ministry_id: string; author_id: string | null;
+  title: string; body: string | null; cover_url: string | null;
+  is_published: boolean; published_at: string | null; created_at: string;
+}
+
+// IA-1 — Indicadores objetivos
+export interface LgIndicators {
+  life_group_id: string;
+  life_group_name?: string;
+  church_id?: string | null;
+  attendance_avg_last_4: number;
+  attendance_avg_last_12: number;
+  members_now: number;
+  members_30d_ago: number;
+  members_90d_ago: number;
+  growth_30d_pct: number;
+  growth_90d_pct: number;
+  new_converts_90d: number;
+  discipleship_rate_pct: number;
+  report_consistency_pct: number;
+  visitors_avg_last_4: number;
+  decisions_90d: number;
+  visits_made_90d: number;
+  multiplication_target: number;
+  multiplication_pct: number;
+  last_report_date: string | null;
+  reports_last_90d: number;
+}
+export type AggregateLevel = "sector" | "area" | "district" | "church";
+export interface AggregateIndicators {
+  level: AggregateLevel;
+  scope_id: string;
+  total_lgs: number;
+  total_members: number;
+  total_new_converts_90d: number;
+  attendance_avg: number;
+  growth_30d_pct: number;
+  discipleship_rate_pct: number;
+  decisions_90d: number;
+  visits_made_90d: number;
+  multiplication_pct_avg: number;
+  report_consistency_pct: number;
+}
+
+// M3 — Cadastro inteligente / Visitor Pipeline
+export type PipelineStage = "novo"|"aguardando_contato"|"contato_realizado"|"convidado_culto"|"convidado_life_group"|"participou"|"discipulado"|"consolidacao"|"batizado"|"membro"|"servo"|"lider";
+export type PipelineIntent = "lifegroup"|"discipulado"|"acompanhamento_pastoral"|"visita"|"conhecer"|"batismo"|"servir"|"outro";
+export interface VisitorPipeline {
+  id: string; user_id: string | null; profile_id: string | null; community_id: string | null;
+  life_group_id: string | null;
+  full_name: string; phone: string | null; email: string | null;
+  state: string | null; city: string | null; cep: string | null;
+  intent: PipelineIntent; stage: PipelineStage; source: string | null;
+  assigned_to: string | null; internal_notes: string | null;
+  first_contact_at: string | null; life_group_invite_at: string | null;
+  discipleship_started_at: string | null;
+  baptism_date: string | null; member_date: string | null;
+  // M6 — sugestão automática de LG
+  suggested_lg_id: string | null;
+  suggestion_score: number | null;
+  suggestion_reason: string | null;
+  suggestion_calculated_at: string | null;
+  created_at: string;
+}
+
+export interface LgSuggestion {
+  lg_id: string;
+  lg_name: string;
+  raw_score: number;
+  adjusted_score: number;
+  members_count: number;
+  target: number;
+  reason: string;
+}
+
+// Caderno 12 — Patrimônio
+export type OccupationType = "proprio"|"alugado"|"cedido"|"comodato"|"em_regularizacao";
+export type AssetCategory = "mobiliario"|"equipamentos"|"som_multimidia"|"infraestrutura"|"nao_duravel";
+export type AssetCondition = "novo"|"otimo"|"bom"|"regular"|"ruim"|"inutilizado"|"baixado";
+export type AssetOrigin = "compra_nf"|"doacao"|"sem_nf"|"transferencia"|"comodato"|"outro";
+
+export interface Property {
+  id: string; church_id: string; name: string; occupation_type: OccupationType;
+  cep: string | null; state: string | null; city: string | null; neighborhood: string | null;
+  address: string | null; numero: string | null; complemento: string | null;
+  latitude: number | null; longitude: number | null;
+  acquired_at: string | null; contract_end_at: string | null; iptu_due_at: string | null;
+  owner_name: string | null; owner_document: string | null; owner_phone: string | null;
+  observations: string | null; is_active: boolean;
+  created_at: string;
+}
+
+export interface Asset {
+  id: string; church_id: string; property_id: string | null;
+  patrimony_code: string | null; tag_number: string | null;
+  name: string; category: AssetCategory; subcategory: string | null;
+  description: string | null; manufacturer: string | null; model: string | null;
+  serial_number: string | null; responsible_id: string | null; location_text: string | null;
+  acquired_at: string | null; acquisition_value: number | null; origin: AssetOrigin;
+  condition: AssetCondition; is_durable: boolean; is_active: boolean;
+  observations: string | null;
+  created_at: string;
+}
+
+export interface PropertyDocument {
+  id: string; property_id: string; doc_type: string; title: string;
+  storage_path: string | null; size_bytes: number | null; mime_type: string | null;
+  uploaded_at: string; observations: string | null;
+  doc_number: string | null; issued_at: string | null; expires_at: string | null;
+  issuing_body: string | null; version: number;
+  superseded_by: string | null; is_current: boolean;
+}
+
+export interface AssetDocument {
+  id: string; asset_id: string; doc_type: string; title: string;
+  storage_path: string | null; size_bytes: number | null; mime_type: string | null;
+  uploaded_at: string; observations: string | null;
+}
+
+export interface AssetPhoto {
+  id: string; asset_id: string; photo_year: number | null; taken_at: string | null;
+  storage_path: string; caption: string | null; uploaded_at: string;
+}
+
+export interface PatrimonySummary {
+  church_id: string; church_name: string;
+  properties_count: number; assets_count: number;
+  total_acquisition_value: number; contracts_expiring_90d: number;
+}
+
+// C16 — Inteligência Ministerial
+export type HealthBand = "saudavel" | "atencao" | "critico";
+export type ReliabilityBand = "confiavel" | "atencao" | "critico";
+
+export interface LgScoreMinisterial {
+  id: string; name: string; church_id: string; leader_id: string | null;
+  status_lg: string; founded_at: string | null; mother_cell_id: string | null;
+  direct_children: number; members_count: number;
+  total_relatorios: number | null; media_presentes: number | null;
+  total_visitantes: number | null; total_decisoes: number | null;
+  total_disc_ativos: number | null; total_integrados: number | null;
+  total_novos_membros: number | null; ultimo_relatorio: string | null;
+  pts_reporte: number; pts_frequencia: number; pts_retencao: number;
+  pts_discipulado: number; pts_evangelismo: number; pts_multiplicacao: number;
+  score_total: number; health_band: HealthBand;
+}
+export interface LgRanking extends LgScoreMinisterial {
+  church_name: string | null;
+  rank_geral: number; rank_frequencia: number; rank_evangelismo: number;
+  rank_multiplicacao: number; rank_discipulado: number; rank_visitantes: number; rank_membros: number;
+}
+export interface RetentionFunnel {
+  visitantes: number; consolidacao: number; discipulado: number; batismo: number;
+  membros_ativos: number; servos_e_formacao: number; lideres: number; total: number;
+}
+export interface RetentionFunnelByChurch extends RetentionFunnel {
+  church_id: string; church_name: string | null;
+}
+export interface LgReliabilityIndex {
+  id: string; name: string; church_id: string; church_name: string | null;
+  members_count: number; relatorios_90d: number; ultimo_relatorio: string | null;
+  dias_sem_relatorio: number; taxa_reporte_pct: number;
+  flag_sem_relatorio_recente: boolean; flag_reporte_irregular: boolean;
+  flag_dados_suspeitos: boolean; flag_sem_membros: boolean;
+  total_flags: number; reliability_band: ReliabilityBand;
+}
+export interface ReliabilitySummary {
+  total_lgs: number; lgs_confiaveis: number; lgs_atencao: number; lgs_criticos: number;
+  lgs_sem_relatorio_recente: number; lgs_reporte_irregular: number;
+  lgs_dados_suspeitos: number; lgs_sem_membros: number;
+  taxa_reporte_media_pct: number; pct_confiaveis: number;
+}
+export interface MonthlyConsolidation {
+  mes: string; mes_label: string; church_id: string; church_name: string | null;
+  church_type: string | null; church_parent_id: string | null;
+  sector_id: string | null; sector_name: string | null;
+  area_id: string | null; area_name: string | null;
+  district_id: string | null; district_name: string | null;
+  lgs_reportaram: number; total_relatorios: number;
+  total_presentes: number; total_frequentadores: number;
+  total_visitantes: number; total_decisoes: number;
+  total_disc_ativos: number; total_disc_novos: number;
+  total_integrados: number; total_novos_membros: number;
+  lgs_em_preparacao_mult: number; lgs_nova_lideranca: number;
+  total_oracao_urgente: number; total_visita_pastoral: number;
+}
+export interface GrowthVariation {
+  mes_label: string; mes: string;
+  presentes: number; visitantes: number; decisoes: number;
+  integrados: number; disc_ativos: number; lgs_reportaram: number;
+  var_pct_presentes: number | null; var_pct_visitantes: number | null; var_pct_lgs_reportaram: number | null;
+}
+
+// C17 — Central de Metas
+export type GoalScope = "nacional"|"sede"|"nucleo"|"distrito"|"area"|"setor"|"lg";
+export type GoalIndicator = "membros_ativos"|"visitantes"|"decisoes"|"batismos"|"multiplicacoes"|"lgs_ativos"|"disc_ativos"|"integrados"|"relatorios_enviados"|"novos_membros";
+export type GoalStatus = "atingido"|"no_caminho"|"atencao";
+export interface MinistryGoal {
+  id: string; scope: GoalScope; scope_id: string | null; scope_name: string;
+  year: number; month: number | null; indicator: GoalIndicator;
+  target_value: number; notes: string | null; created_by: string | null;
+  created_at: string; updated_at: string;
+}
+export interface GoalVsActual extends MinistryGoal {
+  actual_value: number; pct_atingido: number; status_meta: GoalStatus;
+}
+
+// C18 — Torre de Controle
+export type AlertType = "sem_relatorio"|"oracao_urgente"|"visita_pastoral"|"score_critico"|"sem_membros"|"meta_atrasada";
+export type AlertSeverity = "critico"|"atencao";
+
+export interface ControlTowerAlert {
+  alert_type: AlertType;
+  severity: AlertSeverity;
+  category: string;
+  lg_id: string | null;
+  lg_name: string;
+  church_id: string | null;
+  church_name: string | null;
+  detail: string;
+  severity_score: number;
+  alert_date: string;
+}
+
+export interface ControlTowerSummary {
+  total_criticos: number;
+  total_atencao: number;
+  total_alertas: number;
+  alertas_sem_relatorio: number;
+  alertas_oracao_urgente: number;
+  alertas_visita_pastoral: number;
+  alertas_score_critico: number;
+  alertas_sem_membros: number;
+  alertas_meta_atrasada: number;
+  lgs_afetados: number;
+  igrejas_afetadas: number;
+}
+
+// C19 — Governança por Delegação
+export type DelegationModule = "intelligence"|"reports"|"control_tower"|"finance"|"patrimony"|"audit";
+export type DelegationScope  = "lg"|"setor"|"area"|"distrito"|"nucleo"|"sede"|"nacional";
+export type DelegationStatus = "pendente"|"ativo"|"rejeitado"|"revogado"|"expirado";
+export type CouncilVote      = "aprovado"|"reprovado"|"abstencao";
+
+export interface CouncilMember {
+  id: string; profile_id: string; cargo: string; is_active: boolean;
+  created_at: string; updated_at: string;
+}
+export interface ModuleDelegation {
+  id: string; profile_id: string; module: DelegationModule;
+  trust_level: number; scope: DelegationScope; scope_id: string|null; scope_name: string;
+  status: DelegationStatus; expires_at: string|null;
+  requested_by: string|null; requested_at: string; request_reason: string;
+  is_critical: boolean; council_pauta: boolean; council_pauta_at: string|null;
+  reviewed_by: string|null; reviewed_at: string|null; review_notes: string|null;
+  revoked_by: string|null; revoked_at: string|null; revoke_reason: string|null;
+  created_at: string; updated_at: string;
+}
+export interface DelegationPanel extends ModuleDelegation {
+  profile_name: string; profile_email: string; profile_role: string;
+  profile_church_id: string|null; profile_church_name: string|null;
+  requested_by_name: string|null; reviewed_by_name: string|null; revoked_by_name: string|null;
+  votes_yes: number; votes_no: number; votes_abstain: number; votes_total: number;
+  days_remaining: number|null;
+}
+export interface DelegationApproval {
+  id: string; delegation_id: string; director_id: string;
+  vote: CouncilVote; observation: string|null; created_at: string;
+}
+export interface RoleDelegation {
+  id: string; role_name: string; module: DelegationModule;
+  trust_level: number; scope: string; description: string|null; is_active: boolean;
+}
+export interface EmergencyAccess {
+  id: string; profile_id: string; module: DelegationModule;
+  reason: string; approved_by: string|null; starts_at: string; expires_at: string; is_active: boolean;
+}
+export interface ComplianceDashboard {
+  total_delegacoes: number; ativas: number; pendentes: number; expiradas: number; revogadas: number;
+  vencendo_7d: number; vencendo_15d: number; vencendo_30d: number;
+  permanentes: number; criticas_ativas: number; nivel_estrategico: number; aguardando_conselho: number;
+}
+export interface ModuleDelegationRanking {
+  module: DelegationModule; delegacoes_ativas: number; pendentes: number;
+  total_historico: number; nivel_medio: number;
+}
+
+// C20 — Score do Membro + Aniversariantes
+export type EngagementBand = "engajado" | "ativo" | "em_risco";
+
+export interface MemberScore {
+  id: string; full_name: string; birth_date: string | null;
+  journey_stage: string; status: string;
+  life_group_id: string | null; church_id: string | null;
+  joined_at: string | null; discipler_id: string | null;
+  reunioes_presente_90d: number; reunioes_total_90d: number;
+  disc_ativos: number; disc_concluidos: number; total_ministerios: number;
+  pts_estagio: number; pts_progressao: number; pts_discipulado: number;
+  pts_presenca: number; pts_ministerio: number;
+  score_total: number; engagement_band: EngagementBand;
+  proximo_estagio: string | null;
+}
+
+export interface BirthdayMember {
+  id: string; full_name: string; birth_date: string;
+  phone: string | null; email: string | null;
+  journey_stage: string | null; life_group_id: string | null;
+  church_id: string | null; lg_name: string | null; church_name: string | null;
+  idade: number; dia?: number; mes?: number;
+  dias_ate_aniversario?: number; dias_restantes?: number;
+  aniversario_este_ano?: string;
+}
+
+// C21 — Financeiro Completo
+export interface FinanceMonthlyFlow {
+  mes: string; mes_label: string; mes_curto: string;
+  church_id: string;
+  entradas: number; saidas: number; saldo: number;
+}
+
+export interface FinanceByCategory {
+  church_id: string; church_name: string | null;
+  direction: string; kind: string;
+  ano: number; mes: number; mes_label: string;
+  qtd_lancamentos: number; total: number; media: number;
+  minimo: number; maximo: number;
+}
+
+export interface FinanceNationalMonthly {
+  mes_label: string; mes: string;
+  igrejas_reportaram: number;
+  total_entradas: number; total_saidas: number; saldo: number;
+  dizimo: number; oferta: number; primicia: number;
+  missoes: number; construcao: number; outras_entradas: number;
+  salario: number; aluguel: number; energia: number;
+  evangelismo: number; evento: number; investimento: number; outras_saidas: number;
+}
+
+export interface FinanceBudget {
+  id: string; church_id: string; year: number;
+  kind: string; direction: string;
+  amount: number; notes: string | null;
+  created_by: string | null; created_at: string; updated_at: string;
+}
+
+export interface FinanceBudgetVsActual extends FinanceBudget {
+  church_name: string | null;
+  budgeted: number; actual: number;
+  pct_realizado: number;
+  status: "atingido" | "no_caminho" | "atencao";
+}
+
+// C12 Blocos 2-5 — Patrimônio Avançado
+export type DepreciationMethod = "linear" | "acelerado" | "soma_digitos";
+export type MaintenanceType = "preventiva" | "corretiva" | "emergencial" | "revisao";
+export type MaintenanceStatus = "agendada" | "em_andamento" | "concluida" | "cancelada";
+export type InventoryStatus = "encontrado" | "nao_encontrado" | "divergente" | "baixado";
+
+export interface AssetDepreciation {
+  id: string; asset_id: string;
+  method: DepreciationMethod;
+  useful_life_years: number;
+  residual_value: number;
+  start_date: string;
+  notes: string | null;
+  created_at: string; updated_at: string;
+}
+
+export interface AssetDepreciationSummary {
+  asset_id: string; asset_name: string;
+  church_id: string; category: string; condition: string;
+  acquisition_value: number | null; acquired_at: string | null;
+  method: string; useful_life_years: number; residual_value: number; start_date: string;
+  anos_decorridos: number; depreciacao_anual: number;
+  depreciacao_acumulada: number; valor_atual_liquido: number;
+  pct_depreciado: number; status_depreciacao: string;
+}
+
+export interface AssetMaintenance {
+  id: string; asset_id: string;
+  type: MaintenanceType; status: MaintenanceStatus;
+  scheduled_at: string; completed_at: string | null;
+  next_maintenance: string | null; cost: number | null;
+  provider_name: string | null; provider_phone: string | null;
+  description: string; result: string | null;
+  responsible_id: string | null; created_by: string | null;
+  created_at: string; updated_at: string;
+}
+
+export interface MaintenanceUpcoming extends AssetMaintenance {
+  asset_name: string; church_id: string; church_name: string | null;
+  category: string; dias_para_manutencao: number;
+}
+
+export interface MaintenanceHistory extends AssetMaintenance {
+  asset_name: string; church_id: string; church_name: string | null; category: string;
+}
+
+export interface AssetInventory {
+  id: string; campaign_name: string;
+  church_id: string | null; inventory_date: string;
+  asset_id: string; status: InventoryStatus;
+  found_condition: string | null; found_location: string | null;
+  notes: string | null; checked_by: string | null; created_at: string;
+}
+
+export interface AssetLastInventory {
+  asset_id: string; campaign_name: string; inventory_date: string;
+  last_status: string; found_condition: string | null; found_location: string | null;
+  notes: string | null; asset_name: string; church_id: string;
+  church_name: string | null; category: string; current_condition: string;
+}
+
+export interface InventoryCampaignSummary {
+  campaign_name: string; church_id: string | null; inventory_date: string;
+  total_bens: number; encontrados: number; nao_encontrados: number;
+  divergentes: number; baixados: number; pct_encontrados: number;
+}
+
+export interface PatrimonyAccounting {
+  church_id: string; church_name: string | null; category: string;
+  total_bens: number; bens_duraveis: number;
+  valor_aquisicao_total: number; depreciacao_acumulada_total: number; valor_atual_total: number;
+  custo_manutencao_ano: number;
+  cond_novo: number; cond_otimo: number; cond_bom: number; cond_regular: number; cond_ruim: number;
+}
+
+export interface PatrimonyNationalSummary {
+  igrejas_com_patrimonio: number; total_imoveis: number; total_bens: number;
+  valor_total_aquisicao: number; depreciacao_total: number; valor_liquido_total: number;
+  manutencoes_pendentes: number; bens_nao_encontrados: number; bens_depreciados: number;
+}
+
+export interface PatrimonyAlert {
+  alert_type: string; severity: string;
+  asset_id: string | null; asset_name: string;
+  church_id: string | null; church_name: string | null;
+  detail: string; days_overdue: number;
+}
+
+// CT-002 — Central Inteligente de Convites e Cadastro
+export type InviteLinkKind =
+  | "membro" | "visitante" | "lider_lg" | "pastor" | "diretor_financeiro"
+  | "secretario" | "lider_jovens" | "lider_casais" | "lider_criancas"
+  | "musico" | "administrador";
+export type InviteLinkStatus = "ativo" | "expirado" | "esgotado" | "revogado";
+export type InviteValidity = "permanente" | "24h" | "7d" | "30d" | "90d";
+
+export interface InviteLinkCreateInput {
+  kind: InviteLinkKind;
+  church_id: string;
+  district_id?: string | null;
+  area_id?: string | null;
+  sector_id?: string | null;
+  life_group_id?: string | null;
+  ministry_id?: string | null;
+  target_role: UserRole;
+  discipler_id?: string | null;
+  validity: InviteValidity;
+  max_uses?: number | null;
+  allowed_ip_cidr?: string | null;
+}
+
+export interface InviteLinkRow {
+  id: string; token: string; kind: InviteLinkKind; status: InviteLinkStatus;
+  church_name: string | null; life_group_name: string | null; target_role: UserRole;
+  max_uses: number | null; uses_count: number; expires_at: string | null;
+  created_by_name: string | null; created_at: string;
+}
+
+export interface InviteTokenValidation {
+  valid: boolean; reason: string | null;
+  kind: InviteLinkKind | null; church_name: string | null;
+  life_group_name: string | null; ministry_name: string | null;
+  target_role: UserRole | null;
+}
