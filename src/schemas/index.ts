@@ -57,7 +57,8 @@ export type MemberCreateInput = z.infer<typeof memberCreateSchema>;
 
 export const cellSchema = z.object({
   name: reqText("Nome da celula"),
-  sector_id: z.string().uuid("Setor invalido"),
+  sector_id: z.string().uuid("Setor invalido").optional().or(z.literal("")),
+  church_id: z.string().uuid("Igreja invalida").optional().or(z.literal("")),
   address: optionalText,
   cep: z.string().regex(/^\d{5}-?\d{3}$/, "CEP invalido (00000-000)").optional().or(z.literal("")),
   numero: optionalText,
@@ -75,6 +76,9 @@ export const cellSchema = z.object({
   target_audience: z.enum(["misto","jovens","adolescentes","adultos","casais","terceira_idade","mulheres","homens","outro"]).default("misto"),
   status_lg: z.enum(["em_formacao","ativo","em_multiplicacao","multiplicado","encerrado"]).default("ativo"),
   founded_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data invalida").optional().or(z.literal("")),
+}).refine((v) => !!v.sector_id || !!v.church_id, {
+  message: "Selecione um Setor ou vincule direto a uma Igreja/Sede.",
+  path: ["sector_id"],
 });
 export type CellInput = z.infer<typeof cellSchema>;
 
