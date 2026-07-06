@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBirthdaysToday, useBirthdaysMonth, useBirthdaysUpcoming, useChurches } from "@/hooks/use-queries";
 import type { BirthdayMember } from "@/types/domain";
+import { TEMPLATE_ANIVERSARIO, buildWhatsAppLink } from "@/lib/whatsapp-templates";
 
 const MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -46,7 +47,16 @@ function BirthdayCard({ m, showDays }: { m: BirthdayMember; showDays?: boolean }
           </div>
           <div className="flex flex-col gap-1 shrink-0 text-right">
             {m.phone && (
-              <a href={`https://wa.me/55${m.phone.replace(/\D/g, "")}`}
+              <a
+                href={buildWhatsAppLink(m.phone, TEMPLATE_ANIVERSARIO(m.full_name))}
+                target="_blank" rel="noreferrer"
+                className="flex items-center gap-1 rounded-md border border-green-300 bg-green-50 px-2 py-1 text-xs font-bold text-green-800 hover:bg-green-100"
+              >
+                🎉 Parabenizar
+              </a>
+            )}
+            {m.phone && (
+              <a href={`https://wa.me/${m.phone.replace(/\D/g, "")}`}
                 target="_blank" rel="noreferrer"
                 className="flex items-center gap-1 text-xs text-green-600 hover:underline">
                 <Phone className="h-3 w-3" />{m.phone}
@@ -182,10 +192,10 @@ export function BirthdaysAdmin() {
             <p className="text-xs text-muted-foreground">Hoje · Mês atual · Próximos 30 dias</p>
           </div>
         </div>
-        <Select value={churchFilter} onValueChange={setChurchFilter}>
+        <Select value={churchFilter || "todas"} onValueChange={v => setChurchFilter(v === "todas" ? "" : v)}>
           <SelectTrigger className="w-52"><SelectValue placeholder="Todas as comunidades" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas</SelectItem>
+            <SelectItem value="todas">Todas</SelectItem>
             {churches.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>

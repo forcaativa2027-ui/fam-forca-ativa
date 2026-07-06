@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { PastoralTimeline } from "@/types/domain";
+import type { PastoralTimeline, RecentEvolution } from "@/types/domain";
 
 /** Linha do tempo espiritual de um membro. */
 export async function listMemberTimeline(sb: SupabaseClient, memberId: string | null): Promise<PastoralTimeline[]> {
@@ -9,5 +9,25 @@ export async function listMemberTimeline(sb: SupabaseClient, memberId: string | 
       .select("*").eq("member_id", memberId).order("event_date", { ascending: false });
     if (error) return [];
     return (data ?? []) as PastoralTimeline[];
+  } catch { return []; }
+}
+
+/** Membros que avançaram de etapa nos últimos N dias (para o botão "Parabenizar por evolução"). */
+export async function listRecentEvolutions(sb: SupabaseClient, days = 7): Promise<RecentEvolution[]> {
+  try {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    const { data, error } = await sb.from("pastoral_timeline")
+      .select("id, member_id, from_stage, to_stage, event_date, members(full_name, phone, church_id)")
+      .eq("event_type", "mudanca_etapa")
+      .eq("is_progression", true)
+      .gte("event_date", since.toISOString().slice(0, 10))
+      .order("event_date", { ascending: false });
+    if (error) { console.error("[recent-evolutions]", error); return []; }
+    return (data ?? []).map((r: any) => ({
+      id: r.id, member_id: r.member_id, from_stage: r.from_stage, to_stage: r.to_stage,
+      event_date: r.event_date,
+      full_name: r.members?.full_name ?? "—", phone: r.members?.phone ?? null, church_id: r.members?.church_id ?? null,
+    })) as RecentEvolution[];
   } catch { return []; }
 }
