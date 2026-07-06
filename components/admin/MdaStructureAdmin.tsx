@@ -28,12 +28,6 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
-/**
- * Cadastro da Estrutura MDA (Igreja → Distrito → Área → Setor → Life Group).
- * Antes desse componente só existia a árvore de resumo (MdaStructure.tsx),
- * sem nenhum formulário de cadastro — Distrito/Área/Setor só podiam ser
- * criados direto no banco. Life Group já tem seu próprio CRUD (CellsAdmin.tsx).
- */
 export function MdaStructureAdmin() {
   return (
     <div className="space-y-6">
@@ -52,7 +46,6 @@ export function MdaStructureAdmin() {
   );
 }
 
-// ── Distritos ────────────────────────────────────────────────────
 function DistrictsSection() {
   const { data: districts = [] } = useDistricts();
   const { data: churches = [] } = useChurches();
@@ -156,7 +149,6 @@ function DistrictsSection() {
   );
 }
 
-// ── Áreas ────────────────────────────────────────────────────────
 function AreasSection() {
   const { data: areas = [] } = useAreas();
   const { data: districts = [] } = useDistricts();
@@ -264,7 +256,6 @@ function AreasSection() {
   );
 }
 
-// ── Setores ──────────────────────────────────────────────────────
 function SectorsSection() {
   const { data: sectors = [] } = useSectors();
   const { data: areas = [] } = useAreas();
