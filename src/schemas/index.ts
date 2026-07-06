@@ -57,8 +57,7 @@ export type MemberCreateInput = z.infer<typeof memberCreateSchema>;
 
 export const cellSchema = z.object({
   name: reqText("Nome da celula"),
-  sector_id: z.string().uuid("Setor invalido").optional().or(z.literal("")),
-  church_id: z.string().uuid("Igreja invalida").optional().or(z.literal("")),
+  sector_id: z.string().uuid("Setor invalido"),
   address: optionalText,
   cep: z.string().regex(/^\d{5}-?\d{3}$/, "CEP invalido (00000-000)").optional().or(z.literal("")),
   numero: optionalText,
@@ -76,49 +75,8 @@ export const cellSchema = z.object({
   target_audience: z.enum(["misto","jovens","adolescentes","adultos","casais","terceira_idade","mulheres","homens","outro"]).default("misto"),
   status_lg: z.enum(["em_formacao","ativo","em_multiplicacao","multiplicado","encerrado"]).default("ativo"),
   founded_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data invalida").optional().or(z.literal("")),
-}).refine((v) => !!v.sector_id || !!v.church_id, {
-  message: "Selecione um Setor ou vincule direto a uma Igreja/Sede.",
-  path: ["sector_id"],
 });
 export type CellInput = z.infer<typeof cellSchema>;
-
-// ── Estrutura MDA: Distrito, Área, Setor ────────────────────────
-export const districtSchema = z.object({
-  name: reqText("Nome do distrito"),
-  church_id: z.string().uuid("Selecione a igreja/sede"),
-  mother_id: z.string().uuid().optional().or(z.literal("")),
-  leader_id: z.string().uuid().optional().or(z.literal("")),
-});
-export type DistrictInput = z.infer<typeof districtSchema>;
-
-export const areaSchema = z.object({
-  name: reqText("Nome da área"),
-  district_id: z.string().uuid("Selecione o distrito"),
-  mother_id: z.string().uuid().optional().or(z.literal("")),
-  leader_id: z.string().uuid().optional().or(z.literal("")),
-});
-export type AreaInput = z.infer<typeof areaSchema>;
-
-export const sectorSchema = z.object({
-  name: reqText("Nome do setor"),
-  area_id: z.string().uuid("Selecione a área"),
-  mother_id: z.string().uuid().optional().or(z.literal("")),
-  leader_id: z.string().uuid().optional().or(z.literal("")),
-});
-export type SectorInput = z.infer<typeof sectorSchema>;
-
-// ── Grupo de Evangelismo (C24) ──────────────────────────────────
-export const evangelismGroupSchema = z.object({
-  name: reqText("Nome do grupo"),
-  cell_id: z.string().uuid("Selecione o Life Group responsável"),
-  address: optionalText,
-  neighborhood: optionalText,
-  city: optionalText,
-  state: optionalText,
-  meeting_weekday: z.enum(["domingo","segunda","terca","quarta","quinta","sexta","sabado"]).optional().nullable(),
-  meeting_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora invalida (HH:MM)").optional().or(z.literal("")),
-});
-export type EvangelismGroupInput = z.infer<typeof evangelismGroupSchema>;
 
 export const discipleshipAdminSchema = z.object({
   discipler_id: z.string().uuid("Discipulador obrigatorio"),
