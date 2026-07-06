@@ -54,7 +54,8 @@ import { HealthAdmin } from "./HealthAdmin";
 import { AdminSidebar, type TabKey } from "./AdminSidebar";
 import { AuditAdmin } from "./AuditAdmin";
 import { MetasPlaceholder } from "./Placeholders";
-import { ScoresBirthdaysAdmin } from "./ScoresBirthdaysAdmin";
+import { MemberScoreAdmin } from "./MemberScoreAdmin";
+import { BirthdaysAdmin } from "./BirthdaysAdmin";
 
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
@@ -172,7 +173,8 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
     case "ministerial-reports": return <MinisterialReportsAdmin />;
     case "metas":               return <MetasPlaceholder />;
     case "members":             return <MembersAdmin />;
-    case "scores-birthdays":    return <ScoresBirthdaysAdmin />;
+    case "score":                return <MemberScoreAdmin />;
+    case "birthdays":            return <BirthdaysAdmin />;
     case "discipleship":        return <DiscipleshipAdmin />;
     case "acolhimento":         return <AcolhimentoAdmin />;
     case "evasao":              return <EvasionAdmin />;
@@ -209,7 +211,7 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
 
 // MetasPlaceholder foi extraído para Placeholders.tsx (reutilizado também em /executivo).
 
-// ScoresBirthdaysPlaceholder foi substituído por ScoresBirthdaysAdmin.tsx (módulo C20 ligado).
+// Score e Aniversários agora são módulos separados: MemberScoreAdmin.tsx e BirthdaysAdmin.tsx.
 
 // RH substituído pelo GPV — ver GpvAdmin.tsx
 
