@@ -98,7 +98,7 @@ export default function AdminPanel() {
           visit_pending: counts?.visit_pending ?? 0,
           pipeline_new: counts?.pipeline_new ?? 0,
         }}
-        userName={me?.name ?? me?.full_name ?? undefined}
+        userName={me?.full_name ?? undefined}
         userRole={me?.role ?? undefined}
       />
 
@@ -117,7 +117,7 @@ export default function AdminPanel() {
                   visit_pending: counts?.visit_pending ?? 0,
                   pipeline_new: counts?.pipeline_new ?? 0,
                 }}
-                userName={me?.name ?? me?.full_name ?? undefined}
+                userName={me?.full_name ?? undefined}
                 userRole={me?.role ?? undefined}
                 mobileOnly
               />

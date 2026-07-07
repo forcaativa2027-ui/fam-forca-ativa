@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
 import {
-  LayoutDashboard, Zap, Tower, Brain, BarChart3, Target,
+  LayoutDashboard, Zap, RadioTower, Brain, BarChart3, Target,
   Users, Star, Network, Heart, TrendingDown, Briefcase,
   Building2, GitBranch, Map, Mic2, Shield, Lock,
-  FileBarChart, Calendar2, CalendarDays,
+  FileBarChart, CalendarRange, CalendarDays,
   Megaphone, Image, Radio, BookOpen,
   DollarSign, Landmark, UserCog,
   FileText, Download, Search, Bell,
@@ -76,7 +76,7 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       label: "Estratégico",
       icon: <Zap size={16} />,
       items: [
-        { key: "control-tower", label: "Torre de Controle", icon: <Tower size={15} />, badge: counts.tower_alerts },
+        { key: "control-tower", label: "Torre de Controle", icon: <RadioTower size={15} />, badge: counts.tower_alerts },
         { key: "intelligence", label: "Inteligência", icon: <Brain size={15} /> },
         { key: "ministerial-reports", label: "Relatórios", icon: <BarChart3 size={15} /> },
         { key: "metas", label: "Metas", icon: <Target size={15} /> },
@@ -120,7 +120,7 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       icon: <FileBarChart size={16} />,
       items: [
         { key: "weekly", label: "Rel. semanal", icon: <CalendarDays size={15} /> },
-        { key: "monthly", label: "Rel. mensal", icon: <Calendar2 size={15} /> },
+        { key: "monthly", label: "Rel. mensal", icon: <CalendarRange size={15} /> },
       ],
     },
     {
