@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { Plus, Trash2, Pencil, X, Globe, MessageCircle } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Globe, MessageCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -356,6 +357,9 @@ export function CommunitiesAdmin() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1">
+                  <Button asChild variant="navy" size="sm">
+                    <Link href={`/organizacional/comunidades/${c.id}`}><ExternalLink className="h-3.5 w-3.5" /></Link>
+                  </Button>
                   <Button onClick={() => startEdit(c)} variant="outline" size="sm"><Pencil className="h-3.5 w-3.5" /></Button>
                   <Button onClick={() => remove(c)} variant="destructive" size="sm"><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>
