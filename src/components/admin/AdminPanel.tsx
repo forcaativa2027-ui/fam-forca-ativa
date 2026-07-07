@@ -52,7 +52,6 @@ import { MinistriesAdmin } from "./MinistriesAdmin";
 import { HealthAdmin } from "./HealthAdmin";
 import { AdminSidebar, type TabKey } from "./AdminSidebar";
 import { AuditAdmin } from "./AuditAdmin";
-import { MetasPlaceholder } from "./Placeholders";
 
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
@@ -204,7 +203,17 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
 
 // ─── Placeholders para módulos novos ─────────────────────────────────────────
 
-// MetasPlaceholder foi extraído para Placeholders.tsx (reutilizado também em /executivo).
+function MetasPlaceholder() {
+  return (
+    <Card>
+      <CardContent className="pt-8 pb-8 text-center">
+        <p className="text-2xl mb-2">🎯</p>
+        <h2 className="font-display text-xl text-navy">Central de Metas</h2>
+        <p className="mt-2 text-sm text-muted">Módulo C17 — disponível neste painel.</p>
+      </CardContent>
+    </Card>
+  );
+}
 
 function ScoresBirthdaysPlaceholder() {
   return (
