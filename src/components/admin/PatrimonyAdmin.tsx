@@ -76,10 +76,10 @@ const ORIGIN_LABELS: Record<AssetOrigin, string> = {
 // ============================================================
 // MASTER
 // ============================================================
-export function PatrimonyAdmin({ initialChurchId = "" }: { initialChurchId?: string } = {}) {
+export function PatrimonyAdmin() {
   const { data: churches = [] } = useChurches();
   const { data: summary = [] } = usePatrimonySummary();
-  const [churchFilter, setChurchFilter] = useState(initialChurchId);
+  const [churchFilter, setChurchFilter] = useState("");
 
   const totalProperties = summary.reduce((s, x) => s + x.properties_count, 0);
   const totalAssets = summary.reduce((s, x) => s + x.assets_count, 0);
@@ -131,8 +131,8 @@ export function PatrimonyAdmin({ initialChurchId = "" }: { initialChurchId?: str
           <TabsTrigger value="dashboard"><BarChart3 className="mr-1 h-4 w-4" />Dashboard Contábil</TabsTrigger>
         </TabsList>
         <div className="mt-4">
-          <TabsContent value="properties"><PropertiesSection churches={churches} initialChurchId={initialChurchId} /></TabsContent>
-          <TabsContent value="assets"><AssetsSection churches={churches} initialChurchId={initialChurchId} /></TabsContent>
+          <TabsContent value="properties"><PropertiesSection churches={churches} /></TabsContent>
+          <TabsContent value="assets"><AssetsSection churches={churches} /></TabsContent>
           <TabsContent value="depreciacao"><DepreciacaoTab churchFilter={churchFilter} /></TabsContent>
           <TabsContent value="manutencao"><ManutencaoTab churchFilter={churchFilter} /></TabsContent>
           <TabsContent value="inventario"><InventarioTab churchFilter={churchFilter} /></TabsContent>
@@ -158,8 +158,8 @@ function Kpi({ icon, label, value }: { icon: React.ReactNode; label: string; val
 // ============================================================
 // SEÇÃO: IMÓVEIS
 // ============================================================
-function PropertiesSection({ churches, initialChurchId = "" }: { churches: { id: string; name: string }[]; initialChurchId?: string }) {
-  const [churchFilter, setChurchFilter] = useState<string>(initialChurchId || churches[0]?.id || "");
+function PropertiesSection({ churches }: { churches: { id: string; name: string }[] }) {
+  const [churchFilter, setChurchFilter] = useState<string>(churches[0]?.id ?? "");
   const [editing, setEditing] = useState<Property | null>(null);
   const [creating, setCreating] = useState(false);
   const [openProperty, setOpenProperty] = useState<Property | null>(null);
@@ -658,8 +658,8 @@ function NewVersionDialog({ doc, propertyId, churchId, onClose, onSaved }: {
 // SEÇÃO: BENS
 
 // ============================================================
-function AssetsSection({ churches, initialChurchId = "" }: { churches: { id: string; name: string }[]; initialChurchId?: string }) {
-  const [churchFilter, setChurchFilter] = useState<string>(initialChurchId || churches[0]?.id || "");
+function AssetsSection({ churches }: { churches: { id: string; name: string }[] }) {
+  const [churchFilter, setChurchFilter] = useState<string>(churches[0]?.id ?? "");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [editing, setEditing] = useState<Asset | null>(null);
   const [creating, setCreating] = useState(false);

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cellSchema, type CellInput } from "@/schemas";
-import { useCells, useSectors, useAllMembers, useChurches } from "@/hooks/use-queries";
+import { useCells, useSectors, useAllMembers } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { createCell, updateCell, deleteCell } from "@/services/cells";
 import { logAudit } from "@/services/audit";
@@ -24,7 +24,6 @@ const WEEKDAYS: [string, string][] = [
 export function CellsAdmin() {
   const { data: cells = [] } = useCells();
   const { data: sectors = [] } = useSectors();
-  const { data: churches = [] } = useChurches();
   const { data: members = [] } = useAllMembers();
   const qc = useQueryClient();
   const [err, setErr] = useState("");
@@ -38,7 +37,6 @@ export function CellsAdmin() {
     reset({
       name: c.name,
       sector_id: c.sector_id ?? "",
-      church_id: c.sector_id ? "" : (c.church_id ?? ""),
       address: c.address ?? "",
       state: c.state ?? "",
       city: c.city ?? "",
@@ -66,8 +64,7 @@ export function CellsAdmin() {
     try {
       const payload: Partial<Cell> = {
         name: v.name,
-        sector_id: v.sector_id || null,
-        church_id: v.sector_id ? undefined : (v.church_id || null),
+        sector_id: v.sector_id,
         address: v.address || null,
         state: v.state || null,
         city: v.city || null,
@@ -137,18 +134,6 @@ export function CellsAdmin() {
               <select {...register("sector_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
                 <option value="">— Selecione um setor —</option>
                 {sectors.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-              {sectors.length === 0 && (
-                <p className="mt-1 text-xs text-amber-700">
-                  Nenhum setor cadastrado ainda. Vincule direto a uma Igreja/Sede abaixo, ou crie a Estrutura MDA primeiro (aba "Estrutura MDA").
-                </p>
-              )}
-            </Field>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />ou<span className="h-px flex-1 bg-border" /></div>
-            <Field label="Vincular direto a uma Igreja/Sede">
-              <select {...register("church_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                <option value="">— Nenhuma (usar o setor acima) —</option>
-                {churches.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </Field>
             <div className="grid gap-3 sm:grid-cols-2">

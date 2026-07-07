@@ -182,10 +182,10 @@ export function BirthdaysAdmin() {
             <p className="text-xs text-muted-foreground">Hoje · Mês atual · Próximos 30 dias</p>
           </div>
         </div>
-        <Select value={churchFilter || "todas"} onValueChange={v => setChurchFilter(v === "todas" ? "" : v)}>
+        <Select value={churchFilter} onValueChange={setChurchFilter}>
           <SelectTrigger className="w-52"><SelectValue placeholder="Todas as comunidades" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="todas">Todas</SelectItem>
+            <SelectItem value="">Todas</SelectItem>
             {churches.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>

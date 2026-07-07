@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Shield, Users, AlertTriangle, CheckCircle2, XCircle, Clock,
-  Plus, Trash2, Pencil, Eye, BarChart3, Zap, RefreshCw, Lock, Search,
+  Plus, Trash2, Pencil, Eye, BarChart3, Zap, RefreshCw, Lock,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   useDelegations, useCouncilMembers, useRoleDelegations,
   useEmergencyAccess, useComplianceDashboard, useModuleRanking,
-  useChurches, useAllMembers,
+  useChurches,
 } from "@/hooks/use-queries";
 import * as Del from "@/services/delegations";
 import { supabase } from "@/lib/supabase/client";
@@ -54,57 +54,6 @@ const VOTE_CONFIG: Record<CouncilVote, { color: string; label: string }> = {
 };
 const MODULES = Object.entries(MODULE_LABELS) as [DelegationModule, string][];
 const SCOPES  = Object.entries(SCOPE_LABELS);
-
-// ── Busca de membro (por nome, resolve pra profile_id) ─────────
-function MemberSearchInput({ selectedName, onSelect }: {
-  selectedName: string;
-  onSelect: (profileId: string, fullName: string) => void;
-}) {
-  const { data: members = [] } = useAllMembers();
-  const [query, setQuery] = useState(selectedName);
-  const [open, setOpen] = useState(false);
-
-  const eligible = members.filter(m => !!m.profile_id);
-  const filtered = query.trim().length >= 2
-    ? eligible.filter(m => m.full_name.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 8)
-    : [];
-
-  return (
-    <div className="relative">
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-        <Input
-          className="pl-8"
-          value={query}
-          placeholder="Digite o nome do membro…"
-          onChange={e => { setQuery(e.target.value); setOpen(true); onSelect("", e.target.value); }}
-          onFocus={() => setOpen(true)}
-        />
-      </div>
-      {open && filtered.length > 0 && (
-        <div className="absolute z-20 mt-1 w-full rounded-md border bg-popover shadow-md max-h-56 overflow-y-auto">
-          {filtered.map(m => (
-            <button
-              key={m.id}
-              type="button"
-              className="flex w-full flex-col items-start px-3 py-2 text-left text-sm hover:bg-accent"
-              onClick={() => { setQuery(m.full_name); setOpen(false); onSelect(m.profile_id!, m.full_name); }}
-            >
-              <span className="font-medium text-[#0E2A47]">{m.full_name}</span>
-              {m.email && <span className="text-xs text-muted-foreground">{m.email}</span>}
-            </button>
-          ))}
-        </div>
-      )}
-      {open && query.trim().length >= 2 && filtered.length === 0 && (
-        <div className="absolute z-20 mt-1 w-full rounded-md border bg-popover p-3 text-xs text-muted-foreground shadow-md">
-          Nenhum membro com acesso ao sistema encontrado com esse nome.
-          <br />Só é possível delegar pra quem já tem login (perfil) cadastrado.
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ── Card de delegação ─────────────────────────────────────────
 function DelegationCard({ d, isApostolo, onAction }: {
@@ -212,116 +161,24 @@ function PendingTab({ isApostolo, onAction }: { isApostolo: boolean; onAction: (
 function ActiveTab({ isApostolo, onAction }: { isApostolo: boolean; onAction: (a: string, d: DelegationPanel) => void }) {
   const [moduleFilter, setModuleFilter] = useState<DelegationModule|"">("");
   const { data: active = [], isLoading } = useDelegations({ status: "ativo", module: moduleFilter||undefined });
-  const [showGrant, setShowGrant] = useState(false);
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex gap-3">
-          <Select value={moduleFilter} onValueChange={v => setModuleFilter(v as DelegationModule|"")}>
-            <SelectTrigger className="w-52"><SelectValue placeholder="Todos os módulos"/></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">Todos os módulos</SelectItem>
-              {MODULES.map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <span className="flex items-center text-sm text-muted-foreground">{active.length} delegação(ões) ativa(s)</span>
-        </div>
-        {isApostolo && (
-          <Button size="sm" onClick={() => setShowGrant(true)}><Plus className="h-4 w-4 mr-1"/>Nova Delegação</Button>
-        )}
+      <div className="flex gap-3">
+        <Select value={moduleFilter} onValueChange={v => setModuleFilter(v as DelegationModule|"")}>
+          <SelectTrigger className="w-52"><SelectValue placeholder="Todos os módulos"/></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">Todos os módulos</SelectItem>
+            {MODULES.map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <span className="flex items-center text-sm text-muted-foreground">{active.length} delegação(ões) ativa(s)</span>
       </div>
       {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
       <div className="space-y-3">
         {active.map(d => <DelegationCard key={d.id} d={d} isApostolo={isApostolo} onAction={onAction}/>)}
         {!isLoading && active.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma delegação ativa.</p>}
       </div>
-      {showGrant && <GrantDelegationDialog onClose={() => setShowGrant(false)} />}
     </div>
-  );
-}
-
-// ── Dialog: conceder nova delegação direta (busca membro + módulo) ──
-function GrantDelegationDialog({ onClose }: { onClose: () => void }) {
-  const qc = useQueryClient();
-  const [profileId, setProfileId] = useState("");
-  const [memberName, setMemberName] = useState("");
-  const [module, setModule] = useState<DelegationModule>("finance");
-  const [level, setLevel] = useState("3");
-  const [scope, setScope] = useState<DelegationScope>("nacional");
-  const [scopeName, setScopeName] = useState("Nacional");
-  const [reason, setReason] = useState("");
-  const [expires, setExpires] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
-
-  async function handleGrant() {
-    if (!profileId) { setErr("Selecione um membro na busca."); return; }
-    setBusy(true); setErr("");
-    try {
-      const created = await Del.requestDelegation(supabase, {
-        profile_id: profileId, module, trust_level: Number(level),
-        scope, scope_name: scopeName,
-        request_reason: reason || `Delegação concedida diretamente via painel de Governança.`,
-        expires_at: expires || null,
-      });
-      await Del.approveDelegation(supabase, created.id, {
-        trust_level: Number(level), scope, scope_name: scopeName,
-        review_notes: "Concedida diretamente (sem solicitação prévia).",
-        expires_at: expires || null,
-      });
-      qc.invalidateQueries({ queryKey: ["delegations"] });
-      onClose();
-    } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Erro ao conceder delegação.");
-    } finally { setBusy(false); }
-  }
-
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>➕ Nova Delegação</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div><Label className="text-xs">Membro *</Label>
-            <MemberSearchInput selectedName={memberName} onSelect={(pid, name) => { setProfileId(pid); setMemberName(name); }} />
-          </div>
-          <div><Label className="text-xs">Módulo *</Label>
-            <Select value={module} onValueChange={v => setModule(v as DelegationModule)}>
-              <SelectTrigger><SelectValue/></SelectTrigger>
-              <SelectContent>{MODULES.map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label className="text-xs">Nível *</Label>
-              <Select value={level} onValueChange={setLevel}>
-                <SelectTrigger><SelectValue/></SelectTrigger>
-                <SelectContent>{Object.entries(TRUST_LABELS).map(([k,v]) => <SelectItem key={k} value={k}>{k} — {v}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div><Label className="text-xs">Escopo *</Label>
-              <Select value={scope} onValueChange={v => setScope(v as DelegationScope)}>
-                <SelectTrigger><SelectValue/></SelectTrigger>
-                <SelectContent>{SCOPES.map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div><Label className="text-xs">Nome do escopo</Label>
-            <Input value={scopeName} onChange={e => setScopeName(e.target.value)} placeholder="Ex: Distrito Centro-Oeste"/>
-          </div>
-          <div><Label className="text-xs">Validade (opcional)</Label>
-            <Input type="date" value={expires} onChange={e => setExpires(e.target.value)}/>
-            <p className="text-xs text-muted-foreground mt-1">Deixe em branco para acesso permanente.</p>
-          </div>
-          <div><Label className="text-xs">Observação (opcional)</Label>
-            <Textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Ex: Responsável pela administração financeira da Sede." rows={2}/>
-          </div>
-          {err && <p className="text-xs text-destructive">{err}</p>}
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={onClose}>Cancelar</Button>
-            <Button onClick={handleGrant} disabled={busy || !profileId}>{busy ? "Concedendo…" : "Conceder Delegação"}</Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }
 
@@ -393,8 +250,8 @@ function CouncilTab({ isApostolo }: { isApostolo: boolean }) {
           <DialogContent className="max-w-sm">
             <DialogHeader><DialogTitle>Adicionar Diretor ao Conselho</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div><Label className="text-xs">Membro</Label>
-                <MemberSearchInput selectedName="" onSelect={(pid) => setProfileId(pid)} />
+              <div><Label className="text-xs">ID do Perfil (UUID)</Label>
+                <Input value={profileId} onChange={e => setProfileId(e.target.value)} placeholder="uuid do perfil"/>
               </div>
               <div><Label className="text-xs">Cargo</Label>
                 <Input value={cargo} onChange={e => setCargo(e.target.value) } placeholder="Ex: Diretor Financeiro Nacional"/>
@@ -484,9 +341,7 @@ function EmergencyTab({ isApostolo }: { isApostolo: boolean }) {
           <DialogContent className="max-w-sm">
             <DialogHeader><DialogTitle>⚡ Acesso Emergencial</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div><Label className="text-xs">Membro</Label>
-                <MemberSearchInput selectedName="" onSelect={(pid) => setProfileId(pid)} />
-              </div>
+              <div><Label className="text-xs">ID do Perfil</Label><Input value={profileId} onChange={e => setProfileId(e.target.value)} placeholder="UUID do perfil"/></div>
               <div><Label className="text-xs">Módulo</Label>
                 <Select value={module} onValueChange={v => setModule(v as DelegationModule)}>
                   <SelectTrigger><SelectValue/></SelectTrigger>

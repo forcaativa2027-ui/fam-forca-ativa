@@ -190,17 +190,17 @@ export function MemberScoreAdmin() {
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-3">
-        <Select value={churchFilter || "todas"} onValueChange={v => { const val = v === "todas" ? "" : v; setChurchFilter(val); setLgFilter(""); }}>
+        <Select value={churchFilter} onValueChange={v => { setChurchFilter(v); setLgFilter(""); }}>
           <SelectTrigger className="w-48"><SelectValue placeholder="Todas as comunidades" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="todas">Todas</SelectItem>
+            <SelectItem value="">Todas</SelectItem>
             {churches.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={bandFilter || "todos"} onValueChange={v => setBandFilter(v === "todos" ? "" : v)}>
+        <Select value={bandFilter} onValueChange={setBandFilter}>
           <SelectTrigger className="w-40"><SelectValue placeholder="Todos" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
+            <SelectItem value="">Todos</SelectItem>
             <SelectItem value="engajado">🌟 Engajados</SelectItem>
             <SelectItem value="ativo">✅ Ativos</SelectItem>
             <SelectItem value="em_risco">⚠️ Em Risco</SelectItem>

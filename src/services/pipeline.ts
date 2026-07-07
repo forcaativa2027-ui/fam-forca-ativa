@@ -105,30 +105,6 @@ export async function deletePipeline(sb: SupabaseClient, id: string): Promise<vo
   if (error) throw error;
 }
 
-/**
- * Admin cadastra manualmente um participante de Grupo de Evangelismo
- * (pessoa sendo evangelizada, geralmente não é membro). Diferente de
- * createPipelineEntry (que usa RPC pensada pro auto-registro público),
- * esse é insert direto — o admin já está autenticado e tem permissão via RLS.
- */
-export async function createEvangelismParticipant(sb: SupabaseClient, input: {
-  full_name: string; phone: string; community_id: string; life_group_id?: string | null; evangelism_group_id: string;
-}): Promise<void> {
-  const { error } = await sb.from("visitor_pipeline").insert({
-    full_name: input.full_name, phone: input.phone,
-    community_id: input.community_id, life_group_id: input.life_group_id ?? null,
-    evangelism_group_id: input.evangelism_group_id,
-    intent: "conhecer", stage: "novo", source: "grupo_evangelismo",
-  });
-  if (error) throw error;
-}
-
-export async function listEvangelismParticipants(sb: SupabaseClient, groupId: string): Promise<VisitorPipeline[]> {
-  const { data, error } = await sb.from("visitor_pipeline").select("*").eq("evangelism_group_id", groupId).order("created_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as VisitorPipeline[];
-}
-
 // ============================================================
 // M5 — Central de Acolhimento (views)
 // ============================================================
