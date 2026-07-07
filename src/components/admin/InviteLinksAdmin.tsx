@@ -1,4 +1,5 @@
 "use client";
+import { MdaStructureAdmin } from "./MdaStructureAdmin";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
