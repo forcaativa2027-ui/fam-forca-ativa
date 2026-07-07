@@ -1,30 +1,32 @@
 "use client";
 import { useState } from "react";
 import {
-  LayoutDashboard, Zap, RadioTower, Brain, BarChart3, Target,
-  Users, Star, Heart, TrendingDown, Briefcase,
+  LayoutDashboard, Zap, Tower, Brain, BarChart3, Target,
+  Users, Star, Network, Heart, TrendingDown, Briefcase,
   Building2, GitBranch, Map, Mic2, Shield, Lock,
-  FileBarChart, CalendarRange, CalendarDays,
+  FileBarChart, Calendar2, CalendarDays,
   Megaphone, Image, Radio, BookOpen,
   DollarSign, Landmark, UserCog,
-  Download, Search, Bell,
+  FileText, Download, Search, Bell,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network,
+  BarChart2, Users2, ChevronLeft,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+// ─── Tipos ───────────────────────────────────────────────────────────────────
+
 export type TabKey =
   | "supervision" | "org-dashboard"
   | "control-tower" | "intelligence" | "ministerial-reports" | "metas"
-  | "members" | "scores-birthdays" | "discipleship"
+  | "members" | "scores-birthdays" | "cells" | "discipleship"
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
   | "communities" | "structure" | "genealogy" | "expansion-map"
-  | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
+  | "ministerios" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly"
   | "news" | "banners" | "sermons" | "events" | "services" | "word"
-  | "finance" | "patrimony" | "gpv"
+  | "finance" | "patrimony" | "patrimony-advanced" | "rh"
   | "delegations" | "audit"
   | "export";
 
@@ -34,12 +36,14 @@ interface NavItem {
   icon: React.ReactNode;
   badge?: number;
 }
+
 interface NavGroup {
   id: string;
   label: string;
   icon: React.ReactNode;
   items: NavItem[];
 }
+
 interface AdminSidebarProps {
   activeTab: TabKey;
   onNavigate: (tab: TabKey) => void;
@@ -52,8 +56,9 @@ interface AdminSidebarProps {
   userName?: string;
   userRole?: string;
   onSearch?: () => void;
-  mobileOnly?: boolean;
 }
+
+// ─── Grupos de navegação ─────────────────────────────────────────────────────
 
 function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
   return [
@@ -63,7 +68,7 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       icon: <LayoutDashboard size={16} />,
       items: [
         { key: "org-dashboard", label: "Visão geral", icon: <BarChart2 size={15} /> },
-        { key: "supervision",   label: "Supervisão",  icon: <BarChart3 size={15} /> },
+        { key: "supervision", label: "Supervisão", icon: <BarChart3 size={15} /> },
       ],
     },
     {
@@ -71,10 +76,10 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       label: "Estratégico",
       icon: <Zap size={16} />,
       items: [
-        { key: "control-tower",       label: "Torre de Controle", icon: <RadioTower size={15} />, badge: counts.tower_alerts },
-        { key: "intelligence",        label: "Inteligência",       icon: <Brain size={15} /> },
-        { key: "ministerial-reports", label: "Relatórios",         icon: <BarChart3 size={15} /> },
-        { key: "metas",               label: "Metas",              icon: <Target size={15} /> },
+        { key: "control-tower", label: "Torre de Controle", icon: <Tower size={15} />, badge: counts.tower_alerts },
+        { key: "intelligence", label: "Inteligência", icon: <Brain size={15} /> },
+        { key: "ministerial-reports", label: "Relatórios", icon: <BarChart3 size={15} /> },
+        { key: "metas", label: "Metas", icon: <Target size={15} /> },
       ],
     },
     {
@@ -82,14 +87,15 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       label: "Pessoas",
       icon: <Users size={16} />,
       items: [
-        { key: "members",          label: "Membros",             icon: <Users2 size={15} /> },
-        { key: "scores-birthdays", label: "Score & Aniversários",icon: <Star size={15} /> },
-        { key: "discipleship",     label: "Discipulado",         icon: <BookOpen size={15} /> },
-        { key: "acolhimento",      label: "Acolhimento",         icon: <Heart size={15} /> },
-        { key: "evasao",           label: "Em risco",            icon: <TrendingDown size={15} /> },
-        { key: "crm",              label: "CRM",                 icon: <Briefcase size={15} />, badge: counts.pipeline_new },
-        { key: "prayer-requests",  label: "Pedidos de oração",   icon: <Bell size={15} />, badge: counts.prayer_pending },
-        { key: "visit-requests",   label: "Visitas",             icon: <Users size={15} />, badge: counts.visit_pending },
+        { key: "members", label: "Membros", icon: <Users2 size={15} /> },
+        { key: "scores-birthdays", label: "Score & Aniversários", icon: <Star size={15} /> },
+        { key: "cells", label: "Células", icon: <Network size={15} /> },
+        { key: "discipleship", label: "Discipulado", icon: <BookOpen size={15} /> },
+        { key: "acolhimento", label: "Acolhimento", icon: <Heart size={15} /> },
+        { key: "evasao", label: "Em risco", icon: <TrendingDown size={15} /> },
+        { key: "crm", label: "CRM", icon: <Briefcase size={15} />, badge: counts.pipeline_new },
+        { key: "prayer-requests", label: "Pedidos de oração", icon: <Bell size={15} />, badge: counts.prayer_pending },
+        { key: "visit-requests", label: "Visitas", icon: <Users size={15} />, badge: counts.visit_pending },
       ],
     },
     {
@@ -97,16 +103,15 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       label: "Organização",
       icon: <Building2 size={16} />,
       items: [
-        { key: "communities",   label: "Comunidades",    icon: <Building2 size={15} /> },
-        { key: "structure",     label: "Estrutura",      icon: <GitBranch size={15} /> },
-        { key: "genealogy",     label: "Genealogia",     icon: <Network size={15} /> },
-        { key: "ministerios",   label: "Ministérios",    icon: <Mic2 size={15} /> },
-        { key: "life-groups",   label: "Life Groups",    icon: <Flame size={15} /> },
-        { key: "mda",           label: "Estrutura MDA",  icon: <Network size={15} /> },
-        { key: "mda-health",    label: "Saúde MDA",      icon: <Heart size={15} /> },
-        { key: "saude",         label: "Saúde",          icon: <Heart size={15} /> },
-        { key: "expansion-map", label: "Mapa de Expansão",icon: <Map size={15} /> },
-        { key: "permissions",   label: "Permissões",     icon: <Shield size={15} /> },
+        { key: "communities", label: "Comunidades", icon: <Building2 size={15} /> },
+        { key: "structure", label: "Estrutura", icon: <GitBranch size={15} /> },
+        { key: "genealogy", label: "Genealogia", icon: <Network size={15} /> },
+        { key: "expansion-map", label: "Mapa de Expansão", icon: <Map size={15} /> },
+        { key: "ministerios", label: "Ministérios", icon: <Mic2 size={15} /> },
+        { key: "mda-health", label: "Saúde MDA", icon: <Heart size={15} /> },
+        { key: "saude", label: "Saúde", icon: <Heart size={15} /> },
+        { key: "mda", label: "Estrutura MDA", icon: <Network size={15} /> },
+        { key: "permissions", label: "Permissões", icon: <Shield size={15} /> },
       ],
     },
     {
@@ -114,8 +119,8 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       label: "Relatórios Operacionais",
       icon: <FileBarChart size={16} />,
       items: [
-        { key: "weekly",  label: "Rel. semanal", icon: <CalendarDays size={15} /> },
-        { key: "monthly", label: "Rel. mensal",  icon: <CalendarRange size={15} /> },
+        { key: "weekly", label: "Rel. semanal", icon: <CalendarDays size={15} /> },
+        { key: "monthly", label: "Rel. mensal", icon: <Calendar2 size={15} /> },
       ],
     },
     {
@@ -123,12 +128,12 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       label: "Conteúdo",
       icon: <Megaphone size={16} />,
       items: [
-        { key: "news",    label: "Notícias",     icon: <Megaphone size={15} /> },
-        { key: "banners", label: "Banners",      icon: <Image size={15} /> },
-        { key: "sermons", label: "Pregações",    icon: <Mic2 size={15} /> },
-        { key: "events",  label: "Agenda",       icon: <CalendarDays size={15} /> },
-        { key: "services",label: "Cultos",       icon: <Radio size={15} /> },
-        { key: "word",    label: "Palavra do dia",icon: <BookOpen size={15} /> },
+        { key: "news", label: "Notícias", icon: <Megaphone size={15} /> },
+        { key: "banners", label: "Banners", icon: <Image size={15} /> },
+        { key: "sermons", label: "Pregações", icon: <Mic2 size={15} /> },
+        { key: "events", label: "Agenda", icon: <CalendarDays size={15} /> },
+        { key: "services", label: "Cultos", icon: <Radio size={15} /> },
+        { key: "word", label: "Palavra do dia", icon: <BookOpen size={15} /> },
       ],
     },
     {
@@ -136,9 +141,10 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       label: "Gestão de Recursos",
       icon: <DollarSign size={16} />,
       items: [
-        { key: "finance",   label: "Financeiro",              icon: <DollarSign size={15} /> },
-        { key: "patrimony", label: "Patrimônio",              icon: <Landmark size={15} /> },
-        { key: "gpv",       label: "Pessoas & Vínculos (GPV)",icon: <UserCog size={15} /> },
+        { key: "finance", label: "Financeiro", icon: <DollarSign size={15} /> },
+        { key: "patrimony", label: "Patrimônio", icon: <Landmark size={15} /> },
+        { key: "patrimony-advanced", label: "Patrimônio+", icon: <Landmark size={15} /> },
+        { key: "rh", label: "Recursos Humanos", icon: <UserCog size={15} /> },
       ],
     },
     {
@@ -147,7 +153,7 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       icon: <Lock size={16} />,
       items: [
         { key: "delegations", label: "Delegações", icon: <Gavel size={15} /> },
-        { key: "audit",       label: "Auditoria",  icon: <ClipboardList size={15} /> },
+        { key: "audit", label: "Auditoria", icon: <ClipboardList size={15} /> },
       ],
     },
     {
@@ -161,12 +167,21 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
   ];
 }
 
+// ─── Componente principal ─────────────────────────────────────────────────────
+
 export function AdminSidebar({
-  activeTab, onNavigate, counts = {}, userName, userRole, onSearch, mobileOnly = false,
-}: AdminSidebarProps) {
+  activeTab,
+  onNavigate,
+  counts = {},
+  userName,
+  userRole,
+  onSearch,
+  mobileOnly = false,
+}: AdminSidebarProps & { mobileOnly?: boolean }) {
   const groups = buildGroups(counts);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Descobrir qual grupo contém a aba ativa — começa expandido
   const activeGroupId = groups.find((g) => g.items.some((i) => i.key === activeTab))?.id ?? "";
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(
     Object.fromEntries(groups.map((g) => [g.id, g.id === activeGroupId]))
@@ -175,24 +190,33 @@ export function AdminSidebar({
   function toggleGroup(id: string) {
     setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
   }
+
   function handleNavigate(tab: TabKey) {
     onNavigate(tab);
     setMobileOpen(false);
   }
 
   const totalAlerts =
-    (counts.prayer_pending ?? 0) + (counts.visit_pending ?? 0) +
-    (counts.pipeline_new ?? 0) + (counts.tower_alerts ?? 0);
+    (counts.prayer_pending ?? 0) +
+    (counts.visit_pending ?? 0) +
+    (counts.pipeline_new ?? 0) +
+    (counts.tower_alerts ?? 0);
 
   const roleLabel: Record<string, string> = {
-    apostolo: "Apóstolo", pastor: "Pastor", supervisor: "Supervisor", lider: "Líder",
+    apostolo: "Apóstolo",
+    pastor: "Pastor",
+    supervisor: "Supervisor",
+    lider: "Líder",
   };
 
+  // ── Sidebar interna ──────────────────────────────────────────────────────
   const SidebarContent = (
-    <aside className={[
-      "flex h-full flex-col bg-navy text-white transition-all duration-300",
-      collapsed ? "w-[60px]" : "w-[240px]",
-    ].join(" ")}>
+    <aside
+      className={[
+        "flex h-full flex-col bg-navy text-white transition-all duration-300",
+        collapsed ? "w-[60px]" : "w-[240px]",
+      ].join(" ")}
+    >
       {/* Cabeçalho */}
       <div className="flex h-14 items-center justify-between border-b border-white/10 px-3">
         {!collapsed && (
@@ -206,23 +230,30 @@ export function AdminSidebar({
           className="ml-auto rounded p-1 text-white/60 hover:bg-white/10 hover:text-white transition-colors"
           aria-label={collapsed ? "Expandir sidebar" : "Recolher sidebar"}
         >
-          <ChevronLeft size={16} className={`transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`} />
+          <ChevronLeft
+            size={16}
+            className={`transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`}
+          />
         </button>
       </div>
 
       {/* Busca global */}
       {!collapsed && onSearch && (
-        <button onClick={onSearch}
-          className="mx-3 mt-3 flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/50 hover:bg-white/10 hover:text-white/80 transition-colors">
+        <button
+          onClick={onSearch}
+          className="mx-3 mt-3 flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/50 hover:bg-white/10 hover:text-white/80 transition-colors"
+        >
           <Search size={13} />
-          <span className="flex-1 text-left">Busca global</span>
-          <kbd className="rounded border border-white/10 bg-white/5 px-1 py-0.5 text-[10px] font-mono">⌘K</kbd>
+          <span>Busca global</span>
+          <kbd className="ml-auto rounded border border-white/10 bg-white/5 px-1 py-0.5 text-[10px] font-mono">⌘K</kbd>
         </button>
       )}
       {collapsed && onSearch && (
-        <button onClick={onSearch}
+        <button
+          onClick={onSearch}
           className="mx-auto mt-3 flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-colors"
-          aria-label="Busca global">
+          aria-label="Busca global"
+        >
           <Search size={14} />
         </button>
       )}
@@ -233,8 +264,10 @@ export function AdminSidebar({
           const isOpen = openGroups[group.id] ?? false;
           const groupHasActive = group.items.some((i) => i.key === activeTab);
           const groupBadge = group.items.reduce((s, i) => s + (i.badge ?? 0), 0);
+
           return (
             <div key={group.id} className="mb-0.5">
+              {/* Cabeçalho do grupo */}
               <button
                 onClick={() => toggleGroup(group.id)}
                 className={[
@@ -243,7 +276,9 @@ export function AdminSidebar({
                 ].join(" ")}
                 title={collapsed ? group.label : undefined}
               >
-                <span className={groupHasActive ? "text-gold" : "text-white/50"}>{group.icon}</span>
+                <span className={groupHasActive ? "text-gold" : "text-white/50"}>
+                  {group.icon}
+                </span>
                 {!collapsed && (
                   <>
                     <span className="flex-1 truncate">{group.label}</span>
@@ -257,6 +292,7 @@ export function AdminSidebar({
                 )}
               </button>
 
+              {/* Itens do grupo */}
               {(isOpen || collapsed) && (
                 <div className={collapsed ? "space-y-0.5 px-1.5" : "space-y-0.5 pb-1"}>
                   {group.items.map((item) => {
@@ -269,10 +305,14 @@ export function AdminSidebar({
                         className={[
                           "flex w-full items-center gap-2.5 rounded-md px-3 py-1.5 text-sm transition-all",
                           collapsed ? "justify-center px-2" : "",
-                          isActive ? "bg-gold/15 font-semibold text-gold" : "text-white/65 hover:bg-white/8 hover:text-white",
+                          isActive
+                            ? "bg-gold/15 font-semibold text-gold"
+                            : "text-white/65 hover:bg-white/8 hover:text-white",
                         ].join(" ")}
                       >
-                        <span className={isActive ? "text-gold" : "text-white/50"}>{item.icon}</span>
+                        <span className={isActive ? "text-gold" : "text-white/50"}>
+                          {item.icon}
+                        </span>
                         {!collapsed && (
                           <>
                             <span className="flex-1 truncate">{item.label}</span>
@@ -282,6 +322,9 @@ export function AdminSidebar({
                               </span>
                             )}
                           </>
+                        )}
+                        {collapsed && (item.badge ?? 0) > 0 && (
+                          <span className="absolute right-1 top-1 inline-flex h-3 min-w-3 items-center justify-center rounded-full bg-gold text-[8px] font-bold text-navy" />
                         )}
                       </button>
                     );
@@ -293,7 +336,7 @@ export function AdminSidebar({
         })}
       </nav>
 
-      {/* Rodapé */}
+      {/* Rodapé — avatar + role */}
       <div className="border-t border-white/10 p-3">
         {collapsed ? (
           <Button asChild variant="ghost" size="sm" className="w-full p-2 text-white/50 hover:text-white">
@@ -319,14 +362,21 @@ export function AdminSidebar({
 
   return (
     <>
+      {/* ── Desktop: sidebar fixa (não renderiza quando mobileOnly) ── */}
       {!mobileOnly && (
         <div className="hidden md:flex h-screen sticky top-0 flex-shrink-0">
           {SidebarContent}
         </div>
       )}
 
+      {/* ── Mobile: botão hamburger + drawer ── */}
       <div className="md:hidden">
-        <button onClick={() => setMobileOpen(true)} className="flex items-center gap-2 text-white" aria-label="Abrir menu">
+        {/* Botão hamburger no header */}
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="flex items-center gap-2 text-white"
+          aria-label="Abrir menu"
+        >
           <Menu size={20} />
           {totalAlerts > 0 && (
             <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-gold px-1 text-[10px] font-bold text-navy">
@@ -335,25 +385,35 @@ export function AdminSidebar({
           )}
         </button>
 
+        {/* Drawer overlay */}
         {mobileOpen && (
           <div className="fixed inset-0 z-50 flex">
-            <div className="flex-1 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+            <div
+              className="flex-1 bg-black/60 backdrop-blur-sm"
+              onClick={() => setMobileOpen(false)}
+            />
             <div className="w-[260px] h-full">
               <div className="relative h-full">
-                <button onClick={() => setMobileOpen(false)}
+                <button
+                  onClick={() => setMobileOpen(false)}
                   className="absolute right-3 top-3 z-10 rounded-full bg-white/10 p-1.5 text-white hover:bg-white/20"
-                  aria-label="Fechar menu">
+                  aria-label="Fechar menu"
+                >
                   <X size={14} />
                 </button>
+                {/* Renderiza sidebar completa (não collapsed) no mobile */}
                 <aside className="flex h-full w-full flex-col bg-navy text-white">
                   <div className="flex h-14 items-center border-b border-white/10 px-4">
                     <span className="text-gold mr-2">✦</span>
                     <span className="font-display text-sm font-bold">CEC FAMILY</span>
                   </div>
                   {onSearch && (
-                    <button onClick={() => { onSearch(); setMobileOpen(false); }}
-                      className="mx-3 mt-3 flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/50">
-                      <Search size={13} /><span>Busca global</span>
+                    <button
+                      onClick={() => { onSearch(); setMobileOpen(false); }}
+                      className="mx-3 mt-3 flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/50"
+                    >
+                      <Search size={13} />
+                      <span>Busca global</span>
                     </button>
                   )}
                   <nav className="flex-1 overflow-y-auto py-3">
@@ -362,9 +422,13 @@ export function AdminSidebar({
                       const groupHasActive = group.items.some((i) => i.key === activeTab);
                       return (
                         <div key={group.id} className="mb-0.5">
-                          <button onClick={() => toggleGroup(group.id)}
-                            className={["flex w-full items-center gap-2 px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider",
-                              groupHasActive ? "text-gold" : "text-white/40"].join(" ")}>
+                          <button
+                            onClick={() => toggleGroup(group.id)}
+                            className={[
+                              "flex w-full items-center gap-2 px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider",
+                              groupHasActive ? "text-gold" : "text-white/40",
+                            ].join(" ")}
+                          >
                             <span>{group.icon}</span>
                             <span className="flex-1">{group.label}</span>
                             {isOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
@@ -374,9 +438,16 @@ export function AdminSidebar({
                               {group.items.map((item) => {
                                 const isActive = item.key === activeTab;
                                 return (
-                                  <button key={item.key} onClick={() => handleNavigate(item.key)}
-                                    className={["flex w-full items-center gap-2.5 px-6 py-2 text-sm transition-all",
-                                      isActive ? "bg-gold/15 font-semibold text-gold" : "text-white/65 hover:bg-white/8 hover:text-white"].join(" ")}>
+                                  <button
+                                    key={item.key}
+                                    onClick={() => handleNavigate(item.key)}
+                                    className={[
+                                      "flex w-full items-center gap-2.5 px-6 py-2 text-sm transition-all",
+                                      isActive
+                                        ? "bg-gold/15 font-semibold text-gold"
+                                        : "text-white/65 hover:bg-white/8 hover:text-white",
+                                    ].join(" ")}
+                                  >
                                     <span>{item.icon}</span>
                                     <span className="flex-1">{item.label}</span>
                                     {(item.badge ?? 0) > 0 && (
@@ -394,7 +465,9 @@ export function AdminSidebar({
                     })}
                   </nav>
                   <div className="border-t border-white/10 p-4">
-                    <p className="text-xs text-white/50">{userName ?? "Admin"} · {roleLabel[userRole ?? ""] ?? "Liderança"}</p>
+                    <p className="text-xs text-white/50">
+                      {userName ?? "Admin"} · {roleLabel[userRole ?? ""] ?? "Liderança"}
+                    </p>
                     <Button asChild variant="link" className="mt-1 p-0 text-xs text-white/40">
                       <Link href="/painel">← Voltar ao painel</Link>
                     </Button>
