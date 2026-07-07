@@ -14,8 +14,6 @@ import { supabase } from "@/lib/supabase/client";
  */
 const MIGRATED_WORKSPACES = [
   { href: "/executivo", label: "Executivo" },
-  { href: "/organizacional", label: "Organizacional" },
-  { href: "/pessoas", label: "Pessoas" },
   { href: "/recursos", label: "Recursos" },
   { href: "/governanca", label: "Governança" },
 ];
