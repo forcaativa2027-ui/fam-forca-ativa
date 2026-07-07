@@ -1,12 +1,11 @@
 "use client";
 import { useState } from "react";
-import { Star, TrendingUp, Users, Target, BookOpen, Church, ChevronRight, MessageCircle } from "lucide-react";
+import { Star, TrendingUp, Users, Target, BookOpen, Church, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMemberScores, useChurches, useCells, useAllMembers, useRecentEvolutions } from "@/hooks/use-queries";
+import { useMemberScores, useChurches, useCells } from "@/hooks/use-queries";
 import type { MemberScore, EngagementBand } from "@/types/domain";
-import { TEMPLATE_ENCORAJAMENTO, TEMPLATE_CONTATO_GERAL, TEMPLATE_EVOLUCAO_ETAPA, buildWhatsAppLink } from "@/lib/whatsapp-templates";
 
 // ── Config visual ─────────────────────────────────────────────
 const BAND_CONFIG: Record<EngagementBand, { color: string; bg: string; border: string; icon: string; label: string }> = {
@@ -40,7 +39,7 @@ function ScoreBar({ value, max = 100, color = "bg-[#C9A227]" }: { value: number;
 }
 
 // ── Card de membro ────────────────────────────────────────────
-function MemberScoreCard({ m, phone }: { m: MemberScore; phone?: string | null }) {
+function MemberScoreCard({ m }: { m: MemberScore }) {
   const [open, setOpen] = useState(false);
   const cfg = BAND_CONFIG[m.engagement_band];
 
@@ -70,25 +69,6 @@ function MemberScoreCard({ m, phone }: { m: MemberScore; phone?: string | null }
           </div>
           <div className="mt-2"><ScoreBar value={m.score_total} /></div>
         </button>
-
-        {phone && (
-          <a
-            href={buildWhatsAppLink(
-              phone,
-              m.engagement_band === "em_risco" ? TEMPLATE_ENCORAJAMENTO(m.full_name) : TEMPLATE_CONTATO_GERAL(m.full_name)
-            )}
-            target="_blank" rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className={`mt-3 flex items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-bold hover:opacity-90 ${
-              m.engagement_band === "em_risco"
-                ? "border-red-300 bg-red-50 text-red-800"
-                : "border-green-300 bg-green-50 text-green-800"
-            }`}
-          >
-            <MessageCircle className="h-3.5 w-3.5" />
-            {m.engagement_band === "em_risco" ? "Enviar mensagem de encorajamento" : "Enviar mensagem no WhatsApp"}
-          </a>
-        )}
 
         {/* Detalhes expandidos */}
         {open && (
@@ -178,60 +158,11 @@ function RankingTab({ scores }: { scores: MemberScore[] }) {
   );
 }
 
-// ── Card de evoluções recentes ────────────────────────────────
-const STAGE_LABEL_PLAIN: Record<string, string> = {
-  visitante: "Visitante", novo_convertido: "Novo Convertido", consolidacao: "Consolidação",
-  discipulado: "Discipulado", batismo: "Batismo", membro_ativo: "Membro Ativo",
-  servo: "Servo", lider_formacao: "Líder em Formação", lider: "Líder",
-  supervisor: "Supervisor", missionario: "Missionário",
-};
-
-function RecentEvolutionsCard() {
-  const { data: evolutions = [], isLoading } = useRecentEvolutions(7);
-
-  if (isLoading || evolutions.length === 0) return null;
-
-  return (
-    <Card className="border-l-4 border-l-[#C9A227] bg-[#C9A227]/5">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <TrendingUp className="h-4 w-4 text-[#C9A227]" /> Evoluções recentes (últimos 7 dias)
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {evolutions.map((e) => (
-          <div key={e.id} className="flex items-center justify-between gap-3 rounded-md border bg-white p-2.5">
-            <div className="min-w-0">
-              <p className="truncate font-medium text-[#0E2A47]">{e.full_name}</p>
-              <p className="text-xs text-muted-foreground">
-                {STAGE_LABEL_PLAIN[e.from_stage] ?? e.from_stage} → <b className="text-[#0E2A47]">{STAGE_LABEL_PLAIN[e.to_stage] ?? e.to_stage}</b>
-                {" · "}{new Date(e.event_date).toLocaleDateString("pt-BR")}
-              </p>
-            </div>
-            {e.phone ? (
-              <a
-                href={buildWhatsAppLink(e.phone, TEMPLATE_EVOLUCAO_ETAPA(e.full_name, STAGE_LABEL_PLAIN[e.to_stage] ?? e.to_stage))}
-                target="_blank" rel="noreferrer"
-                className="shrink-0 flex items-center gap-1.5 rounded-md border border-[#C9A227] bg-[#C9A227]/10 px-3 py-1.5 text-xs font-bold text-[#8a6d1a] hover:bg-[#C9A227]/20"
-              >
-                <MessageCircle className="h-3.5 w-3.5" /> Parabenizar
-              </a>
-            ) : (
-              <span className="shrink-0 text-xs italic text-muted-foreground">sem telefone</span>
-            )}
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
-
 // ══════════════════════════════════════════════════════════════
 // MASTER — MemberScoreAdmin
 // ══════════════════════════════════════════════════════════════
 export function MemberScoreAdmin() {
   const { data: churches = [] } = useChurches();
-  const { data: allMembers = [] } = useAllMembers();
   const [churchFilter, setChurchFilter] = useState("");
   const [lgFilter,     setLgFilter]     = useState("");
   const [bandFilter,   setBandFilter]   = useState("");
@@ -241,8 +172,6 @@ export function MemberScoreAdmin() {
     lgId:     lgFilter     || undefined,
     band:     bandFilter   || undefined,
   });
-
-  const phoneById = new Map(allMembers.map((m) => [m.id, m.phone]));
 
   const engajados  = scores.filter(s => s.engagement_band === "engajado").length;
   const ativos     = scores.filter(s => s.engagement_band === "ativo").length;
@@ -258,8 +187,6 @@ export function MemberScoreAdmin() {
           <p className="text-xs text-muted-foreground">Jornada individual · Engajamento · Próximo passo</p>
         </div>
       </div>
-
-      <RecentEvolutionsCard />
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-3">
@@ -307,7 +234,7 @@ export function MemberScoreAdmin() {
           <TabsContent value="list">
             {isLoading && <p className="py-8 text-center text-sm text-muted-foreground">Calculando scores…</p>}
             <div className="space-y-2">
-              {scores.map(m => <MemberScoreCard key={m.id} m={m} phone={phoneById.get(m.id)} />)}
+              {scores.map(m => <MemberScoreCard key={m.id} m={m} />)}
               {!isLoading && scores.length === 0 && (
                 <p className="py-10 text-center text-sm text-muted-foreground">Nenhum membro encontrado.</p>
               )}
