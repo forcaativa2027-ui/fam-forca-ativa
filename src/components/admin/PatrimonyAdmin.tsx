@@ -850,6 +850,8 @@ function fmtMoney(v: number | null | undefined) {
   if (v == null) return "—";
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 }
+// Alias usado pelas abas avançadas
+
 
 // ══════════════════════════════════════════════════════════════
 // ABA 1 — DEPRECIAÇÃO
@@ -890,15 +892,15 @@ function DepreciacaoTab({ churchFilter }: { churchFilter: string }) {
       <div className="grid grid-cols-3 gap-3">
         <Card className="border-l-4 border-l-[#C9A227]"><CardContent className="pt-4">
           <p className="text-xs text-muted-foreground uppercase font-bold">Valor de Aquisição</p>
-          <p className="font-display text-2xl font-bold text-[#0E2A47] mt-1">{fmt(totalAquisicao)}</p>
+          <p className="font-display text-2xl font-bold text-[#0E2A47] mt-1">{fmtMoney(totalAquisicao)}</p>
         </CardContent></Card>
         <Card className="border-l-4 border-l-red-400"><CardContent className="pt-4">
           <p className="text-xs text-muted-foreground uppercase font-bold">Depreciação Acumulada</p>
-          <p className="font-display text-2xl font-bold text-red-600 mt-1">{fmt(totalDeprec)}</p>
+          <p className="font-display text-2xl font-bold text-red-600 mt-1">{fmtMoney(totalDeprec)}</p>
         </CardContent></Card>
         <Card className="border-l-4 border-l-green-500"><CardContent className="pt-4">
           <p className="text-xs text-muted-foreground uppercase font-bold">Valor Líquido Atual</p>
-          <p className="font-display text-2xl font-bold text-green-700 mt-1">{fmt(totalValor)}</p>
+          <p className="font-display text-2xl font-bold text-green-700 mt-1">{fmtMoney(totalValor)}</p>
         </CardContent></Card>
       </div>
 
@@ -937,8 +939,8 @@ function DepreciacaoTab({ churchFilter }: { churchFilter: string }) {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-muted-foreground">
                       <span>📅 Início: {new Date(d.start_date).toLocaleDateString("pt-BR")}</span>
                       <span>⏱️ {d.anos_decorridos}/{d.useful_life_years} anos</span>
-                      <span>💰 Aquisição: {fmt(d.acquisition_value)}</span>
-                      <span>📊 Líquido: {fmt(d.valor_atual_liquido)}</span>
+                      <span>💰 Aquisição: {fmtMoney(d.acquisition_value)}</span>
+                      <span>📊 Líquido: {fmtMoney(d.valor_atual_liquido)}</span>
                     </div>
                   </div>
                 </div>
@@ -1082,7 +1084,7 @@ function ManutencaoTab({ churchFilter }: { churchFilter: string }) {
                       {m.dias_para_manutencao < 0
                         ? <span className="text-red-600 font-semibold">⚠️ Vencida há {Math.abs(m.dias_para_manutencao)} dias</span>
                         : <span>Em {m.dias_para_manutencao} dias</span>}
-                      {m.cost && <span>💰 {fmt(m.cost)}</span>}
+                      {m.cost && <span>💰 {fmtMoney(m.cost)}</span>}
                       {m.provider_name && <span>🔧 {m.provider_name}</span>}
                     </div>
                   </div>
@@ -1117,7 +1119,7 @@ function ManutencaoTab({ churchFilter }: { churchFilter: string }) {
                 <p className="text-xs text-muted-foreground">{m.description}</p>
                 <div className="flex gap-3 text-xs text-muted-foreground mt-0.5">
                   <span>{new Date(m.scheduled_at).toLocaleDateString("pt-BR")}</span>
-                  {m.cost && <span>{fmt(m.cost)}</span>}
+                  {m.cost && <span>{fmtMoney(m.cost)}</span>}
                   {m.provider_name && <span>{m.provider_name}</span>}
                 </div>
               </div>
@@ -1349,11 +1351,11 @@ function DashboardContabilTab({ churchFilter }: { churchFilter: string }) {
           </CardContent></Card>
           <Card className="border-l-4 border-l-green-500"><CardContent className="pt-4">
             <p className="text-xs text-muted-foreground uppercase font-bold">Valor Líquido</p>
-            <p className="font-display text-xl font-bold text-green-700 mt-1">{fmt(national.valor_liquido_total)}</p>
+            <p className="font-display text-xl font-bold text-green-700 mt-1">{fmtMoney(national.valor_liquido_total)}</p>
           </CardContent></Card>
           <Card className="border-l-4 border-l-red-400"><CardContent className="pt-4">
             <p className="text-xs text-muted-foreground uppercase font-bold">Depreciação Total</p>
-            <p className="font-display text-xl font-bold text-red-600 mt-1">{fmt(national.depreciacao_total)}</p>
+            <p className="font-display text-xl font-bold text-red-600 mt-1">{fmtMoney(national.depreciacao_total)}</p>
           </CardContent></Card>
         </div>
       )}
@@ -1416,9 +1418,9 @@ function DashboardContabilTab({ churchFilter }: { churchFilter: string }) {
                       <td className="px-3 py-2 font-medium text-[#0E2A47] capitalize">{row.category}</td>
                       <td className="px-3 py-2 text-muted-foreground">{row.church_name ?? "—"}</td>
                       <td className="px-2 py-2 text-center">{row.total_bens}</td>
-                      <td className="px-3 py-2 text-right">{fmt(row.valor_aquisicao_total)}</td>
-                      <td className="px-3 py-2 text-right text-red-600">{fmt(row.depreciacao_acumulada_total)}</td>
-                      <td className="px-3 py-2 text-right font-bold text-green-700">{fmt(row.valor_atual_total)}</td>
+                      <td className="px-3 py-2 text-right">{fmtMoney(row.valor_aquisicao_total)}</td>
+                      <td className="px-3 py-2 text-right text-red-600">{fmtMoney(row.depreciacao_acumulada_total)}</td>
+                      <td className="px-3 py-2 text-right font-bold text-green-700">{fmtMoney(row.valor_atual_total)}</td>
                     </tr>
                   ))}
                 </tbody>
