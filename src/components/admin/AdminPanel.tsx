@@ -1,4 +1,5 @@
 "use client";
+import { MdaStructureAdmin } from "./MdaStructureAdmin";
 import { InviteLinksAdmin } from "./InviteLinksAdmin";
 import { useState, useCallback } from "react";
 import Link from "next/link";
@@ -189,7 +190,7 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
     case "life-groups":         return <CellsAdmin />;
     case "mda-health":          return <MdaHealthAdmin />;
     case "saude":               return <HealthAdmin />;
-    case "mda":                 return <MdaStructure />;
+    case "mda":                 return <MdaStructureAdmin />;
     case "permissions":         return <PermissionsAdmin />;
     case "weekly":              return <WeeklyReportsAdmin />;
     case "monthly":             return <MonthlyReportAdmin />;
