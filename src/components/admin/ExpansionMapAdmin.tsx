@@ -17,15 +17,6 @@ interface MarkerData {
 }
 interface ChurchDetail { id: string; name: string; type: string; status_admin?: string; created_at?: string; }
 interface LgSummary    { id: string; name: string; status_lg?: string; }
-interface LgDetail {
-  id: string; name: string; status_lg?: string;
-  address?: string; city?: string; state?: string; neighborhood?: string;
-  meeting_weekday?: string; meeting_time?: string;
-  target_audience?: string; founded_at?: string;
-  leader_id?: string | null; coleader_id?: string | null;
-  host_id?: string | null; supervisor_id?: string | null;
-}
-interface ProfileMini { id: string; full_name: string; phone: string | null; }
 interface FinanceSummary { total_entrada: number; total_saida: number; saldo: number; }
 interface PatrimonyInfo  { properties_count: number; assets_count: number; total_value: number; }
 interface ReportStatus   { total_lgs: number; lgs_with_weekly: number; lgs_with_monthly: number; }
@@ -55,126 +46,6 @@ const LeafletMapInteractive = dynamic(
   () => import("./ExpansionMapLeafletInteractive"),
   { ssr: false, loading: () => <div className="h-[520px] w-full rounded-md border bg-gray-50 grid place-items-center text-sm text-muted">Carregando mapa…</div> }
 );
-
-function LgDetailCard({ lgId, onClose }: { lgId: string; onClose: () => void }) {
-  const [detail, setDetail] = useState<LgDetail | null>(null);
-  const [people, setPeople] = useState<Record<string, ProfileMini>>({});
-  const [memberCount, setMemberCount] = useState<number | null>(null);
-  const [lastReport, setLastReport] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    supabase.from("life_groups").select("*").eq("id", lgId).single()
-      .then(async ({ data }) => {
-        const lg = data as LgDetail | null;
-        setDetail(lg);
-        if (lg) {
-          const ids = [lg.leader_id, lg.coleader_id, lg.host_id, lg.supervisor_id].filter(Boolean) as string[];
-          if (ids.length > 0) {
-            const { data: profiles } = await supabase.from("profiles").select("id, full_name, phone").in("id", ids);
-            const map: Record<string, ProfileMini> = {};
-            (profiles ?? []).forEach((p: ProfileMini) => { map[p.id] = p; });
-            setPeople(map);
-          }
-          const { count } = await supabase.from("members").select("id", { count: "exact", head: true })
-            .eq("life_group_id", lgId).eq("status", "ativo");
-          setMemberCount(count ?? 0);
-
-          const { data: report } = await supabase.from("meeting_reports")
-            .select("meeting_date").eq("life_group_id", lgId)
-            .order("meeting_date", { ascending: false }).limit(1).maybeSingle();
-          setLastReport(report?.meeting_date ?? null);
-        }
-        setLoading(false);
-      });
-  }, [lgId]);
-
-  const WEEKDAY_LABELS: Record<string, string> = {
-    domingo: "Domingo", segunda: "Segunda", terca: "Terça",
-    quarta: "Quarta", quinta: "Quinta", sexta: "Sexta", sabado: "Sábado",
-  };
-
-  return (
-    <div className="rounded-md border-2 border-gold/40 bg-gold/5 p-3 space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-bold text-navy">{detail?.name ?? "Carregando…"}</p>
-        <Button onClick={onClose} variant="ghost" size="sm" className="h-6 w-6 p-0"><X className="h-3 w-3" /></Button>
-      </div>
-
-      {loading && <p className="text-xs italic text-muted">Carregando ficha…</p>}
-
-      {!loading && detail && (
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-md bg-white p-2 text-center">
-              <p className="font-display text-lg font-bold text-navy">{memberCount ?? "—"}</p>
-              <p className="text-[10px] text-muted">Membros ativos</p>
-            </div>
-            <div className="rounded-md bg-white p-2 text-center">
-              {detail.status_lg ? (
-                <span className={[
-                  "inline-block rounded-full px-2 py-1 text-[10px] font-bold",
-                  detail.status_lg === "muito_saudavel" ? "bg-green-100 text-green-700" :
-                  detail.status_lg === "saudavel"       ? "bg-green-50 text-green-600" :
-                  detail.status_lg === "atencao"        ? "bg-yellow-100 text-yellow-700" :
-                  "bg-red-100 text-red-700",
-                ].join(" ")}>
-                  {detail.status_lg.replace(/_/g, " ")}
-                </span>
-              ) : <span className="text-[10px] text-muted">Sem avaliação</span>}
-              <p className="text-[10px] text-muted mt-1">Saúde do LG</p>
-            </div>
-          </div>
-
-          {(detail.meeting_weekday || detail.meeting_time) && (
-            <div className="rounded-md bg-white p-2 text-xs text-navy">
-              <b>Encontros:</b> {WEEKDAY_LABELS[detail.meeting_weekday ?? ""] ?? detail.meeting_weekday}
-              {detail.meeting_time ? ` às ${detail.meeting_time.slice(0,5)}` : ""}
-            </div>
-          )}
-
-          {(detail.address || detail.neighborhood) && (
-            <div className="rounded-md bg-white p-2 text-xs text-muted">
-              📍 {[detail.address, detail.neighborhood, detail.city].filter(Boolean).join(", ")}
-            </div>
-          )}
-
-          <div className="rounded-md bg-white p-2 space-y-1.5">
-            <p className="text-[10px] font-bold uppercase text-muted">Liderança</p>
-            {[
-              { label: "Líder",      id: detail.leader_id },
-              { label: "Colíder",    id: detail.coleader_id },
-              { label: "Anfitrião",  id: detail.host_id },
-              { label: "Supervisor", id: detail.supervisor_id },
-            ].filter(r => r.id).map(r => (
-              <div key={r.label} className="flex items-center justify-between text-xs">
-                <span className="text-muted">{r.label}</span>
-                <span className="font-medium text-navy">{people[r.id!]?.full_name ?? "—"}</span>
-              </div>
-            ))}
-            {![detail.leader_id, detail.coleader_id, detail.host_id, detail.supervisor_id].some(Boolean) && (
-              <p className="text-xs italic text-muted">Nenhuma liderança definida.</p>
-            )}
-          </div>
-
-          <div className="rounded-md bg-white p-2 text-xs">
-            <b className="text-navy">Último relatório semanal:</b>{" "}
-            {lastReport
-              ? <span className="text-green-700">{new Date(lastReport).toLocaleDateString("pt-BR")}</span>
-              : <span className="text-red-600">Nenhum registrado</span>}
-          </div>
-
-          {detail.founded_at && (
-            <p className="text-[10px] text-muted">
-              Fundado em {new Date(detail.founded_at).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () => void }) {
   const [churches,  setChurches]  = useState<ChurchDetail[]>([]);
@@ -218,7 +89,7 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
     setLoading(false);
   }, [marker]);
 
-  useEffect(() => { load(); setSelectedLgId(null); }, [load]);
+  useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
     if (lgs.length === 0) return;
@@ -248,10 +119,8 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
     { id: "reports",   label: "Relatórios" },
   ];
 
-  const [selectedLgId, setSelectedLgId] = useState<string | null>(null);
-
   return (
-    <div className="flex h-full w-full flex-col bg-white shadow-2xl overflow-hidden">
+    <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl overflow-hidden">
       {/* Header navy */}
       <div className="bg-navy px-4 py-4 text-white">
         <div className="flex items-start justify-between gap-3">
@@ -356,32 +225,19 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
                 <h3 className="font-semibold text-navy text-sm">{lgs.length} Life Group{lgs.length !== 1 ? "s" : ""}</h3>
                 {lgs.length === 0 && <p className="text-sm italic text-muted">Nenhum Life Group ativo.</p>}
                 {lgs.map(lg => (
-                  <div key={lg.id}>
-                    <button
-                      onClick={() => setSelectedLgId(selectedLgId === lg.id ? null : lg.id)}
-                      className={[
-                        "flex w-full items-center gap-3 rounded-md border bg-card p-2.5 text-left transition-colors",
-                        selectedLgId === lg.id ? "border-gold bg-gold/5" : "hover:bg-gold/5",
-                      ].join(" ")}
-                    >
-                      <Flame className="h-4 w-4 shrink-0 text-orange-500" />
-                      <span className="flex-1 text-sm font-medium text-navy truncate">{lg.name}</span>
-                      {lg.status_lg && (
-                        <span className={[
-                          "rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0",
-                          lg.status_lg === "muito_saudavel" ? "bg-green-100 text-green-700" :
-                          lg.status_lg === "saudavel"       ? "bg-green-50 text-green-600" :
-                          lg.status_lg === "atencao"        ? "bg-yellow-100 text-yellow-700" :
-                          "bg-red-100 text-red-700",
-                        ].join(" ")}>
-                          {lg.status_lg.replace(/_/g, " ")}
-                        </span>
-                      )}
-                    </button>
-                    {selectedLgId === lg.id && (
-                      <div className="mt-1.5">
-                        <LgDetailCard lgId={lg.id} onClose={() => setSelectedLgId(null)} />
-                      </div>
+                  <div key={lg.id} className="flex items-center gap-3 rounded-md border bg-card p-2.5">
+                    <Flame className="h-4 w-4 shrink-0 text-orange-500" />
+                    <span className="flex-1 text-sm font-medium text-navy truncate">{lg.name}</span>
+                    {lg.status_lg && (
+                      <span className={[
+                        "rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0",
+                        lg.status_lg === "muito_saudavel" ? "bg-green-100 text-green-700" :
+                        lg.status_lg === "saudavel"       ? "bg-green-50 text-green-600" :
+                        lg.status_lg === "atencao"        ? "bg-yellow-100 text-yellow-700" :
+                        "bg-red-100 text-red-700",
+                      ].join(" ")}>
+                        {lg.status_lg.replace(/_/g, " ")}
+                      </span>
                     )}
                   </div>
                 ))}
@@ -548,14 +404,8 @@ export function ExpansionMapAdmin() {
 
       {selectedMarker && (
         <>
-          <div
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm"
-            style={{ zIndex: 2000 }}
-            onClick={() => setSelectedMarker(null)}
-          />
-          <div style={{ zIndex: 2001, position: "fixed", inset: "0 0 0 auto", width: "100%", maxWidth: 420 }}>
-            <LocationPanel marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
-          </div>
+          <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={() => setSelectedMarker(null)} />
+          <LocationPanel marker={selectedMarker} onClose={() => setSelectedMarker(null)} />
         </>
       )}
     </div>
