@@ -10,7 +10,7 @@ import {
   Download, Search, Bell,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -18,14 +18,14 @@ import { Button } from "@/components/ui/button";
 export type TabKey =
   | "supervision" | "org-dashboard"
   | "control-tower" | "intelligence" | "ministerial-reports" | "metas"
-  | "members" | "scores-birthdays" | "discipleship"
+  | "members" | "score" | "birthdays" | "discipleship"
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
   | "communities" | "structure" | "genealogy" | "expansion-map"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly"
   | "news" | "banners" | "sermons" | "events" | "services" | "word"
   | "finance" | "patrimony" | "gpv"
-  | "delegations" | "audit"
+  | "delegations" | "invites" | "audit"
   | "export";
 
 interface NavItem {
@@ -83,7 +83,8 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       icon: <Users size={16} />,
       items: [
         { key: "members",          label: "Membros",             icon: <Users2 size={15} /> },
-        { key: "scores-birthdays", label: "Score & Aniversários",icon: <Star size={15} /> },
+        { key: "score",            label: "Score",               icon: <Star size={15} /> },
+        { key: "birthdays",        label: "Aniversários",        icon: <Cake size={15} /> },
         { key: "discipleship",     label: "Discipulado",         icon: <BookOpen size={15} /> },
         { key: "acolhimento",      label: "Acolhimento",         icon: <Heart size={15} /> },
         { key: "evasao",           label: "Em risco",            icon: <TrendingDown size={15} /> },
@@ -147,6 +148,7 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       icon: <Lock size={16} />,
       items: [
         { key: "delegations", label: "Delegações", icon: <Gavel size={15} /> },
+        { key: "invites",     label: "Convites",   icon: <Link2 size={15} /> },
         { key: "audit",       label: "Auditoria",  icon: <ClipboardList size={15} /> },
       ],
     },

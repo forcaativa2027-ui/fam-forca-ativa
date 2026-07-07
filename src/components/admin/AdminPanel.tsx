@@ -1,4 +1,5 @@
 "use client";
+import { InviteLinksAdmin } from "./InviteLinksAdmin";
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -53,6 +54,8 @@ import { HealthAdmin } from "./HealthAdmin";
 import { AdminSidebar, type TabKey } from "./AdminSidebar";
 import { AuditAdmin } from "./AuditAdmin";
 import { MetasPlaceholder } from "./Placeholders";
+import { MemberScoreAdmin } from "./MemberScoreAdmin";
+import { BirthdaysAdmin } from "./BirthdaysAdmin";
 
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
@@ -160,6 +163,9 @@ export default function AdminPanel() {
 
 function TabContent({ activeTab }: { activeTab: TabKey }) {
   switch (activeTab) {
+    case "delegations":         return <DelegationsAdmin />;
+    case "invites":             return <InviteLinksAdmin />;
+    case "audit":               return <AuditView />;
     case "org-dashboard":       return <OrgDashboardAdmin />;
     case "supervision":         return <SupervisionDashboard />;
     case "control-tower":       return <ControlTowerAdmin />;
@@ -167,7 +173,8 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
     case "ministerial-reports": return <MinisterialReportsAdmin />;
     case "metas":               return <MetasPlaceholder />;
     case "members":             return <MembersAdmin />;
-    case "scores-birthdays":    return <ScoresBirthdaysPlaceholder />;
+    case "score":                return <MemberScoreAdmin />;
+    case "birthdays":            return <BirthdaysAdmin />;
     case "discipleship":        return <DiscipleshipAdmin />;
     case "acolhimento":         return <AcolhimentoAdmin />;
     case "evasao":              return <EvasionAdmin />;
@@ -195,8 +202,6 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
     case "finance":             return <FinanceAdmin />;
     case "patrimony":           return <PatrimonyAdmin />;
     case "gpv":                 return <GpvAdmin />;
-    case "delegations":         return <DelegationsAdmin />;
-    case "audit":               return <AuditView />;
     case "export":              return <ExportAdmin />;
     default:                    return null;
   }
@@ -206,17 +211,7 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
 
 // MetasPlaceholder foi extraído para Placeholders.tsx (reutilizado também em /executivo).
 
-function ScoresBirthdaysPlaceholder() {
-  return (
-    <Card>
-      <CardContent className="pt-8 pb-8 text-center">
-        <p className="text-2xl mb-2">⭐</p>
-        <h2 className="font-display text-xl text-navy">Score & Aniversários</h2>
-        <p className="mt-2 text-sm text-muted">Módulo C20 — disponível neste painel.</p>
-      </CardContent>
-    </Card>
-  );
-}
+// Score e Aniversários agora são módulos separados: MemberScoreAdmin.tsx e BirthdaysAdmin.tsx.
 
 // RH substituído pelo GPV — ver GpvAdmin.tsx
 
