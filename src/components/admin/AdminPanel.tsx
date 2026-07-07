@@ -13,6 +13,7 @@ import { sermonSchema, eventSchema, serviceTimeSchema, dailyWordSchema,
   type SermonInput, type EventInput, type ServiceTimeInput, type DailyWordInput } from "@/schemas";
 import {
   useMyProfile, useSermons, useEvents,
+  useDistricts, useAreas, useSectors, useCells,
   useChurches, useAllServiceTimes, useDailyWords,
   usePendingCounts,
 } from "@/hooks/use-queries";
@@ -51,8 +52,7 @@ import { MinistriesAdmin } from "./MinistriesAdmin";
 import { HealthAdmin } from "./HealthAdmin";
 import { AdminSidebar, type TabKey } from "./AdminSidebar";
 import { AuditAdmin } from "./AuditAdmin";
-import { MetasPlaceholder, ScoresBirthdaysPlaceholder } from "./Placeholders";
-import { MdaStructure, MdaCount } from "./MdaStructure";
+import { MetasPlaceholder } from "./Placeholders";
 
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
@@ -206,7 +206,17 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
 
 // MetasPlaceholder foi extraído para Placeholders.tsx (reutilizado também em /executivo).
 
-// ScoresBirthdaysPlaceholder foi extraído para Placeholders.tsx (reutilizado também em /pessoas).
+function ScoresBirthdaysPlaceholder() {
+  return (
+    <Card>
+      <CardContent className="pt-8 pb-8 text-center">
+        <p className="text-2xl mb-2">⭐</p>
+        <h2 className="font-display text-xl text-navy">Score & Aniversários</h2>
+        <p className="mt-2 text-sm text-muted">Módulo C20 — disponível neste painel.</p>
+      </CardContent>
+    </Card>
+  );
+}
 
 // RH substituído pelo GPV — ver GpvAdmin.tsx
 
@@ -371,7 +381,64 @@ function EventsAdmin() {
   );
 }
 
-// MdaStructure foi extraído para MdaStructure.tsx (reutilizado também em /organizacional).
+function MdaStructure() {
+  const { data: districts = [] } = useDistricts();
+  const { data: areas = [] } = useAreas();
+  const { data: sectors = [] } = useSectors();
+  const { data: cells = [] } = useCells();
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Estrutura MDA (mínimo 3 por nível)</CardTitle>
+          <CardDescription>Igreja → Distrito → Área → Setor → Célula. Multiplicação registrada via "mãe".</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-4">
+            <MdaCount label="Distritos" value={districts.length} />
+            <MdaCount label="Áreas" value={areas.length} />
+            <MdaCount label="Setores" value={sectors.length} />
+            <MdaCount label="Células" value={cells.length} />
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Hierarquia</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {districts.length === 0 && <p className="text-sm italic text-muted">Nenhum distrito cadastrado.</p>}
+          {districts.map((d) => {
+            const dAreas = areas.filter((a) => a.district_id === d.id);
+            return (
+              <div key={d.id} className="rounded-md border p-3">
+                <div className="flex items-center justify-between">
+                  <b className="text-navy">{d.name}</b>
+                  <span className="text-xs text-muted">{dAreas.length} área(s)</span>
+                </div>
+                <ul className="mt-2 space-y-1 pl-4 text-sm text-muted">
+                  {dAreas.map((a) => {
+                    const aSectors = sectors.filter((s) => s.area_id === a.id);
+                    return (
+                      <li key={a.id}>
+                        <b className="text-navy-600">{a.name}</b> — {aSectors.length} setor(es)
+                        <ul className="ml-4 mt-1 list-disc text-xs">
+                          {aSectors.map((s) => {
+                            const sCells = cells.filter((c) => c.sector_id === s.id);
+                            return <li key={s.id}>{s.name}: {sCells.length} célula(s)</li>;
+                          })}
+                        </ul>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 // AuditView foi extraído para AuditAdmin.tsx (reutilizado também em /governanca).
 function AuditView() {
@@ -583,4 +650,11 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
-// MdaCount foi extraído para MdaStructure.tsx.
+function MdaCount({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg border bg-card p-4 text-center">
+      <p className="font-display text-2xl font-semibold text-gold">{value}</p>
+      <p className="text-xs text-muted">{label}</p>
+    </div>
+  );
+}
