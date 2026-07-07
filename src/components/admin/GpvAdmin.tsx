@@ -43,7 +43,7 @@ interface GpvTipoVinculo {
 }
 interface GpvFormaRemuneracao { id: string; nome: string; is_active: boolean; }
 interface GpvVinculo {
-  id: string; vinculo_id?: string; pessoa_id: string; tipo_vinculo_id: string; church_id: string;
+  id: string; pessoa_id: string; tipo_vinculo_id: string; church_id: string;
   cargo?: string; departamento?: string; data_inicio: string; data_fim?: string;
   status: StatusVinculo; observacoes?: string;
   // joined
@@ -461,10 +461,10 @@ function VinculosTab({ churches }: { churches: { id: string; name: string }[] })
 
       <div className="space-y-2">
         {vinculos.map((v) => (
-          <Card key={v.vinculo_id ?? v.id} className="border-l-4 border-l-gold">
+          <Card key={v.vinculo_id} className="border-l-4 border-l-gold">
             <CardContent className="pt-3 pb-3">
               <div className="flex items-center gap-3">
-                <button onClick={() => toggleExpand(v.vinculo_id ?? v.id)} className="flex-1 min-w-0 text-left">
+                <button onClick={() => toggleExpand(v.vinculo_id!)} className="flex-1 min-w-0 text-left">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-navy">{v.pessoa_nome}</span>
                     <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${STATUS_VINCULO_COLOR[v.status]}`}>
@@ -481,7 +481,7 @@ function VinculosTab({ churches }: { churches: { id: string; name: string }[] })
                   </p>
                 </button>
                 <div className="flex gap-1 shrink-0">
-                  {expanded === (v.vinculo_id ?? v.id)
+                  {expanded === v.vinculo_id
                     ? <ChevronDown className="h-4 w-4 text-muted" />
                     : <ChevronRight className="h-4 w-4 text-muted" />}
                   <Button onClick={() => encerrar(v)} variant="outline" size="sm" className="h-7 px-2 text-xs">
@@ -491,22 +491,22 @@ function VinculosTab({ churches }: { churches: { id: string; name: string }[] })
               </div>
 
               {/* Remunerações expandidas */}
-              {expanded === (v.vinculo_id ?? v.id) && (
+              {expanded === v.vinculo_id && (
                 <div className="mt-3 border-t pt-3">
                   <p className="text-xs font-bold uppercase text-muted mb-2">Remunerações</p>
-                  {(remuneracoes[v.vinculo_id ?? v.id] ?? []).length === 0
+                  {(remuneracoes[v.vinculo_id!] ?? []).length === 0
                     ? <p className="text-xs text-muted italic">Nenhuma remuneração cadastrada.</p>
-                    : (remuneracoes[v.vinculo_id ?? v.id] ?? []).map((r) => (
+                    : (remuneracoes[v.vinculo_id!] ?? []).map((r) => (
                         <div key={r.id} className="flex items-center justify-between text-xs border-b py-1.5 last:border-0">
                           <span className="text-navy font-medium">{r.forma_nome}</span>
                           <span className="text-muted">{PERIODICIDADE_LABELS[r.periodicidade]}</span>
                           <span className="font-bold text-navy">{fmt(r.valor)}</span>
                         </div>
                       ))}
-                  <AddRemuneracaoInline vinculoId={v.vinculo_id ?? v.id} formas={formas}
+                  <AddRemuneracaoInline vinculoId={v.vinculo_id!} formas={formas}
                     onSaved={() => {
-                      setRemuneracoes((prev) => { const n = {...prev}; delete n[v.vinculo_id ?? v.id]; return n; });
-                      loadRemuneracoes(v.vinculo_id ?? v.id);
+                      setRemuneracoes((prev) => { const n = {...prev}; delete n[v.vinculo_id!]; return n; });
+                      loadRemuneracoes(v.vinculo_id!);
                     }} />
                 </div>
               )}
@@ -923,7 +923,7 @@ function PagamentoForm({ vinculos, formas, onClose, onSaved }: {
               className="h-10 w-full rounded-md border bg-background px-3 text-sm">
               <option value="">— Selecione —</option>
               {vinculos.map((v) => (
-                <option key={v.vinculo_id ?? v.id} value={v.vinculo_id ?? v.id}>
+                <option key={v.vinculo_id} value={v.vinculo_id!}>
                   {v.pessoa_nome} · {v.tipo_vinculo}
                 </option>
               ))}
@@ -1038,7 +1038,7 @@ function HistoricoTab() {
           className="h-9 rounded-md border bg-background px-3 text-sm">
           <option value="">— Selecione o vínculo —</option>
           {vinculos.map((v) => (
-            <option key={v.vinculo_id ?? v.id} value={v.vinculo_id ?? v.id}>
+            <option key={v.vinculo_id} value={v.vinculo_id!}>
               {v.pessoa_nome} · {v.tipo_vinculo}
             </option>
           ))}
