@@ -822,3 +822,13 @@ export interface InviteTokenValidation {
   life_group_name: string | null; ministry_name: string | null;
   target_role: UserRole | null;
 }
+// Grupo de Evangelismo — subdivisão de um Life Group (C24)
+export interface EvangelismGroup {
+  id:string; cell_id:string; name:string;
+  address:string|null; neighborhood:string|null; city:string|null; state:string|null;
+  meeting_weekday:Weekday|null; meeting_time:string|null; is_active:boolean;
+  created_at:string;
+  leader_ids?: string[];       // preenchido no service, a partir de evangelism_group_leaders
+  leader_names?: string[];     // idem, nomes já resolvidos
+}
+export interface EvangelismGroupLeader { id:string; group_id:string; member_id:string; created_at:string; }
