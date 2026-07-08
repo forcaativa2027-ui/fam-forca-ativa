@@ -40,6 +40,11 @@ export async function revokeInviteLink(sb: SupabaseClient, id: string): Promise<
   if (error) { console.error("[invites] revokeInviteLink", error); throw error; }
 }
 
+export async function deleteInviteLink(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.rpc("delete_invite_link", { p_id: id });
+  if (error) { console.error("[invites] deleteInviteLink", error); throw error; }
+}
+
 export function inviteLinkUrl(token: string): string {
   const base = typeof window !== "undefined" ? window.location.origin : "https://cecfamily.com";
   return `${base}/convite/${token}`;
