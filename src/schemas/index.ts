@@ -378,15 +378,3 @@ export const assetSchema = z.object({
   observations: optionalText,
 });
 export type AssetInput = z.infer<typeof assetSchema>;
-// ── Grupo de Evangelismo (C24) ──────────────────────────────────
-export const evangelismGroupSchema = z.object({
-  name: reqText("Nome do grupo"),
-  cell_id: z.string().uuid("Selecione o Life Group responsável"),
-  address: optionalText,
-  neighborhood: optionalText,
-  city: optionalText,
-  state: optionalText,
-  meeting_weekday: z.enum(["domingo","segunda","terca","quarta","quinta","sexta","sabado"]).optional().nullable(),
-  meeting_time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Hora invalida (HH:MM)").optional().or(z.literal("")),
-});
-export type EvangelismGroupInput = z.infer<typeof evangelismGroupSchema>;
