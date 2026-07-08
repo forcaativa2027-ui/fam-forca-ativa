@@ -57,6 +57,7 @@ import { AuditAdmin } from "./AuditAdmin";
 import { MetasPlaceholder } from "./Placeholders";
 import { MemberScoreAdmin } from "./MemberScoreAdmin";
 import { BirthdaysAdmin } from "./BirthdaysAdmin";
+import { DelegationsAdmin } from "./DelegationsAdmin";
 
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
