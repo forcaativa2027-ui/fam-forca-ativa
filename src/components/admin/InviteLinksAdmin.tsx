@@ -7,12 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Link2, Copy, Ban, Plus, Loader2, CheckCircle2 } from "lucide-react";
+import { Link2, Copy, Ban, Plus, Loader2, CheckCircle2, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import {
   useInviteLinks, useChurches, useSectors, useCells, useMinistries, useMyProfile,
 } from "@/hooks/use-queries";
-import { createInviteLink, revokeInviteLink, inviteLinkUrl } from "@/services/invites";
+import { createInviteLink, revokeInviteLink, deleteInviteLink, inviteLinkUrl } from "@/services/invites";
 import type { InviteLinkKind, InviteValidity, UserRole, InviteLinkStatus } from "@/types/domain";
 
 const KIND_LABELS: Record<InviteLinkKind, string> = {
@@ -74,7 +74,8 @@ export function InviteLinksAdmin() {
       qc.invalidateQueries({ queryKey: ["invite-links"] });
       setOpen(false);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Erro ao criar convite. Verifique sua permissão para este tipo de link.");
+      const msg = (e as { message?: string })?.message ?? "Erro ao criar convite. Verifique sua permissão para este tipo de link.";
+      setErr(msg);
     } finally {
       setSaving(false);
     }
@@ -86,6 +87,16 @@ export function InviteLinksAdmin() {
       qc.invalidateQueries({ queryKey: ["invite-links"] });
     } catch {
       setErr("Erro ao revogar link");
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Excluir este link permanentemente? Essa ação não pode ser desfeita.")) return;
+    try {
+      await deleteInviteLink(supabase, id);
+      qc.invalidateQueries({ queryKey: ["invite-links"] });
+    } catch {
+      setErr("Erro ao excluir link");
     }
   }
 
@@ -143,6 +154,9 @@ export function InviteLinksAdmin() {
                             <Ban size={14} className="text-destructive" />
                           </Button>
                         )}
+                        <Button size="icon" variant="ghost" onClick={() => handleDelete(l.id)} title="Excluir">
+                          <Trash2 size={14} className="text-muted-foreground hover:text-destructive" />
+                        </Button>
                       </td>
                     </tr>
                   ))}
