@@ -1,5 +1,6 @@
 "use client";
 import { InviteLinksAdmin } from "./InviteLinksAdmin";
+import { MdaStructureAdmin } from "./MdaStructureAdmin";
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -189,7 +190,7 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
     case "life-groups":         return <CellsAdmin />;
     case "mda-health":          return <MdaHealthAdmin />;
     case "saude":               return <HealthAdmin />;
-    case "mda":                 return <MdaStructure />;
+    case "mda":                 return <MdaStructureAdmin />;
     case "permissions":         return <PermissionsAdmin />;
     case "weekly":              return <WeeklyReportsAdmin />;
     case "monthly":             return <MonthlyReportAdmin />;
@@ -376,64 +377,8 @@ function EventsAdmin() {
   );
 }
 
-function MdaStructure() {
-  const { data: districts = [] } = useDistricts();
-  const { data: areas = [] } = useAreas();
-  const { data: sectors = [] } = useSectors();
-  const { data: cells = [] } = useCells();
-
-  return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Estrutura MDA (mínimo 3 por nível)</CardTitle>
-          <CardDescription>Igreja → Distrito → Área → Setor → Célula. Multiplicação registrada via "mãe".</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 sm:grid-cols-4">
-            <MdaCount label="Distritos" value={districts.length} />
-            <MdaCount label="Áreas" value={areas.length} />
-            <MdaCount label="Setores" value={sectors.length} />
-            <MdaCount label="Células" value={cells.length} />
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader><CardTitle>Hierarquia</CardTitle></CardHeader>
-        <CardContent className="space-y-2">
-          {districts.length === 0 && <p className="text-sm italic text-muted">Nenhum distrito cadastrado.</p>}
-          {districts.map((d) => {
-            const dAreas = areas.filter((a) => a.district_id === d.id);
-            return (
-              <div key={d.id} className="rounded-md border p-3">
-                <div className="flex items-center justify-between">
-                  <b className="text-navy">{d.name}</b>
-                  <span className="text-xs text-muted">{dAreas.length} área(s)</span>
-                </div>
-                <ul className="mt-2 space-y-1 pl-4 text-sm text-muted">
-                  {dAreas.map((a) => {
-                    const aSectors = sectors.filter((s) => s.area_id === a.id);
-                    return (
-                      <li key={a.id}>
-                        <b className="text-navy-600">{a.name}</b> — {aSectors.length} setor(es)
-                        <ul className="ml-4 mt-1 list-disc text-xs">
-                          {aSectors.map((s) => {
-                            const sCells = cells.filter((c) => c.sector_id === s.id);
-                            return <li key={s.id}>{s.name}: {sCells.length} célula(s)</li>;
-                          })}
-                        </ul>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+// MdaStructure() antiga (somente-leitura) foi removida — substituída pelo componente
+// MdaStructureAdmin (CRUD completo), importado de "./MdaStructureAdmin".
 
 // AuditView foi extraído para AuditAdmin.tsx (reutilizado também em /governanca).
 function AuditView() {
