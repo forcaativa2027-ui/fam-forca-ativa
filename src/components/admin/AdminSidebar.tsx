@@ -14,6 +14,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import {
+  // ...
+  Gavel, ClipboardList, ChevronDown, ChevronRight,
+  Menu, X, LogOut,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2,
+} from "lucide-react";
 
 export type TabKey =
   | "supervision" | "org-dashboard"
