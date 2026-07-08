@@ -20,7 +20,7 @@ export type TabKey =
   | "control-tower" | "intelligence" | "ministerial-reports" | "metas"
   | "members" | "score" | "birthdays" | "discipleship"
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
-  | "communities" | "structure" | "genealogy" | "expansion-map"
+  | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly"
   | "news" | "banners" | "sermons" | "events" | "services" | "word"
@@ -103,6 +103,7 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
         { key: "genealogy",     label: "Genealogia",     icon: <Network size={15} /> },
         { key: "ministerios",   label: "Ministérios",    icon: <Mic2 size={15} /> },
         { key: "life-groups",   label: "Life Groups",    icon: <Flame size={15} /> },
+        { key: "evangelism-groups", label: "Grupos de Evangelismo", icon: <Megaphone size={15} /> },
         { key: "mda",           label: "Estrutura MDA",  icon: <Network size={15} /> },
         { key: "mda-health",    label: "Saúde MDA",      icon: <Heart size={15} /> },
         { key: "saude",         label: "Saúde",          icon: <Heart size={15} /> },

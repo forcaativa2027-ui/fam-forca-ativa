@@ -1,6 +1,7 @@
 "use client";
 import { InviteLinksAdmin } from "./InviteLinksAdmin";
 import { MdaStructureAdmin } from "./MdaStructureAdmin";
+import { EvangelismGroupsAdmin } from "./EvangelismGroupsAdmin";
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -191,6 +192,7 @@ function TabContent({ activeTab }: { activeTab: TabKey }) {
     case "mda-health":          return <MdaHealthAdmin />;
     case "saude":               return <HealthAdmin />;
     case "mda":                 return <MdaStructureAdmin />;
+    case "evangelism-groups":   return <EvangelismGroupsAdmin />;
     case "permissions":         return <PermissionsAdmin />;
     case "weekly":              return <WeeklyReportsAdmin />;
     case "monthly":             return <MonthlyReportAdmin />;
