@@ -149,7 +149,7 @@ function KpiCard({ icon, label, value, sublabel, accent = "gold", onClick }: {
   return (
     <Card
       onClick={onClick}
-      className={`border-l-4 ${ACCENT[accent] ?? ACCENT.gold} ${onClick ? "cursor-pointer transition hover:shadow-md hover:-translate-y-0.5" : ""}`}
+      className={`border-l-4 ${ACCENT[accent] ?? ACCENT.gold} ${onClick ? "cursor-pointer shadow-sm ring-1 ring-transparent transition hover:shadow-xl hover:-translate-y-1 hover:ring-gold/40" : ""}`}
     >
       <CardContent className="pt-4">
         <div className="flex items-center gap-2 text-navy-600">

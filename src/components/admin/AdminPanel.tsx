@@ -65,9 +65,13 @@ export default function AdminPanel() {
   const isAdmin = me && ["apostolo", "pastor"].includes(me.role);
 
   const [activeTab, setActiveTab] = useState<TabKey>("org-dashboard");
+  const [previousTab, setPreviousTab] = useState<TabKey | null>(null);
 
   const handleNavigate = useCallback((tab: TabKey) => {
-    setActiveTab(tab);
+    setActiveTab((prev) => {
+      setPreviousTab(prev);
+      return tab;
+    });
   }, []);
 
   if (isLoading) {
@@ -153,6 +157,15 @@ export default function AdminPanel() {
         {/* Conteúdo */}
         <main className="flex-1 overflow-y-auto">
           <div className="container py-8">
+            {previousTab === "org-dashboard" && activeTab !== "org-dashboard" && (
+              <Button
+                variant="outline" size="sm"
+                className="mb-4 gap-1.5"
+                onClick={() => handleNavigate("org-dashboard")}
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao Dashboard
+              </Button>
+            )}
             <TabContent activeTab={activeTab} onNavigate={handleNavigate} />
           </div>
         </main>
