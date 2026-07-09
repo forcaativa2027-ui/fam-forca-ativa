@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useOrgKpis, useGrowthMonthly } from "@/hooks/use-queries";
+import { HierarchyExplorer } from "./HierarchyExplorer";
 
 export function OrgDashboardAdmin() {
   const { data: kpis, isLoading } = useOrgKpis();
@@ -40,8 +41,10 @@ export function OrgDashboardAdmin() {
       <section>
         <SectionTitle icon={<Globe2 />} title="Rede CEC Brasil" />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard icon={<Building2 />} label="Comunidades" value={kpis.total_churches}
-            sublabel={`${kpis.total_sedes} Sedes · ${kpis.total_nucleos} Núcleos · ${kpis.total_locais} Locais`} accent="gold" />
+          <a href="#estrutura-explorer">
+            <KpiCard icon={<Building2 />} label="Comunidades" value={kpis.total_churches}
+              sublabel={`${kpis.total_sedes} Sedes · ${kpis.total_nucleos} Núcleos · ${kpis.total_locais} Locais · clique p/ explorar`} accent="gold" />
+          </a>
           <KpiCard icon={<MapPin />} label="Estados alcançados" value={kpis.estados_alcancados}
             sublabel={`${kpis.cidades_alcancadas} cidades`} accent="blue" />
           <KpiCard icon={<Users />} label="Membros ativos" value={kpis.total_membros_ativos.toLocaleString("pt-BR")}
@@ -51,16 +54,10 @@ export function OrgDashboardAdmin() {
         </div>
       </section>
 
-      {/* Bloco 2 — Estrutura celular */}
-      <section>
-        <SectionTitle icon={<Heart />} title="Estrutura Celular MDA" />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiCard icon={<Heart />} label="Distritos" value={kpis.total_distritos} accent="navy" />
-          <KpiCard icon={<Heart />} label="Áreas" value={kpis.total_areas} accent="navy" />
-          <KpiCard icon={<Heart />} label="Setores" value={kpis.total_setores} accent="navy" />
-          <KpiCard icon={<Heart />} label="Life Groups" value={kpis.total_lgs}
-            sublabel={`${kpis.lgs_em_multiplicacao} em multiplicação`} accent="gold" />
-        </div>
+      {/* Bloco 2 — Estrutura celular (interativo, drill-down macro → micro) */}
+      <section id="estrutura-explorer">
+        <SectionTitle icon={<Heart />} title="Estrutura Celular MDA — clique num card para explorar" />
+        <HierarchyExplorer />
       </section>
 
       {/* Bloco 3 — Atividade */}
