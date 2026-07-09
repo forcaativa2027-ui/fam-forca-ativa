@@ -153,7 +153,7 @@ export default function AdminPanel() {
         {/* Conteúdo */}
         <main className="flex-1 overflow-y-auto">
           <div className="container py-8">
-            <TabContent activeTab={activeTab} />
+            <TabContent activeTab={activeTab} onNavigate={handleNavigate} />
           </div>
         </main>
       </div>
@@ -163,12 +163,12 @@ export default function AdminPanel() {
 
 // ─── Roteador de conteúdo ─────────────────────────────────────────────────────
 
-function TabContent({ activeTab }: { activeTab: TabKey }) {
+function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: (tab: TabKey) => void }) {
   switch (activeTab) {
     case "delegations":         return <DelegationsAdmin />;
     case "invites":             return <InviteLinksAdmin />;
     case "audit":               return <AuditView />;
-    case "org-dashboard":       return <OrgDashboardAdmin />;
+    case "org-dashboard":       return <OrgDashboardAdmin onNavigate={onNavigate} />;
     case "supervision":         return <SupervisionDashboard />;
     case "control-tower":       return <ControlTowerAdmin />;
     case "intelligence":        return <IntelligenceAdmin />;

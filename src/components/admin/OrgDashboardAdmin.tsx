@@ -6,8 +6,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useOrgKpis, useGrowthMonthly } from "@/hooks/use-queries";
 import { HierarchyExplorer } from "./HierarchyExplorer";
+import type { TabKey } from "./AdminSidebar";
 
-export function OrgDashboardAdmin() {
+export function OrgDashboardAdmin({ onNavigate }: { onNavigate?: (tab: TabKey) => void }) {
   const { data: kpis, isLoading } = useOrgKpis();
   const { data: growth = [] } = useGrowthMonthly();
 
@@ -46,11 +47,11 @@ export function OrgDashboardAdmin() {
               sublabel={`${kpis.total_sedes} Sedes · ${kpis.total_nucleos} Núcleos · ${kpis.total_locais} Locais · clique p/ explorar`} accent="gold" />
           </a>
           <KpiCard icon={<MapPin />} label="Estados alcançados" value={kpis.estados_alcancados}
-            sublabel={`${kpis.cidades_alcancadas} cidades`} accent="blue" />
+            sublabel={`${kpis.cidades_alcancadas} cidades`} accent="blue" onClick={() => onNavigate?.("expansion-map")} />
           <KpiCard icon={<Users />} label="Membros ativos" value={kpis.total_membros_ativos.toLocaleString("pt-BR")}
-            sublabel={`+${kpis.novos_membros_30d} nos últimos 30d`} accent="green" />
+            sublabel={`+${kpis.novos_membros_30d} nos últimos 30d`} accent="green" onClick={() => onNavigate?.("members")} />
           <KpiCard icon={<Sparkles />} label="Novos convertidos" value={kpis.novos_convertidos}
-            sublabel="ainda em consolidação" accent="purple" />
+            sublabel="ainda em consolidação" accent="purple" onClick={() => onNavigate?.("crm")} />
         </div>
       </section>
 
@@ -65,12 +66,12 @@ export function OrgDashboardAdmin() {
         <SectionTitle icon={<TrendingUp />} title="Atividade Recente" />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <KpiCard icon={<FileText />} label="Relatórios" value={kpis.relatorios_ultima_semana}
-            sublabel="esta semana" accent="green" />
+            sublabel="esta semana" accent="green" onClick={() => onNavigate?.("weekly")} />
           <KpiCard icon={<Calendar />} label="Relatórios" value={kpis.relatorios_ultimo_mes}
-            sublabel="último mês" accent="green" />
+            sublabel="último mês" accent="green" onClick={() => onNavigate?.("monthly")} />
           <KpiCard icon={<Split />} label="Multiplicações" value={kpis.multiplicacoes_ano}
-            sublabel="no ano" accent="gold" />
-          <KpiCard icon={<Award />} label="Ministérios" value={kpis.total_ministerios} accent="purple" />
+            sublabel="no ano" accent="gold" onClick={() => onNavigate?.("genealogy")} />
+          <KpiCard icon={<Award />} label="Ministérios" value={kpis.total_ministerios} accent="purple" onClick={() => onNavigate?.("ministerios")} />
         </div>
       </section>
 
@@ -142,11 +143,14 @@ const ACCENT: Record<string, string> = {
   navy: "border-l-navy bg-navy-50/30",
 };
 
-function KpiCard({ icon, label, value, sublabel, accent = "gold" }: {
-  icon: React.ReactNode; label: string; value: string | number; sublabel?: string; accent?: string;
+function KpiCard({ icon, label, value, sublabel, accent = "gold", onClick }: {
+  icon: React.ReactNode; label: string; value: string | number; sublabel?: string; accent?: string; onClick?: () => void;
 }) {
   return (
-    <Card className={`border-l-4 ${ACCENT[accent] ?? ACCENT.gold}`}>
+    <Card
+      onClick={onClick}
+      className={`border-l-4 ${ACCENT[accent] ?? ACCENT.gold} ${onClick ? "cursor-pointer transition hover:shadow-md hover:-translate-y-0.5" : ""}`}
+    >
       <CardContent className="pt-4">
         <div className="flex items-center gap-2 text-navy-600">
           <span className="text-gold [&>svg]:h-4 [&>svg]:w-4">{icon}</span>
