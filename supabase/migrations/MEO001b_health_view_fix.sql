@@ -83,7 +83,10 @@ end; $$;
 grant execute on function public.state_health_score(uuid) to authenticated;
 
 -- ---------- View consolidada: agora na direção certa ----------
-create or replace view public.mda_health_dashboard as
+-- (drop primeiro porque o formato de colunas mudou — "create or replace"
+-- só funciona quando as colunas existentes continuam nas mesmas posições)
+drop view if exists public.mda_health_dashboard;
+create view public.mda_health_dashboard as
 select
   st.id as state_id, st.name as state_name,
   nu.id as nucleo_id, nu.name as nucleo_name,

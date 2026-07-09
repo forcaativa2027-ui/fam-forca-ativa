@@ -67,14 +67,9 @@ alter table public.districts alter column church_id drop not null;
 
 -- Setor: passa a pertencer diretamente a um Distrito (antes: area_id obrigatório)
 alter table public.sectors add column if not exists district_id uuid references public.districts(id) on delete cascade;
-alter table public.sectors add column if not exists area_id_new uuid references public.areas(id) on delete set null;
--- area_id antiga (se existir e apontava pro conceito velho) fica obsoleta — renomeamos a nova pra área genealógica
-do $$ begin
-  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='sectors' and column_name='area_id') then
-    alter table public.sectors drop column area_id;
-  end if;
-end $$;
-alter table public.sectors rename column area_id_new to area_id;
+-- area_id já existe e já aponta pra public.areas — só deixamos de exigir (vira opcional/genealogia,
+-- sem derrubar a coluna, já que views e policies existentes dependem dela)
+alter table public.sectors alter column area_id drop not null;
 
 -- Igreja Local: passa a pertencer a um Setor (antes: raiz da árvore via parent_id)
 alter table public.churches add column if not exists sector_id uuid references public.sectors(id) on delete set null;
