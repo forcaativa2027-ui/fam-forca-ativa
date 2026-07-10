@@ -1,8 +1,5 @@
 "use client";
-import { InviteLinksAdmin } from "./InviteLinksAdmin";
-import { MdaStructureAdmin } from "./MdaStructureAdmin";
-import { EvangelismGroupsAdmin } from "./EvangelismGroupsAdmin";
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,10 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { sermonSchema, eventSchema, serviceTimeSchema, dailyWordSchema,
   type SermonInput, type EventInput, type ServiceTimeInput, type DailyWordInput } from "@/schemas";
 import {
-  useMyProfile, useSermons, useEvents,
+  useMyProfile, useSermons, useEvents, useAuditLogs,
   useDistricts, useAreas, useSectors, useCells,
   useChurches, useAllServiceTimes, useDailyWords,
-  usePendingCounts,
+  usePendingCounts, useStates, useNucleos,
 } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { youtubeThumb } from "@/services/content";
@@ -54,10 +51,7 @@ import { EvasionAdmin } from "./EvasionAdmin";
 import { MinistriesAdmin } from "./MinistriesAdmin";
 import { HealthAdmin } from "./HealthAdmin";
 import { AdminSidebar, type TabKey } from "./AdminSidebar";
-import { AuditAdmin } from "./AuditAdmin";
-import { MetasPlaceholder } from "./Placeholders";
-import { MemberScoreAdmin } from "./MemberScoreAdmin";
-import { BirthdaysAdmin } from "./BirthdaysAdmin";
+import { StatesNucleoAdmin } from "./StatesNucleoAdmin";
 
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
@@ -65,13 +59,9 @@ export default function AdminPanel() {
   const isAdmin = me && ["apostolo", "pastor"].includes(me.role);
 
   const [activeTab, setActiveTab] = useState<TabKey>("org-dashboard");
-  const [previousTab, setPreviousTab] = useState<TabKey | null>(null);
 
   const handleNavigate = useCallback((tab: TabKey) => {
-    setActiveTab((prev) => {
-      setPreviousTab(prev);
-      return tab;
-    });
+    setActiveTab(tab);
   }, []);
 
   if (isLoading) {
@@ -157,16 +147,7 @@ export default function AdminPanel() {
         {/* Conteúdo */}
         <main className="flex-1 overflow-y-auto">
           <div className="container py-8">
-            {previousTab === "org-dashboard" && activeTab !== "org-dashboard" && (
-              <Button
-                variant="outline" size="sm"
-                className="mb-4 gap-1.5"
-                onClick={() => handleNavigate("org-dashboard")}
-              >
-                <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao Dashboard
-              </Button>
-            )}
-            <TabContent activeTab={activeTab} onNavigate={handleNavigate} />
+            <TabContent activeTab={activeTab} />
           </div>
         </main>
       </div>
@@ -176,20 +157,16 @@ export default function AdminPanel() {
 
 // ─── Roteador de conteúdo ─────────────────────────────────────────────────────
 
-function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: (tab: TabKey) => void }) {
+function TabContent({ activeTab }: { activeTab: TabKey }) {
   switch (activeTab) {
-    case "delegations":         return <DelegationsAdmin />;
-    case "invites":             return <InviteLinksAdmin />;
-    case "audit":               return <AuditView />;
-    case "org-dashboard":       return <OrgDashboardAdmin onNavigate={onNavigate} />;
+    case "org-dashboard":       return <OrgDashboardAdmin />;
     case "supervision":         return <SupervisionDashboard />;
     case "control-tower":       return <ControlTowerAdmin />;
     case "intelligence":        return <IntelligenceAdmin />;
     case "ministerial-reports": return <MinisterialReportsAdmin />;
     case "metas":               return <MetasPlaceholder />;
     case "members":             return <MembersAdmin />;
-    case "score":                return <MemberScoreAdmin />;
-    case "birthdays":            return <BirthdaysAdmin />;
+    case "scores-birthdays":    return <ScoresBirthdaysPlaceholder />;
     case "discipleship":        return <DiscipleshipAdmin />;
     case "acolhimento":         return <AcolhimentoAdmin />;
     case "evasao":              return <EvasionAdmin />;
@@ -197,6 +174,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
     case "prayer-requests":     return <PublicPrayerRequestsAdmin />;
     case "visit-requests":      return <VisitRequestsAdmin />;
     case "communities":         return <CommunitiesAdmin />;
+    case "states-nucleos":      return <StatesNucleoAdmin />;
     case "structure":           return <OrgStructureAdmin />;
     case "genealogy":           return <GenealogyAdmin />;
     case "expansion-map":       return <ExpansionMapAdmin />;
@@ -204,8 +182,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
     case "life-groups":         return <CellsAdmin />;
     case "mda-health":          return <MdaHealthAdmin />;
     case "saude":               return <HealthAdmin />;
-    case "mda":                 return <MdaStructureAdmin />;
-    case "evangelism-groups":   return <EvangelismGroupsAdmin />;
+    case "mda":                 return <MdaStructure />;
     case "permissions":         return <PermissionsAdmin />;
     case "weekly":              return <WeeklyReportsAdmin />;
     case "monthly":             return <MonthlyReportAdmin />;
@@ -218,6 +195,8 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
     case "finance":             return <FinanceAdmin />;
     case "patrimony":           return <PatrimonyAdmin />;
     case "gpv":                 return <GpvAdmin />;
+    case "delegations":         return <DelegationsAdmin />;
+    case "audit":               return <AuditView />;
     case "export":              return <ExportAdmin />;
     default:                    return null;
   }
@@ -225,9 +204,29 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
 
 // ─── Placeholders para módulos novos ─────────────────────────────────────────
 
-// MetasPlaceholder foi extraído para Placeholders.tsx (reutilizado também em /executivo).
+function MetasPlaceholder() {
+  return (
+    <Card>
+      <CardContent className="pt-8 pb-8 text-center">
+        <p className="text-2xl mb-2">🎯</p>
+        <h2 className="font-display text-xl text-navy">Central de Metas</h2>
+        <p className="mt-2 text-sm text-muted">Módulo C17 — disponível neste painel.</p>
+      </CardContent>
+    </Card>
+  );
+}
 
-// Score e Aniversários agora são módulos separados: MemberScoreAdmin.tsx e BirthdaysAdmin.tsx.
+function ScoresBirthdaysPlaceholder() {
+  return (
+    <Card>
+      <CardContent className="pt-8 pb-8 text-center">
+        <p className="text-2xl mb-2">⭐</p>
+        <h2 className="font-display text-xl text-navy">Score & Aniversários</h2>
+        <p className="mt-2 text-sm text-muted">Módulo C20 — disponível neste painel.</p>
+      </CardContent>
+    </Card>
+  );
+}
 
 // RH substituído pelo GPV — ver GpvAdmin.tsx
 
@@ -392,12 +391,133 @@ function EventsAdmin() {
   );
 }
 
-// MdaStructure() antiga (somente-leitura) foi removida — substituída pelo componente
-// MdaStructureAdmin (CRUD completo), importado de "./MdaStructureAdmin".
+function MdaStructure() {
+  const { data: states = [] }    = useStates();
+  const { data: nucleos = [] }   = useNucleos();
+  const { data: districts = [] } = useDistricts();
+  const { data: sectors = [] }   = useSectors();
+  const { data: churches = [] }  = useChurches();
+  const { data: cells = [] }     = useCells();
+  const [expanded, setExpanded]  = React.useState<Record<string, boolean>>({});
 
-// AuditView foi extraído para AuditAdmin.tsx (reutilizado também em /governanca).
+  function toggle(id: string) { setExpanded(p => ({ ...p, [id]: !p[id] })); }
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Estrutura Organizacional MEO-001</CardTitle>
+          <CardDescription>Estado → Núcleo → Distrito → Setor → Igreja Local → Life Group</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 sm:grid-cols-5">
+            <MdaCount label="Estados"      value={states.length} />
+            <MdaCount label="Núcleos"      value={nucleos.length} />
+            <MdaCount label="Distritos"    value={districts.length} />
+            <MdaCount label="Setores"      value={sectors.length} />
+            <MdaCount label="Life Groups"  value={cells.length} />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Hierarquia</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          {states.length === 0 && <p className="text-sm italic text-muted">Nenhum estado cadastrado. Acesse "Estados e Núcleos" para começar.</p>}
+          {states.map(st => {
+            const stNucleos = nucleos.filter(n => n.state_id === st.id);
+            return (
+              <div key={st.id} className="rounded-md border p-3">
+                <button onClick={() => toggle(st.id)} className="flex items-center justify-between w-full text-left">
+                  <b className="text-navy">🌎 {st.name} ({st.uf})</b>
+                  <span className="text-xs text-muted">{stNucleos.length} núcleo(s)</span>
+                </button>
+                {expanded[st.id] && (
+                  <ul className="mt-2 space-y-1 pl-4 text-sm text-muted">
+                    {stNucleos.map(nu => {
+                      const nuDistricts = districts.filter(d => d.nucleo_id === nu.id);
+                      return (
+                        <li key={nu.id}>
+                          <button onClick={() => toggle(nu.id)} className="flex items-center gap-1 text-left w-full">
+                            <b className="text-navy-700">🏛 {nu.name}</b>
+                            <span className="text-xs ml-1">({nuDistricts.length} distrito(s))</span>
+                          </button>
+                          {expanded[nu.id] && (
+                            <ul className="ml-4 mt-1 space-y-1 text-xs">
+                              {nuDistricts.map(d => {
+                                const dSectors = sectors.filter(s => s.district_id === d.id);
+                                return (
+                                  <li key={d.id}>
+                                    <button onClick={() => toggle(d.id)} className="text-left">
+                                      <b>📍 {d.name}</b> — {dSectors.length} setor(es)
+                                    </button>
+                                    {expanded[d.id] && (
+                                      <ul className="ml-4 mt-0.5 list-disc">
+                                        {dSectors.map(s => {
+                                          const sChurches = churches.filter(c => c.sector_id === s.id);
+                                          const sLgs = cells.filter(c => sChurches.some(ch => ch.id === c.church_id));
+                                          return (
+                                            <li key={s.id}>
+                                              {s.name}: {sChurches.length} igreja(s), {sLgs.length} LG(s)
+                                            </li>
+                                          );
+                                        })}
+                                      </ul>
+                                    )}
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function AuditView() {
-  return <AuditAdmin />;
+  const { data: logs = [] } = useAuditLogs();
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Logs de auditoria</CardTitle>
+        <CardDescription>Ações registradas no sistema (últimos 50 eventos).</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {logs.length === 0 ? (
+          <p className="text-sm italic text-muted">Nenhum log registrado ainda.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-xs uppercase text-muted">
+                  <th className="p-2">Quando</th><th className="p-2">Quem</th><th className="p-2">Ação</th><th className="p-2">Entidade</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((l) => (
+                  <tr key={l.id} className="border-b">
+                    <td className="p-2 text-xs text-muted">{new Date(l.created_at).toLocaleString("pt-BR")}</td>
+                    <td className="p-2">{l.actor_email ?? "—"}</td>
+                    <td className="p-2"><span className="rounded bg-navy-50 px-2 py-0.5 text-xs font-bold text-navy">{l.action}</span></td>
+                    <td className="p-2 text-navy">{l.entity}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 function ServiceTimesAdmin() {
