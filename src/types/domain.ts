@@ -106,7 +106,7 @@ export interface Finance {
 
 export type ChurchStatus = "ativa"|"em_implantacao"|"inativa";
 export interface Church {
-  id:string; name:string; type:ChurchType; parent_id:string|null;
+  id:string; name:string; type:ChurchType; parent_id:string|null; sector_id:string|null;
   address:string|null; city:string|null; state:string|null;
   slug:string|null; pastor_id:string|null;
   logo_url:string|null; banner_url:string|null;
@@ -158,13 +158,18 @@ export interface LgWithHealth {
   evasion_count: number;
   health_class: MdaHealth;
 }
-export interface District { id:string; church_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
+export interface State { id:string; name:string; uf:string; is_active:boolean; created_at:string; }
+export interface Nucleo { id:string; state_id:string; name:string; leader_id:string|null; is_active:boolean; created_at:string; }
+export interface District { id:string; nucleo_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean;
+  /** @deprecated coluna legada, pré-MEO-001 — não usar em código novo */ church_id?:string|null; }
 export interface Area { id:string; district_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
-export interface Sector { id:string; area_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
+export interface Sector { id:string; district_id:string; area_id:string|null; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
 
 // MDA Health (Caderno 11-B)
 export type MdaStatus = "saudavel" | "atencao" | "necessita";
 export interface MdaHealthRow {
+  state_id: string | null; state_name: string | null;
+  nucleo_id: string | null; nucleo_name: string | null;
   church_id: string; church_name: string; church_type: string;
   district_id: string | null; district_name: string | null;
   area_id: string | null; area_name: string | null;
@@ -174,6 +179,8 @@ export interface MdaHealthRow {
   sector_health: MdaStatus | null;
   area_health: MdaStatus | null;
   district_health: MdaStatus | null;
+  nucleo_health: MdaStatus | null;
+  state_health: MdaStatus | null;
   church_health: MdaStatus;
   lg_members_count: number | null;
   lg_last_report_date: string | null;
@@ -822,13 +829,3 @@ export interface InviteTokenValidation {
   life_group_name: string | null; ministry_name: string | null;
   target_role: UserRole | null;
 }
-// Grupo de Evangelismo — subdivisão de um Life Group (C24)
-export interface EvangelismGroup {
-  id:string; cell_id:string; name:string;
-  address:string|null; neighborhood:string|null; city:string|null; state:string|null;
-  meeting_weekday:Weekday|null; meeting_time:string|null; is_active:boolean;
-  created_at:string;
-  leader_ids?: string[];       // preenchido no service, a partir de evangelism_group_leaders
-  leader_names?: string[];     // idem, nomes já resolvidos
-}
-export interface EvangelismGroupLeader { id:string; group_id:string; member_id:string; created_at:string; }
