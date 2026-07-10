@@ -83,9 +83,22 @@ export const cellSchema = z.object({
 export type CellInput = z.infer<typeof cellSchema>;
 
 // ── Estrutura MDA: Distrito, Área, Setor ────────────────────────
+export const stateSchema = z.object({
+  name: reqText("Nome do estado"),
+  uf: z.string().length(2, "Sigla deve ter 2 letras").transform((v) => v.toUpperCase()),
+});
+export type StateInput = z.infer<typeof stateSchema>;
+
+export const nucleoSchema = z.object({
+  name: reqText("Nome do núcleo"),
+  state_id: z.string().uuid("Selecione o estado"),
+  leader_id: z.string().uuid().optional().or(z.literal("")),
+});
+export type NucleoInput = z.infer<typeof nucleoSchema>;
+
 export const districtSchema = z.object({
   name: reqText("Nome do distrito"),
-  church_id: z.string().uuid("Selecione a igreja/sede"),
+  nucleo_id: z.string().uuid("Selecione o núcleo"),
   mother_id: z.string().uuid().optional().or(z.literal("")),
   leader_id: z.string().uuid().optional().or(z.literal("")),
 });
@@ -101,7 +114,8 @@ export type AreaInput = z.infer<typeof areaSchema>;
 
 export const sectorSchema = z.object({
   name: reqText("Nome do setor"),
-  area_id: z.string().uuid("Selecione a área"),
+  district_id: z.string().uuid("Selecione o distrito"),
+  area_id: z.string().uuid().optional().or(z.literal("")),
   mother_id: z.string().uuid().optional().or(z.literal("")),
   leader_id: z.string().uuid().optional().or(z.literal("")),
 });
