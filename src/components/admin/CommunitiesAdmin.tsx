@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useChurches } from "@/hooks/use-queries";
+import { useChurches, useSectors } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { logAudit } from "@/services/audit";
 import type { Church } from "@/types/domain";
@@ -21,6 +21,7 @@ const communitySchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Use apenas letras minúsculas, números e hífen"),
   type: z.enum(["sede","nucleo","igreja_local"]).default("sede"),
   parent_id: z.string().uuid().optional().or(z.literal("")),
+  sector_id: z.string().uuid().optional().or(z.literal("")),
   state: z.string().trim().optional().or(z.literal("")),
   city: z.string().trim().optional().or(z.literal("")),
   address: z.string().trim().optional().or(z.literal("")),
@@ -47,6 +48,7 @@ type CommunityInput = z.infer<typeof communitySchema>;
 
 export function CommunitiesAdmin() {
   const { data: churches = [] } = useChurches();
+  const { data: sectors = [] } = useSectors();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Church | null>(null);
   const [err, setErr] = useState("");
@@ -65,6 +67,7 @@ export function CommunitiesAdmin() {
       slug: c.slug ?? "",
       type: c.type,
       parent_id: c.parent_id ?? "",
+      sector_id: c.sector_id ?? "",
       state: c.state ?? "",
       city: c.city ?? "",
       address: c.address ?? "",
@@ -99,6 +102,7 @@ export function CommunitiesAdmin() {
       const payload = {
         name: v.name, slug: v.slug, type: v.type,
         parent_id: v.parent_id || null,
+        sector_id: v.sector_id || null,
         state: v.state || null, city: v.city || null, address: v.address || null,
         short_description: v.short_description || null,
         logo_url: v.logo_url || null, banner_url: v.banner_url || null,
@@ -196,13 +200,24 @@ export function CommunitiesAdmin() {
                   <option value="igreja_local">Igreja Local</option>
                 </select>
               </Field>
-              <Field label="Comunidade Mãe (vincula a uma sede)">
+              <Field label="Comunidade Mãe (legado — só para dados antigos)">
                 <select {...register("parent_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
                   <option value="">— Nenhuma —</option>
                   {possibleParents.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </Field>
             </div>
+
+            <Field label="Setor (Estrutura Territorial MEO-001)" error={errors.sector_id?.message}>
+              <select {...register("sector_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="">— Sem setor definido ainda —</option>
+                {sectors.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <p className="mt-1 text-xs text-muted">
+                É esse vínculo que posiciona a Igreja Local na árvore Estado → Núcleo → Distrito → Setor.
+                Cadastre o Setor primeiro em Organização → Estrutura MDA, se ainda não existir.
+              </p>
+            </Field>
 
             <Field label="Descrição curta" error={errors.short_description?.message}>
               <Input {...register("short_description")} placeholder="Frase que aparece no footer e meta tags" />
@@ -351,6 +366,11 @@ export function CommunitiesAdmin() {
                     {(c.city || c.state) && <> · {[c.city, c.state].filter(Boolean).join(", ")}</>}
                   </p>
                   {c.short_description && <p className="mt-1 text-xs text-muted line-clamp-2">{c.short_description}</p>}
+                  {c.sector_id ? (
+                    <p className="mt-1 text-[11px] text-muted">📍 {sectors.find((s) => s.id === c.sector_id)?.name ?? "Setor"}</p>
+                  ) : (
+                    <p className="mt-1 text-[11px] font-semibold text-amber-600">⚠ Sem Setor vinculado (fora da árvore MEO-001)</p>
+                  )}
                   <div className="mt-2 flex flex-wrap gap-2 text-[11px]">
                     {c.site_url && <a href={c.site_url} target="_blank" rel="noreferrer" className="flex items-center gap-0.5 text-gold hover:underline"><Globe className="h-3 w-3" />Site</a>}
                     {c.whatsapp_phone && <span className="flex items-center gap-0.5 text-muted"><MessageCircle className="h-3 w-3" />{c.whatsapp_phone}</span>}
