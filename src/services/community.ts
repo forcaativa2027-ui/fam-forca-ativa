@@ -57,6 +57,7 @@ export function fallbackCommunity(): Church {
     name: "CEC",
     type: "sede",
     parent_id: null,
+    sector_id: null,
     address: null,
     city: null,
     state: null,

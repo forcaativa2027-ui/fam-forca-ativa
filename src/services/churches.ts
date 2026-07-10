@@ -1,6 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Church, District, Area, Sector, Cell, MdaMinAlert } from "@/types/domain";
+import type { Church, State, Nucleo, District, Area, Sector, Cell, MdaMinAlert } from "@/types/domain";
 
+export async function listStates(sb: SupabaseClient): Promise<State[]> {
+  const { data, error } = await sb.from("states").select("*").order("name");
+  if (error) throw error;
+  return (data ?? []) as State[];
+}
+export async function listNucleos(sb: SupabaseClient): Promise<Nucleo[]> {
+  const { data, error } = await sb.from("nucleos").select("*").order("name");
+  if (error) throw error;
+  return (data ?? []) as Nucleo[];
+}
 export async function listChurches(sb: SupabaseClient): Promise<Church[]> {
   const { data, error } = await sb.from("churches").select("*").order("name");
   if (error) throw error;
@@ -74,5 +84,35 @@ export async function updateSector(sb: SupabaseClient, id: string, input: Partia
 }
 export async function deleteSector(sb: SupabaseClient, id: string): Promise<void> {
   const { error } = await sb.from("sectors").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ── CRUD: Estado ───────────────────────────────────────────────
+export async function createState(sb: SupabaseClient, input: Partial<State>): Promise<State> {
+  const { data, error } = await sb.from("states").insert(input).select().single();
+  if (error) throw error;
+  return data as State;
+}
+export async function updateState(sb: SupabaseClient, id: string, input: Partial<State>): Promise<void> {
+  const { error } = await sb.from("states").update(input).eq("id", id);
+  if (error) throw error;
+}
+export async function deleteState(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("states").delete().eq("id", id);
+  if (error) throw error;
+}
+
+// ── CRUD: Núcleo ───────────────────────────────────────────────
+export async function createNucleo(sb: SupabaseClient, input: Partial<Nucleo>): Promise<Nucleo> {
+  const { data, error } = await sb.from("nucleos").insert(input).select().single();
+  if (error) throw error;
+  return data as Nucleo;
+}
+export async function updateNucleo(sb: SupabaseClient, id: string, input: Partial<Nucleo>): Promise<void> {
+  const { error } = await sb.from("nucleos").update(input).eq("id", id);
+  if (error) throw error;
+}
+export async function deleteNucleo(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("nucleos").delete().eq("id", id);
   if (error) throw error;
 }
