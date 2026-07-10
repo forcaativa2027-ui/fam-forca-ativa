@@ -10,7 +10,7 @@ import {
   Download, Search, Bell,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network, Globe,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -18,15 +18,14 @@ import { Button } from "@/components/ui/button";
 export type TabKey =
   | "supervision" | "org-dashboard"
   | "control-tower" | "intelligence" | "ministerial-reports" | "metas"
-  | "members" | "scores-birthdays" | "discipleship"
+  | "members" | "score" | "birthdays" | "discipleship"
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
-  | "communities" | "structure" | "genealogy" | "expansion-map"
+  | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
-  | "states-nucleos"
   | "weekly" | "monthly"
   | "news" | "banners" | "sermons" | "events" | "services" | "word"
   | "finance" | "patrimony" | "gpv"
-  | "delegations" | "audit"
+  | "delegations" | "invites" | "audit"
   | "export";
 
 interface NavItem {
@@ -84,7 +83,8 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       icon: <Users size={16} />,
       items: [
         { key: "members",          label: "Membros",             icon: <Users2 size={15} /> },
-        { key: "scores-birthdays", label: "Score & Aniversários",icon: <Star size={15} /> },
+        { key: "score",            label: "Score",               icon: <Star size={15} /> },
+        { key: "birthdays",        label: "Aniversários",        icon: <Cake size={15} /> },
         { key: "discipleship",     label: "Discipulado",         icon: <BookOpen size={15} /> },
         { key: "acolhimento",      label: "Acolhimento",         icon: <Heart size={15} /> },
         { key: "evasao",           label: "Em risco",            icon: <TrendingDown size={15} /> },
@@ -98,12 +98,12 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       label: "Organização",
       icon: <Building2 size={16} />,
       items: [
-        { key: "communities",   label: "Comunidades",       icon: <Building2 size={15} /> },
-        { key: "states-nucleos",label: "Estados e Núcleos",  icon: <Globe size={15} /> },
-        { key: "structure",     label: "Estrutura",          icon: <GitBranch size={15} /> },
+        { key: "communities",   label: "Comunidades",    icon: <Building2 size={15} /> },
+        { key: "structure",     label: "Estrutura",      icon: <GitBranch size={15} /> },
         { key: "genealogy",     label: "Genealogia",     icon: <Network size={15} /> },
         { key: "ministerios",   label: "Ministérios",    icon: <Mic2 size={15} /> },
         { key: "life-groups",   label: "Life Groups",    icon: <Flame size={15} /> },
+        { key: "evangelism-groups", label: "Grupos de Evangelismo", icon: <Megaphone size={15} /> },
         { key: "mda",           label: "Estrutura MDA",  icon: <Network size={15} /> },
         { key: "mda-health",    label: "Saúde MDA",      icon: <Heart size={15} /> },
         { key: "saude",         label: "Saúde",          icon: <Heart size={15} /> },
@@ -149,6 +149,7 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       icon: <Lock size={16} />,
       items: [
         { key: "delegations", label: "Delegações", icon: <Gavel size={15} /> },
+        { key: "invites",     label: "Convites",   icon: <Link2 size={15} /> },
         { key: "audit",       label: "Auditoria",  icon: <ClipboardList size={15} /> },
       ],
     },
