@@ -15,6 +15,8 @@ import * as Pr from "@/services/prayer";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
+export const useStates          = () => useQuery({ queryKey: ["states"],    queryFn: () => C.listStates(supabase) });
+export const useNucleos         = () => useQuery({ queryKey: ["nucleos"],   queryFn: () => C.listNucleos(supabase) });
 export const useDistricts      = () => useQuery({ queryKey: ["districts"],  queryFn: () => C.listDistricts(supabase) });
 export const useAreas          = () => useQuery({ queryKey: ["areas"],      queryFn: () => C.listAreas(supabase) });
 export const useSectors        = () => useQuery({ queryKey: ["sectors"],    queryFn: () => C.listSectors(supabase) });
