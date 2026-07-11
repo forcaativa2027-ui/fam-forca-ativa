@@ -22,6 +22,8 @@ export async function createInviteLink(
     p_validity: input.validity,
     p_max_uses: input.max_uses ?? null,
     p_allowed_ip_cidr: input.allowed_ip_cidr ?? null,
+    p_scope_level: input.scope_level ?? null,
+    p_scope_id: input.scope_id ?? null,
   });
   if (error) { console.error("[invites] createInviteLink", error); throw error; }
   return data?.[0] ?? null;
@@ -60,12 +62,13 @@ export async function validateInviteToken(
   return data?.[0] ?? null;
 }
 
-export async function consumeInviteLink(sb: SupabaseClient, token: string, phone?: string): Promise<void> {
+export async function consumeInviteLink(sb: SupabaseClient, token: string, phone?: string, userId?: string): Promise<void> {
   const { error } = await sb.rpc("consume_invite_link", {
     p_token: token,
     p_ip: null,          // capturado no futuro via header/edge function; ver seção 15 do caderno
     p_user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
     p_phone: phone ?? null,
+    p_user_id: userId ?? null,
   });
   if (error) { console.error("[invites] consumeInviteLink", error); throw error; }
 }
