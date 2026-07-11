@@ -11,9 +11,10 @@ import { Link2, Copy, Ban, Plus, Loader2, CheckCircle2, Trash2 } from "lucide-re
 import { supabase } from "@/lib/supabase/client";
 import {
   useInviteLinks, useChurches, useSectors, useCells, useMinistries, useMyProfile,
+  useStates, useNucleos, useDistricts,
 } from "@/hooks/use-queries";
 import { createInviteLink, revokeInviteLink, deleteInviteLink, inviteLinkUrl } from "@/services/invites";
-import type { InviteLinkKind, InviteValidity, UserRole, InviteLinkStatus } from "@/types/domain";
+import type { InviteLinkKind, InviteValidity, UserRole, InviteLinkStatus, ScopeLevel } from "@/types/domain";
 
 const KIND_LABELS: Record<InviteLinkKind, string> = {
   membro: "Membro", visitante: "Visitante", lider_lg: "Líder de Life Group",
@@ -38,6 +39,9 @@ export function InviteLinksAdmin() {
   const { data: sectors = [] } = useSectors();
   const { data: cells = [] } = useCells();
   const { data: ministries = [] } = useMinistries(profile?.church_id);
+  const { data: states = [] } = useStates();
+  const { data: nucleos = [] } = useNucleos();
+  const { data: districts = [] } = useDistricts();
 
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -50,12 +54,26 @@ export function InviteLinksAdmin() {
   const [maxUses, setMaxUses] = useState<string>("");
   const [err, setErr] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [scopeLevel, setScopeLevel] = useState<ScopeLevel | "">("");
+  const [scopeId, setScopeId] = useState<string>("");
+
+  const needsScope = kind === "pastor" || kind === "administrador";
+  const SCOPE_OPTIONS: Record<Exclude<ScopeLevel, "nacional">, { id: string; name: string }[]> = {
+    estado: states.map(s => ({ id: s.id, name: `${s.name} (${s.uf})` })),
+    nucleo: nucleos.map(n => ({ id: n.id, name: n.name })),
+    distrito: districts.map(d => ({ id: d.id, name: d.name })),
+    setor: sectors.map(s => ({ id: s.id, name: s.name })),
+    igreja: churches.map(c => ({ id: c.id, name: c.name })),
+  };
 
   const needsLg = kind === "lider_lg" || kind === "membro" || kind === "visitante";
   const needsMinistry = ["lider_jovens", "lider_casais", "lider_criancas", "musico"].includes(kind);
 
   async function handleCreate() {
     if (!churchId) { setErr("Selecione a igreja"); return; }
+    if (needsScope && scopeLevel && scopeLevel !== "nacional" && !scopeId) {
+      setErr("Selecione o destino do escopo (Estado/Núcleo/Distrito/Setor/Igreja)."); return;
+    }
     setSaving(true); setErr("");
     try {
       const result = await createInviteLink(supabase, {
@@ -67,12 +85,15 @@ export function InviteLinksAdmin() {
         target_role: KIND_TO_ROLE[kind],
         validity,
         max_uses: maxUses ? Number(maxUses) : null,
+        scope_level: needsScope && scopeLevel ? (scopeLevel as ScopeLevel) : null,
+        scope_id: needsScope && scopeLevel && scopeLevel !== "nacional" ? scopeId : null,
       });
       if (result) {
         await navigator.clipboard.writeText(inviteLinkUrl(result.token));
       }
       qc.invalidateQueries({ queryKey: ["invite-links"] });
       setOpen(false);
+      setScopeLevel(""); setScopeId("");
     } catch (e) {
       const msg = (e as { message?: string })?.message ?? "Erro ao criar convite. Verifique sua permissão para este tipo de link.";
       setErr(msg);
@@ -184,7 +205,7 @@ export function InviteLinksAdmin() {
             </div>
 
             <div>
-              <Label>Igreja</Label>
+              <Label>Igreja (referência)</Label>
               <Select value={churchId} onValueChange={setChurchId}>
                 <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
@@ -192,6 +213,41 @@ export function InviteLinksAdmin() {
                 </SelectContent>
               </Select>
             </div>
+
+            {needsScope && (
+              <div className="rounded-md border bg-muted/30 p-3 space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Escopo que essa pessoa vai administrar (Estrutura de Supervisão — MEO-001). Deixe em branco pra modo legado (vê tudo).
+                </p>
+                <div>
+                  <Label>Nível de escopo</Label>
+                  <Select value={scopeLevel} onValueChange={(v) => { setScopeLevel(v as ScopeLevel); setScopeId(""); }}>
+                    <SelectTrigger><SelectValue placeholder="— Sem escopo (legado) —" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="nacional">Nacional (vê tudo)</SelectItem>
+                      <SelectItem value="estado">Estado</SelectItem>
+                      <SelectItem value="nucleo">Núcleo</SelectItem>
+                      <SelectItem value="distrito">Distrito</SelectItem>
+                      <SelectItem value="setor">Setor</SelectItem>
+                      <SelectItem value="igreja">Igreja Local</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {scopeLevel && scopeLevel !== "nacional" && (
+                  <div>
+                    <Label>Destino</Label>
+                    <Select value={scopeId} onValueChange={setScopeId}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {SCOPE_OPTIONS[scopeLevel].map((o) => (
+                          <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            )}
 
             {needsLg && (
               <div>
