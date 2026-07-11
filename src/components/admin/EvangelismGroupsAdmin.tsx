@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, X, Megaphone, Search, UserPlus, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Megaphone, Search, UserPlus, ChevronDown, ChevronRight, Sparkles, Link2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { supabase } from "@/lib/supabase/client";
 import * as Eg from "@/services/evangelismGroups";
 import * as Pp from "@/services/pipeline";
 import { logAudit } from "@/services/audit";
-import type { EvangelismGroup } from "@/types/domain";
+import type { EvangelismGroup, EvangelismGroupStatus } from "@/types/domain";
 import { STAGE_LABELS, STAGE_COLORS } from "./CrmPipelineAdmin";
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
@@ -30,10 +30,30 @@ const WEEKDAYS: [string, string][] = [
   ["quarta","Quarta"],["quinta","Quinta"],["sexta","Sexta"],["sabado","Sábado"],
 ];
 
+// Ciclo de vida (ARQ-004 §8): 5 etapas ativas + 3 desfechos possíveis
+const ACTIVE_STAGES: EvangelismGroupStatus[] = ["planejamento","autorizacao","implantacao","evangelizacao","consolidacao"];
+const STATUS_LABELS: Record<EvangelismGroupStatus, string> = {
+  planejamento: "Planejamento", autorizacao: "Autorização", implantacao: "Implantação",
+  evangelizacao: "Evangelização", consolidacao: "Consolidação",
+  encerrado_novo_lg: "Encerrado — virou Life Group", encerrado_integrado: "Encerrado — integrado a LG existente",
+  encerrado_sem_resultado: "Encerrado — sem resultado",
+};
+const STATUS_COLORS: Record<EvangelismGroupStatus, string> = {
+  planejamento: "bg-slate-100 text-slate-700 border-slate-300",
+  autorizacao: "bg-blue-50 text-blue-700 border-blue-300",
+  implantacao: "bg-indigo-50 text-indigo-700 border-indigo-300",
+  evangelizacao: "bg-amber-50 text-amber-700 border-amber-300",
+  consolidacao: "bg-purple-50 text-purple-700 border-purple-300",
+  encerrado_novo_lg: "bg-green-50 text-green-700 border-green-300",
+  encerrado_integrado: "bg-green-50 text-green-700 border-green-300",
+  encerrado_sem_resultado: "bg-red-50 text-red-700 border-red-300",
+};
+const isEncerrado = (s: EvangelismGroupStatus) => s.startsWith("encerrado_");
+
 /**
- * Grupo de Evangelismo (ADR-001 / pedido do usuário) — subdivisão de um
- * Life Group. Uma célula pode ter um ou mais grupos, cada um com um ou
- * mais responsáveis (não é um único "líder", é uma lista de pessoas).
+ * Grupo de Evangelismo (ARQ-004/MEO-001) — subdivisão temporária de um
+ * Life Group, com ciclo de vida formal: Planejamento → Autorização →
+ * Implantação → Evangelização → Consolidação → um de 3 desfechos.
  */
 export function EvangelismGroupsAdmin() {
   const { data: groups = [] } = useEvangelismGroups();
@@ -59,11 +79,12 @@ export function EvangelismGroupsAdmin() {
       name: g.name, cell_id: g.cell_id,
       address: g.address ?? "", neighborhood: g.neighborhood ?? "", city: g.city ?? "", state: g.state ?? "",
       meeting_weekday: g.meeting_weekday, meeting_time: g.meeting_time?.slice(0,5) ?? "",
+      started_at: g.started_at ?? "", expected_end_at: g.expected_end_at ?? "",
     });
   }
   function cancelEdit() {
     setEditing(null); setErr(""); setSelectedLeaders([]);
-    reset({ name: "", cell_id: "", address: "", neighborhood: "", city: "", state: "", meeting_weekday: null, meeting_time: "" });
+    reset({ name: "", cell_id: "", address: "", neighborhood: "", city: "", state: "", meeting_weekday: null, meeting_time: "", started_at: "", expected_end_at: "" });
   }
   function toggleLeader(memberId: string) {
     setSelectedLeaders(prev => prev.includes(memberId) ? prev.filter(id => id !== memberId) : [...prev, memberId]);
@@ -72,11 +93,12 @@ export function EvangelismGroupsAdmin() {
   async function onSubmit(v: EvangelismGroupInput) {
     setErr("");
     try {
+      const payload = { ...v, started_at: v.started_at || null, expected_end_at: v.expected_end_at || null };
       if (editing) {
-        await Eg.updateEvangelismGroup(supabase, editing.id, v, selectedLeaders);
+        await Eg.updateEvangelismGroup(supabase, editing.id, payload, selectedLeaders);
         await logAudit(supabase, "update", "evangelism_groups", editing.id, { name: v.name });
       } else {
-        const created = await Eg.createEvangelismGroup(supabase, v, selectedLeaders);
+        const created = await Eg.createEvangelismGroup(supabase, payload, selectedLeaders);
         await logAudit(supabase, "insert", "evangelism_groups", created.id, { name: v.name });
       }
       cancelEdit();
@@ -114,7 +136,7 @@ export function EvangelismGroupsAdmin() {
               <Field label="Nome do grupo" error={errors.name?.message}>
                 <Input {...register("name")} placeholder="Ex: Grupo de Evangelismo — Vila Nova" />
               </Field>
-              <Field label="Life Group responsável" error={errors.cell_id?.message}>
+              <Field label="Life Group de origem" error={errors.cell_id?.message}>
                 <select {...register("cell_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
                   <option value="">— Selecione —</option>
                   {cells.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -134,6 +156,15 @@ export function EvangelismGroupsAdmin() {
                 </Field>
                 <Field label="Horário" error={errors.meeting_time?.message}><Input type="time" {...register("meeting_time")} /></Field>
               </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Data de início (ciclo de vida)" error={errors.started_at?.message}>
+                  <Input type="date" {...register("started_at")} />
+                </Field>
+                <Field label="Previsão de encerramento" error={errors.expected_end_at?.message}>
+                  <Input type="date" {...register("expected_end_at")} />
+                </Field>
+              </div>
+              <p className="text-xs text-muted-foreground -mt-1">Recomendação (ARQ-004): 4 a 8 semanas de duração.</p>
 
               <Field label="Responsáveis — um ou mais membros efetivos da igreja">
                 {selectedLeaders.length > 0 && (
@@ -195,11 +226,16 @@ export function EvangelismGroupsAdmin() {
 function GroupCard({ g, churchId, onEdit, onDelete }: { g: EvangelismGroup; churchId: string | null; onEdit: () => void; onDelete: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const qc = useQueryClient();
+  const { data: cells = [] } = useCells();
   const { data: participants = [], isLoading } = useEvangelismParticipants(expanded ? g.id : null);
   const [pName, setPName] = useState("");
   const [pPhone, setPPhone] = useState("");
   const [adding, setAdding] = useState(false);
   const [pErr, setPErr] = useState("");
+  const [newLgName, setNewLgName] = useState("");
+  const [integrateLgId, setIntegrateLgId] = useState("");
+  const [showEndOptions, setShowEndOptions] = useState<"novo_lg" | "integra" | null>(null);
+  const [busy, setBusy] = useState(false);
 
   async function addParticipant() {
     if (!pName.trim() || !pPhone.trim()) { setPErr("Nome e telefone são obrigatórios."); return; }
@@ -217,13 +253,58 @@ function GroupCard({ g, churchId, onEdit, onDelete }: { g: EvangelismGroup; chur
     finally { setAdding(false); }
   }
 
+  async function advanceStage(newStatus: EvangelismGroupStatus) {
+    setBusy(true);
+    try {
+      await Eg.updateEvangelismGroupStatus(supabase, g.id, newStatus);
+      await logAudit(supabase, "update", "evangelism_groups", g.id, { status: newStatus });
+      qc.invalidateQueries({ queryKey: ["evangelism-groups"] });
+    } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro ao mudar etapa"); }
+    finally { setBusy(false); }
+  }
+
+  async function confirmNewLg() {
+    if (!newLgName.trim()) return;
+    setBusy(true);
+    try {
+      await Eg.transformIntoLifeGroup(supabase, g.id, newLgName.trim(), g.cell_id);
+      await logAudit(supabase, "update", "evangelism_groups", g.id, { status: "encerrado_novo_lg", new_lg: newLgName });
+      qc.invalidateQueries({ queryKey: ["evangelism-groups"] });
+      qc.invalidateQueries({ queryKey: ["cells"] });
+      setShowEndOptions(null); setNewLgName("");
+    } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro ao criar novo Life Group"); }
+    finally { setBusy(false); }
+  }
+
+  async function confirmIntegrate() {
+    if (!integrateLgId) return;
+    setBusy(true);
+    try {
+      await Eg.updateEvangelismGroupStatus(supabase, g.id, "encerrado_integrado", integrateLgId);
+      await logAudit(supabase, "update", "evangelism_groups", g.id, { status: "encerrado_integrado", resulting_lg_id: integrateLgId });
+      qc.invalidateQueries({ queryKey: ["evangelism-groups"] });
+      setShowEndOptions(null); setIntegrateLgId("");
+    } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro ao integrar"); }
+    finally { setBusy(false); }
+  }
+
+  async function encerrarSemResultado() {
+    if (!confirm("Encerrar este grupo sem resultado?")) return;
+    await advanceStage("encerrado_sem_resultado");
+  }
+
+  const stageIndex = ACTIVE_STAGES.indexOf(g.status as typeof ACTIVE_STAGES[number]);
+
   return (
     <div className="rounded-md border bg-card">
       <div className="flex items-center justify-between p-3">
         <button className="flex flex-1 items-center gap-2 text-left" onClick={() => setExpanded(v => !v)}>
           {expanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
           <div>
-            <b className="text-navy">{g.name}</b>
+            <div className="flex items-center gap-2">
+              <b className="text-navy">{g.name}</b>
+              <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${STATUS_COLORS[g.status]}`}>{STATUS_LABELS[g.status]}</span>
+            </div>
             <p className="text-xs text-muted">
               {(g.leader_names ?? []).join(", ") || "sem responsável"}
               {g.meeting_weekday && ` · ${g.meeting_weekday}`}
@@ -237,33 +318,99 @@ function GroupCard({ g, churchId, onEdit, onDelete }: { g: EvangelismGroup; chur
         </div>
       </div>
       {expanded && (
-        <div className="border-t p-3 space-y-3">
-          <p className="text-xs font-semibold uppercase text-muted-foreground">Participantes (pessoas sendo evangelizadas)</p>
-          <div className="flex flex-wrap gap-2">
-            <Input className="max-w-[200px]" placeholder="Nome" value={pName} onChange={e => setPName(e.target.value)} />
-            <Input className="max-w-[160px]" placeholder="Telefone" value={pPhone} onChange={e => setPPhone(e.target.value)} />
-            <Button size="sm" onClick={addParticipant} disabled={adding} className="gap-1">
-              <UserPlus className="h-3.5 w-3.5" /> Adicionar
-            </Button>
-          </div>
-          {pErr && <p className="text-xs text-destructive">{pErr}</p>}
-          {isLoading ? (
-            <p className="text-xs italic text-muted-foreground">Carregando…</p>
-          ) : participants.length === 0 ? (
-            <p className="text-xs italic text-muted-foreground">Nenhum participante registrado ainda.</p>
-          ) : (
-            <div className="space-y-1.5">
-              {participants.map(p => (
-                <div key={p.id} className="flex items-center justify-between rounded border px-2.5 py-1.5 text-sm">
-                  <div>
-                    <span className="font-medium text-navy">{p.full_name}</span>
-                    {p.phone && <span className="ml-2 text-xs text-muted-foreground">{p.phone}</span>}
-                  </div>
-                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${STAGE_COLORS[p.stage]}`}>{STAGE_LABELS[p.stage]}</span>
+        <div className="border-t p-3 space-y-4">
+          {/* Ciclo de vida */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Ciclo de vida (ARQ-004 §8)</p>
+            {!isEncerrado(g.status) ? (
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {ACTIVE_STAGES.map((s, i) => (
+                    <button
+                      key={s} disabled={busy}
+                      onClick={() => advanceStage(s)}
+                      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
+                        i <= stageIndex ? STATUS_COLORS[s] : "border-dashed text-muted-foreground hover:bg-muted/30"
+                      }`}
+                    >
+                      {i + 1}. {STATUS_LABELS[s]}
+                    </button>
+                  ))}
                 </div>
-              ))}
+                {g.started_at && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Início: {new Date(g.started_at).toLocaleDateString("pt-BR")}
+                    {g.expected_end_at && ` · Previsão de encerramento: ${new Date(g.expected_end_at).toLocaleDateString("pt-BR")}`}
+                  </p>
+                )}
+                {stageIndex === ACTIVE_STAGES.length - 1 && (
+                  <div className="mt-2 flex flex-wrap gap-2 border-t pt-2">
+                    <Button size="sm" variant="outline" className="gap-1 border-green-300 text-green-700 hover:bg-green-50" onClick={() => setShowEndOptions("novo_lg")}>
+                      <Sparkles className="h-3.5 w-3.5" /> Virou Life Group
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-1 border-blue-300 text-blue-700 hover:bg-blue-50" onClick={() => setShowEndOptions("integra")}>
+                      <Link2 className="h-3.5 w-3.5" /> Integrou a LG existente
+                    </Button>
+                    <Button size="sm" variant="outline" className="gap-1 border-red-300 text-red-700 hover:bg-red-50" onClick={encerrarSemResultado}>
+                      <Ban className="h-3.5 w-3.5" /> Encerrar sem resultado
+                    </Button>
+                  </div>
+                )}
+                {showEndOptions === "novo_lg" && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md border border-green-200 bg-green-50/50 p-2">
+                    <Input className="max-w-[220px]" placeholder="Nome do novo Life Group" value={newLgName} onChange={e => setNewLgName(e.target.value)} />
+                    <Button size="sm" disabled={busy || !newLgName.trim()} onClick={confirmNewLg}>Confirmar</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setShowEndOptions(null)}>Cancelar</Button>
+                  </div>
+                )}
+                {showEndOptions === "integra" && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md border border-blue-200 bg-blue-50/50 p-2">
+                    <select value={integrateLgId} onChange={e => setIntegrateLgId(e.target.value)} className="h-9 rounded-md border bg-background px-2 text-xs">
+                      <option value="">— Selecione o Life Group —</option>
+                      {cells.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                    <Button size="sm" disabled={busy || !integrateLgId} onClick={confirmIntegrate}>Confirmar</Button>
+                    <Button size="sm" variant="ghost" onClick={() => setShowEndOptions(null)}>Cancelar</Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Encerrado em {STATUS_LABELS[g.status]}.
+                {g.resulting_lg_id && ` Life Group resultante: ${cells.find(c => c.id === g.resulting_lg_id)?.name ?? g.resulting_lg_id}`}
+              </p>
+            )}
+          </div>
+
+          {/* Participantes */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Participantes (pessoas sendo evangelizadas)</p>
+            <div className="flex flex-wrap gap-2">
+              <Input className="max-w-[200px]" placeholder="Nome" value={pName} onChange={e => setPName(e.target.value)} />
+              <Input className="max-w-[160px]" placeholder="Telefone" value={pPhone} onChange={e => setPPhone(e.target.value)} />
+              <Button size="sm" onClick={addParticipant} disabled={adding} className="gap-1">
+                <UserPlus className="h-3.5 w-3.5" /> Adicionar
+              </Button>
             </div>
-          )}
+            {pErr && <p className="mt-1 text-xs text-destructive">{pErr}</p>}
+            {isLoading ? (
+              <p className="mt-2 text-xs italic text-muted-foreground">Carregando…</p>
+            ) : participants.length === 0 ? (
+              <p className="mt-2 text-xs italic text-muted-foreground">Nenhum participante registrado ainda.</p>
+            ) : (
+              <div className="mt-2 space-y-1.5">
+                {participants.map(p => (
+                  <div key={p.id} className="flex items-center justify-between rounded border px-2.5 py-1.5 text-sm">
+                    <div>
+                      <span className="font-medium text-navy">{p.full_name}</span>
+                      {p.phone && <span className="ml-2 text-xs text-muted-foreground">{p.phone}</span>}
+                    </div>
+                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${STAGE_COLORS[p.stage]}`}>{STAGE_LABELS[p.stage]}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
