@@ -801,6 +801,8 @@ export type InviteLinkKind =
 export type InviteLinkStatus = "ativo" | "expirado" | "esgotado" | "revogado";
 export type InviteValidity = "permanente" | "24h" | "7d" | "30d" | "90d";
 
+export type ScopeLevel = "nacional" | "estado" | "nucleo" | "distrito" | "setor" | "igreja";
+
 export interface InviteLinkCreateInput {
   kind: InviteLinkKind;
   church_id: string;
@@ -814,6 +816,8 @@ export interface InviteLinkCreateInput {
   validity: InviteValidity;
   max_uses?: number | null;
   allowed_ip_cidr?: string | null;
+  scope_level?: ScopeLevel | null;
+  scope_id?: string | null;
 }
 
 export interface InviteLinkRow {
@@ -821,6 +825,7 @@ export interface InviteLinkRow {
   church_name: string | null; life_group_name: string | null; target_role: UserRole;
   max_uses: number | null; uses_count: number; expires_at: string | null;
   created_by_name: string | null; created_at: string;
+  scope_level?: ScopeLevel | null; scope_name?: string | null;
 }
 
 export interface InviteTokenValidation {
@@ -828,4 +833,5 @@ export interface InviteTokenValidation {
   kind: InviteLinkKind | null; church_name: string | null;
   life_group_name: string | null; ministry_name: string | null;
   target_role: UserRole | null;
+  scope_level?: ScopeLevel | null; scope_name?: string | null;
 }
