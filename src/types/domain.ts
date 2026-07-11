@@ -237,10 +237,17 @@ export interface Cell {
 }
 
 // Grupo de Evangelismo — subdivisão de um Life Group (C24)
+export type EvangelismGroupStatus =
+  | "planejamento" | "autorizacao" | "implantacao" | "evangelizacao" | "consolidacao"
+  | "encerrado_novo_lg" | "encerrado_integrado" | "encerrado_sem_resultado";
+
 export interface EvangelismGroup {
   id:string; cell_id:string; name:string;
   address:string|null; neighborhood:string|null; city:string|null; state:string|null;
   meeting_weekday:Weekday|null; meeting_time:string|null; is_active:boolean;
+  status: EvangelismGroupStatus;
+  started_at: string|null; expected_end_at: string|null;
+  resulting_lg_id: string|null;
   created_at:string;
   leader_ids?: string[];       // preenchido no service, a partir de evangelism_group_leaders
   leader_names?: string[];     // idem, nomes já resolvidos
