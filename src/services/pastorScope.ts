@@ -1,7 +1,7 @@
 "use client";
 import type { SupabaseClient } from "@supabase/supabase-js";
-
-export type ScopeLevel = "nacional" | "estado" | "nucleo" | "distrito" | "setor" | "igreja";
+import type { ScopeLevel } from "@/types/domain";
+export type { ScopeLevel };
 
 export interface PastorScope {
   id: string;
