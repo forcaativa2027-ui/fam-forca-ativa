@@ -842,3 +842,31 @@ export interface InviteTokenValidation {
   target_role: UserRole | null;
   scope_level?: ScopeLevel | null; scope_name?: string | null;
 }
+
+// Aba Liderança (script de melhoria, Seção 6) — histórico de designações
+export type LeadershipFunction =
+  | "apostolo" | "pastor_principal" | "pastor_auxiliar" | "pastor_distrito"
+  | "supervisor_distrito" | "supervisor_area" | "supervisor_setor"
+  | "lider_lg" | "lider_auxiliar" | "diacono" | "lider_ministerio"
+  | "lider_louvor" | "lider_jovens" | "lider_casais" | "lider_infantil"
+  | "lider_evangelismo" | "lider_missoes" | "outro";
+export type LeadershipStatus = "ativo" | "encerrado";
+
+export interface LeadershipAssignment {
+  id: string; function_type: LeadershipFunction; status: LeadershipStatus;
+  started_at: string; ended_at: string | null; notes: string | null;
+  profile_id: string; profile_name: string; profile_email: string | null;
+  church_id: string | null; church_name: string | null;
+  ministry_id: string | null; ministry_name: string | null;
+  life_group_id: string | null; life_group_name: string | null;
+  scope_level: ScopeLevel | null; scope_id: string | null;
+  assigned_by: string | null; assigned_by_name: string | null;
+  created_at: string;
+}
+
+export interface AssignLeadershipInput {
+  profile_id: string; function_type: LeadershipFunction;
+  church_id?: string | null; scope_level?: ScopeLevel | null; scope_id?: string | null;
+  ministry_id?: string | null; life_group_id?: string | null;
+  started_at?: string; notes?: string | null;
+}
