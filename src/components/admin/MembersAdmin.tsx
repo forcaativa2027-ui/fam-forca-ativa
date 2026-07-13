@@ -4,20 +4,29 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, X, KeyRound, Check, Copy, AlertCircle, ExternalLink } from "lucide-react";
+import { Plus, Trash2, Pencil, X, KeyRound, Check, Copy, AlertCircle, ExternalLink, ArrowRightLeft, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   memberSchema, type MemberInput,
   memberCreateSchema, type MemberCreateInput,
 } from "@/schemas";
-import { useAllMembers, useCells, useChurches } from "@/hooks/use-queries";
+import { useAllMembers, useCells, useChurches, useStates, useNucleos, useDistricts, useSectors, useMemberRelocations } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { updateMember, deleteMember } from "@/services/members";
+import { relocateMember } from "@/services/relocations";
 import { logAudit } from "@/services/audit";
-import type { Member } from "@/types/domain";
+import type { Member, RelocationReason } from "@/types/domain";
+
+const RELOCATION_REASONS: [RelocationReason, string][] = [
+  ["correcao_cadastro","Correção de cadastro"], ["mudanca_endereco","Mudança de endereço"],
+  ["transferencia_ministerial","Transferência ministerial"], ["mudanca_igreja","Mudança de igreja"],
+  ["multiplicacao_lg","Multiplicação de Life Group"], ["reorganizacao_territorial","Reorganização territorial"],
+  ["designacao_pastoral","Designação pastoral"], ["solicitacao_membro","Solicitação do membro"], ["outro","Outro"],
+];
 
 const STAGES: [Member["journey_stage"], string][] = [
   ["visitante","Visitante"],["novo_convertido","Novo convertido"],["consolidacao","Consolidação"],
@@ -30,10 +39,66 @@ export function MembersAdmin() {
   const { data: members = [] } = useAllMembers();
   const { data: cells = [] } = useCells();
   const { data: churches = [] } = useChurches();
+  const { data: statesList = [] } = useStates();
+  const { data: nucleosList = [] } = useNucleos();
+  const { data: districtsList = [] } = useDistricts();
+  const { data: sectorsList = [] } = useSectors();
   const qc = useQueryClient();
   const [err, setErr] = useState("");
   const [editing, setEditing] = useState<Member | null>(null);
+  const [relocating, setRelocating] = useState<Member | null>(null);
+  const [viewingHistory, setViewingHistory] = useState<Member | null>(null);
   const [credentials, setCredentials] = useState<{ name: string; email: string; password: string } | null>(null);
+
+  // ============ FILTROS DA LISTAGEM (busca + estrutura territorial) ============
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStageList, setFilterStageList] = useState("");
+  const [filterStateId, setFilterStateId] = useState("");
+  const [filterDistrictId, setFilterDistrictId] = useState("");
+  const [filterSectorId, setFilterSectorId] = useState("");
+  const [filterChurchId, setFilterChurchId] = useState("");
+
+  // Mapas auxiliares pra resolver a linhagem territorial de cada igreja (Setor→Distrito→Núcleo→Estado)
+  const sectorById = useMemo(() => new Map(sectorsList.map((s) => [s.id, s])), [sectorsList]);
+  const districtById = useMemo(() => new Map(districtsList.map((d) => [d.id, d])), [districtsList]);
+  const nucleoById = useMemo(() => new Map(nucleosList.map((n) => [n.id, n])), [nucleosList]);
+
+  const districtsForFilter = useMemo(
+    () => filterStateId
+      ? districtsList.filter((d) => nucleoById.get(d.nucleo_id)?.state_id === filterStateId)
+      : districtsList,
+    [districtsList, filterStateId, nucleoById]
+  );
+  const sectorsForFilter = useMemo(
+    () => filterDistrictId ? sectorsList.filter((s) => s.district_id === filterDistrictId) : sectorsList,
+    [sectorsList, filterDistrictId]
+  );
+  const churchesForFilter = useMemo(
+    () => filterSectorId ? churches.filter((c) => c.sector_id === filterSectorId) : churches,
+    [churches, filterSectorId]
+  );
+
+  const filteredMembers = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return members.filter((m) => {
+      if (q && !(
+        m.full_name.toLowerCase().includes(q) ||
+        (m.phone ?? "").toLowerCase().includes(q) ||
+        (m.email ?? "").toLowerCase().includes(q)
+      )) return false;
+      if (filterStageList && m.journey_stage !== filterStageList) return false;
+      if (filterChurchId && m.church_id !== filterChurchId) return false;
+      const ch = churches.find((c) => c.id === m.church_id);
+      const sec = ch?.sector_id ? sectorById.get(ch.sector_id) : null;
+      const dist = sec?.district_id ? districtById.get(sec.district_id) : null;
+      const nuc = dist?.nucleo_id ? nucleoById.get(dist.nucleo_id) : null;
+      if (filterSectorId && sec?.id !== filterSectorId) return false;
+      if (filterDistrictId && dist?.id !== filterDistrictId) return false;
+      if (filterStateId && nuc?.state_id !== filterStateId) return false;
+      return true;
+    });
+  }, [members, searchQuery, filterStageList, filterChurchId, filterSectorId, filterDistrictId, filterStateId, churches, sectorById, districtById, nucleoById]);
+
 
   // ============ FORM PRINCIPAL (criar OU editar) ============
   // Usa schema diferente conforme o modo: edição → schema flexível, criação → schema com email obrigatório
@@ -308,10 +373,46 @@ export function MembersAdmin() {
         </CardContent>
       </Card>
 
-      <h3 className="font-display text-lg text-navy">Membros cadastrados ({members.length})</h3>
+      <h3 className="font-display text-lg text-navy">Membros cadastrados ({filteredMembers.length} de {members.length})</h3>
+
+      <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/20 p-2.5">
+        <Input
+          value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Buscar por nome, telefone ou e-mail…" className="h-8 max-w-[220px] text-xs"
+        />
+        <select value={filterStateId} onChange={(e) => { setFilterStateId(e.target.value); setFilterDistrictId(""); }} className="h-8 rounded-md border bg-background px-2 text-xs">
+          <option value="">Todos os estados</option>
+          {statesList.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.uf})</option>)}
+        </select>
+        <select value={filterDistrictId} onChange={(e) => { setFilterDistrictId(e.target.value); setFilterSectorId(""); }} className="h-8 rounded-md border bg-background px-2 text-xs">
+          <option value="">Todos os distritos</option>
+          {districtsForFilter.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+        </select>
+        <select value={filterSectorId} onChange={(e) => { setFilterSectorId(e.target.value); setFilterChurchId(""); }} className="h-8 rounded-md border bg-background px-2 text-xs">
+          <option value="">Todos os setores</option>
+          {sectorsForFilter.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+        <select value={filterChurchId} onChange={(e) => setFilterChurchId(e.target.value)} className="h-8 rounded-md border bg-background px-2 text-xs">
+          <option value="">Todas as igrejas</option>
+          {churchesForFilter.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+        <select value={filterStageList} onChange={(e) => setFilterStageList(e.target.value)} className="h-8 rounded-md border bg-background px-2 text-xs">
+          <option value="">Todas as situações</option>
+          {STAGES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+        </select>
+        {(searchQuery || filterStateId || filterDistrictId || filterSectorId || filterChurchId || filterStageList) && (
+          <button
+            onClick={() => { setSearchQuery(""); setFilterStateId(""); setFilterDistrictId(""); setFilterSectorId(""); setFilterChurchId(""); setFilterStageList(""); }}
+            className="text-xs text-muted-foreground underline"
+          >
+            Limpar filtros
+          </button>
+        )}
+      </div>
+
       <div className="space-y-2">
-        {members.length === 0 && <p className="text-sm italic text-muted">Nenhum membro cadastrado ainda.</p>}
-        {members.map((m) => {
+        {filteredMembers.length === 0 && <p className="text-sm italic text-muted">Nenhum membro encontrado com esses filtros.</p>}
+        {filteredMembers.map((m) => {
           const cell = cells.find((c) => c.id === m.life_group_id);
           const hasAccess = !!m.profile_id;
           return (
@@ -336,6 +437,12 @@ export function MembersAdmin() {
                   <KeyRound className="h-3.5 w-3.5" />Ativar acesso
                 </Button>
               )}
+              <Button onClick={() => setRelocating(m)} variant="outline" size="sm" title="Realocar/Transferir">
+                <ArrowRightLeft className="h-3.5 w-3.5" />
+              </Button>
+              <Button onClick={() => setViewingHistory(m)} variant="ghost" size="sm" title="Histórico de realocações">
+                <History className="h-3.5 w-3.5" />
+              </Button>
               <Button asChild variant="navy" size="sm">
                 <Link href={`/pessoas/membros/${m.id}`}><ExternalLink className="h-3.5 w-3.5" /></Link>
               </Button>
@@ -345,7 +452,191 @@ export function MembersAdmin() {
           );
         })}
       </div>
+
+      {relocating && (
+        <RelocateDialog
+          member={relocating}
+          churches={churches} cells={cells}
+          statesList={statesList} nucleosList={nucleosList} districtsList={districtsList} sectorsList={sectorsList}
+          onClose={() => setRelocating(null)}
+        />
+      )}
+      {viewingHistory && (
+        <HistoryDialog member={viewingHistory} onClose={() => setViewingHistory(null)} />
+      )}
     </div>
+  );
+}
+
+function RelocateDialog({ member, churches, cells, statesList, nucleosList, districtsList, sectorsList, onClose }: {
+  member: Member;
+  churches: { id: string; name: string; sector_id: string | null }[];
+  cells: { id: string; name: string; church_id: string | null }[];
+  statesList: { id: string; name: string; uf: string }[];
+  nucleosList: { id: string; name: string; state_id: string }[];
+  districtsList: { id: string; name: string; nucleo_id: string }[];
+  sectorsList: { id: string; name: string; district_id: string }[];
+  onClose: () => void;
+}) {
+  const qc = useQueryClient();
+  const [stateId, setStateId] = useState("");
+  const [nucleoId, setNucleoId] = useState("");
+  const [districtId, setDistrictId] = useState("");
+  const [sectorId, setSectorId] = useState("");
+  const [churchId, setChurchId] = useState("");
+  const [lgId, setLgId] = useState("");
+  const [reason, setReason] = useState<RelocationReason>("mudanca_igreja");
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [step, setStep] = useState<"form" | "confirm">("form");
+
+  const nucleosOpts = stateId ? nucleosList.filter(n => n.state_id === stateId) : nucleosList;
+  const districtsOpts = nucleoId ? districtsList.filter(d => d.nucleo_id === nucleoId) : districtsList;
+  const sectorsOpts = districtId ? sectorsList.filter(s => s.district_id === districtId) : sectorsList;
+  const churchesOpts = sectorId ? churches.filter(c => c.sector_id === sectorId) : churches;
+  const lgsOpts = churchId ? cells.filter(c => c.church_id === churchId) : cells;
+
+  const fromChurchName = churches.find(c => c.id === member.church_id)?.name ?? "—";
+  const fromLgName = cells.find(c => c.id === member.life_group_id)?.name ?? "—";
+  const toChurchName = churches.find(c => c.id === churchId)?.name ?? "—";
+  const toLgName = cells.find(c => c.id === lgId)?.name ?? "—";
+
+  async function confirm() {
+    if (!churchId) { setErr("Selecione a igreja de destino."); return; }
+    setBusy(true); setErr("");
+    try {
+      await relocateMember(supabase, {
+        member_id: member.id, to_church_id: churchId, to_life_group_id: lgId || null,
+        reason, notes: notes || null,
+      });
+      await logAudit(supabase, "update", "members", member.id, { realocado_para: churchId });
+      qc.invalidateQueries({ queryKey: ["all-members"] });
+      qc.invalidateQueries({ queryKey: ["member-relocations", member.id] });
+      onClose();
+    } catch (e) {
+      setErr((e as { message?: string })?.message ?? "Erro ao realocar. Confira se você tem permissão sobre origem e destino.");
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Realocar {member.full_name}</DialogTitle></DialogHeader>
+        {step === "form" ? (
+          <div className="space-y-3">
+            <div className="rounded-md border bg-muted/30 p-2 text-xs text-muted-foreground">
+              Atualmente em: <b className="text-navy">{fromChurchName}</b>
+              {member.life_group_id && <> · {fromLgName}</>}
+            </div>
+
+            <Field label="Motivo">
+              <select value={reason} onChange={e => setReason(e.target.value as RelocationReason)} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                {RELOCATION_REASONS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
+              </select>
+            </Field>
+
+            <div className="rounded-md border bg-navy-50/40 p-3">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-navy-600">Nova unidade</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Field label="Estado">
+                  <select value={stateId} onChange={e => { setStateId(e.target.value); setNucleoId(""); setDistrictId(""); setSectorId(""); setChurchId(""); setLgId(""); }} className="h-9 w-full rounded-md border bg-background px-2 text-xs">
+                    <option value="">— Todos —</option>
+                    {statesList.map(s => <option key={s.id} value={s.id}>{s.name} ({s.uf})</option>)}
+                  </select>
+                </Field>
+                <Field label="Núcleo">
+                  <select value={nucleoId} onChange={e => { setNucleoId(e.target.value); setDistrictId(""); setSectorId(""); setChurchId(""); setLgId(""); }} className="h-9 w-full rounded-md border bg-background px-2 text-xs">
+                    <option value="">— Todos —</option>
+                    {nucleosOpts.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="Distrito">
+                  <select value={districtId} onChange={e => { setDistrictId(e.target.value); setSectorId(""); setChurchId(""); setLgId(""); }} className="h-9 w-full rounded-md border bg-background px-2 text-xs">
+                    <option value="">— Todos —</option>
+                    {districtsOpts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="Setor">
+                  <select value={sectorId} onChange={e => { setSectorId(e.target.value); setChurchId(""); setLgId(""); }} className="h-9 w-full rounded-md border bg-background px-2 text-xs">
+                    <option value="">— Todos —</option>
+                    {sectorsOpts.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="Igreja Local">
+                  <select value={churchId} onChange={e => { setChurchId(e.target.value); setLgId(""); }} className="h-9 w-full rounded-md border bg-background px-2 text-xs">
+                    <option value="">— Selecione —</option>
+                    {churchesOpts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </Field>
+                <Field label="Life Group (opcional)">
+                  <select value={lgId} onChange={e => setLgId(e.target.value)} className="h-9 w-full rounded-md border bg-background px-2 text-xs">
+                    <option value="">— Sem célula —</option>
+                    {lgsOpts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </Field>
+              </div>
+            </div>
+
+            <Field label="Observações"><Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Detalhes adicionais (opcional)" /></Field>
+
+            {err && <p className="text-sm text-destructive">{err}</p>}
+            <Button onClick={() => churchId ? setStep("confirm") : setErr("Selecione a igreja de destino.")} className="w-full">Continuar</Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm font-medium">Confirme a movimentação:</p>
+            <div className="rounded-md border p-3 text-sm space-y-1">
+              <p><b className="text-navy">De:</b> {fromChurchName}{member.life_group_id ? ` — ${fromLgName}` : ""}</p>
+              <p><b className="text-navy">Para:</b> {toChurchName}{lgId ? ` — ${toLgName}` : ""}</p>
+              <p className="text-xs text-muted-foreground">Motivo: {RELOCATION_REASONS.find(([k]) => k === reason)?.[1]}</p>
+              {notes && <p className="text-xs text-muted-foreground">Obs: {notes}</p>}
+            </div>
+            {err && <p className="text-sm text-destructive">{err}</p>}
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setStep("form")} className="flex-1">Voltar</Button>
+              <Button onClick={confirm} disabled={busy} className="flex-1 gap-1.5">
+                <ArrowRightLeft className="h-4 w-4" /> {busy ? "Confirmando…" : "Confirmar"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function HistoryDialog({ member, onClose }: { member: Member; onClose: () => void }) {
+  const { data: history = [], isLoading } = useMemberRelocations(member.id);
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Histórico de realocações — {member.full_name}</DialogTitle></DialogHeader>
+        {isLoading ? (
+          <p className="py-6 text-center text-sm italic text-muted-foreground">Carregando…</p>
+        ) : history.length === 0 ? (
+          <p className="py-6 text-center text-sm italic text-muted-foreground">Nenhuma realocação registrada ainda.</p>
+        ) : (
+          <div className="max-h-96 space-y-2 overflow-y-auto">
+            {history.map(h => (
+              <div key={h.id} className="rounded-md border p-3 text-xs">
+                <p className="font-medium text-navy">
+                  {h.from_church_name ?? "—"} → {h.to_church_name ?? "—"}
+                </p>
+                {(h.from_life_group_name || h.to_life_group_name) && (
+                  <p className="text-muted-foreground">{h.from_life_group_name ?? "sem LG"} → {h.to_life_group_name ?? "sem LG"}</p>
+                )}
+                <p className="mt-1 text-muted-foreground">
+                  {RELOCATION_REASONS.find(([k]) => k === h.reason)?.[1] ?? h.reason} · {new Date(h.created_at).toLocaleDateString("pt-BR")}
+                  {h.performed_by_name ? ` · por ${h.performed_by_name}` : ""}
+                </p>
+                {h.notes && <p className="mt-1 italic text-muted-foreground">"{h.notes}"</p>}
+              </div>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
