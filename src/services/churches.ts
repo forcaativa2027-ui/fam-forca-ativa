@@ -1,6 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Church, State, Nucleo, District, Area, Sector, Cell, MdaMinAlert } from "@/types/domain";
 
+export async function listChurchAncestry(sb: SupabaseClient): Promise<{ church_id: string; state_id: string | null; nucleo_id: string | null; district_id: string | null; sector_id: string | null }[]> {
+  const { data, error } = await sb.from("church_ancestry").select("*");
+  if (error) { console.error("[churches] listChurchAncestry", error); return []; }
+  return data ?? [];
+}
+
 export async function listStates(sb: SupabaseClient): Promise<State[]> {
   const { data, error } = await sb.from("states").select("*").order("name");
   if (error) throw error;
