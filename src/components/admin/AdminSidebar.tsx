@@ -10,7 +10,7 @@ import {
   Download, Search, Bell,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 export type TabKey =
   | "supervision" | "org-dashboard"
   | "control-tower" | "intelligence" | "ministerial-reports" | "metas"
-  | "members" | "score" | "birthdays" | "discipleship"
+  | "members" | "leadership" | "score" | "birthdays" | "discipleship"
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
@@ -83,6 +83,7 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       icon: <Users size={16} />,
       items: [
         { key: "members",          label: "Membros",             icon: <Users2 size={15} /> },
+        { key: "leadership",       label: "Liderança",           icon: <UserCog2 size={15} /> },
         { key: "score",            label: "Score",               icon: <Star size={15} /> },
         { key: "birthdays",        label: "Aniversários",        icon: <Cake size={15} /> },
         { key: "discipleship",     label: "Discipulado",         icon: <BookOpen size={15} /> },
