@@ -18,6 +18,12 @@ export const useChurches       = () => useQuery({ queryKey: ["churches"],   quer
 export const useStates          = () => useQuery({ queryKey: ["states"],    queryFn: () => C.listStates(supabase) });
 export const useNucleos         = () => useQuery({ queryKey: ["nucleos"],   queryFn: () => C.listNucleos(supabase) });
 export const useLeadershipAssignments = () => useQuery({ queryKey: ["leadership-assignments"], queryFn: () => Ld.listLeadershipAssignments(supabase) });
+export const useMemberRelocations = (memberId: string | null) =>
+  useQuery({
+    queryKey: ["member-relocations", memberId],
+    queryFn: () => Rl.listMemberRelocations(supabase, memberId as string),
+    enabled: !!memberId,
+  });
 export const useDistricts      = () => useQuery({ queryKey: ["districts"],  queryFn: () => C.listDistricts(supabase) });
 export const useAreas          = () => useQuery({ queryKey: ["areas"],      queryFn: () => C.listAreas(supabase) });
 export const useSectors        = () => useQuery({ queryKey: ["sectors"],    queryFn: () => C.listSectors(supabase) });
@@ -417,6 +423,7 @@ export const useFinanceBudgets = (churchId: string, year: number) =>
 import * as PA from "@/services/patrimonyAdvanced";
 import * as Inv from "@/services/invites";
 import * as Ld from "@/services/leadership";
+import * as Rl from "@/services/relocations";
 export const useDepreciationSummary = (churchId?: string) =>
   useQuery({ queryKey: ["depreciation-summary", churchId], queryFn: () => PA.getDepreciationSummary(supabase, churchId) });
 export const useDepreciation = (assetId: string) =>
