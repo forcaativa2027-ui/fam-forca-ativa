@@ -17,6 +17,7 @@ export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], quer
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
 export const useStates          = () => useQuery({ queryKey: ["states"],    queryFn: () => C.listStates(supabase) });
 export const useNucleos         = () => useQuery({ queryKey: ["nucleos"],   queryFn: () => C.listNucleos(supabase) });
+export const useLeadershipAssignments = () => useQuery({ queryKey: ["leadership-assignments"], queryFn: () => Ld.listLeadershipAssignments(supabase) });
 export const useDistricts      = () => useQuery({ queryKey: ["districts"],  queryFn: () => C.listDistricts(supabase) });
 export const useAreas          = () => useQuery({ queryKey: ["areas"],      queryFn: () => C.listAreas(supabase) });
 export const useSectors        = () => useQuery({ queryKey: ["sectors"],    queryFn: () => C.listSectors(supabase) });
@@ -415,6 +416,7 @@ export const useFinanceBudgets = (churchId: string, year: number) =>
 // C12 Blocos 2-5 — Patrimônio Avançado
 import * as PA from "@/services/patrimonyAdvanced";
 import * as Inv from "@/services/invites";
+import * as Ld from "@/services/leadership";
 export const useDepreciationSummary = (churchId?: string) =>
   useQuery({ queryKey: ["depreciation-summary", churchId], queryFn: () => PA.getDepreciationSummary(supabase, churchId) });
 export const useDepreciation = (assetId: string) =>
