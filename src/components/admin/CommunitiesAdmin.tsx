@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useChurches, useSectors } from "@/hooks/use-queries";
+import { useChurches, useSectors, useNucleos, useDistricts } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { logAudit } from "@/services/audit";
 import type { Church } from "@/types/domain";
@@ -21,7 +21,8 @@ const communitySchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Use apenas letras minúsculas, números e hífen"),
   type: z.enum(["sede","nucleo","igreja_local"]).default("sede"),
   parent_id: z.string().uuid().optional().or(z.literal("")),
-  sector_id: z.string().uuid().optional().or(z.literal("")),
+  parent_territorial_level: z.enum(["nucleo","distrito","setor"]).optional().or(z.literal("")),
+  parent_territorial_id: z.string().uuid().optional().or(z.literal("")),
   state: z.string().trim().optional().or(z.literal("")),
   city: z.string().trim().optional().or(z.literal("")),
   address: z.string().trim().optional().or(z.literal("")),
@@ -49,6 +50,8 @@ type CommunityInput = z.infer<typeof communitySchema>;
 export function CommunitiesAdmin() {
   const { data: churches = [] } = useChurches();
   const { data: sectors = [] } = useSectors();
+  const { data: nucleos = [] } = useNucleos();
+  const { data: districts = [] } = useDistricts();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Church | null>(null);
   const [err, setErr] = useState("");
@@ -56,9 +59,10 @@ export function CommunitiesAdmin() {
   const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } =
     useForm<CommunityInput>({
       resolver: zodResolver(communitySchema),
-      defaultValues: { type: "sede", primary_color: "#0E2A47", secondary_color: "#C9A227" },
+      defaultValues: { type: "sede", primary_color: "#0E2A47", secondary_color: "#C9A227", parent_territorial_level: "setor" },
     });
   const slugWatch = watch("slug");
+  const territorialLevelWatch = watch("parent_territorial_level");
 
   function startEdit(c: Church) {
     setEditing(c); setErr("");
@@ -67,7 +71,8 @@ export function CommunitiesAdmin() {
       slug: c.slug ?? "",
       type: c.type,
       parent_id: c.parent_id ?? "",
-      sector_id: c.sector_id ?? "",
+      parent_territorial_level: c.parent_level ?? "setor",
+      parent_territorial_id: c.parent_territorial_id ?? c.sector_id ?? "",
       state: c.state ?? "",
       city: c.city ?? "",
       address: c.address ?? "",
@@ -93,7 +98,7 @@ export function CommunitiesAdmin() {
   }
   function cancelEdit() {
     setEditing(null);
-    reset({ type: "sede", primary_color: "#0E2A47", secondary_color: "#C9A227", status_admin: "ativa" });
+    reset({ type: "sede", primary_color: "#0E2A47", secondary_color: "#C9A227", status_admin: "ativa", parent_territorial_level: "setor" });
   }
 
   async function onSubmit(v: CommunityInput) {
@@ -102,7 +107,10 @@ export function CommunitiesAdmin() {
       const payload = {
         name: v.name, slug: v.slug, type: v.type,
         parent_id: v.parent_id || null,
-        sector_id: v.sector_id || null,
+        parent_level: v.parent_territorial_level || null,
+        parent_territorial_id: v.parent_territorial_id || null,
+        // sector_id (coluna legada) fica em sincronia só quando o nível escolhido é Setor
+        sector_id: v.parent_territorial_level === "setor" ? (v.parent_territorial_id || null) : null,
         state: v.state || null, city: v.city || null, address: v.address || null,
         short_description: v.short_description || null,
         logo_url: v.logo_url || null, banner_url: v.banner_url || null,
@@ -208,16 +216,29 @@ export function CommunitiesAdmin() {
               </Field>
             </div>
 
-            <Field label="Setor (Estrutura Territorial MEO-001)" error={errors.sector_id?.message}>
-              <select {...register("sector_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                <option value="">— Sem setor definido ainda —</option>
-                {sectors.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-              <p className="mt-1 text-xs text-muted">
+            <div className="rounded-md border bg-navy-50/40 p-3">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-navy-600">Posição na Estrutura Territorial (MEO-001)</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Nível de vínculo">
+                  <select {...register("parent_territorial_level")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                    <option value="setor">Setor (padrão)</option>
+                    <option value="distrito">Distrito (pula o Setor)</option>
+                    <option value="nucleo">Núcleo (pula Distrito e Setor)</option>
+                  </select>
+                </Field>
+                <Field label={territorialLevelWatch === "nucleo" ? "Núcleo" : territorialLevelWatch === "distrito" ? "Distrito" : "Setor"} error={errors.parent_territorial_id?.message}>
+                  <select {...register("parent_territorial_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                    <option value="">— Sem vínculo definido ainda —</option>
+                    {(territorialLevelWatch === "nucleo" ? nucleos : territorialLevelWatch === "distrito" ? districts : sectors)
+                      .map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </Field>
+              </div>
+              <p className="mt-2 text-xs text-muted">
                 É esse vínculo que posiciona a Igreja Local na árvore Estado → Núcleo → Distrito → Setor.
-                Cadastre o Setor primeiro em Organização → Estrutura MDA, se ainda não existir.
+                Pode pular níveis (ex: ligar direto ao Núcleo se não tiver Distrito/Setor cadastrado).
               </p>
-            </Field>
+            </div>
 
             <Field label="Descrição curta" error={errors.short_description?.message}>
               <Input {...register("short_description")} placeholder="Frase que aparece no footer e meta tags" />
@@ -366,7 +387,17 @@ export function CommunitiesAdmin() {
                     {(c.city || c.state) && <> · {[c.city, c.state].filter(Boolean).join(", ")}</>}
                   </p>
                   {c.short_description && <p className="mt-1 text-xs text-muted line-clamp-2">{c.short_description}</p>}
-                  {c.sector_id ? (
+                  {c.parent_territorial_id ? (
+                    <p className="mt-1 text-[11px] text-muted">
+                      📍 {(c.parent_level === "nucleo" ? nucleos : c.parent_level === "distrito" ? districts : sectors)
+                        .find((p) => p.id === c.parent_territorial_id)?.name ?? "—"}
+                      {c.parent_level && c.parent_level !== "setor" && (
+                        <span className="ml-1 rounded bg-amber-100 px-1 text-[10px] text-amber-700">
+                          direto no {c.parent_level === "nucleo" ? "Núcleo" : "Distrito"}
+                        </span>
+                      )}
+                    </p>
+                  ) : c.sector_id ? (
                     <p className="mt-1 text-[11px] text-muted">📍 {sectors.find((s) => s.id === c.sector_id)?.name ?? "Setor"}</p>
                   ) : (
                     <p className="mt-1 text-[11px] font-semibold text-amber-600">⚠ Sem Setor vinculado (fora da árvore MEO-001)</p>

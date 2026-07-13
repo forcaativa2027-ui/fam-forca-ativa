@@ -12,7 +12,7 @@ import {
   districtSchema, areaSchema, sectorSchema,
   type DistrictInput, type AreaInput, type SectorInput,
 } from "@/schemas";
-import { useDistricts, useAreas, useSectors, useNucleos, useAllMembers } from "@/hooks/use-queries";
+import { useDistricts, useAreas, useSectors, useNucleos, useStates, useAllMembers } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import * as Ch from "@/services/churches";
 import { logAudit } from "@/services/audit";
@@ -61,23 +61,25 @@ export function MdaStructureAdmin() {
 function DistrictsSection() {
   const { data: districts = [] } = useDistricts();
   const { data: nucleos = [] } = useNucleos();
+  const { data: statesList = [] } = useStates();
   const { data: members = [] } = useAllMembers();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<District | null>(null);
   const [err, setErr] = useState("");
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
-    useForm<DistrictInput>({ resolver: zodResolver(districtSchema) });
+  const { register, handleSubmit, watch, reset, formState: { errors, isSubmitting } } =
+    useForm<DistrictInput>({ resolver: zodResolver(districtSchema), defaultValues: { parent_level: "nucleo" } });
+  const parentLevel = watch("parent_level");
 
   function startEdit(d: District) {
     setEditing(d); setErr("");
-    reset({ name: d.name, nucleo_id: d.nucleo_id, mother_id: d.mother_id ?? "", leader_id: d.leader_id ?? "" });
+    reset({ name: d.name, parent_level: d.parent_level, parent_id: d.parent_id, mother_id: d.mother_id ?? "", leader_id: d.leader_id ?? "" });
   }
-  function cancelEdit() { setEditing(null); setErr(""); reset({ name: "", nucleo_id: "", mother_id: "", leader_id: "" }); }
+  function cancelEdit() { setEditing(null); setErr(""); reset({ name: "", parent_level: "nucleo", parent_id: "", mother_id: "", leader_id: "" }); }
 
   async function onSubmit(v: DistrictInput) {
     setErr("");
     try {
-      const payload = { name: v.name, nucleo_id: v.nucleo_id, mother_id: v.mother_id || null, leader_id: v.leader_id || null };
+      const payload = { name: v.name, parent_level: v.parent_level, parent_id: v.parent_id, mother_id: v.mother_id || null, leader_id: v.leader_id || null };
       if (editing) {
         await Ch.updateDistrict(supabase, editing.id, payload);
         await logAudit(supabase, "update", "districts", editing.id, { name: v.name });
@@ -98,6 +100,12 @@ function DistrictsSection() {
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro ao remover"); }
   }
 
+  const parentOptions = parentLevel === "estado" ? statesList : nucleos;
+  function parentName(d: District): string {
+    const list = d.parent_level === "estado" ? statesList : nucleos;
+    return list.find(x => x.id === d.parent_id)?.name ?? "—";
+  }
+
   return (
     <div className="space-y-4">
       <Card>
@@ -105,45 +113,49 @@ function DistrictsSection() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>{editing ? "Editar distrito" : "Cadastrar distrito"}</CardTitle>
-              <CardDescription>Vincule a um Núcleo.</CardDescription>
+              <CardDescription>Vincule a um Núcleo (padrão) ou direto a um Estado, pulando o Núcleo.</CardDescription>
             </div>
             {editing && <Button onClick={cancelEdit} variant="ghost" size="sm" className="gap-1"><X className="h-3.5 w-3.5" />Cancelar</Button>}
           </div>
         </CardHeader>
         <CardContent>
-          {nucleos.length === 0 ? (
-            <p className="text-sm italic text-amber-700">Cadastre ao menos um Núcleo primeiro (aba Estados &amp; Núcleos).</p>
-          ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-              <Field label="Nome do distrito" error={errors.name?.message}>
-                <Input {...register("name")} placeholder="Ex: Distrito Centro" />
-              </Field>
-              <Field label="Núcleo" error={errors.nucleo_id?.message}>
-                <select {...register("nucleo_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                  <option value="">— Selecione —</option>
-                  {nucleos.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            <Field label="Nome do distrito" error={errors.name?.message}>
+              <Input {...register("name")} placeholder="Ex: Distrito Centro" />
+            </Field>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Nível do pai">
+                <select {...register("parent_level")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                  <option value="nucleo">Núcleo (padrão)</option>
+                  <option value="estado">Estado (pula o Núcleo)</option>
                 </select>
               </Field>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Líder responsável (opcional)">
-                  <select {...register("leader_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                    <option value="">— Nenhum —</option>
-                    {members.map(m => <option key={m.id} value={m.id}>{m.full_name}</option>)}
-                  </select>
-                </Field>
-                <Field label="Distrito-mãe (se for multiplicação)">
-                  <select {...register("mother_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                    <option value="">— Nenhum —</option>
-                    {districts.filter(d => !editing || d.id !== editing.id).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                  </select>
-                </Field>
-              </div>
-              {err && <p className="text-sm text-destructive">{err}</p>}
-              <Button type="submit" disabled={isSubmitting} className="gap-2">
-                {editing ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {editing ? "Salvar alterações" : "Cadastrar distrito"}
-              </Button>
-            </form>
-          )}
+              <Field label={parentLevel === "estado" ? "Estado" : "Núcleo"} error={errors.parent_id?.message}>
+                <select {...register("parent_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                  <option value="">— Selecione —</option>
+                  {parentOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </Field>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Líder responsável (opcional)">
+                <select {...register("leader_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                  <option value="">— Nenhum —</option>
+                  {members.map(m => <option key={m.id} value={m.id}>{m.full_name}</option>)}
+                </select>
+              </Field>
+              <Field label="Distrito-mãe (se for multiplicação)">
+                <select {...register("mother_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                  <option value="">— Nenhum —</option>
+                  {districts.filter(d => !editing || d.id !== editing.id).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </Field>
+            </div>
+            {err && <p className="text-sm text-destructive">{err}</p>}
+            <Button type="submit" disabled={isSubmitting} className="gap-2">
+              {editing ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {editing ? "Salvar alterações" : "Cadastrar distrito"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
       <div className="space-y-2">
@@ -152,7 +164,10 @@ function DistrictsSection() {
           <div key={d.id} className="flex items-center justify-between rounded-md border bg-card p-3">
             <div>
               <b className="text-navy">{d.name}</b>
-              <p className="text-xs text-muted">{nucleos.find(n => n.id === d.nucleo_id)?.name ?? "—"}</p>
+              <p className="text-xs text-muted">
+                {parentName(d)}
+                {d.parent_level === "estado" && <span className="ml-1 rounded bg-amber-100 px-1 text-[10px] text-amber-700">pulou Núcleo</span>}
+              </p>
             </div>
             <div className="flex gap-2">
               <Button onClick={() => startEdit(d)} variant="outline" size="sm"><Pencil className="h-3.5 w-3.5" /></Button>
@@ -278,24 +293,26 @@ function AreasSection() {
 function SectorsSection() {
   const { data: sectors = [] } = useSectors();
   const { data: districts = [] } = useDistricts();
+  const { data: nucleos = [] } = useNucleos();
   const { data: areas = [] } = useAreas();
   const { data: members = [] } = useAllMembers();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Sector | null>(null);
   const [err, setErr] = useState("");
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
-    useForm<SectorInput>({ resolver: zodResolver(sectorSchema) });
+  const { register, handleSubmit, watch, reset, formState: { errors, isSubmitting } } =
+    useForm<SectorInput>({ resolver: zodResolver(sectorSchema), defaultValues: { parent_level: "distrito" } });
+  const parentLevel = watch("parent_level");
 
   function startEdit(s: Sector) {
     setEditing(s); setErr("");
-    reset({ name: s.name, district_id: s.district_id, area_id: s.area_id ?? "", mother_id: s.mother_id ?? "", leader_id: s.leader_id ?? "" });
+    reset({ name: s.name, parent_level: s.parent_level, parent_id: s.parent_id, area_id: s.area_id ?? "", mother_id: s.mother_id ?? "", leader_id: s.leader_id ?? "" });
   }
-  function cancelEdit() { setEditing(null); setErr(""); reset({ name: "", district_id: "", area_id: "", mother_id: "", leader_id: "" }); }
+  function cancelEdit() { setEditing(null); setErr(""); reset({ name: "", parent_level: "distrito", parent_id: "", area_id: "", mother_id: "", leader_id: "" }); }
 
   async function onSubmit(v: SectorInput) {
     setErr("");
     try {
-      const payload = { name: v.name, district_id: v.district_id, area_id: v.area_id || null, mother_id: v.mother_id || null, leader_id: v.leader_id || null };
+      const payload = { name: v.name, parent_level: v.parent_level, parent_id: v.parent_id, area_id: v.area_id || null, mother_id: v.mother_id || null, leader_id: v.leader_id || null };
       if (editing) {
         await Ch.updateSector(supabase, editing.id, payload);
         await logAudit(supabase, "update", "sectors", editing.id, { name: v.name });
@@ -316,6 +333,12 @@ function SectorsSection() {
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro ao remover"); }
   }
 
+  const parentOptions = parentLevel === "nucleo" ? nucleos : districts;
+  function parentName(s: Sector): string {
+    const list = s.parent_level === "nucleo" ? nucleos : districts;
+    return list.find(x => x.id === s.parent_id)?.name ?? "—";
+  }
+
   return (
     <div className="space-y-4">
       <Card>
@@ -323,51 +346,55 @@ function SectorsSection() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>{editing ? "Editar setor" : "Cadastrar setor"}</CardTitle>
-              <CardDescription>Vincule a um Distrito existente. Área é só genealogia (opcional).</CardDescription>
+              <CardDescription>Vincule a um Distrito (padrão) ou direto a um Núcleo, pulando o Distrito. Área é só genealogia (opcional).</CardDescription>
             </div>
             {editing && <Button onClick={cancelEdit} variant="ghost" size="sm" className="gap-1"><X className="h-3.5 w-3.5" />Cancelar</Button>}
           </div>
         </CardHeader>
         <CardContent>
-          {districts.length === 0 ? (
-            <p className="text-sm italic text-amber-700">Cadastre ao menos um Distrito primeiro, na aba anterior.</p>
-          ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-              <Field label="Nome do setor" error={errors.name?.message}>
-                <Input {...register("name")} placeholder="Ex: Setor 1" />
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            <Field label="Nome do setor" error={errors.name?.message}>
+              <Input {...register("name")} placeholder="Ex: Setor 1" />
+            </Field>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Nível do pai">
+                <select {...register("parent_level")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                  <option value="distrito">Distrito (padrão)</option>
+                  <option value="nucleo">Núcleo (pula o Distrito)</option>
+                </select>
               </Field>
-              <Field label="Distrito" error={errors.district_id?.message}>
-                <select {...register("district_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+              <Field label={parentLevel === "nucleo" ? "Núcleo" : "Distrito"} error={errors.parent_id?.message}>
+                <select {...register("parent_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
                   <option value="">— Selecione —</option>
-                  {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  {parentOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </Field>
-              <Field label="Área (genealogia — opcional)">
-                <select {...register("area_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                  <option value="">— Nenhuma —</option>
-                  {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </div>
+            <Field label="Área (genealogia — opcional)">
+              <select {...register("area_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="">— Nenhuma —</option>
+                {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select>
+            </Field>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Líder responsável (opcional)">
+                <select {...register("leader_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                  <option value="">— Nenhum —</option>
+                  {members.map(m => <option key={m.id} value={m.id}>{m.full_name}</option>)}
                 </select>
               </Field>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Líder responsável (opcional)">
-                  <select {...register("leader_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                    <option value="">— Nenhum —</option>
-                    {members.map(m => <option key={m.id} value={m.id}>{m.full_name}</option>)}
-                  </select>
-                </Field>
-                <Field label="Setor-mãe (se for multiplicação)">
-                  <select {...register("mother_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                    <option value="">— Nenhum —</option>
-                    {sectors.filter(s => !editing || s.id !== editing.id).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
-                </Field>
-              </div>
-              {err && <p className="text-sm text-destructive">{err}</p>}
-              <Button type="submit" disabled={isSubmitting} className="gap-2">
-                {editing ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {editing ? "Salvar alterações" : "Cadastrar setor"}
-              </Button>
-            </form>
-          )}
+              <Field label="Setor-mãe (se for multiplicação)">
+                <select {...register("mother_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                  <option value="">— Nenhum —</option>
+                  {sectors.filter(s => !editing || s.id !== editing.id).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </Field>
+            </div>
+            {err && <p className="text-sm text-destructive">{err}</p>}
+            <Button type="submit" disabled={isSubmitting} className="gap-2">
+              {editing ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />} {editing ? "Salvar alterações" : "Cadastrar setor"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
       <div className="space-y-2">
@@ -376,7 +403,10 @@ function SectorsSection() {
           <div key={s.id} className="flex items-center justify-between rounded-md border bg-card p-3">
             <div>
               <b className="text-navy">{s.name}</b>
-              <p className="text-xs text-muted">{districts.find(d => d.id === s.district_id)?.name ?? "—"}</p>
+              <p className="text-xs text-muted">
+                {parentName(s)}
+                {s.parent_level === "nucleo" && <span className="ml-1 rounded bg-amber-100 px-1 text-[10px] text-amber-700">pulou Distrito</span>}
+              </p>
             </div>
             <div className="flex gap-2">
               <Button onClick={() => startEdit(s)} variant="outline" size="sm"><Pencil className="h-3.5 w-3.5" /></Button>

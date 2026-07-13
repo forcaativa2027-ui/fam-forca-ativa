@@ -14,7 +14,7 @@ import {
   memberSchema, type MemberInput,
   memberCreateSchema, type MemberCreateInput,
 } from "@/schemas";
-import { useAllMembers, useCells, useChurches, useStates, useNucleos, useDistricts, useSectors, useMemberRelocations } from "@/hooks/use-queries";
+import { useAllMembers, useCells, useChurches, useStates, useNucleos, useDistricts, useSectors, useChurchAncestry, useMemberRelocations } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { updateMember, deleteMember } from "@/services/members";
 import { relocateMember } from "@/services/relocations";
@@ -58,24 +58,29 @@ export function MembersAdmin() {
   const [filterSectorId, setFilterSectorId] = useState("");
   const [filterChurchId, setFilterChurchId] = useState("");
 
-  // Mapas auxiliares pra resolver a linhagem territorial de cada igreja (Setor→Distrito→Núcleo→Estado)
-  const sectorById = useMemo(() => new Map(sectorsList.map((s) => [s.id, s])), [sectorsList]);
-  const districtById = useMemo(() => new Map(districtsList.map((d) => [d.id, d])), [districtsList]);
+  // Mapa auxiliar pra resolver Núcleo→Estado (distrito que pula direto pro núcleo)
   const nucleoById = useMemo(() => new Map(nucleosList.map((n) => [n.id, n])), [nucleosList]);
+
+  const { data: ancestry = [] } = useChurchAncestry();
+  const ancestryByChurch = useMemo(() => new Map(ancestry.map((a) => [a.church_id, a])), [ancestry]);
 
   const districtsForFilter = useMemo(
     () => filterStateId
-      ? districtsList.filter((d) => nucleoById.get(d.nucleo_id)?.state_id === filterStateId)
+      ? districtsList.filter((d) => {
+          if (d.parent_level === "nucleo") return nucleoById.get(d.parent_id)?.state_id === filterStateId;
+          if (d.parent_level === "estado") return d.parent_id === filterStateId;
+          return false;
+        })
       : districtsList,
     [districtsList, filterStateId, nucleoById]
   );
   const sectorsForFilter = useMemo(
-    () => filterDistrictId ? sectorsList.filter((s) => s.district_id === filterDistrictId) : sectorsList,
+    () => filterDistrictId ? sectorsList.filter((s) => s.parent_level === "distrito" && s.parent_id === filterDistrictId) : sectorsList,
     [sectorsList, filterDistrictId]
   );
   const churchesForFilter = useMemo(
-    () => filterSectorId ? churches.filter((c) => c.sector_id === filterSectorId) : churches,
-    [churches, filterSectorId]
+    () => filterSectorId ? churches.filter((c) => ancestryByChurch.get(c.id)?.sector_id === filterSectorId) : churches,
+    [churches, filterSectorId, ancestryByChurch]
   );
 
   const filteredMembers = useMemo(() => {
@@ -88,16 +93,13 @@ export function MembersAdmin() {
       )) return false;
       if (filterStageList && m.journey_stage !== filterStageList) return false;
       if (filterChurchId && m.church_id !== filterChurchId) return false;
-      const ch = churches.find((c) => c.id === m.church_id);
-      const sec = ch?.sector_id ? sectorById.get(ch.sector_id) : null;
-      const dist = sec?.district_id ? districtById.get(sec.district_id) : null;
-      const nuc = dist?.nucleo_id ? nucleoById.get(dist.nucleo_id) : null;
-      if (filterSectorId && sec?.id !== filterSectorId) return false;
-      if (filterDistrictId && dist?.id !== filterDistrictId) return false;
-      if (filterStateId && nuc?.state_id !== filterStateId) return false;
+      const anc = m.church_id ? ancestryByChurch.get(m.church_id) : null;
+      if (filterSectorId && anc?.sector_id !== filterSectorId) return false;
+      if (filterDistrictId && anc?.district_id !== filterDistrictId) return false;
+      if (filterStateId && anc?.state_id !== filterStateId) return false;
       return true;
     });
-  }, [members, searchQuery, filterStageList, filterChurchId, filterSectorId, filterDistrictId, filterStateId, churches, sectorById, districtById, nucleoById]);
+  }, [members, searchQuery, filterStageList, filterChurchId, filterSectorId, filterDistrictId, filterStateId, ancestryByChurch]);
 
 
   // ============ FORM PRINCIPAL (criar OU editar) ============
@@ -474,8 +476,8 @@ function RelocateDialog({ member, churches, cells, statesList, nucleosList, dist
   cells: { id: string; name: string; church_id: string | null }[];
   statesList: { id: string; name: string; uf: string }[];
   nucleosList: { id: string; name: string; state_id: string }[];
-  districtsList: { id: string; name: string; nucleo_id: string }[];
-  sectorsList: { id: string; name: string; district_id: string }[];
+  districtsList: { id: string; name: string; parent_level: string; parent_id: string }[];
+  sectorsList: { id: string; name: string; parent_level: string; parent_id: string }[];
   onClose: () => void;
 }) {
   const qc = useQueryClient();
@@ -491,10 +493,16 @@ function RelocateDialog({ member, churches, cells, statesList, nucleosList, dist
   const [err, setErr] = useState("");
   const [step, setStep] = useState<"form" | "confirm">("form");
 
+  const { data: ancestry = [] } = useChurchAncestry();
+  const ancestryByChurch = useMemo(() => new Map(ancestry.map((a) => [a.church_id, a])), [ancestry]);
   const nucleosOpts = stateId ? nucleosList.filter(n => n.state_id === stateId) : nucleosList;
-  const districtsOpts = nucleoId ? districtsList.filter(d => d.nucleo_id === nucleoId) : districtsList;
-  const sectorsOpts = districtId ? sectorsList.filter(s => s.district_id === districtId) : sectorsList;
-  const churchesOpts = sectorId ? churches.filter(c => c.sector_id === sectorId) : churches;
+  const districtsOpts = nucleoId
+    ? districtsList.filter(d => d.parent_level === "nucleo" && d.parent_id === nucleoId)
+    : districtsList;
+  const sectorsOpts = districtId
+    ? sectorsList.filter(s => s.parent_level === "distrito" && s.parent_id === districtId)
+    : sectorsList;
+  const churchesOpts = sectorId ? churches.filter(c => ancestryByChurch.get(c.id)?.sector_id === sectorId) : churches;
   const lgsOpts = churchId ? cells.filter(c => c.church_id === churchId) : cells;
 
   const fromChurchName = churches.find(c => c.id === member.church_id)?.name ?? "—";
