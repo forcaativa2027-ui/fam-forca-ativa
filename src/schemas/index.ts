@@ -5,7 +5,7 @@ const reqText = (label: string, min = 2) =>
 const optionalText = z.string().trim().optional().or(z.literal(""));
 
 export const loginSchema = z.object({
-  email: z.string({required_error:"E-mail e obrigatorio"}).email("E-mail invalido"),
+  email: z.string({required_error:"E-mail e obrigatorio"}).trim().toLowerCase().email("E-mail invalido"),
   password: z.string({required_error:"Senha e obrigatoria"}).min(6, "Senha precisa ter ao menos 6 caracteres"),
 });
 export type LoginInput = z.infer<typeof loginSchema>;
@@ -98,7 +98,8 @@ export type NucleoInput = z.infer<typeof nucleoSchema>;
 
 export const districtSchema = z.object({
   name: reqText("Nome do distrito"),
-  nucleo_id: z.string().uuid("Selecione o núcleo"),
+  parent_level: z.enum(["estado","nucleo"]),
+  parent_id: z.string().uuid("Selecione o destino"),
   mother_id: z.string().uuid().optional().or(z.literal("")),
   leader_id: z.string().uuid().optional().or(z.literal("")),
 });
@@ -114,7 +115,8 @@ export type AreaInput = z.infer<typeof areaSchema>;
 
 export const sectorSchema = z.object({
   name: reqText("Nome do setor"),
-  district_id: z.string().uuid("Selecione o distrito"),
+  parent_level: z.enum(["nucleo","distrito"]),
+  parent_id: z.string().uuid("Selecione o destino"),
   area_id: z.string().uuid().optional().or(z.literal("")),
   mother_id: z.string().uuid().optional().or(z.literal("")),
   leader_id: z.string().uuid().optional().or(z.literal("")),
