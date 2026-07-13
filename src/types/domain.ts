@@ -871,3 +871,27 @@ export interface AssignLeadershipInput {
   ministry_id?: string | null; life_group_id?: string | null;
   started_at?: string; notes?: string | null;
 }
+
+// Realocação/Transferência de Membros (script de melhoria, Seção 5)
+export type RelocationReason =
+  | "correcao_cadastro" | "mudanca_endereco" | "transferencia_ministerial" | "mudanca_igreja"
+  | "multiplicacao_lg" | "reorganizacao_territorial" | "designacao_pastoral" | "solicitacao_membro" | "outro";
+
+export interface MemberRelocation {
+  id: string; member_id: string; member_name: string;
+  from_church_id: string | null; from_church_name: string | null;
+  from_life_group_id: string | null; from_life_group_name: string | null;
+  to_church_id: string | null; to_church_name: string | null;
+  to_life_group_id: string | null; to_life_group_name: string | null;
+  reason: RelocationReason; notes: string | null;
+  previous_function: string | null; new_function: string | null;
+  performed_by: string | null; performed_by_name: string | null;
+  approved_by: string | null; approved_by_name: string | null;
+  created_at: string;
+}
+
+export interface RelocateMemberInput {
+  member_id: string; to_church_id: string; to_life_group_id?: string | null;
+  reason: RelocationReason; notes?: string | null;
+  previous_function?: string | null; new_function?: string | null;
+}
