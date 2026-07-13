@@ -4,13 +4,21 @@ import {
   FileText, Award, Calendar, Globe2, Split,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useOrgKpis, useGrowthMonthly } from "@/hooks/use-queries";
+import { useOrgKpis, useGrowthMonthly, useMyProfile, useChurches } from "@/hooks/use-queries";
 import { HierarchyExplorer } from "./HierarchyExplorer";
+import { CommunityIdentity } from "@/components/shared/CommunityIdentity";
 import type { TabKey } from "./AdminSidebar";
+
+const ROLE_LABELS: Record<string, string> = {
+  apostolo: "Apóstolo", pastor: "Pastor", supervisor: "Supervisor", lider: "Líder", membro: "Membro",
+};
 
 export function OrgDashboardAdmin({ onNavigate }: { onNavigate?: (tab: TabKey) => void }) {
   const { data: kpis, isLoading } = useOrgKpis();
   const { data: growth = [] } = useGrowthMonthly();
+  const { data: me } = useMyProfile();
+  const { data: churches = [] } = useChurches();
+  const activeCommunity = churches.find(c => c.id === me?.church_id);
 
   if (isLoading) {
     return <p className="py-8 text-center text-sm italic text-muted">Carregando dashboard…</p>;
@@ -31,6 +39,15 @@ export function OrgDashboardAdmin({ onNavigate }: { onNavigate?: (tab: TabKey) =
 
   return (
     <div className="space-y-5">
+      {activeCommunity && (
+        <CommunityIdentity
+          variant="dashboard"
+          communityName={activeCommunity.name}
+          logoUrl={activeCommunity.logo_url}
+          userName={me?.full_name}
+          roleName={me?.role ? (ROLE_LABELS[me.role] ?? me.role) : null}
+        />
+      )}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5 text-gold" />Dashboard Organizacional</CardTitle>

@@ -16,7 +16,7 @@ import {
 import { createInviteLink, revokeInviteLink, deleteInviteLink, inviteLinkUrl } from "@/services/invites";
 import type { InviteLinkKind, InviteValidity, UserRole, InviteLinkStatus, ScopeLevel } from "@/types/domain";
 
-const KIND_LABELS: Record<InviteLinkKind, string> = {
+export const KIND_LABELS: Record<InviteLinkKind, string> = {
   membro: "Membro", visitante: "Visitante", lider_lg: "Líder de Life Group",
   pastor: "Pastor", diretor_financeiro: "Diretor Financeiro", secretario: "Secretário",
   lider_jovens: "Líder de Jovens", lider_casais: "Líder de Casais",
