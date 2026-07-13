@@ -107,6 +107,7 @@ export interface Finance {
 export type ChurchStatus = "ativa"|"em_implantacao"|"inativa";
 export interface Church {
   id:string; name:string; type:ChurchType; parent_id:string|null; sector_id:string|null;
+  parent_level?: ChurchParentLevel | null; parent_territorial_id?: string | null;
   address:string|null; city:string|null; state:string|null;
   slug:string|null; pastor_id:string|null;
   logo_url:string|null; banner_url:string|null;
@@ -160,10 +161,22 @@ export interface LgWithHealth {
 }
 export interface State { id:string; name:string; uf:string; is_active:boolean; created_at:string; }
 export interface Nucleo { id:string; state_id:string; name:string; leader_id:string|null; is_active:boolean; created_at:string; }
-export interface District { id:string; nucleo_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean;
-  /** @deprecated coluna legada, pré-MEO-001 — não usar em código novo */ church_id?:string|null; }
+export type DistrictParentLevel = "estado" | "nucleo";
+export type SectorParentLevel = "nucleo" | "distrito";
+export type ChurchParentLevel = "nucleo" | "distrito" | "setor";
+
+export interface District {
+  id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean;
+  parent_level: DistrictParentLevel; parent_id: string;
+  /** @deprecated coluna legada, pré-flexibilização — não usar em código novo */ nucleo_id?:string;
+  /** @deprecated coluna legada, pré-MEO-001 — não usar em código novo */ church_id?:string|null;
+}
 export interface Area { id:string; district_id:string; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
-export interface Sector { id:string; district_id:string; area_id:string|null; name:string; mother_id:string|null; leader_id:string|null; is_active:boolean; }
+export interface Sector {
+  id:string; name:string; area_id:string|null; mother_id:string|null; leader_id:string|null; is_active:boolean;
+  parent_level: SectorParentLevel; parent_id: string;
+  /** @deprecated coluna legada, pré-flexibilização — não usar em código novo */ district_id?:string;
+}
 
 // MDA Health (Caderno 11-B)
 export type MdaStatus = "saudavel" | "atencao" | "necessita";
