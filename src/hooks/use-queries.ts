@@ -24,6 +24,7 @@ export const useMemberRelocations = (memberId: string | null) =>
     queryFn: () => Rl.listMemberRelocations(supabase, memberId as string),
     enabled: !!memberId,
   });
+export const useChurchAncestry  = () => useQuery({ queryKey: ["church-ancestry"], queryFn: () => C.listChurchAncestry(supabase) });
 export const useDistricts      = () => useQuery({ queryKey: ["districts"],  queryFn: () => C.listDistricts(supabase) });
 export const useAreas          = () => useQuery({ queryKey: ["areas"],      queryFn: () => C.listAreas(supabase) });
 export const useSectors        = () => useQuery({ queryKey: ["sectors"],    queryFn: () => C.listSectors(supabase) });
