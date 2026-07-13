@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, X, KeyRound, Check, Copy, AlertCircle, ExternalLink, ArrowRightLeft, History } from "lucide-react";
+import { Plus, Trash2, Pencil, X, KeyRound, Check, Copy, AlertCircle, ExternalLink, ArrowRightLeft, History, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -377,11 +377,18 @@ export function MembersAdmin() {
 
       <h3 className="font-display text-lg text-navy">Membros cadastrados ({filteredMembers.length} de {members.length})</h3>
 
-      <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/20 p-2.5">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Buscar por nome, telefone ou e-mail…" className="h-8 max-w-[220px] text-xs"
+          placeholder="Buscar membro por nome, telefone ou e-mail…" className="h-11 pl-9 text-sm"
         />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/20 p-2.5">
+        <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <Filter className="h-3 w-3" /> Filtrar por:
+        </span>
         <select value={filterStateId} onChange={(e) => { setFilterStateId(e.target.value); setFilterDistrictId(""); }} className="h-8 rounded-md border bg-background px-2 text-xs">
           <option value="">Todos os estados</option>
           {statesList.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.uf})</option>)}
