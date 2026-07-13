@@ -841,6 +841,7 @@ export interface InviteTokenValidation {
   life_group_name: string | null; ministry_name: string | null;
   target_role: UserRole | null;
   scope_level?: ScopeLevel | null; scope_name?: string | null;
+  church_logo_url?: string | null; org_unit_name?: string | null;
 }
 
 // Aba Liderança (script de melhoria, Seção 6) — histórico de designações
