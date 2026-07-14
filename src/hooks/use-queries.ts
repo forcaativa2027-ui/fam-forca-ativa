@@ -52,10 +52,16 @@ export const useDailyWords     = () => useQuery({ queryKey: ["daily-words"], que
 
 // B3 — Area do membro
 export const useMyMember          = () => useQuery({ queryKey: ["my-member"], queryFn: () => Me.getMyMember(supabase) });
+export const useMemberCompletion  = (memberId: string | null) =>
+  useQuery({
+    queryKey: ["member-completion", memberId],
+    queryFn: () => Me.getMemberCompletionPercent(supabase, memberId as string),
+    enabled: !!memberId,
+  });
 export const useCellMembers       = (cellId: string|null, excludeId?: string|null) =>
   useQuery({
     queryKey: ["cell-members", cellId ?? "none", excludeId ?? "none"],
-    queryFn: () => cellId ? Me.listCellMembers(supabase, cellId, excludeId ?? undefined) : Promise.resolve([]),
+    queryFn: (): Promise<import("@/types/domain").Member[]> => cellId ? Me.listCellMembers(supabase, cellId, excludeId ?? undefined) : Promise.resolve([]),
     enabled: !!cellId,
   });
 export const useMyActiveDiscipleship = (myMemberId: string|null) =>
