@@ -39,7 +39,7 @@ export function CompleteProfileCard({ member }: { member: Member | null | undefi
     return until ? new Date(until) > new Date() : false;
   });
 
-  if (!member || percent >= 100) return null;
+  if (!member) return null;
 
   function snooze() {
     const until = new Date(); until.setDate(until.getDate() + 7);
@@ -47,14 +47,38 @@ export function CompleteProfileCard({ member }: { member: Member | null | undefi
     setSnoozed(true);
   }
 
-  // Adiado: some o card grande, mas deixa uma faixa discreta e sempre clicável —
-  // o membro nunca fica sem jeito de completar o cadastro quando quiser.
+  // ── Estado 1: cadastro pessoal já 100% completo ──────────────────────────
+  // (não esconde mais o card — mostra que está tudo certo e aguardando a
+  // liderança validar o vínculo institucional, conforme Seção 7-8 do script)
+  if (percent >= 100) {
+    return (
+      <>
+        <Card className="border border-blue-200 bg-blue-50/30">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-4">
+            <div className="min-w-[220px] flex-1">
+              <p className="font-display text-base font-bold text-navy">Seus dados estão atualizados</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Seu cadastro pessoal está completo e foi enviado para validação da liderança.
+                Após essa validação, sua Carteirinha CEC ID poderá ser liberada.
+              </p>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setOpen(true)} className="gap-1">
+              Atualizar meus dados <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+          </CardContent>
+        </Card>
+        {open && <CompleteProfileDialog member={member} onClose={() => setOpen(false)} />}
+      </>
+    );
+  }
+
+  // ── Estado 2: adiado — faixa discreta, sempre clicável ───────────────────
   if (snoozed) {
     return (
       <>
         <button
           onClick={() => setOpen(true)}
-          className="flex w-full items-center justify-between rounded-md border border-dashed border-gold/40 bg-gold/5 px-3 py-2 text-left text-xs text-navy hover:bg-gold/10"
+          className="flex w-full items-center justify-between rounded-md border border-dashed border-red-300 bg-red-50/50 px-3 py-2 text-left text-xs text-navy hover:bg-red-50"
         >
           <span>Complete seu cadastro pra liberar a Carteirinha Digital ({percent}% concluído)</span>
           <ChevronRight className="h-3.5 w-3.5 shrink-0" />
@@ -64,30 +88,34 @@ export function CompleteProfileCard({ member }: { member: Member | null | undefi
     );
   }
 
+  // ── Estado 3: incompleto — card vermelho, elevado, botão amarelo (Seção 12) ──
   return (
     <>
-      <Card className="border-l-4 border-l-gold">
-        <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-4">
-          <div className="min-w-[220px] flex-1">
-            <p className="font-display text-base font-bold text-navy">Complete seu cadastro</p>
-            <p className="text-xs text-muted-foreground">
-              Pra manter seus dados atualizados e permitir a emissão da sua futura Carteirinha de Membro da CEC.
-            </p>
-            <div className="mt-2 flex items-center gap-2">
-              <div className="h-2 flex-1 max-w-[180px] overflow-hidden rounded-full bg-muted">
-                <div className="h-full rounded-full bg-gold transition-all" style={{ width: `${percent}%` }} />
+      <button onClick={() => setOpen(true)} className="block w-full text-left">
+        <Card className="border-2 border-red-300 shadow-lg shadow-red-100 transition hover:shadow-xl hover:-translate-y-0.5">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-4">
+            <div className="min-w-[220px] flex-1">
+              <p className="font-display text-base font-bold text-red-700">Complete seu cadastro</p>
+              <p className="text-xs text-muted-foreground">
+                Seu cadastro ainda possui informações pendentes. Complete seus dados para iniciar
+                o processo de liberação da sua Carteirinha CEC ID.
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <div className="h-2 flex-1 max-w-[180px] overflow-hidden rounded-full bg-muted">
+                  <div className="h-full rounded-full bg-red-400 transition-all" style={{ width: `${percent}%` }} />
+                </div>
+                <span className="text-xs font-semibold text-red-700">Cadastro {percent}% completo</span>
               </div>
-              <span className="text-xs font-semibold text-navy">{percent}%</span>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={snooze}>Lembrar depois</Button>
-            <Button size="sm" onClick={() => setOpen(true)} className="gap-1">
-              Completar agora <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" size="sm" onClick={snooze}>Lembrar depois</Button>
+              <Button size="sm" onClick={() => setOpen(true)} className="gap-1 bg-amber-400 text-amber-950 hover:bg-amber-500">
+                Completar meus dados <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </button>
       {open && <CompleteProfileDialog member={member} onClose={() => setOpen(false)} />}
     </>
   );
@@ -184,6 +212,15 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
                 <option value="casado">Casado(a)</option>
                 <option value="divorciado">Divorciado(a)</option>
                 <option value="viuvo">Viúvo(a)</option>
+              </select>
+            </div>
+            <div><Label>Sexo</Label>
+              <select {...register("gender")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="">— Selecione —</option>
+                <option value="masculino">Masculino</option>
+                <option value="feminino">Feminino</option>
+                <option value="outro">Outro</option>
+                <option value="prefiro_nao_informar">Prefiro não informar</option>
               </select>
             </div>
           </div>
