@@ -11,6 +11,25 @@ export async function getMyMember(sb: SupabaseClient): Promise<Member | null> {
   } catch { return null; }
 }
 
+export async function getMemberCompletionPercent(sb: SupabaseClient, memberId: string): Promise<number> {
+  const { data, error } = await sb.rpc("member_completion_percent", { p_member_id: memberId });
+  if (error) return 0;
+  return (data as number) ?? 0;
+}
+
+export async function uploadMemberPhoto(sb: SupabaseClient, memberId: string, file: File): Promise<string> {
+  const { data: u } = await sb.auth.getUser();
+  if (!u.user) throw new Error("Sessão expirada, faça login novamente.");
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `${u.user.id}/${memberId}.${ext}`;
+  const { error: upErr } = await sb.storage.from("member-photos").upload(path, file, {
+    contentType: file.type, upsert: true,
+  });
+  if (upErr) throw upErr;
+  const { data } = sb.storage.from("member-photos").getPublicUrl(path);
+  return data.publicUrl;
+}
+/** Lista os membros ativos de um Life Group, opcionalmente excluindo um deles (ex: ao trocar de líder). */
 export async function listCellMembers(sb: SupabaseClient, cellId: string, excludeMemberId?: string): Promise<Member[]> {
   let q = sb.from("members").select("*").eq("life_group_id", cellId).eq("status", "ativo").order("full_name");
   if (excludeMemberId) q = q.neq("id", excludeMemberId);
