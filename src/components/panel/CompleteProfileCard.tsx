@@ -15,6 +15,7 @@ import { logAudit } from "@/services/audit";
 import type { Member } from "@/types/domain";
 
 interface FormValues {
+  birth_date: string; phone: string;
   cpf: string; rg: string; rg_orgao_expedidor: string;
   phone_recado: string; phone_recado_nome: string; whatsapp: string;
   cep: string; address: string; numero: string; complemento: string; neighborhood: string; city: string; state: string;
@@ -38,12 +39,29 @@ export function CompleteProfileCard({ member }: { member: Member | null | undefi
     return until ? new Date(until) > new Date() : false;
   });
 
-  if (!member || percent >= 100 || snoozed) return null;
+  if (!member || percent >= 100) return null;
 
   function snooze() {
     const until = new Date(); until.setDate(until.getDate() + 7);
     window.localStorage.setItem(LOCAL_STORAGE_SNOOZE_KEY, until.toISOString());
     setSnoozed(true);
+  }
+
+  // Adiado: some o card grande, mas deixa uma faixa discreta e sempre clicável —
+  // o membro nunca fica sem jeito de completar o cadastro quando quiser.
+  if (snoozed) {
+    return (
+      <>
+        <button
+          onClick={() => setOpen(true)}
+          className="flex w-full items-center justify-between rounded-md border border-dashed border-gold/40 bg-gold/5 px-3 py-2 text-left text-xs text-navy hover:bg-gold/10"
+        >
+          <span>Complete seu cadastro pra liberar a Carteirinha Digital ({percent}% concluído)</span>
+          <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+        </button>
+        {open && <CompleteProfileDialog member={member} onClose={() => setOpen(false)} />}
+      </>
+    );
   }
 
   return (
@@ -87,6 +105,7 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
 
   const { register, handleSubmit } = useForm<FormValues>({
     defaultValues: {
+      birth_date: member.birth_date ?? "", phone: member.phone ?? "",
       cpf: member.cpf ?? "", rg: member.rg ?? "", rg_orgao_expedidor: member.rg_orgao_expedidor ?? "",
       phone_recado: member.phone_recado ?? "", phone_recado_nome: member.phone_recado_nome ?? "", whatsapp: member.whatsapp ?? "",
       cep: member.cep ?? "", address: member.address ?? "", numero: member.numero ?? "", complemento: member.complemento ?? "",
@@ -147,6 +166,11 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
             </button>
             <input ref={fileInputRef} type="file" accept="image/*" capture="user" className="hidden" onChange={handlePhotoChange} />
             <p className="text-xs text-muted-foreground">Toque pra tirar uma foto ou escolher da galeria</p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div><Label>Data de nascimento</Label><Input type="date" {...register("birth_date")} /></div>
+            <div><Label>Telefone principal</Label><Input {...register("phone")} placeholder="(00) 00000-0000" /></div>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
