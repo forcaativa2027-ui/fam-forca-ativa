@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import {
   AlertTriangle, ShieldAlert, Bell, Radio, RefreshCw,
@@ -57,8 +58,8 @@ const SEVERITY_LABEL: Record<AlertSeverity, string> = {
 // ── Card de alerta individual ─────────────────────────────────
 function AlertCard({ alert }: { alert: ControlTowerAlert }) {
   const cfg = ALERT_CONFIG[alert.alert_type];
-  return (
-    <div className={`flex items-start gap-3 rounded-lg border p-3 ${cfg.bg} ${cfg.border}`}>
+  const content = (
+    <div className={`flex items-start gap-3 rounded-lg border p-3 ${cfg.bg} ${cfg.border} ${alert.church_id ? "transition hover:shadow-md hover:-translate-y-0.5 cursor-pointer" : ""}`}>
       <div className={`mt-0.5 shrink-0 ${cfg.color}`}>{cfg.icon}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -81,8 +82,10 @@ function AlertCard({ alert }: { alert: ControlTowerAlert }) {
           </span>
         </div>
       </div>
+      {alert.church_id && <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />}
     </div>
   );
+  return alert.church_id ? <Link href={`/organizacional/comunidades/${alert.church_id}`}>{content}</Link> : content;
 }
 
 // ── Painel de KPIs no topo ────────────────────────────────────
