@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { CheckCircle2, XCircle, Loader2, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,9 +40,21 @@ export function InviteRegisterForm({ token, validation }: Props) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
+  const [countdown, setCountdown] = useState(5);
   const [err, setErr] = useState("");
 
   const roleName = validation.kind ? KIND_LABELS[validation.kind] : null;
+
+  useEffect(() => {
+    if (!done) return;
+    if (countdown <= 0) {
+      window.location.href = hasSession ? "/painel" : `/entrar?email=${encodeURIComponent(email)}`;
+      return;
+    }
+    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [done, hasSession, countdown, email]);
 
   if (!validation.valid) {
     return (
@@ -71,13 +84,33 @@ export function InviteRegisterForm({ token, validation }: Props) {
             />
             <div className="space-y-2">
               <CheckCircle2 className="mx-auto text-primary" size={36} />
-              <p className="font-medium">Cadastro concluído!</p>
+              <p className="font-medium">Cadastro concluído com sucesso!</p>
               <p className="text-sm text-muted-foreground">
-                Você já está vinculado a {validation.church_name}
-                {validation.life_group_name ? ` — ${validation.life_group_name}` : ""}.
-                Confirme seu e-mail para acessar o painel.
+                {fullName} · {email}
+                <br />
+                Perfil: {roleName ?? "Membro"} · {validation.church_name}
+                {validation.life_group_name ? ` — ${validation.life_group_name}` : ""}
               </p>
             </div>
+            {hasSession ? (
+              <div className="space-y-2">
+                <Button asChild className="w-full gap-1.5">
+                  <Link href="/painel"><LogIn size={16} /> Acessar o CEC Family</Link>
+                </Button>
+                <p className="text-xs text-muted-foreground">Redirecionando automaticamente em {countdown}s…</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Seu e-mail ainda precisa ser confirmado. Verifique sua caixa de entrada e clique no
+                  link enviado para concluir a ativação da conta.
+                </p>
+                <Button asChild variant="outline" className="w-full gap-1.5">
+                  <Link href={`/entrar?email=${encodeURIComponent(email)}`}><LogIn size={16} /> Acessar o CEC Family</Link>
+                </Button>
+                <p className="text-xs text-muted-foreground">Redirecionando para o login em {countdown}s…</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
@@ -99,6 +132,7 @@ export function InviteRegisterForm({ token, validation }: Props) {
       // signUp() pode não retornar sessão ativa (projeto exige confirmação de e-mail) —
       // por isso passamos o id do usuário explicitamente, não dependemos de auth.uid() no banco.
       await consumeInviteLink(supabase, token, phone, signData.user?.id);
+      setHasSession(!!signData.session);
       setDone(true);
     } catch (e2) {
       setErr(e2 instanceof Error ? e2.message : "Erro ao concluir cadastro.");
