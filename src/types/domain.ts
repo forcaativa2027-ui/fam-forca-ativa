@@ -272,6 +272,16 @@ export interface Member {
   id:string; profile_id:string|null; full_name:string; email:string|null; phone:string|null;
   birth_date:string|null; life_group_id:string|null; church_id:string|null;
   journey_stage:JourneyStage; status:MemberStatus; joined_at:string|null;
+  // Dados pessoais complementares (script Cadastro/Realocação/Carteirinha)
+  social_name?: string|null; gender?: string|null; marital_status?: string|null;
+  nationality?: string|null; naturalidade?: string|null;
+  cpf?: string|null; rg?: string|null; rg_orgao_expedidor?: string|null;
+  cnh?: string|null; cnh_validade?: string|null;
+  phone_recado?: string|null; phone_recado_nome?: string|null; whatsapp?: string|null;
+  cep?: string|null; address?: string|null; numero?: string|null; complemento?: string|null;
+  neighborhood?: string|null; city?: string|null; state?: string|null; country?: string|null;
+  photo_url?: string|null; baptism_date?: string|null; discipler_id?: string|null;
+  consent_accepted_at?: string|null; photo_consent_accepted_at?: string|null;
 }
 export interface Sermon { id:string; title:string; reference:string|null; speaker:string|null; youtube_url:string; thumbnail_url:string|null; category:string|null; published_at:string; is_featured:boolean; is_published:boolean; church_id:string|null; }
 export interface EventItem { id:string; title:string; description:string|null; starts_at:string; ends_at:string|null; location:string|null; image_url:string|null; registration_url:string|null; status:EventStatus; event_type:EventTypeKind; is_published:boolean; church_id:string|null; }
