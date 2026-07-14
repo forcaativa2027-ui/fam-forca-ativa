@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { MyMinistriesPanel } from "./MyMinistriesPanel";
+import { CompleteProfileCard } from "./CompleteProfileCard";
 import { NotificationsPanel, useNotificationCount, NotificationBadge } from "./NotificationsPanel";
 import { supabase } from "@/lib/supabase/client";
 import {
@@ -89,6 +90,8 @@ export default function PanelDashboard() {
           <h1 className="mt-1 font-display text-3xl text-navy">{profile ? `Paz, ${profile.full_name.split(" ")[0]}.` : "Bem-vindo"}</h1>
           {profile && <p className="mt-1 text-sm font-bold text-gold">{ROLE_LABELS[profile.role] ?? profile.role}</p>}
         </div>
+
+        <CompleteProfileCard member={member} />
 
         <Tabs defaultValue={isAdmin ? "geral" : "celula"}>
           <div className="overflow-x-auto">
