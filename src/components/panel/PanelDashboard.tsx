@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { MyMinistriesPanel } from "./MyMinistriesPanel";
 import { CompleteProfileCard } from "./CompleteProfileCard";
+import { MyCredentialCard } from "./MyCredentialCard";
 import { NotificationsPanel, useNotificationCount, NotificationBadge } from "./NotificationsPanel";
 import { supabase } from "@/lib/supabase/client";
 import {
@@ -53,6 +54,8 @@ const STAGE_LABELS: Record<string, string> = {
 export default function PanelDashboard() {
   const { data: profile } = useMyProfile();
   const { data: member } = useMyMember();
+  const { data: allChurches = [] } = useChurches();
+  const myChurchName = allChurches.find((c) => c.id === member?.church_id)?.name ?? null;
   const isAdmin = profile?.role === "apostolo" || profile?.role === "pastor";
   const notifCount = useNotificationCount();
 
@@ -92,6 +95,7 @@ export default function PanelDashboard() {
         </div>
 
         <CompleteProfileCard member={member} />
+        <MyCredentialCard member={member} churchName={myChurchName} />
 
         <Tabs defaultValue={isAdmin ? "geral" : "celula"}>
           <div className="overflow-x-auto">
