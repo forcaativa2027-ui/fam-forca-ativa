@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, X, KeyRound, Check, Copy, AlertCircle, ExternalLink, ArrowRightLeft, History, Search, Filter, UserCog } from "lucide-react";
+import { Plus, Trash2, Pencil, X, KeyRound, Check, Copy, AlertCircle, ExternalLink, ArrowRightLeft, History, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -457,10 +457,7 @@ export function MembersAdmin() {
               <Button asChild variant="navy" size="sm">
                 <Link href={`/pessoas/membros/${m.id}`}><ExternalLink className="h-3.5 w-3.5" /></Link>
               </Button>
-              <Button onClick={() => setFullEditing(m)} variant="outline" size="sm" title="Editor completo (dados, classificação, estrutura, liderança, histórico)">
-                <UserCog className="h-3.5 w-3.5" />
-              </Button>
-              <Button onClick={() => setFullEditing(m)} variant="outline" size="sm" title="Editar completo"><Pencil className="h-3.5 w-3.5" /></Button>
+              <Button onClick={() => setFullEditing(m)} variant="outline" size="sm" title="Editar completo (dados, classificação, estrutura, liderança, histórico)"><Pencil className="h-3.5 w-3.5" /></Button>
               <Button onClick={() => remove(m)} variant="destructive" size="sm"><Trash2 className="h-3.5 w-3.5" /></Button>
             </div>
           );
