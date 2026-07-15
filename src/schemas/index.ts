@@ -37,7 +37,7 @@ export const memberSchema = z.object({
   phone: optionalText,
   birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data invalida").optional().or(z.literal("")),
   life_group_id: z.string().uuid().optional().nullable(),
-  journey_stage: z.enum(["visitante","novo_convertido","consolidacao","discipulado","batismo","membro_ativo","servo","lider_formacao","lider","supervisor","missionario"]).default("visitante"),
+  journey_stage: z.enum(["visitante","novo_convertido","consolidacao","discipulado","batismo","membro_ativo","membro_efetivo","servo","lider_formacao","lider","diacono","supervisor","supervisor_setor","supervisor_area","supervisor_distrito","pastor_auxiliar","pastor_principal","apostolo","missionario"]).default("visitante"),
 });
 export type MemberInput = z.infer<typeof memberSchema>;
 
@@ -51,9 +51,42 @@ export const memberCreateSchema = z.object({
   city: optionalText,
   church_id: optionalText,
   life_group_id: z.string().uuid().optional().or(z.literal("")),
-  journey_stage: z.enum(["visitante","novo_convertido","consolidacao","discipulado","batismo","membro_ativo","servo","lider_formacao","lider","supervisor","missionario"]).default("visitante"),
+  journey_stage: z.enum(["visitante","novo_convertido","consolidacao","discipulado","batismo","membro_ativo","membro_efetivo","servo","lider_formacao","lider","diacono","supervisor","supervisor_setor","supervisor_area","supervisor_distrito","pastor_auxiliar","pastor_principal","apostolo","missionario"]).default("visitante"),
 });
 export type MemberCreateInput = z.infer<typeof memberCreateSchema>;
+
+// Editor completo do membro (script Cadastro/Realocação/Carteirinha, Seção 5)
+export const memberFullEditSchema = z.object({
+  full_name: reqText("Nome completo", 3),
+  social_name: optionalText,
+  email: z.string().email("E-mail invalido").optional().or(z.literal("")),
+  phone: optionalText,
+  phone_recado: optionalText,
+  phone_recado_nome: optionalText,
+  whatsapp: optionalText,
+  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data invalida").optional().or(z.literal("")),
+  gender: optionalText,
+  marital_status: optionalText,
+  nationality: optionalText,
+  naturalidade: optionalText,
+  cpf: z.string().regex(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/, "CPF invalido").optional().or(z.literal("")),
+  rg: optionalText,
+  rg_orgao_expedidor: optionalText,
+  cnh: optionalText,
+  cnh_validade: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data invalida").optional().or(z.literal("")),
+  cep: z.string().regex(/^\d{5}-?\d{3}$/, "CEP invalido").optional().or(z.literal("")),
+  address: optionalText,
+  numero: optionalText,
+  complemento: optionalText,
+  neighborhood: optionalText,
+  city: optionalText,
+  state: optionalText,
+  country: optionalText,
+  photo_url: optionalText,
+  journey_stage: z.enum(["visitante","novo_convertido","consolidacao","discipulado","batismo","membro_ativo","membro_efetivo","servo","lider_formacao","lider","diacono","supervisor","supervisor_setor","supervisor_area","supervisor_distrito","pastor_auxiliar","pastor_principal","apostolo","missionario"]),
+  status: z.enum(["ativo","inativo","afastado"]),
+});
+export type MemberFullEditInput = z.infer<typeof memberFullEditSchema>;
 
 export const cellSchema = z.object({
   name: reqText("Nome da celula"),
