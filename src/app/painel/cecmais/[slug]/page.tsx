@@ -1,22 +1,24 @@
 "use client";
+import { use } from "react";
 import Link from "next/link";
-import { Search, ChevronRight } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { notFound } from "next/navigation";
+import { ArrowLeft, Clock } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useMyProfile, useMyMember } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { MemberHeader } from "@/components/panel/MemberHeader";
-import { CECmaisLogo, Mais } from "@/components/shared/CECmaisBrand";
-import { CECMAIS_CATEGORIAS } from "@/lib/cecmais-categorias";
+import { MaisCategoria } from "@/components/shared/CECmaisBrand";
+import { getCategoria } from "@/lib/cecmais-categorias";
 import { logAudit } from "@/services/audit";
 
-const CATEGORIES = CECMAIS_CATEGORIAS;
+export default function CategoriaPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
+  const categoria = getCategoria(slug);
 
-export default function CECmaisPage() {
   const { data: profile } = useMyProfile();
   const { data: member } = useMyMember();
   const isAdmin = profile?.role && profile.role !== "membro" && profile.role !== "visitante";
-  const firstName = (member?.full_name ?? profile?.full_name ?? "").split(" ")[0];
 
   async function signOut() {
     if (profile) await logAudit(supabase, "logout", "auth", profile.id);
@@ -24,51 +26,42 @@ export default function CECmaisPage() {
     window.location.href = "/";
   }
 
+  if (!categoria) return notFound();
+
   return (
     <div className="min-h-screen bg-background">
       <MemberHeader active="cecmais" isAdmin={!!isAdmin} onSignOut={signOut} />
 
-      <main className="container max-w-3xl space-y-8 py-12 text-center">
-        <CECmaisLogo size="lg" className="justify-center" />
-
-        <div>
-          <p className="text-lg text-muted-foreground">Olá, {firstName || "membro"}.</p>
-          <p className="mt-2 font-display text-2xl leading-snug text-navy">
-            <Mais className="text-2xl" /> cuidado.<br />
-            <Mais className="text-2xl" /> conhecimento.<br />
-            <Mais className="text-2xl" /> oportunidades para você e sua família.
-          </p>
+      <main className="container max-w-3xl space-y-6 py-8">
+        <div className="flex items-center gap-3">
+          <Button asChild variant="ghost" size="sm" className="gap-1">
+            <Link href="/painel/cecmais/explorar"><ArrowLeft className="h-4 w-4" /></Link>
+          </Button>
+          <MaisCategoria nome={categoria.nome} size="md" />
         </div>
 
-        <div className="relative mx-auto max-w-md">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Buscar no CECmais…" className="h-12 pl-9 text-sm" disabled />
-        </div>
+        <p className="text-muted-foreground">{categoria.descricao}</p>
 
-        <div className="rounded-xl border border-dashed border-gold/40 bg-gold/5 p-6">
-          <p className="text-sm text-muted-foreground">
-            Conheça <Mais className="text-base" /> Saúde, <Mais className="text-base" /> Proteção,{" "}
-            <Mais className="text-base" /> Formação, <Mais className="text-base" /> Fé,{" "}
-            <Mais className="text-base" /> Leitura e <Mais className="text-base" /> Vantagens —
-            serviços, formação, conteúdos e oportunidades para você e sua família.
-          </p>
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            {CATEGORIES.map((c) => (
-              <Link
-                key={c.slug}
-                href={`/painel/cecmais/${c.slug}`}
-                className="rounded-full border border-navy/10 bg-white px-3 py-1 text-xs font-semibold text-navy/70 transition hover:border-gold/50 hover:bg-gold/5"
-              >
-                <Mais className="text-xs" /> {c.nome}
-              </Link>
-            ))}
-          </div>
-          <div className="mt-5">
-            <Button asChild className="gap-1.5">
-              <Link href="/painel/cecmais/explorar">Explorar tudo <ChevronRight className="h-4 w-4" /></Link>
-            </Button>
-          </div>
-        </div>
+        <Card>
+          <CardContent className="pt-5">
+            <p className="mb-3 text-xs font-bold uppercase tracking-wide text-navy">O que vem por aí</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {categoria.ofertas.map((oferta) => (
+                <div key={oferta} className="flex items-center justify-between rounded-md border bg-muted/20 px-3 py-2 text-sm">
+                  <span>{oferta}</span>
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground">
+                    <Clock className="h-3 w-3" /> Em breve
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <p className="rounded-md border bg-muted/20 p-3 text-center text-xs text-muted-foreground">
+          Essas ofertas ainda estão sendo preparadas. Assim que estiverem disponíveis, você poderá
+          conhecer, contratar ou se matricular direto por aqui.
+        </p>
       </main>
     </div>
   );
