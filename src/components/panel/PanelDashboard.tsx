@@ -17,6 +17,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { MyMinistriesPanel } from "./MyMinistriesPanel";
 import { CompleteProfileCard } from "./CompleteProfileCard";
 import { MyCredentialCard } from "./MyCredentialCard";
+import { MemberHeader } from "./MemberHeader";
 import { NotificationsPanel, useNotificationCount, NotificationBadge } from "./NotificationsPanel";
 import { supabase } from "@/lib/supabase/client";
 import {
@@ -67,25 +68,7 @@ export default function PanelDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b-[3px] border-gold bg-navy">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2 text-white">
-            <Sparkles className="h-5 w-5 text-gold" />
-            <span className="font-display text-lg font-bold tracking-wide">CEC FAMILY</span>
-            <span className="ml-2 hidden border-l border-white/20 pl-3 text-xs font-semibold text-white/70 sm:inline">Área do membro</span>
-          </div>
-          <div className="flex items-center gap-2">
-            {isAdmin && (
-              <Button asChild variant="outline" size="sm" className="border-gold/80 bg-transparent text-gold hover:bg-gold/10 hover:text-gold">
-                <Link href="/admin">Administração ✦</Link>
-              </Button>
-            )}
-            <Button onClick={signOut} variant="outline" size="sm" className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white">
-              <LogOut className="mr-1 h-3.5 w-3.5" /> Sair
-            </Button>
-          </div>
-        </div>
-      </header>
+      <MemberHeader active="dashboard" isAdmin={isAdmin} onSignOut={signOut} />
 
       <main className="container space-y-8 py-8">
         <div>
