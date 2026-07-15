@@ -2,9 +2,10 @@
 import Link from "next/link";
 import { Sparkles, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Mais } from "@/components/shared/CECmaisBrand";
 
 export function MemberHeader({ active, isAdmin, onSignOut }: {
-  active: "dashboard" | "carteira";
+  active: "dashboard" | "carteira" | "cecmais";
   isAdmin?: boolean;
   onSignOut: () => void;
 }) {
@@ -30,6 +31,14 @@ export function MemberHeader({ active, isAdmin, onSignOut }: {
               }`}
             >
               Carteira de Membro
+            </Link>
+            <Link
+              href="/painel/cecmais"
+              className={`rounded px-2 py-1.5 text-xs font-semibold transition ${
+                active === "cecmais" ? "border-b-2 border-gold text-white" : "text-white/60 hover:text-white"
+              }`}
+            >
+              CEC<Mais className="text-sm" />
             </Link>
           </nav>
         </div>
