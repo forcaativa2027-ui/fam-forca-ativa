@@ -438,6 +438,7 @@ import * as Inv from "@/services/invites";
 import * as Ld from "@/services/leadership";
 import * as Rl from "@/services/relocations";
 import * as Cid from "@/services/cecId";
+import * as Cm from "@/services/cecmaisOfertas";
 export const useDepreciationSummary = (churchId?: string) =>
   useQuery({ queryKey: ["depreciation-summary", churchId], queryFn: () => PA.getDepreciationSummary(supabase, churchId) });
 export const useDepreciation = (assetId: string) =>
@@ -466,4 +467,18 @@ export const useValidateInviteToken = (token: string) =>
     queryFn: () => Inv.validateInviteToken(supabase, token),
     enabled: !!token,
     retry: false,
+  });
+
+export const useCecmaisOfertas = (categoria?: import("@/types/domain").CECmaisCategoriaSlug) =>
+  useQuery({
+    queryKey: ["cecmais-ofertas", categoria ?? "all"],
+    queryFn: () => Cm.listOfertas(supabase, categoria),
+  });
+export const useCecmaisOfertasAdmin = () =>
+  useQuery({ queryKey: ["cecmais-ofertas-admin"], queryFn: () => Cm.listAllOfertasAdmin(supabase) });
+export const useCecmaisOferta = (id: string | null) =>
+  useQuery({
+    queryKey: ["cecmais-oferta", id],
+    queryFn: () => Cm.getOferta(supabase, id as string),
+    enabled: !!id,
   });
