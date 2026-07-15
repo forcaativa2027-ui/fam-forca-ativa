@@ -1,5 +1,4 @@
 "use client";
-import { use } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, ChevronRight } from "lucide-react";
@@ -14,8 +13,8 @@ import { OFERTA_TIPO_LABELS } from "@/services/cecmaisOfertas";
 import { logAudit } from "@/services/audit";
 import type { CECmaisCategoriaSlug } from "@/types/domain";
 
-export default function CategoriaPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = use(params);
+export default function CategoriaPage({ params }: { params: { slug: string } }) {
+  const { slug } = params;
   const categoria = getCategoria(slug);
   const { data: ofertas = [], isLoading } = useCecmaisOfertas(slug as CECmaisCategoriaSlug);
 
