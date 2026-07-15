@@ -77,9 +77,6 @@ export default function PanelDashboard() {
           {profile && <p className="mt-1 text-sm font-bold text-gold">{ROLE_LABELS[profile.role] ?? profile.role}</p>}
         </div>
 
-        <CompleteProfileCard member={member} />
-        <MyCredentialCard member={member} churchName={myChurchName} />
-
         <Tabs defaultValue={isAdmin ? "geral" : "celula"}>
           <div className="overflow-x-auto">
             <TabsList className="mb-6 min-w-max">
@@ -95,7 +92,7 @@ export default function PanelDashboard() {
               <TabsTrigger value="jornada"><Map className="mr-1 h-4 w-4" />Minha jornada</TabsTrigger>
               <TabsTrigger value="oracao"><MessageSquareHeart className="mr-1 h-4 w-4" />Oração</TabsTrigger>
               <TabsTrigger value="ministerio"><Award className="mr-1 h-4 w-4" />Ministério</TabsTrigger>
-              <TabsTrigger value="perfil"><User className="mr-1 h-4 w-4" />Meu perfil</TabsTrigger>
+              <TabsTrigger value="perfil"><User className="mr-1 h-4 w-4" />Meu Perfil/Atualizar</TabsTrigger>
             </TabsList>
           </div>
 
@@ -446,6 +443,7 @@ function PrayerTab({ member }: { member: Member | null }) {
 // ============================================================
 function ProfileTab() {
   const { data: profile } = useMyProfile();
+  const { data: member } = useMyMember();
   const qc = useQueryClient();
   const [ok, setOk] = useState(false);
   const [err, setErr] = useState("");
@@ -470,29 +468,32 @@ function ProfileTab() {
   if (!profile) return <p className="text-sm text-muted">Carregando…</p>;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2"><User className="h-5 w-5 text-gold"/>Meu perfil</CardTitle>
-        <CardDescription>{profile.email}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-          <div className="space-y-1.5">
-            <Label>Nome completo</Label>
-            <Input {...register("full_name")}/>
-            {errors.full_name && <p className="text-xs text-destructive">{errors.full_name.message}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label>Telefone</Label>
-            <Input {...register("phone")} placeholder="(00) 00000-0000"/>
-            {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
-          </div>
-          {err && <p className="text-sm text-destructive">{err}</p>}
-          {ok && <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">Perfil atualizado com sucesso.</p>}
-          <Button type="submit" disabled={isSubmitting}>Salvar alterações</Button>
-        </form>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <CompleteProfileCard member={member} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><User className="h-5 w-5 text-gold"/>Meu Perfil/Atualizar</CardTitle>
+          <CardDescription>{profile.email}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label>Nome completo</Label>
+              <Input {...register("full_name")}/>
+              {errors.full_name && <p className="text-xs text-destructive">{errors.full_name.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label>Telefone</Label>
+              <Input {...register("phone")} placeholder="(00) 00000-0000"/>
+              {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
+            </div>
+            {err && <p className="text-sm text-destructive">{err}</p>}
+            {ok && <p className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-800">Perfil atualizado com sucesso.</p>}
+            <Button type="submit" disabled={isSubmitting}>Salvar alterações</Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
