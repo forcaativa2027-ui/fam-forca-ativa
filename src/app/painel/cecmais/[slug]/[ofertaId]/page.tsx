@@ -73,7 +73,7 @@ export default function OfertaPage({ params }: { params: Promise<{ slug: string;
             <Card>
               <CardContent className="grid gap-3 pt-4 sm:grid-cols-2">
                 {(oferta.tipo === "produto" || oferta.tipo === "conteudo_digital") && oferta.preco != null && (
-                  <Detail icon={<Package className="h-3.5 w-3.5" />} label="Preço" value={`R$ ${oferta.preco.toFixed(2)}`} />
+                  <Detail icon={<Package className="h-3.5 w-3.5" />} label="Preço" value={`R$ ${Number(oferta.preco).toFixed(2)}`} />
                 )}
                 {oferta.tipo === "produto" && oferta.estoque != null && (
                   <Detail icon={<Package className="h-3.5 w-3.5" />} label="Estoque" value={`${oferta.estoque} unidade(s)`} />
@@ -91,7 +91,7 @@ export default function OfertaPage({ params }: { params: Promise<{ slug: string;
                 {(oferta.tipo === "assinatura" || oferta.tipo === "servico_plano") && (
                   <>
                     {oferta.preco_recorrente != null && (
-                      <Detail icon={<Repeat className="h-3.5 w-3.5" />} label="Valor" value={`R$ ${oferta.preco_recorrente.toFixed(2)}${oferta.periodicidade ? ` / ${oferta.periodicidade}` : ""}`} />
+                      <Detail icon={<Repeat className="h-3.5 w-3.5" />} label="Valor" value={`R$ ${Number(oferta.preco_recorrente).toFixed(2)}${oferta.periodicidade ? ` / ${oferta.periodicidade}` : ""}`} />
                     )}
                     <Detail icon={<Percent className="h-3.5 w-3.5" />} label="Dependentes" value={oferta.permite_dependentes ? "Permite incluir dependentes" : "Somente titular"} />
                     {oferta.carencia_dias != null && oferta.carencia_dias > 0 && (
