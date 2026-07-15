@@ -2,7 +2,7 @@
 
 export type UserRole = "apostolo"|"pastor"|"supervisor"|"lider"|"anfitriao"|"discipulador"|"membro"|"visitante";
 export type ChurchType = "sede"|"nucleo"|"igreja_local";
-export type JourneyStage = "visitante"|"novo_convertido"|"consolidacao"|"discipulado"|"batismo"|"membro_ativo"|"servo"|"lider_formacao"|"lider"|"supervisor"|"missionario";
+export type JourneyStage = "visitante"|"novo_convertido"|"consolidacao"|"discipulado"|"batismo"|"membro_ativo"|"membro_efetivo"|"servo"|"lider_formacao"|"lider"|"diacono"|"supervisor"|"supervisor_setor"|"supervisor_area"|"supervisor_distrito"|"pastor_auxiliar"|"pastor_principal"|"apostolo"|"missionario";
 export type MemberStatus = "ativo"|"inativo"|"afastado";
 export type Weekday = "domingo"|"segunda"|"terca"|"quarta"|"quinta"|"sexta"|"sabado";
 export type EventStatus = "abertas"|"encerradas"|"esgotado"|"em_breve";
@@ -283,6 +283,7 @@ export interface Member {
   photo_url?: string|null; baptism_date?: string|null; discipler_id?: string|null;
   consent_accepted_at?: string|null; photo_consent_accepted_at?: string|null;
   cec_id?: string|null; card_status?: CardStatus; card_approved_at?: string|null; card_issued_at?: string|null; qr_token?: string;
+  member_since?: string|null;
 }
 export interface Sermon { id:string; title:string; reference:string|null; speaker:string|null; youtube_url:string; thumbnail_url:string|null; category:string|null; published_at:string; is_featured:boolean; is_published:boolean; church_id:string|null; }
 export interface EventItem { id:string; title:string; description:string|null; starts_at:string; ends_at:string|null; location:string|null; image_url:string|null; registration_url:string|null; status:EventStatus; event_type:EventTypeKind; is_published:boolean; church_id:string|null; }
