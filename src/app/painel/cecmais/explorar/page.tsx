@@ -7,6 +7,7 @@ import { useMyProfile, useMyMember } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { MemberHeader } from "@/components/panel/MemberHeader";
 import { MaisCategoria } from "@/components/shared/CECmaisBrand";
+import { CECmaisSubNav } from "@/components/panel/CECmaisSubNav";
 import { CECMAIS_CATEGORIAS } from "@/lib/cecmais-categorias";
 import { logAudit } from "@/services/audit";
 
@@ -41,6 +42,8 @@ export default function ExplorarPage() {
           </Button>
           <h1 className="font-display text-xl text-navy">Explorar</h1>
         </div>
+
+        <CECmaisSubNav />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {CECMAIS_CATEGORIAS.map((cat) => (
