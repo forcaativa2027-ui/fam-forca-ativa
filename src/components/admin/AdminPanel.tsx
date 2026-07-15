@@ -1,6 +1,7 @@
 "use client";
 import { InviteLinksAdmin } from "./InviteLinksAdmin";
 import { LeadershipAdmin } from "./LeadershipAdmin";
+import { CECmaisOfertasAdmin } from "./CECmaisOfertasAdmin";
 import { MdaStructureAdmin } from "./MdaStructureAdmin";
 import { EvangelismGroupsAdmin } from "./EvangelismGroupsAdmin";
 import { useState, useCallback } from "react";
@@ -190,6 +191,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
     case "metas":               return <MetasPlaceholder />;
     case "members":             return <MembersAdmin />;
     case "leadership":          return <LeadershipAdmin />;
+    case "cecmais-ofertas":     return <CECmaisOfertasAdmin />;
     case "score":                return <MemberScoreAdmin />;
     case "birthdays":            return <BirthdaysAdmin />;
     case "discipleship":        return <DiscipleshipAdmin />;
