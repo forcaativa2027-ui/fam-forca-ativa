@@ -9,8 +9,8 @@ import { MemberHeader } from "@/components/panel/MemberHeader";
 import { CECmaisSubNav } from "@/components/panel/CECmaisSubNav";
 import { logAudit } from "@/services/audit";
 
-function SectionCard({ icon, title, description, ctaLabel }: {
-  icon: React.ReactNode; title: string; description: string; ctaLabel: string;
+function SectionCard({ icon, title, description, ctaLabel, href }: {
+  icon: React.ReactNode; title: string; description: string; ctaLabel: string; href: string;
 }) {
   return (
     <Card>
@@ -19,7 +19,7 @@ function SectionCard({ icon, title, description, ctaLabel }: {
         <p className="font-display text-base font-bold text-navy">{title}</p>
         <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         <Button asChild variant="outline" size="sm" className="mt-3 gap-1">
-          <Link href="/painel/cecmais/explorar">{ctaLabel} <ChevronRight className="h-3.5 w-3.5" /></Link>
+          <Link href={href}>{ctaLabel} <ChevronRight className="h-3.5 w-3.5" /></Link>
         </Button>
       </CardContent>
     </Card>
@@ -55,24 +55,28 @@ export default function MinhaAreaPage() {
             title="Meus Serviços"
             description="Você ainda não contratou nenhum serviço ou plano."
             ctaLabel="Explorar mais Proteção"
+            href="/painel/cecmais/protecao"
           />
           <SectionCard
             icon={<GraduationCap className="h-6 w-6" />}
             title="Minha Formação"
             description="Você ainda não se matriculou em nenhum curso."
             ctaLabel="Explorar mais Formação"
+            href="/painel/cecmais/formacao"
           />
           <SectionCard
             icon={<Library className="h-6 w-6" />}
             title="Minha Biblioteca"
             description="Você ainda não tem livros ou conteúdos digitais."
             ctaLabel="Explorar mais Leitura"
+            href="/painel/cecmais/leitura"
           />
           <SectionCard
             icon={<Repeat className="h-6 w-6" />}
             title="Minhas Assinaturas"
             description="Você ainda não possui assinaturas ativas."
             ctaLabel="Explorar mais Saúde"
+            href="/painel/cecmais/saude"
           />
         </div>
 
