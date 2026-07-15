@@ -33,7 +33,7 @@ export function MemberHeader({ active, isAdmin, onSignOut }: {
               Carteira de Membro
             </Link>
             <Link
-              href="/painel/cecmais"
+              href="/painel/cecmais/explorar"
               className={`rounded px-2 py-1.5 text-xs font-semibold transition ${
                 active === "cecmais" ? "border-b-2 border-gold text-white" : "text-white/60 hover:text-white"
               }`}
