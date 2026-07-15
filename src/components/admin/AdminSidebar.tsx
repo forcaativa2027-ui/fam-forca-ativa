@@ -10,7 +10,7 @@ import {
   Download, Search, Bell,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ export type TabKey =
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly"
   | "news" | "banners" | "sermons" | "events" | "services" | "word"
-  | "finance" | "patrimony" | "gpv"
+  | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "invites" | "audit"
   | "export";
 
@@ -132,6 +132,14 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
         { key: "events",  label: "Agenda",       icon: <CalendarDays size={15} /> },
         { key: "services",label: "Cultos",       icon: <Radio size={15} /> },
         { key: "word",    label: "Palavra do dia",icon: <BookOpen size={15} /> },
+      ],
+    },
+    {
+      id: "cecmais",
+      label: "CECmais",
+      icon: <Sparkles size={16} />,
+      items: [
+        { key: "cecmais-ofertas", label: "Ofertas", icon: <Sparkles size={15} /> },
       ],
     },
     {
