@@ -28,8 +28,13 @@ const RELOCATION_REASONS: [RelocationReason, string][] = [
 ];
 const JOURNEY_STAGES: [Member["journey_stage"], string][] = [
   ["visitante","Visitante"], ["novo_convertido","Novo Convertido"], ["consolidacao","Em Consolidação"],
-  ["discipulado","Discipulado"], ["batismo","Batismo"], ["membro_ativo","Membro Ativo"], ["servo","Servo"],
-  ["lider_formacao","Líder em Formação"], ["lider","Líder"], ["supervisor","Supervisor"], ["missionario","Missionário"],
+  ["discipulado","Discípulo"], ["batismo","Batismo"], ["membro_ativo","Membro"],
+  ["membro_efetivo","Membro Efetivo"], ["servo","Servo"], ["lider_formacao","Líder em Formação"],
+  ["lider","Líder de Life Group"], ["diacono","Diácono(a)"],
+  ["supervisor_setor","Supervisor(a) de Setor"], ["supervisor_area","Supervisor(a) de Área"],
+  ["supervisor_distrito","Supervisor(a) de Distrito"], ["supervisor","Supervisor"],
+  ["pastor_auxiliar","Pastor(a) Auxiliar"], ["pastor_principal","Pastor(a) Principal"],
+  ["apostolo","Apóstolo(a)"], ["missionario","Missionário"],
 ];
 const FUNCTION_LABELS: Record<LeadershipFunction, string> = {
   apostolo: "Apóstolo", pastor_principal: "Pastor Principal", pastor_auxiliar: "Pastor Auxiliar",
@@ -80,6 +85,7 @@ function PersonalDataTab({ member }: { member: Member }) {
     defaultValues: {
       full_name: member.full_name, social_name: member.social_name ?? "",
       birth_date: member.birth_date ?? "", gender: member.gender ?? "", marital_status: member.marital_status ?? "",
+      member_since: member.member_since ?? "",
       cpf: member.cpf ?? "", rg: member.rg ?? "", cnh: member.cnh ?? "",
       phone: member.phone ?? "", phone_recado: member.phone_recado ?? "", phone_recado_nome: member.phone_recado_nome ?? "",
       email: member.email ?? "", whatsapp: member.whatsapp ?? "",
@@ -108,6 +114,7 @@ function PersonalDataTab({ member }: { member: Member }) {
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Data de nascimento"><Input type="date" {...register("birth_date")} /></Field>
+        <Field label="Membro desde (Carteira CEC ID)"><Input type="date" {...register("member_since")} /></Field>
         <Field label="Sexo">
           <select {...register("gender")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
             <option value="">—</option><option value="masculino">Masculino</option><option value="feminino">Feminino</option>
