@@ -1,5 +1,4 @@
 "use client";
-import { use } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Info, GraduationCap, Repeat, Package, FileDown, Percent } from "lucide-react";
@@ -12,8 +11,8 @@ import { getCategoria } from "@/lib/cecmais-categorias";
 import { OFERTA_TIPO_LABELS, OFERTA_CTA_LABELS } from "@/services/cecmaisOfertas";
 import { logAudit } from "@/services/audit";
 
-export default function OfertaPage({ params }: { params: Promise<{ slug: string; ofertaId: string }> }) {
-  const { slug, ofertaId } = use(params);
+export default function OfertaPage({ params }: { params: { slug: string; ofertaId: string } }) {
+  const { slug, ofertaId } = params;
   const categoria = getCategoria(slug);
   const { data: oferta, isLoading } = useCecmaisOferta(ofertaId);
 
