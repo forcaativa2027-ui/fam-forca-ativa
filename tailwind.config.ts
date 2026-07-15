@@ -17,7 +17,7 @@ const config: Config = {
         card: { DEFAULT:"hsl(var(--card))", foreground:"hsl(var(--card-foreground))" },
         popover: { DEFAULT:"hsl(var(--popover))", foreground:"hsl(var(--popover-foreground))" }
       },
-      fontFamily: { display: ["Fraunces","Georgia","serif"], sans: ["Archivo","system-ui","sans-serif"] },
+      fontFamily: { display: ["Fraunces","Georgia","serif"], sans: ["Archivo","system-ui","sans-serif"], script: ["\"Dancing Script\"","cursive"] },
       borderRadius: { lg: "var(--radius)", md: "calc(var(--radius) - 2px)", sm: "calc(var(--radius) - 4px)" }
     }
   },
