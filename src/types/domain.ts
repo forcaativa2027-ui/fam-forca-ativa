@@ -936,3 +936,32 @@ export interface CecIdValidation {
   valid: boolean; cec_id: string | null; full_name: string | null; photo_url: string | null;
   categoria: string | null; church_name: string | null; card_status: CardStatus | null;
 }
+
+// CECmais — Catálogo de Ofertas (Fase 3)
+export type CECmaisCategoriaSlug = "saude" | "protecao" | "formacao" | "fe" | "leitura" | "vantagens";
+export type CECmaisOfertaTipo = "produto" | "conteudo_digital" | "curso" | "assinatura" | "servico_plano";
+
+export interface CECmaisOferta {
+  id: string;
+  categoria: CECmaisCategoriaSlug;
+  tipo: CECmaisOfertaTipo;
+  nome: string;
+  descricao_curta: string | null;
+  descricao_completa: string | null;
+  imagem_url: string | null;
+  parceiro_nome: string | null;
+  preco: number | null;
+  estoque: number | null;
+  arquivo_url: string | null;
+  carga_horaria_horas: number | null;
+  numero_modulos: number | null;
+  emite_certificado: boolean;
+  preco_recorrente: number | null;
+  periodicidade: string | null;
+  permite_dependentes: boolean;
+  carencia_dias: number | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export type CECmaisOfertaInput = Partial<Omit<CECmaisOferta, "id" | "created_at">>;
