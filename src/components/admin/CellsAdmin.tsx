@@ -95,11 +95,11 @@ export function CellsAdmin() {
       cancelEdit();
       qc.invalidateQueries({ queryKey: ["cells"] });
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Erro ao salvar");
+      setErr((e as { message?: string })?.message ?? "Erro ao salvar");
     }
   }
   async function remove(c: Cell) {
-    if (!confirm(`Remover célula "${c.name}"?\n\nMembros vinculados ficarão sem célula.`)) return;
+    if (!confirm(`Remover Life Group "${c.name}"?\n\nMembros vinculados ficarão sem Life Group.`)) return;
     try {
       await deleteCell(supabase, c.id);
       await logAudit(supabase, "delete", "life_groups", c.id, { name: c.name });
@@ -122,7 +122,7 @@ export function CellsAdmin() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>{editing ? "Editar célula" : "Cadastrar célula"}</CardTitle>
+              <CardTitle>{editing ? "Editar Life Group" : "Cadastrar Life Group"}</CardTitle>
               <CardDescription>{editing ? `Alterando ${editing.name}` : "Vincule a um setor existente"}</CardDescription>
             </div>
             {editing && <Button onClick={cancelEdit} variant="ghost" size="sm" className="gap-1"><X className="h-3.5 w-3.5" />Cancelar</Button>}
@@ -130,7 +130,7 @@ export function CellsAdmin() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-            <Field label="Nome da célula" error={errors.name?.message}>
+            <Field label="Nome do Life Group" error={errors.name?.message}>
               <Input {...register("name")} placeholder="Ex: Vida Nova" />
             </Field>
             <Field label="Setor" error={errors.sector_id?.message}>
@@ -268,7 +268,7 @@ export function CellsAdmin() {
             </div>
             {err && <p className="text-sm text-destructive">{err}</p>}
             <Button type="submit" disabled={isSubmitting} className="gap-2">
-              <Plus className="h-4 w-4" />{editing ? "Salvar alterações" : "Cadastrar célula"}
+              <Plus className="h-4 w-4" />{editing ? "Salvar alterações" : "Cadastrar Life Group"}
             </Button>
             <p className="text-xs text-muted">
               Dica: <b>{members.length}</b> membro(s) já cadastrado(s) podem ser vinculados na aba "Membros".
@@ -280,9 +280,9 @@ export function CellsAdmin() {
       <div className="space-y-4">
         {bySector.map(({ sector, cells: sectorCells }) => (
           <div key={sector.id}>
-            <h3 className="mb-2 font-display text-lg text-navy">{sector.name} <span className="text-sm text-muted">({sectorCells.length} célula(s))</span></h3>
+            <h3 className="mb-2 font-display text-lg text-navy">{sector.name} <span className="text-sm text-muted">({sectorCells.length} Life Group(s))</span></h3>
             <div className="grid gap-3 sm:grid-cols-2">
-              {sectorCells.length === 0 && <p className="text-sm italic text-muted">Nenhuma célula neste setor.</p>}
+              {sectorCells.length === 0 && <p className="text-sm italic text-muted">Nenhum Life Group neste setor.</p>}
               {sectorCells.map((c) => <CellCard key={c.id} cell={c} onEdit={startEdit} onRemove={remove} />)}
             </div>
           </div>
