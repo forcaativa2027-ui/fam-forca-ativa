@@ -965,3 +965,138 @@ export interface CECmaisOferta {
 }
 
 export type CECmaisOfertaInput = Partial<Omit<CECmaisOferta, "id" | "created_at">>;
+
+// ============================================================
+// RELMDA — Relatório Semanal de Life Group (Fase 1)
+// ============================================================
+export type RelmdaStatus =
+  | "rascunho" | "enviado" | "em_analise" | "correcao_solicitada"
+  | "corrigido" | "validado" | "encerrado";
+
+export type RelmdaHealth = "muito_saudavel" | "saudavel" | "atencao" | "necessita_apoio";
+export type RelmdaFlow = "muito_bem" | "bem" | "regular" | "dificil";
+export type RelmdaVisitorFollowup = "sem_contato" | "contatado" | "em_acompanhamento" | "integrado";
+export type RelmdaNoMeetingReason =
+  | "feriado" | "evento_igreja" | "enfermidade" | "ausencia_lideranca" | "reorganizacao" | "outro";
+
+export interface RelmdaWeeklyReport {
+  id: string;
+  life_group_id: string;
+  week_number: number;
+  month: number;
+  year: number;
+  reference_date: string | null;
+
+  happened: boolean;
+  no_meeting_reason: RelmdaNoMeetingReason | null;
+  no_meeting_note: string | null;
+  extraordinary: boolean;
+  week_note: string | null;
+
+  mda_count: number;
+  new_discipleships: number;
+  interrupted_discipleships: number;
+
+  ge_happened: boolean;
+  ge_count: number;
+  evangelism_group_id: string | null;
+  ge_people_reached: number;
+  ge_decisions: number;
+
+  tadel_count: number;
+
+  emp_participants: number;
+  emp_occurrences: number;
+
+  offering_pix: number;
+  offering_especie: number;
+  offering_outros: number;
+  offering_outros_desc: string | null;
+  offering_total: number;
+
+  kg_amor: number;
+  cestas_completas: number;
+
+  topic: string | null;
+  bible_text: string | null;
+  flow: RelmdaFlow | null;
+  health_assessment: RelmdaHealth | null;
+  health_comment: string | null;
+  summary: string | null;
+
+  status: RelmdaStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  sent_by: string | null;
+  sent_at: string | null;
+  validated_by: string | null;
+  validated_at: string | null;
+
+  supervisor_note: string | null;
+  needs_correction: boolean;
+  correction_items: string[] | null;
+  correction_deadline: string | null;
+  needs_support: boolean;
+  support_type: string | null;
+}
+
+export type RelmdaWeeklyReportInput = Partial<Omit<RelmdaWeeklyReport,
+  "id" | "created_at" | "updated_at" | "offering_total">>;
+
+export interface RelmdaAttendance {
+  id: string;
+  report_id: string;
+  member_id: string;
+  present: boolean;
+}
+
+export interface RelmdaVisitor {
+  id: string;
+  report_id: string;
+  full_name: string;
+  phone: string | null;
+  first_visit: boolean;
+  followup_status: RelmdaVisitorFollowup;
+  note: string | null;
+  created_at: string;
+}
+export type RelmdaVisitorInput = Partial<Omit<RelmdaVisitor, "id" | "report_id" | "created_at">> & { full_name: string };
+
+export interface RelmdaPastoralNeed {
+  id: string;
+  report_id: string;
+  need_type: string | null;
+  urgent_prayer: boolean;
+  pastoral_visit: boolean;
+  related_member_id: string | null;
+  description: string | null;
+  responsible_id: string | null;
+  deadline: string | null;
+  status: string;
+  created_at: string;
+}
+export type RelmdaPastoralNeedInput = Partial<Omit<RelmdaPastoralNeed, "id" | "report_id" | "created_at">>;
+
+export interface RelmdaStatusHistory {
+  id: string;
+  report_id: string;
+  from_status: RelmdaStatus | null;
+  to_status: RelmdaStatus;
+  changed_by: string | null;
+  changed_at: string;
+  note: string | null;
+}
+
+export interface RelmdaLgSnapshot {
+  total_members: number;
+  with_discipler: number;
+}
+
+export interface RelmdaReportFull {
+  report: RelmdaWeeklyReport;
+  attendance: RelmdaAttendance[];
+  visitors: RelmdaVisitor[];
+  needs: RelmdaPastoralNeed[];
+  snapshot: RelmdaLgSnapshot;
+}
