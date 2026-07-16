@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   RelmdaWeeklyReport, RelmdaWeeklyReportInput, RelmdaAttendance, RelmdaVisitor,
   RelmdaVisitorInput, RelmdaPastoralNeed, RelmdaPastoralNeedInput, RelmdaLgSnapshot,
-  RelmdaReportFull, RelmdaStatusHistory,
+  RelmdaReportFull, RelmdaStatusHistory, RelmdaSupervisorOverviewRow,
 } from "@/types/domain";
 
 /** Retorna o id do rascunho da semana (cria se ainda não existir). */
@@ -57,11 +57,9 @@ export async function updateReport(
   return data as RelmdaWeeklyReport;
 }
 
-/** Envia o relatório (rascunho/corrigido -> enviado). */
-export async function sendReport(sb: SupabaseClient, reportId: string, userId: string): Promise<void> {
-  const { error } = await sb.from("relmda_weekly_reports")
-    .update({ status: "enviado", sent_by: userId, sent_at: new Date().toISOString() })
-    .eq("id", reportId);
+/** Envia o relatório: rascunho -> enviado, ou correção_solicitada -> corrigido. */
+export async function sendReport(sb: SupabaseClient, reportId: string): Promise<void> {
+  const { error } = await sb.rpc("relmda_send_report", { p_report_id: reportId });
   if (error) throw error;
 }
 
@@ -103,4 +101,45 @@ export async function getStatusHistory(sb: SupabaseClient, reportId: string): Pr
     .select("*").eq("report_id", reportId).order("changed_at");
   if (error) throw error;
   return (data ?? []) as RelmdaStatusHistory[];
+}
+
+// ============================================================
+// Supervisão (Fase 2)
+// ============================================================
+export async function getSupervisorOverview(
+  sb: SupabaseClient, weekNumber: number, month: number, year: number
+): Promise<RelmdaSupervisorOverviewRow[]> {
+  const { data, error } = await sb.rpc("relmda_supervisor_overview", {
+    p_week_number: weekNumber, p_month: month, p_year: year,
+  });
+  if (error) throw error;
+  return (data ?? []) as RelmdaSupervisorOverviewRow[];
+}
+
+export async function markInAnalysis(sb: SupabaseClient, reportId: string): Promise<void> {
+  const { error } = await sb.rpc("relmda_mark_in_analysis", { p_report_id: reportId });
+  if (error) throw error;
+}
+
+export async function requestCorrection(
+  sb: SupabaseClient, reportId: string, items: string[], note: string, deadline: string | null
+): Promise<void> {
+  const { error } = await sb.rpc("relmda_request_correction", {
+    p_report_id: reportId, p_items: items, p_note: note, p_deadline: deadline,
+  });
+  if (error) throw error;
+}
+
+export async function validateReport(sb: SupabaseClient, reportId: string, note?: string): Promise<void> {
+  const { error } = await sb.rpc("relmda_validate_report", { p_report_id: reportId, p_note: note ?? null });
+  if (error) throw error;
+}
+
+export async function saveSupervisorNote(
+  sb: SupabaseClient, reportId: string, note: string, needsSupport: boolean, supportType: string | null
+): Promise<void> {
+  const { error } = await sb.rpc("relmda_save_supervisor_note", {
+    p_report_id: reportId, p_note: note, p_needs_support: needsSupport, p_support_type: supportType,
+  });
+  if (error) throw error;
 }
