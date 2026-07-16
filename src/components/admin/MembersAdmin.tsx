@@ -167,6 +167,10 @@ export function MembersAdmin() {
 
   async function onCreate(v: MemberCreateInput) {
     setErr("");
+    if (!v.church_id && !v.life_group_id) {
+      setErr("Selecione ao menos a Igreja (ou o Life Group) antes de cadastrar. Sem isso o membro fica sem escopo e não aparece pra ninguém depois.");
+      return;
+    }
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { setErr("Sessão expirada. Faça login novamente."); return; }
@@ -179,6 +183,7 @@ export function MembersAdmin() {
           full_name: v.full_name,
           phone: v.phone || null,
           birth_date: v.birth_date || null,
+          church_id: v.church_id || null,
           life_group_id: v.life_group_id || null,
           role: "membro",
           access_token: session.access_token,
