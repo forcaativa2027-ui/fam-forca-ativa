@@ -513,3 +513,9 @@ export const useRelmdaSupervisorOverview = (weekNumber: number, month: number, y
     queryKey: ["relmda-supervisor-overview", weekNumber, month, year],
     queryFn: () => Rm.getSupervisorOverview(supabase, weekNumber, month, year),
   });
+
+export const useRelmdaMonthlyComparison = (month: number, year: number) =>
+  useQuery({
+    queryKey: ["relmda-monthly-comparison", month, year],
+    queryFn: () => Rm.getMonthlyComparison(supabase, month, year),
+  });
