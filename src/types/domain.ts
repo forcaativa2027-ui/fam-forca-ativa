@@ -1122,3 +1122,18 @@ export interface RelmdaSupervisorOverviewRow {
   correction_deadline: string | null;
   is_inconsistent: boolean;
 }
+
+export interface RelmdaMonthlyComparisonRow {
+  week_number: number;
+  life_groups: number;
+  total_members: number;
+  mda_count: number;
+  ge_count: number;
+  visitantes_count: number;
+  offering_total: number;
+  kg_amor: number;
+  tadel_count: number;
+  emp_participants: number;
+  enviados: number;
+  esperados: number;
+}
