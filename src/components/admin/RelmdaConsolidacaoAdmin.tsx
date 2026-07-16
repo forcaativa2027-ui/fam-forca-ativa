@@ -1,8 +1,9 @@
 "use client";
 import { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Network } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Network, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRelmdaSupervisorOverview, useChurches, useSectors } from "@/hooks/use-queries";
+import { exportToExcel, RELMDA_SECTOR_COLUMNS } from "@/lib/export";
 import type { RelmdaSupervisorOverviewRow } from "@/types/domain";
 
 const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -85,9 +86,15 @@ export function RelmdaConsolidacaoAdmin() {
           <h2 className="font-display text-2xl text-navy">Consolidação da Rede</h2>
           <p className="text-sm text-muted-foreground">Semana {period.week} de {MONTH_NAMES[period.month - 1]} de {period.year}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => shiftWeek(-1)} className="gap-1"><ChevronLeft className="h-4 w-4" />Semana anterior</Button>
           <Button variant="outline" size="sm" onClick={() => shiftWeek(1)} className="gap-1">Semana seguinte<ChevronRight className="h-4 w-4" /></Button>
+          <Button
+            variant="outline" size="sm" className="gap-1" disabled={bySector.length === 0}
+            onClick={() => exportToExcel(bySector as unknown as Record<string, unknown>[], RELMDA_SECTOR_COLUMNS, `relmda_consolidacao_setor_semana${period.week}_${period.month}_${period.year}`, "Consolidação")}
+          >
+            <FileSpreadsheet className="h-4 w-4" />Excel
+          </Button>
         </div>
       </div>
 

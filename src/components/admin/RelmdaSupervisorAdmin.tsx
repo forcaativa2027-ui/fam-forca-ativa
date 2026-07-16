@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft, ChevronRight, Eye, CheckCircle2, AlertOctagon, Clock,
-  FileWarning, X, ShieldCheck,
+  FileWarning, X, ShieldCheck, FileDown, FileSpreadsheet, Printer,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useRelmdaSupervisorOverview, useRelmdaReportFull } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import * as Rm from "@/services/relmdaReports";
+import { exportToExcel, exportToPDF, RELMDA_OVERVIEW_COLUMNS } from "@/lib/export";
 import type { RelmdaStatus, RelmdaSupervisorOverviewRow } from "@/types/domain";
 
 const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -62,6 +64,21 @@ export function RelmdaSupervisorAdmin() {
   const noPrazo = enviados - (isPastPeriod ? 0 : 0);
   const inconsistentes = rows.filter((r) => r.is_inconsistent).length;
 
+  const filenameBase = `relmda_supervisao_semana${period.week}_${period.month}_${period.year}`;
+  function handleExportExcel() {
+    exportToExcel(rows as unknown as Record<string, unknown>[], RELMDA_OVERVIEW_COLUMNS, filenameBase, "Supervisão");
+  }
+  function handleExportPdf() {
+    exportToPDF({
+      title: "Supervisão de Rede — RELMDA",
+      subtitle: `Semana ${period.week} de ${MONTH_NAMES[period.month - 1]} de ${period.year}`,
+      columns: RELMDA_OVERVIEW_COLUMNS,
+      data: rows as unknown as Record<string, unknown>[],
+      filename: filenameBase,
+      landscape: true,
+    });
+  }
+
   async function handleValidate(reportId: string) {
     if (!confirm("Após a validação, os dados serão considerados na consolidação oficial da semana.\n\nValidar relatório?")) return;
     try {
@@ -89,9 +106,11 @@ export function RelmdaSupervisorAdmin() {
             Semana {period.week} de {MONTH_NAMES[period.month - 1]} de {period.year}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => shiftWeek(-1)} className="gap-1"><ChevronLeft className="h-4 w-4" />Semana anterior</Button>
           <Button variant="outline" size="sm" onClick={() => shiftWeek(1)} className="gap-1">Semana seguinte<ChevronRight className="h-4 w-4" /></Button>
+          <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1" disabled={rows.length === 0}><FileSpreadsheet className="h-4 w-4" />Excel</Button>
+          <Button variant="outline" size="sm" onClick={handleExportPdf} className="gap-1" disabled={rows.length === 0}><FileDown className="h-4 w-4" />PDF</Button>
         </div>
       </div>
 
@@ -234,7 +253,12 @@ function ReportDetailModal({
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-card p-5 shadow-xl">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-display text-lg text-navy">Relatório do Life Group</h3>
-          <button onClick={onClose}><X className="h-5 w-5 text-muted-foreground" /></button>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm" className="h-7 gap-1 text-xs">
+              <Link href={`/admin/relatorio-relmda/${reportId}`} target="_blank"><Printer className="h-3 w-3" />Imprimir</Link>
+            </Button>
+            <button onClick={onClose}><X className="h-5 w-5 text-muted-foreground" /></button>
+          </div>
         </div>
 
         {isLoading || !full ? <p className="text-sm text-muted-foreground">Carregando…</p> : (
