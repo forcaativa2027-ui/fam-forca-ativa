@@ -64,3 +64,12 @@ export async function deleteMember(sb: SupabaseClient, id: string): Promise<void
     );
   }
 }
+
+/** Resolve o nome real de Igreja/Life Group do membro, mesmo que estejam fora do escopo territorial de quem pergunta (desde que já tenha acesso ao membro). */
+export async function getMemberStructureNames(
+  sb: SupabaseClient, memberId: string
+): Promise<{ church_name: string | null; life_group_name: string | null } | null> {
+  const { data, error } = await sb.rpc("member_structure_names", { p_member_id: memberId }).maybeSingle();
+  if (error) throw error;
+  return data as { church_name: string | null; life_group_name: string | null } | null;
+}
