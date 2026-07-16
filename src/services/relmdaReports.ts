@@ -3,6 +3,7 @@ import type {
   RelmdaWeeklyReport, RelmdaWeeklyReportInput, RelmdaAttendance, RelmdaVisitor,
   RelmdaVisitorInput, RelmdaPastoralNeed, RelmdaPastoralNeedInput, RelmdaLgSnapshot,
   RelmdaReportFull, RelmdaStatusHistory, RelmdaSupervisorOverviewRow, RelmdaMonthlyComparisonRow,
+  RelmdaDeadlineConfig,
 } from "@/types/domain";
 
 /** Retorna o id do rascunho da semana (cria se ainda não existir). */
@@ -153,4 +154,25 @@ export async function getMonthlyComparison(
   const { data, error } = await sb.rpc("relmda_monthly_comparison", { p_month: month, p_year: year });
   if (error) throw error;
   return (data ?? []) as RelmdaMonthlyComparisonRow[];
+}
+
+// ============================================================
+// Prazos configuráveis (Fase 5)
+// ============================================================
+export async function getEffectiveDeadline(sb: SupabaseClient, churchId: string): Promise<RelmdaDeadlineConfig | null> {
+  const { data, error } = await sb.rpc("relmda_effective_deadline", { p_church_id: churchId }).maybeSingle();
+  if (error) { console.error("[relmda] getEffectiveDeadline", error); return null; }
+  return data ? { church_id: churchId, ...data } as RelmdaDeadlineConfig : null;
+}
+
+export async function listDeadlineConfigs(sb: SupabaseClient): Promise<RelmdaDeadlineConfig[]> {
+  const { data, error } = await sb.from("relmda_deadline_config").select("*").order("church_id", { nullsFirst: true });
+  if (error) { console.error("[relmda] listDeadlineConfigs", error); return []; }
+  return (data ?? []) as RelmdaDeadlineConfig[];
+}
+
+export async function saveDeadlineConfig(sb: SupabaseClient, config: RelmdaDeadlineConfig): Promise<void> {
+  const { error } = await sb.from("relmda_deadline_config")
+    .upsert(config, { onConflict: "church_id" });
+  if (error) throw error;
 }
