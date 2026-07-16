@@ -22,7 +22,7 @@ export type TabKey =
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
-  | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao"
+  | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard"
   | "news" | "banners" | "sermons" | "events" | "services" | "word"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "invites" | "audit"
@@ -121,6 +121,7 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
         { key: "monthly", label: "Rel. mensal",  icon: <CalendarRange size={15} /> },
         { key: "relmda-supervisao", label: "Supervisão RELMDA", icon: <FileBarChart size={15} /> },
         { key: "relmda-consolidacao", label: "Consolidação RELMDA", icon: <Network size={15} /> },
+        { key: "relmda-dashboard", label: "Dashboard RELMDA", icon: <BarChart3 size={15} /> },
       ],
     },
     {

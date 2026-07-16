@@ -31,6 +31,7 @@ import { WeeklyReportsAdmin } from "./WeeklyReportsAdmin";
 import { MonthlyReportAdmin } from "./MonthlyReportAdmin";
 import { RelmdaSupervisorAdmin } from "./RelmdaSupervisorAdmin";
 import { RelmdaConsolidacaoAdmin } from "./RelmdaConsolidacaoAdmin";
+import { RelmdaDashboardAdmin } from "./RelmdaDashboardAdmin";
 import { FinanceAdmin } from "./FinanceAdmin";
 import { NewsAdmin } from "./NewsAdmin";
 import { PublicPrayerRequestsAdmin, VisitRequestsAdmin } from "./ContactRequestsAdmin";
@@ -217,6 +218,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
     case "monthly":             return <MonthlyReportAdmin />;
     case "relmda-supervisao":   return <RelmdaSupervisorAdmin />;
     case "relmda-consolidacao": return <RelmdaConsolidacaoAdmin />;
+    case "relmda-dashboard":    return <RelmdaDashboardAdmin />;
     case "news":                return <NewsAdmin />;
     case "banners":             return <BannersAdmin />;
     case "sermons":             return <SermonsAdmin />;
