@@ -22,7 +22,7 @@ export type TabKey =
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
-  | "weekly" | "monthly"
+  | "weekly" | "monthly" | "relmda-supervisao"
   | "news" | "banners" | "sermons" | "events" | "services" | "word"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "invites" | "audit"
@@ -119,6 +119,7 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
       items: [
         { key: "weekly",  label: "Rel. semanal", icon: <CalendarDays size={15} /> },
         { key: "monthly", label: "Rel. mensal",  icon: <CalendarRange size={15} /> },
+        { key: "relmda-supervisao", label: "Supervisão RELMDA", icon: <FileBarChart size={15} /> },
       ],
     },
     {
