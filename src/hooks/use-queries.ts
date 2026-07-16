@@ -515,6 +515,12 @@ export const useRelmdaSupervisorOverview = (weekNumber: number, month: number, y
     queryFn: () => Rm.getSupervisorOverview(supabase, weekNumber, month, year),
   });
 
+export const useRelmdaDeadline = (churchId: string | null) =>
+  useQuery({
+    queryKey: ["relmda-deadline", churchId],
+    queryFn: () => Rm.getEffectiveDeadline(supabase, churchId as string),
+    enabled: !!churchId,
+  });
 export const useRelmdaMonthlyComparison = (month: number, year: number) =>
   useQuery({
     queryKey: ["relmda-monthly-comparison", month, year],
