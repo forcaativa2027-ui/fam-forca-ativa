@@ -13,6 +13,7 @@ import * as Di from "@/services/discipleship";
 import * as Tl from "@/services/timeline";
 import * as Pr from "@/services/prayer";
 import * as Rm from "@/services/relmdaReports";
+import * as Ev from "@/services/events";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -532,4 +533,44 @@ export const useRecentCheckins = (eventLabel?: string) =>
     queryKey: ["cec-id-checkins", eventLabel ?? "all"],
     queryFn: () => Cid.listRecentCheckins(supabase, eventLabel),
     refetchInterval: 8000,
+  });
+
+// ============================================================
+// Eventos com Inscrição (módulo novo — diferente da Agenda simples acima)
+// ============================================================
+export const usePublicRegistrationEvents = (churchId?: string | null) =>
+  useQuery({ queryKey: ["registration-events-public", churchId ?? "all"], queryFn: () => Ev.listPublicRegistrationEvents(supabase, churchId) });
+
+export const useRegistrationEventBySlug = (slug: string | null) =>
+  useQuery({
+    queryKey: ["registration-event-by-slug", slug],
+    queryFn: () => Ev.getRegistrationEventBySlug(supabase, slug as string),
+    enabled: !!slug,
+  });
+
+export const useMyEventRegistrations = () =>
+  useQuery({ queryKey: ["my-event-registrations"], queryFn: () => Ev.listMyEventRegistrations(supabase) });
+
+export const useRegistrationEventsAdmin = () =>
+  useQuery({ queryKey: ["registration-events-admin"], queryFn: () => Ev.listRegistrationEventsAdmin(supabase) });
+
+export const useRegistrationEventAdmin = (id: string | null) =>
+  useQuery({
+    queryKey: ["registration-event-admin", id],
+    queryFn: () => Ev.getRegistrationEventAdmin(supabase, id as string),
+    enabled: !!id,
+  });
+
+export const useEventRegistrations = (eventId: string | null) =>
+  useQuery({
+    queryKey: ["event-registrations", eventId],
+    queryFn: () => Ev.listEventRegistrations(supabase, eventId as string),
+    enabled: !!eventId,
+  });
+
+export const useEventRegistrationSummary = (eventId: string | null) =>
+  useQuery({
+    queryKey: ["event-registration-summary", eventId],
+    queryFn: () => Ev.getRegistrationSummary(supabase, eventId as string),
+    enabled: !!eventId,
   });
