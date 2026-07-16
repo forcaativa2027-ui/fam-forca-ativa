@@ -56,6 +56,11 @@ export async function updateMember(sb: SupabaseClient, id: string, input: Partia
 }
 
 export async function deleteMember(sb: SupabaseClient, id: string): Promise<void> {
-  const { error } = await sb.from("members").delete().eq("id", id);
+  const { data, error } = await sb.from("members").delete().eq("id", id).select("id");
   if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error(
+      "Nada foi excluído. Provavelmente este membro está fora do seu escopo de permissão (church_id não bate com o seu acesso), ou já foi removido antes."
+    );
+  }
 }
