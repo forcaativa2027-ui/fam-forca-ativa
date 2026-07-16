@@ -10,7 +10,7 @@ import {
   Download, Search, Bell,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ export type TabKey =
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
-  | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard"
+  | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "cec-id-portaria"
   | "news" | "banners" | "sermons" | "events" | "services" | "word"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "invites" | "audit"
@@ -153,6 +153,14 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
         { key: "finance",   label: "Financeiro",              icon: <DollarSign size={15} /> },
         { key: "patrimony", label: "Patrimônio",              icon: <Landmark size={15} /> },
         { key: "gpv",       label: "Pessoas & Vínculos (GPV)",icon: <UserCog size={15} /> },
+      ],
+    },
+    {
+      id: "cec-id",
+      label: "CEC ID",
+      icon: <IdCard size={16} />,
+      items: [
+        { key: "cec-id-portaria", label: "Leitor de Portaria", icon: <IdCard size={15} /> },
       ],
     },
     {
