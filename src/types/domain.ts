@@ -1105,6 +1105,8 @@ export interface RelmdaSupervisorOverviewRow {
   life_group_id: string;
   life_group_name: string;
   leader_name: string | null;
+  church_id: string | null;
+  church_name: string | null;
   report_id: string | null;
   status: RelmdaStatus;
   sent_at: string | null;
@@ -1113,6 +1115,9 @@ export interface RelmdaSupervisorOverviewRow {
   visitantes_count: number;
   ge_count: number;
   offering_total: number;
+  kg_amor: number;
+  tadel_count: number;
+  emp_participants: number;
   needs_correction: boolean;
   correction_deadline: string | null;
   is_inconsistent: boolean;
