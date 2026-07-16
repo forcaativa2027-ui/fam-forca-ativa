@@ -206,3 +206,40 @@ export const FINANCE_COLUMNS: ExportColumn[] = [
   { header: "Ofertante",       key: "payer_name",        width: 22 },
   { header: "Descrição",       key: "description",       width: 30 },
 ];
+
+const RELMDA_STATUS_LABELS: Record<string, string> = {
+  rascunho: "Rascunho", enviado: "Enviado", em_analise: "Em análise",
+  correcao_solicitada: "Correção solicitada", corrigido: "Corrigido", validado: "Validado", encerrado: "Encerrado",
+};
+
+export const RELMDA_OVERVIEW_COLUMNS: ExportColumn[] = [
+  { header: "Life Group",      key: "life_group_name",   width: 26 },
+  { header: "Líder",           key: "leader_name",       width: 22 },
+  { header: "Igreja",          key: "church_name",       width: 22 },
+  { header: "Status",          key: "status",            width: 16, format: v => RELMDA_STATUS_LABELS[v as string] ?? String(v ?? "—") },
+  { header: "Enviado em",      key: "sent_at",           width: 16, format: v => v ? new Date(v as string).toLocaleString("pt-BR") : "—" },
+  { header: "Membros",         key: "total_members",     width: 12 },
+  { header: "MDA",             key: "mda_count",         width: 10 },
+  { header: "Visitantes",      key: "visitantes_count",  width: 12 },
+  { header: "GE",              key: "ge_count",          width: 10 },
+  { header: "TADEL",           key: "tadel_count",       width: 10 },
+  { header: "EMP",             key: "emp_participants",  width: 10 },
+  { header: "Oferta total",    key: "offering_total",    width: 16, format: v => fmtCurrency(v as number) },
+  { header: "Kg do Amor",      key: "kg_amor",           width: 14 },
+  { header: "Inconsistente?",  key: "is_inconsistent",   width: 14 },
+];
+
+export const RELMDA_SECTOR_COLUMNS: ExportColumn[] = [
+  { header: "Setor",           key: "sectorName",        width: 26 },
+  { header: "Life Groups",     key: "lifeGroups",        width: 14 },
+  { header: "Membros",         key: "membros",           width: 12 },
+  { header: "MDA",             key: "mda",               width: 10 },
+  { header: "GE",              key: "ge",                width: 10 },
+  { header: "Visitantes",      key: "visitantes",        width: 12 },
+  { header: "TADEL",           key: "tadel",             width: 10 },
+  { header: "EMP",             key: "emp",               width: 10 },
+  { header: "Oferta total",    key: "ofertaTotal",       width: 16, format: v => fmtCurrency(v as number) },
+  { header: "Kg do Amor",      key: "kgAmor",            width: 14 },
+  { header: "Enviados",        key: "enviados",          width: 12 },
+  { header: "Esperados",       key: "esperados",         width: 12 },
+];
