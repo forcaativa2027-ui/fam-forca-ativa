@@ -1154,3 +1154,62 @@ export interface RelmdaMonthlyComparisonRow {
   enviados: number;
   esperados: number;
 }
+
+// ============================================================
+// Eventos com Inscrição (sem pagamento por enquanto)
+// Diferente de EventItem/EventStatus acima, que são da Agenda simples.
+// ============================================================
+export type RegistrationEventStatus = "rascunho" | "publicado" | "encerrado" | "cancelado";
+export type EventRegistrationStatus = "confirmada" | "lista_espera" | "cancelada";
+
+export interface RegistrationEvent {
+  id: string;
+  church_id: string | null;
+  slug: string;
+  name: string;
+  description: string | null;
+  banner_url: string | null;
+  location: string | null;
+  is_online: boolean;
+  online_url: string | null;
+  start_at: string;
+  end_at: string | null;
+  registration_opens_at: string | null;
+  registration_closes_at: string | null;
+  capacity: number | null;
+  is_free: boolean;
+  status: RegistrationEventStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+export type RegistrationEventInput = Partial<Omit<RegistrationEvent, "id" | "created_at" | "updated_at">>;
+
+export interface EventRegistration {
+  id: string;
+  event_id: string;
+  member_id: string | null;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  status: EventRegistrationStatus;
+  registered_at: string;
+  cancelled_at: string | null;
+}
+
+export interface EventRegistrationSummary {
+  confirmadas: number;
+  lista_espera: number;
+  canceladas: number;
+  capacidade: number | null;
+}
+
+export interface RegisterForEventResult {
+  registration_id: string;
+  reg_status: EventRegistrationStatus;
+  queue_position: number | null;
+}
+
+export interface MyEventRegistration extends EventRegistration {
+  event: RegistrationEvent;
+}
