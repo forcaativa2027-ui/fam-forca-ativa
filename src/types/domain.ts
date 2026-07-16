@@ -309,7 +309,13 @@ export interface RecentEvolution {
   id: string; member_id: string; from_stage: string; to_stage: string; event_date: string;
   full_name: string; phone: string | null; church_id: string | null;
 }
-export interface AuditLog { id:string; actor_id:string|null; actor_email:string|null; action:AuditAction; entity:string; entity_id:string|null; created_at:string; }
+export interface AuditLog {
+  id:string; actor_id:string|null; actor_email:string|null; action:AuditAction; entity:string; entity_id:string|null;
+  church_id: string | null;
+  details: Record<string, unknown> | null;
+  ip: string | null;
+  created_at:string;
+}
 export interface MdaMinAlert { nivel:"distrito"|"area"|"setor"; id:string; nome:string; filhos:number; }
 export interface DashboardStats {
   total_members:number; total_visitors:number; total_groups:number;
