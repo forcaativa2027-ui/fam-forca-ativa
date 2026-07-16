@@ -1,12 +1,31 @@
 "use client";
 import { useState } from "react";
-import { Star, TrendingUp, Users, Target, BookOpen, Church, ChevronRight, MessageCircle } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Star, TrendingUp, Users, Target, BookOpen, Church, ChevronRight, MessageCircle, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMemberScores, useChurches, useCells, useAllMembers, useRecentEvolutions } from "@/hooks/use-queries";
+import { supabase } from "@/lib/supabase/client";
+import { deleteMember } from "@/services/members";
+import { logAudit } from "@/services/audit";
 import type { MemberScore, EngagementBand } from "@/types/domain";
 import { TEMPLATE_ENCORAJAMENTO, TEMPLATE_CONTATO_GERAL, TEMPLATE_EVOLUCAO_ETAPA, buildWhatsAppLink } from "@/lib/whatsapp-templates";
+
+async function removeMemberEverywhere(qc: ReturnType<typeof useQueryClient>, id: string, name: string) {
+  if (!confirm(`Remover ${name}?\n\nEsta ação remove apenas o registro de membro. A conta de acesso (se houver) continua existindo.`)) return false;
+  try {
+    await deleteMember(supabase, id);
+    await logAudit(supabase, "delete", "members", id, { name });
+    qc.invalidateQueries({ queryKey: ["all-members"] });
+    qc.invalidateQueries({ queryKey: ["member-scores"] });
+    return true;
+  } catch (e: unknown) {
+    alert(e instanceof Error ? e.message : "Erro ao remover");
+    return false;
+  }
+}
+
 
 // ── Config visual ─────────────────────────────────────────────
 const BAND_CONFIG: Record<EngagementBand, { color: string; bg: string; border: string; icon: string; label: string }> = {
@@ -42,12 +61,19 @@ function ScoreBar({ value, max = 100, color = "bg-[#C9A227]" }: { value: number;
 // ── Card de membro ────────────────────────────────────────────
 function MemberScoreCard({ m, phone }: { m: MemberScore; phone?: string | null }) {
   const [open, setOpen] = useState(false);
+  const qc = useQueryClient();
   const cfg = BAND_CONFIG[m.engagement_band];
+
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    await removeMemberEverywhere(qc, m.id, m.full_name);
+  }
 
   return (
     <Card className={`border-l-4 ${cfg.border}`}>
       <CardContent className="pt-3 pb-3">
-        <button className="w-full text-left" onClick={() => setOpen(o => !o)}>
+        <div className="w-full cursor-pointer text-left" role="button" tabIndex={0} onClick={() => setOpen(o => !o)}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setOpen(o => !o); }}>
           <div className="flex items-center justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -65,15 +91,23 @@ function MemberScoreCard({ m, phone }: { m: MemberScore; phone?: string | null }
                 <p className="font-display text-2xl font-bold text-[#0E2A47]">{m.score_total}</p>
                 <p className="text-xs text-muted-foreground">/ 100</p>
               </div>
+              <button
+                onClick={handleDelete}
+                title="Excluir membro"
+                className="rounded-md p-1.5 text-red-500 hover:bg-red-50 hover:text-red-700"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
               <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`} />
             </div>
           </div>
           <div className="mt-2"><ScoreBar value={m.score_total} /></div>
-        </button>
+        </div>
 
         {phone && (
           <a
             href={buildWhatsAppLink(
+
               phone,
               m.engagement_band === "em_risco" ? TEMPLATE_ENCORAJAMENTO(m.full_name) : TEMPLATE_CONTATO_GERAL(m.full_name)
             )}
@@ -132,7 +166,7 @@ function MemberScoreCard({ m, phone }: { m: MemberScore; phone?: string | null }
 }
 
 // ── Aba de ranking ────────────────────────────────────────────
-function RankingTab({ scores }: { scores: MemberScore[] }) {
+function RankingTab({ scores, onDelete }: { scores: MemberScore[]; onDelete: (id: string, name: string) => void }) {
   const top = [...scores].sort((a, b) => b.score_total - a.score_total).slice(0, 20);
   return (
     <div className="overflow-x-auto rounded-lg border">
@@ -146,6 +180,7 @@ function RankingTab({ scores }: { scores: MemberScore[] }) {
             <th className="px-3 py-2 text-center">Presença</th>
             <th className="px-3 py-2 text-center">Discip.</th>
             <th className="px-3 py-2 text-center">Ministérios</th>
+            <th className="px-3 py-2 text-center w-10"></th>
           </tr>
         </thead>
         <tbody>
@@ -169,6 +204,12 @@ function RankingTab({ scores }: { scores: MemberScore[] }) {
                 <td className="px-3 py-2 text-center">{m.reunioes_presente_90d}/{m.reunioes_total_90d}</td>
                 <td className="px-3 py-2 text-center">{m.disc_ativos}</td>
                 <td className="px-3 py-2 text-center">{m.total_ministerios}</td>
+                <td className="px-3 py-2 text-center">
+                  <button onClick={() => onDelete(m.id, m.full_name)} title="Excluir membro"
+                    className="rounded-md p-1 text-red-500 hover:bg-red-50 hover:text-red-700">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </td>
               </tr>
             );
           })}
@@ -230,6 +271,7 @@ function RecentEvolutionsCard() {
 // MASTER — MemberScoreAdmin
 // ══════════════════════════════════════════════════════════════
 export function MemberScoreAdmin() {
+  const qc = useQueryClient();
   const { data: churches = [] } = useChurches();
   const { data: allMembers = [] } = useAllMembers();
   const [churchFilter, setChurchFilter] = useState("");
@@ -314,7 +356,7 @@ export function MemberScoreAdmin() {
             </div>
           </TabsContent>
           <TabsContent value="ranking">
-            <RankingTab scores={scores} />
+            <RankingTab scores={scores} onDelete={(id, name) => removeMemberEverywhere(qc, id, name)} />
           </TabsContent>
         </div>
       </Tabs>
