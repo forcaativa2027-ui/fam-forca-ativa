@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useChurches, useCells, useStates, useNucleos, useDistricts, useSectors, useChurchAncestry,
-  useMemberRelocations, useLeadershipAssignments, useAllMembers, useMemberCard,
+  useMemberRelocations, useLeadershipAssignments, useAllMembers, useMemberCard, useMemberStructureNames,
 } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { updateMember } from "@/services/members";
@@ -275,8 +275,18 @@ function StructureTab({ member, onClose }: { member: Member; onClose: () => void
   const churchesOpts = sectorId ? churches.filter(c => ancestryByChurch.get(c.id)?.sector_id === sectorId) : churches;
   const lgsOpts = churchId ? cells.filter(c => c.church_id === churchId) : cells;
 
-  const currentChurchName = churches.find(c => c.id === member.church_id)?.name ?? "—";
-  const currentLgName = cells.find(c => c.id === member.life_group_id)?.name ?? "sem Life Group";
+  const currentChurchNameLocal = churches.find(c => c.id === member.church_id)?.name;
+  const currentLgNameLocal = cells.find(c => c.id === member.life_group_id)?.name;
+  const { data: resolvedNames } = useMemberStructureNames(member.id);
+
+  // Se não achar na lista já filtrada pelo escopo, tenta a resolução real (RPC)
+  // antes de assumir "sem Life Group" — a lista local pode só estar fora do escopo territorial de quem está vendo.
+  const currentChurchName = currentChurchNameLocal
+    ?? resolvedNames?.church_name
+    ?? (member.church_id ? "Igreja fora do seu escopo de visualização" : "—");
+  const currentLgName = member.life_group_id
+    ? (currentLgNameLocal ?? resolvedNames?.life_group_name ?? "Life Group fora do seu escopo de visualização")
+    : "sem Life Group";
 
   async function save() {
     if (!churchId) { setErr("Selecione a igreja de destino."); return; }
