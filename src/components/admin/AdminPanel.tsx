@@ -32,6 +32,7 @@ import { MonthlyReportAdmin } from "./MonthlyReportAdmin";
 import { RelmdaSupervisorAdmin } from "./RelmdaSupervisorAdmin";
 import { RelmdaConsolidacaoAdmin } from "./RelmdaConsolidacaoAdmin";
 import { RelmdaDashboardAdmin } from "./RelmdaDashboardAdmin";
+import { RelmdaDeadlineAdmin } from "./RelmdaDeadlineAdmin";
 import { CecIdPortariaAdmin } from "./CecIdPortariaAdmin";
 import { FinanceAdmin } from "./FinanceAdmin";
 import { NewsAdmin } from "./NewsAdmin";
@@ -220,6 +221,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
     case "relmda-supervisao":   return <RelmdaSupervisorAdmin />;
     case "relmda-consolidacao": return <RelmdaConsolidacaoAdmin />;
     case "relmda-dashboard":    return <RelmdaDashboardAdmin />;
+    case "relmda-prazos":       return <RelmdaDeadlineAdmin />;
     case "cec-id-portaria":     return <CecIdPortariaAdmin />;
     case "news":                return <NewsAdmin />;
     case "banners":             return <BannersAdmin />;

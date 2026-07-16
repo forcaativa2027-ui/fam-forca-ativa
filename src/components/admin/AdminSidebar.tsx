@@ -10,7 +10,7 @@ import {
   Download, Search, Bell,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ export type TabKey =
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
-  | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "cec-id-portaria"
+  | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "cec-id-portaria"
   | "news" | "banners" | "sermons" | "events" | "services" | "word"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "invites" | "audit"
@@ -122,6 +122,7 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
         { key: "relmda-supervisao", label: "Supervisão RELMDA", icon: <FileBarChart size={15} /> },
         { key: "relmda-consolidacao", label: "Consolidação RELMDA", icon: <Network size={15} /> },
         { key: "relmda-dashboard", label: "Dashboard RELMDA", icon: <BarChart3 size={15} /> },
+        { key: "relmda-prazos", label: "Prazos RELMDA", icon: <Clock size={15} /> },
       ],
     },
     {
