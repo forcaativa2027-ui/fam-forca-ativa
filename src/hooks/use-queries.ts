@@ -526,3 +526,10 @@ export const useMemberStructureNames = (memberId: string | null) =>
     queryFn: () => Me.getMemberStructureNames(supabase, memberId as string),
     enabled: !!memberId,
   });
+
+export const useRecentCheckins = (eventLabel?: string) =>
+  useQuery({
+    queryKey: ["cec-id-checkins", eventLabel ?? "all"],
+    queryFn: () => Cid.listRecentCheckins(supabase, eventLabel),
+    refetchInterval: 8000,
+  });
