@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   LogOut, Sparkles, AlertTriangle, BarChart3, Users, Heart, Map,
   Clock, MessageSquareHeart, User, Check, Plus, Calendar as Cal,
-  Award,
+  Award, ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,7 +98,7 @@ export default function PanelDashboard() {
 
           {isAdmin && <TabsContent value="geral"><GeneralView /></TabsContent>}
           {isAdmin && <TabsContent value="alertas"><NotificationsPanel /></TabsContent>}
-          <TabsContent value="celula"><MyCellTab member={member ?? null} /></TabsContent>
+          <TabsContent value="celula"><MyCellTab member={member ?? null} profileId={profile?.id ?? null} /></TabsContent>
           <TabsContent value="discipulado"><DiscipleshipTab member={member ?? null} /></TabsContent>
           <TabsContent value="jornada"><JourneyTab member={member ?? null} /></TabsContent>
           <TabsContent value="oracao"><PrayerTab member={member ?? null} /></TabsContent>
@@ -207,7 +207,7 @@ function JourneyBars({ byStage }: { byStage: Record<string, number> }) {
 // ============================================================
 // MINHA CÉLULA
 // ============================================================
-function MyCellTab({ member }: { member: Member | null }) {
+function MyCellTab({ member, profileId }: { member: Member | null; profileId: string | null }) {
   const { data: cells = [] } = useCells();
   const myCell: Cell | null = member?.life_group_id ? (cells.find((c)=>c.id === member.life_group_id) ?? null) : null;
   const { data: companions = [] } = useCellMembers(myCell?.id ?? null, member?.id ?? null);
@@ -215,10 +215,25 @@ function MyCellTab({ member }: { member: Member | null }) {
   if (!member) return <NotLinkedMessage subject="a uma célula"/>;
   if (!myCell)  return <AwaitingLgMessage/>;
 
+  const isResponsible = !!profileId && (myCell.leader_id === profileId || myCell.coleader_id === profileId || myCell.supervisor_id === profileId);
   const mapsUrl = myCell.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(myCell.address)}` : null;
 
   return (
     <div className="space-y-4">
+      {isResponsible && (
+        <Card className="border-l-4 border-l-gold bg-gold/5">
+          <CardContent className="flex items-center justify-between gap-3 py-4">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5 text-gold" />
+              <div>
+                <p className="text-sm font-semibold text-navy">Relatório Semanal do Life Group</p>
+                <p className="text-xs text-muted-foreground">Preencha o relatório desta semana pelo celular.</p>
+              </div>
+            </div>
+            <Button asChild size="sm"><Link href="/painel/relatorio-lg">Preencher</Link></Button>
+          </CardContent>
+        </Card>
+      )}
       <Card className="border-l-4 border-l-gold">
         <CardHeader>
           <CardTitle>{myCell.name}</CardTitle>
