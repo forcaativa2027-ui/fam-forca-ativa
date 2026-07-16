@@ -519,3 +519,10 @@ export const useRelmdaMonthlyComparison = (month: number, year: number) =>
     queryKey: ["relmda-monthly-comparison", month, year],
     queryFn: () => Rm.getMonthlyComparison(supabase, month, year),
   });
+
+export const useMemberStructureNames = (memberId: string | null) =>
+  useQuery({
+    queryKey: ["member-structure-names", memberId],
+    queryFn: () => Me.getMemberStructureNames(supabase, memberId as string),
+    enabled: !!memberId,
+  });
