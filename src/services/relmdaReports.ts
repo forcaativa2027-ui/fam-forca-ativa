@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   RelmdaWeeklyReport, RelmdaWeeklyReportInput, RelmdaAttendance, RelmdaVisitor,
   RelmdaVisitorInput, RelmdaPastoralNeed, RelmdaPastoralNeedInput, RelmdaLgSnapshot,
-  RelmdaReportFull, RelmdaStatusHistory, RelmdaSupervisorOverviewRow,
+  RelmdaReportFull, RelmdaStatusHistory, RelmdaSupervisorOverviewRow, RelmdaMonthlyComparisonRow,
 } from "@/types/domain";
 
 /** Retorna o id do rascunho da semana (cria se ainda não existir). */
@@ -142,4 +142,15 @@ export async function saveSupervisorNote(
     p_report_id: reportId, p_note: note, p_needs_support: needsSupport, p_support_type: supportType,
   });
   if (error) throw error;
+}
+
+// ============================================================
+// Dashboard / Comparativo Mensal (Fase 4)
+// ============================================================
+export async function getMonthlyComparison(
+  sb: SupabaseClient, month: number, year: number
+): Promise<RelmdaMonthlyComparisonRow[]> {
+  const { data, error } = await sb.rpc("relmda_monthly_comparison", { p_month: month, p_year: year });
+  if (error) throw error;
+  return (data ?? []) as RelmdaMonthlyComparisonRow[];
 }
