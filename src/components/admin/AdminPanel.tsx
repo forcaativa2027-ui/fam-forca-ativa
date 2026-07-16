@@ -188,7 +188,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
     case "audit":               return <AuditView />;
     case "org-dashboard":       return <OrgDashboardAdmin onNavigate={onNavigate} />;
     case "supervision":         return <SupervisionDashboard />;
-    case "control-tower":       return <ControlTowerAdmin />;
+    case "control-tower":       return <ControlTowerAdmin onNavigate={onNavigate} />;
     case "intelligence":        return <IntelligenceAdmin />;
     case "ministerial-reports": return <MinisterialReportsAdmin />;
     case "metas":               return <MetasPlaceholder />;

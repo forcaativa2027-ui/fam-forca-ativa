@@ -13,6 +13,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useControlTowerAlerts, useControlTowerSummary, useChurches } from "@/hooks/use-queries";
 import type { ControlTowerAlert, AlertType, AlertSeverity } from "@/types/domain";
+import type { TabKey } from "./AdminSidebar";
+
+// ── Pra onde cada tipo de alerta leva ao clicar (resolver, não só olhar) ──
+const ALERT_TARGET_TAB: Record<AlertType, TabKey> = {
+  sem_relatorio:     "weekly",
+  oracao_urgente:    "prayer-requests",
+  visita_pastoral:   "visit-requests",
+  score_critico:     "score",
+  sem_membros:       "members",
+  meta_atrasada:     "metas",
+  relmda_atrasado:   "relmda-supervisao",
+};
 
 // ── Config visual por tipo de alerta ─────────────────────────
 const ALERT_CONFIG: Record<AlertType, {
@@ -61,10 +73,16 @@ const SEVERITY_LABEL: Record<AlertSeverity, string> = {
 };
 
 // ── Card de alerta individual ─────────────────────────────────
-function AlertCard({ alert }: { alert: ControlTowerAlert }) {
+function AlertCard({ alert, onNavigate }: { alert: ControlTowerAlert; onNavigate?: (tab: TabKey) => void }) {
   const cfg = ALERT_CONFIG[alert.alert_type];
-  const content = (
-    <div className={`flex items-start gap-3 rounded-lg border p-3 ${cfg.bg} ${cfg.border} ${alert.church_id ? "transition hover:shadow-md hover:-translate-y-0.5 cursor-pointer" : ""}`}>
+  const targetTab = ALERT_TARGET_TAB[alert.alert_type];
+  const clickable = !!onNavigate && !!targetTab;
+
+  return (
+    <div
+      onClick={clickable ? () => onNavigate(targetTab) : undefined}
+      className={`flex items-start gap-3 rounded-lg border p-3 ${cfg.bg} ${cfg.border} ${clickable ? "transition hover:shadow-md hover:-translate-y-0.5 cursor-pointer" : ""}`}
+    >
       <div className={`mt-0.5 shrink-0 ${cfg.color}`}>{cfg.icon}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -79,7 +97,13 @@ function AlertCard({ alert }: { alert: ControlTowerAlert }) {
         <p className={`text-xs mt-0.5 ${cfg.color} opacity-80`}>{alert.detail}</p>
         <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
           {alert.church_name && alert.church_name !== "Nacional" && (
-            <span className="flex items-center gap-1"><Church className="h-3 w-3" />{alert.church_name}</span>
+            alert.church_id ? (
+              <Link href={`/organizacional/comunidades/${alert.church_id}`} onClick={(e) => e.stopPropagation()} className="flex items-center gap-1 underline-offset-2 hover:underline">
+                <Church className="h-3 w-3" />{alert.church_name}
+              </Link>
+            ) : (
+              <span className="flex items-center gap-1"><Church className="h-3 w-3" />{alert.church_name}</span>
+            )
           )}
           <span className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
@@ -87,10 +111,9 @@ function AlertCard({ alert }: { alert: ControlTowerAlert }) {
           </span>
         </div>
       </div>
-      {alert.church_id && <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />}
+      {clickable && <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" />}
     </div>
   );
-  return alert.church_id ? <Link href={`/organizacional/comunidades/${alert.church_id}`}>{content}</Link> : content;
 }
 
 // ── Painel de KPIs no topo ────────────────────────────────────
@@ -151,10 +174,11 @@ function TowerKpis({ onFilter }: { onFilter: (type: AlertType | "") => void }) {
 }
 
 // ── Lista de alertas filtrada ─────────────────────────────────
-function AlertsList({ churchFilter, typeFilter, severityFilter }: {
+function AlertsList({ churchFilter, typeFilter, severityFilter, onNavigate }: {
   churchFilter: string;
   typeFilter: AlertType | "";
   severityFilter: AlertSeverity | "";
+  onNavigate?: (tab: TabKey) => void;
 }) {
   const { data: alerts = [], isLoading } = useControlTowerAlerts({
     churchId: churchFilter || undefined,
@@ -190,7 +214,7 @@ function AlertsList({ churchFilter, typeFilter, severityFilter }: {
             <ShieldAlert className="h-4 w-4 text-red-600" />
             <h3 className="font-bold text-sm text-red-700">CRÍTICOS ({criticos.length}) — Ação imediata</h3>
           </div>
-          {criticos.map((a, i) => <AlertCard key={i} alert={a} />)}
+          {criticos.map((a, i) => <AlertCard key={i} alert={a} onNavigate={onNavigate} />)}
         </div>
       )}
 
@@ -201,7 +225,7 @@ function AlertsList({ churchFilter, typeFilter, severityFilter }: {
             <AlertTriangle className="h-4 w-4 text-yellow-600" />
             <h3 className="font-bold text-sm text-yellow-700">ATENÇÃO ({atencao.length}) — Monitorar</h3>
           </div>
-          {atencao.map((a, i) => <AlertCard key={i} alert={a} />)}
+          {atencao.map((a, i) => <AlertCard key={i} alert={a} onNavigate={onNavigate} />)}
         </div>
       )}
     </div>
@@ -211,7 +235,7 @@ function AlertsList({ churchFilter, typeFilter, severityFilter }: {
 // ══════════════════════════════════════════════════════════════
 // MASTER — ControlTowerAdmin
 // ══════════════════════════════════════════════════════════════
-export function ControlTowerAdmin() {
+export function ControlTowerAdmin({ onNavigate }: { onNavigate?: (tab: TabKey) => void }) {
   const { data: churches = [] } = useChurches();
   const [churchFilter,   setChurchFilter]   = useState("");
   const [typeFilter,     setTypeFilter]     = useState<AlertType | "">("");
@@ -287,6 +311,7 @@ export function ControlTowerAdmin() {
         churchFilter={churchFilter}
         typeFilter={typeFilter}
         severityFilter={severityFilter}
+        onNavigate={onNavigate}
       />
     </div>
   );
