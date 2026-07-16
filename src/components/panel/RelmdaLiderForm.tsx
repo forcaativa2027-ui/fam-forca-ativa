@@ -95,8 +95,7 @@ export function RelmdaLiderForm({ reportId, cellName }: { reportId: string; cell
     setSaving(true);
     try {
       await Rm.updateReport(supabase, reportId, form);
-      const { data: { session } } = await supabase.auth.getSession();
-      await Rm.sendReport(supabase, reportId, session?.user.id ?? "");
+      await Rm.sendReport(supabase, reportId);
       qc.invalidateQueries({ queryKey: ["relmda-report-full", reportId] });
       alert("Relatório enviado com sucesso! A supervisão será notificada.");
     } catch (e) {
