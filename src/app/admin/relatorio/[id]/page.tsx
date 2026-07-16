@@ -1,6 +1,6 @@
-import { ReportDetailView } from "@/components/admin/ReportDetailView";
+import { MonthlyReportDetailView } from "@/components/admin/MonthlyReportDetailView";
 
-export default async function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function MonthlyReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return <ReportDetailView reportId={id} />;
+  return <MonthlyReportDetailView reportId={id} />;
 }
