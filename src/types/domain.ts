@@ -944,6 +944,16 @@ export interface CecIdValidation {
   categoria: string | null; church_name: string | null; card_status: CardStatus | null;
 }
 
+// CEC ID Fase 2 — Leitor de Portaria
+export interface CheckinLookupResult {
+  member_id: string; cec_id: string | null; full_name: string; photo_url: string | null;
+  categoria: string | null; church_name: string | null; church_id: string | null; card_status: CardStatus;
+}
+export interface CecIdCheckin {
+  id: string; member_id: string; cec_id: string | null; event_label: string;
+  method: "qr" | "manual"; checked_by: string | null; church_id: string | null; checked_at: string;
+}
+
 // CECmais — Catálogo de Ofertas (Fase 3)
 export type CECmaisCategoriaSlug = "saude" | "protecao" | "formacao" | "fe" | "leitura" | "vantagens";
 export type CECmaisOfertaTipo = "produto" | "conteudo_digital" | "curso" | "assinatura" | "servico_plano";
