@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Wand2, Lock, FileSpreadsheet, Filter, BarChart3, Users } from "lucide-react";
+import { Wand2, Lock, FileSpreadsheet, Filter, BarChart3, Users, Eye } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -284,15 +285,22 @@ function SingleLgReport({ lgId, lgName, year, month, allMembers }: {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm">Indicadores por semana</CardTitle>
-                {full.report.closed_at ? (
-                  <span className="flex items-center gap-1 rounded-full bg-navy/10 px-3 py-1 text-xs font-bold text-navy">
-                    <Lock className="h-3 w-3" />Fechado
-                  </span>
-                ) : (
-                  <Button onClick={doClose} variant="outline" size="sm" className="gap-1 h-7 text-xs">
-                    <Lock className="h-3 w-3" />Fechar
+                <div className="flex items-center gap-2">
+                  <Button asChild variant="outline" size="sm" className="gap-1 h-7 text-xs">
+                    <Link href={`/admin/relatorio-mensal/${full.report.id}`}>
+                      <Eye className="h-3 w-3" />Ver / Imprimir
+                    </Link>
                   </Button>
-                )}
+                  {full.report.closed_at ? (
+                    <span className="flex items-center gap-1 rounded-full bg-navy/10 px-3 py-1 text-xs font-bold text-navy">
+                      <Lock className="h-3 w-3" />Fechado
+                    </span>
+                  ) : (
+                    <Button onClick={doClose} variant="outline" size="sm" className="gap-1 h-7 text-xs">
+                      <Lock className="h-3 w-3" />Fechar
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="overflow-x-auto">
