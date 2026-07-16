@@ -507,3 +507,9 @@ export const useRelmdaStatusHistory = (reportId: string | null) =>
     queryFn: () => Rm.getStatusHistory(supabase, reportId as string),
     enabled: !!reportId,
   });
+
+export const useRelmdaSupervisorOverview = (weekNumber: number, month: number, year: number) =>
+  useQuery({
+    queryKey: ["relmda-supervisor-overview", weekNumber, month, year],
+    queryFn: () => Rm.getSupervisorOverview(supabase, weekNumber, month, year),
+  });
