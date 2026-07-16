@@ -278,10 +278,12 @@ function ReportDetailModal({
             {full.report.status !== "validado" && full.report.status !== "encerrado" && (
               <div className="flex gap-2 border-t pt-3">
                 <Button variant="outline" className="flex-1 gap-1 text-red-600" onClick={() => onRequestCorrection({
-                  life_group_id: full.report.life_group_id, life_group_name: "", leader_name: null, report_id: full.report.id,
+                  life_group_id: full.report.life_group_id, life_group_name: "", leader_name: null,
+                  church_id: null, church_name: null, report_id: full.report.id,
                   status: full.report.status, sent_at: full.report.sent_at, total_members: full.snapshot.total_members,
                   mda_count: full.report.mda_count, visitantes_count: full.visitors.length, ge_count: full.report.ge_count,
-                  offering_total: full.report.offering_total, needs_correction: full.report.needs_correction,
+                  offering_total: full.report.offering_total, kg_amor: full.report.kg_amor, tadel_count: full.report.tadel_count,
+                  emp_participants: full.report.emp_participants, needs_correction: full.report.needs_correction,
                   correction_deadline: full.report.correction_deadline, is_inconsistent: false,
                 })}>
                   <FileWarning className="h-4 w-4" />Solicitar correção
