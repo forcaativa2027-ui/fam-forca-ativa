@@ -593,7 +593,7 @@ export interface GoalVsActual extends MinistryGoal {
 }
 
 // C18 — Torre de Controle
-export type AlertType = "sem_relatorio"|"oracao_urgente"|"visita_pastoral"|"score_critico"|"sem_membros"|"meta_atrasada";
+export type AlertType = "sem_relatorio"|"oracao_urgente"|"visita_pastoral"|"score_critico"|"sem_membros"|"meta_atrasada"|"relmda_atrasado";
 export type AlertSeverity = "critico"|"atencao";
 
 export interface ControlTowerAlert {
@@ -621,6 +621,7 @@ export interface ControlTowerSummary {
   alertas_meta_atrasada: number;
   lgs_afetados: number;
   igrejas_afetadas: number;
+  alertas_relmda_atrasado: number;
 }
 
 // C19 — Governança por Delegação
