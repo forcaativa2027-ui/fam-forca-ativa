@@ -12,6 +12,7 @@ import * as Me from "@/services/members";
 import * as Di from "@/services/discipleship";
 import * as Tl from "@/services/timeline";
 import * as Pr from "@/services/prayer";
+import * as Rm from "@/services/relmdaReports";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -481,4 +482,28 @@ export const useCecmaisOferta = (id: string | null) =>
     queryKey: ["cecmais-oferta", id],
     queryFn: () => Cm.getOferta(supabase, id as string),
     enabled: !!id,
+  });
+
+// ============================================================
+// RELMDA — Relatório Semanal de Life Group (Fase 1)
+// ============================================================
+export const useRelmdaDraftId = (lifeGroupId: string | null, weekNumber: number, month: number, year: number) =>
+  useQuery({
+    queryKey: ["relmda-draft-id", lifeGroupId, weekNumber, year],
+    queryFn: () => Rm.getOrCreateDraft(supabase, lifeGroupId as string, weekNumber, month, year),
+    enabled: !!lifeGroupId,
+  });
+
+export const useRelmdaReportFull = (reportId: string | null) =>
+  useQuery({
+    queryKey: ["relmda-report-full", reportId],
+    queryFn: () => Rm.getReportFull(supabase, reportId as string),
+    enabled: !!reportId,
+  });
+
+export const useRelmdaStatusHistory = (reportId: string | null) =>
+  useQuery({
+    queryKey: ["relmda-status-history", reportId],
+    queryFn: () => Rm.getStatusHistory(supabase, reportId as string),
+    enabled: !!reportId,
   });
