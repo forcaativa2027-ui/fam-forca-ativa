@@ -4,11 +4,11 @@ import { createClient } from "@supabase/supabase-js";
 
 /**
  * POST /api/admin/create-member
- * Body: { email, full_name, phone?, birth_date?, life_group_id?, role?, access_token }
+ * Body: { email, full_name, phone?, birth_date?, church_id?, life_group_id?, role?, access_token }
  * - Verifica se quem chama é admin (apostolo/pastor) usando o access_token enviado
  * - Cria auth.user com senha 'cec1234'
  * - Atualiza profile com nome, telefone, role (trigger já criou o profile)
- * - Cria entrada em members
+ * - Cria entrada em members com church_id definido (obrigatório pra RLS funcionar depois)
  */
 
 const INITIAL_PASSWORD = "cec1234";
@@ -21,6 +21,7 @@ export async function POST(req: Request) {
   const full_name    = String(body.full_name ?? "").trim();
   const phone        = String(body.phone ?? "").trim() || null;
   const birth_date   = body.birth_date ? String(body.birth_date) : null;
+  const church_id_in = body.church_id ? String(body.church_id) : null;
   const life_group_id = body.life_group_id ? String(body.life_group_id) : null;
   const role         = String(body.role ?? "membro");
   const access_token = String(body.access_token ?? "");
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
   if (!email || !/^\S+@\S+\.\S+$/.test(email)) return NextResponse.json({ error: "E-mail inválido" }, { status: 400 });
   if (full_name.length < 3) return NextResponse.json({ error: "Nome muito curto" }, { status: 400 });
   if (!access_token)        return NextResponse.json({ error: "Token de autenticação ausente" }, { status: 401 });
+  if (!church_id_in && !life_group_id) return NextResponse.json({ error: "Selecione ao menos a Igreja ou o Life Group" }, { status: 400 });
 
   let admin;
   try {
@@ -71,13 +73,26 @@ export async function POST(req: Request) {
     role,
   }).eq("id", newUserId);
 
-  // 4) Cria entrada em members
+  // 4) Resolve church_id: usa o enviado, ou deduz a partir do Life Group
+  let church_id = church_id_in;
+  if (!church_id && life_group_id) {
+    const { data: lg } = await admin.from("life_groups").select("church_id").eq("id", life_group_id).maybeSingle();
+    church_id = lg?.church_id ?? null;
+  }
+  if (!church_id) {
+    // Sem escopo territorial não há como o membro aparecer depois (RLS). Aborta antes de criar o auth.user.
+    await admin.auth.admin.deleteUser(newUserId);
+    return NextResponse.json({ error: "Não foi possível determinar a Igreja do membro. Selecione a Igreja manualmente." }, { status: 400 });
+  }
+
+  // 5) Cria entrada em members
   const { data: member, error: memberErr } = await admin.from("members").insert({
     profile_id: newUserId,
     full_name,
     email,
     phone,
     birth_date,
+    church_id,
     life_group_id,
     status: "ativo",
   }).select().single();
