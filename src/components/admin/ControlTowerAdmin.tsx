@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   AlertTriangle, ShieldAlert, Bell, Radio, RefreshCw,
   ChevronRight, Clock, Church, Users, FileX, Heart,
-  Target, TrendingDown, CheckCircle2,
+  Target, TrendingDown, CheckCircle2, CalendarDays,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +47,11 @@ const ALERT_CONFIG: Record<AlertType, {
     icon: <Target className="h-4 w-4" />,
     color: "text-yellow-700", bg: "bg-yellow-50", border: "border-yellow-300",
     label: "Meta Atrasada",
+  },
+  relmda_atrasado: {
+    icon: <CalendarDays className="h-4 w-4" />,
+    color: "text-yellow-700", bg: "bg-yellow-50", border: "border-yellow-300",
+    label: "RELMDA Atrasado",
   },
 };
 
@@ -128,6 +133,7 @@ function TowerKpis({ onFilter }: { onFilter: (type: AlertType | "") => void }) {
           { type: "score_critico" as AlertType,  label: "Score Crítico",   value: summary.alertas_score_critico,   icon: <TrendingDown className="h-4 w-4" />, color: "border-l-red-500",    text: "text-red-700"    },
           { type: "sem_membros" as AlertType,    label: "Sem Membros",     value: summary.alertas_sem_membros,     icon: <Users className="h-4 w-4" />,        color: "border-l-yellow-500", text: "text-yellow-700" },
           { type: "meta_atrasada" as AlertType,  label: "Meta Atrasada",   value: summary.alertas_meta_atrasada,   icon: <Target className="h-4 w-4" />,       color: "border-l-yellow-400", text: "text-yellow-700" },
+          { type: "relmda_atrasado" as AlertType, label: "RELMDA Atrasado", value: summary.alertas_relmda_atrasado, icon: <CalendarDays className="h-4 w-4" />, color: "border-l-yellow-400", text: "text-yellow-700" },
         ].map(k => (
           <button
             key={k.type}
@@ -219,6 +225,7 @@ export function ControlTowerAdmin() {
     { value: "score_critico",   label: "🔴 Score Crítico"    },
     { value: "sem_membros",     label: "👥 Sem Membros"      },
     { value: "meta_atrasada",   label: "🎯 Meta Atrasada"    },
+    { value: "relmda_atrasado", label: "🗓️ RELMDA Atrasado"  },
   ];
 
   return (
