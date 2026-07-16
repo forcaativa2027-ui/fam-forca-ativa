@@ -1213,3 +1213,13 @@ export interface RegisterForEventResult {
 export interface MyEventRegistration extends EventRegistration {
   event: RegistrationEvent;
 }
+
+// RELMDA Fase 5 — prazos configuráveis
+export interface RelmdaDeadlineConfig {
+  id?: string;
+  church_id: string | null;
+  deadline_weekday: number; // 0=domingo ... 6=sábado
+  deadline_time: string;    // "HH:MM:SS"
+  correction_deadline_days: number;
+  reminder_before_hours: number;
+}
