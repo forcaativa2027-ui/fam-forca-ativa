@@ -1100,3 +1100,20 @@ export interface RelmdaReportFull {
   needs: RelmdaPastoralNeed[];
   snapshot: RelmdaLgSnapshot;
 }
+
+export interface RelmdaSupervisorOverviewRow {
+  life_group_id: string;
+  life_group_name: string;
+  leader_name: string | null;
+  report_id: string | null;
+  status: RelmdaStatus;
+  sent_at: string | null;
+  total_members: number;
+  mda_count: number;
+  visitantes_count: number;
+  ge_count: number;
+  offering_total: number;
+  needs_correction: boolean;
+  correction_deadline: string | null;
+  is_inconsistent: boolean;
+}
