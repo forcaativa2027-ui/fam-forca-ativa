@@ -1,11 +1,16 @@
 "use client";
 import { useState } from "react";
-import { AlertOctagon, Phone, Mail, Calendar, Building2, Users } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { AlertOctagon, Phone, Mail, Calendar, Building2, Users, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useMembersAtRisk, useChurches, useCells } from "@/hooks/use-queries";
+import { supabase } from "@/lib/supabase/client";
+import { deleteMember } from "@/services/members";
+import { logAudit } from "@/services/audit";
 
 export function EvasionAdmin() {
+  const qc = useQueryClient();
   const [churchFilter, setChurchFilter] = useState<string>("");
   const [lgFilter, setLgFilter]         = useState<string>("");
 
@@ -18,6 +23,18 @@ export function EvasionAdmin() {
   const churchMap = new Map(churches.map((c) => [c.id, c]));
   const cellMap   = new Map(cells.map((c) => [c.id, c]));
   const filteredCells = churchFilter ? cells.filter((c) => c.church_id === churchFilter) : cells;
+
+  async function remove(memberId: string, name: string) {
+    if (!confirm(`Remover ${name}?\n\nEsta ação remove apenas o registro de membro. A conta de acesso (se houver) continua existindo.`)) return;
+    try {
+      await deleteMember(supabase, memberId);
+      await logAudit(supabase, "delete", "members", memberId, { name });
+      qc.invalidateQueries({ queryKey: ["all-members"] });
+      qc.invalidateQueries({ queryKey: ["members-at-risk"] });
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Erro ao remover");
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -105,6 +122,13 @@ export function EvasionAdmin() {
                       WhatsApp
                     </a>
                   )}
+                  <button
+                    onClick={() => remove(m.member_id, m.full_name)}
+                    title="Excluir membro"
+                    className="shrink-0 rounded-md border border-red-300 bg-red-50 p-1.5 text-red-600 hover:bg-red-100"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </CardContent>
             </Card>
