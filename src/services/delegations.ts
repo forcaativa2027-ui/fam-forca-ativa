@@ -171,3 +171,30 @@ export async function checkModuleAccess(sb: SupabaseClient, module: DelegationMo
 export async function expireDelegations(sb: SupabaseClient): Promise<void> {
   await sb.rpc("expire_delegations");
 }
+
+// ── Travamento real do painel (Governança) ────────────────────
+export async function listMyActiveModules(sb: SupabaseClient): Promise<DelegationModule[]> {
+  const { data, error } = await sb.rpc("my_active_modules");
+  if (error) { console.error("[delegations] listMyActiveModules", error); return []; }
+  return (data ?? []) as DelegationModule[];
+}
+
+/** Quais abas (TabKey do AdminSidebar) cada módulo de delegação libera. */
+export const DELEGATION_TAB_MAP: Record<DelegationModule, string[]> = {
+  administrativo: [
+    "org-dashboard", "metas", "members", "leadership", "score", "birthdays", "discipleship",
+    "acolhimento", "evasao", "crm", "prayer-requests", "visit-requests",
+    "communities", "structure", "life-groups", "expansion-map", "genealogy",
+    "invites", "permissions", "delegations", "evangelism-groups",
+    "mda", "mda-health", "saude", "ministerios", "ministerial-reports", "export", "gpv",
+  ],
+  finance: ["finance"],
+  patrimony: ["patrimony"],
+  intelligence: ["intelligence"],
+  reports: [],
+  control_tower: ["control-tower"],
+  audit: ["audit"],
+  supervisao: ["relmda-supervisao", "relmda-consolidacao", "relmda-dashboard", "relmda-prazos", "weekly", "monthly", "supervision", "ministerial-reports"],
+  comunicacao: ["news", "banners", "sermons", "events", "services", "word"],
+  documentacao: [],
+};
