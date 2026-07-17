@@ -17,6 +17,12 @@ import * as Ev from "@/services/events";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
+export const useChurchStateName = (churchId: string | null) =>
+  useQuery({
+    queryKey: ["church-state-name", churchId],
+    queryFn: () => C.getChurchStateName(supabase, churchId as string),
+    enabled: !!churchId,
+  });
 export const useStates          = () => useQuery({ queryKey: ["states"],    queryFn: () => C.listStates(supabase) });
 export const useNucleos         = () => useQuery({ queryKey: ["nucleos"],   queryFn: () => C.listNucleos(supabase) });
 export const useLeadershipAssignments = () => useQuery({ queryKey: ["leadership-assignments"], queryFn: () => Ld.listLeadershipAssignments(supabase) });
