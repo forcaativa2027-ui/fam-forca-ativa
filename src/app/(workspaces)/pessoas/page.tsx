@@ -2,10 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/services/profiles";
 import { WorkspaceShell } from "../WorkspaceShell";
 import { PessoasTabs } from "./PessoasTabs";
+import { requireWorkspaceAccess } from "../requireWorkspaceAccess";
 
 export default async function PessoasPage() {
   const supabase = await createClient();
   const profile = await getMyProfile(supabase);
+  await requireWorkspaceAccess(supabase, profile);
 
   return (
     <WorkspaceShell title="Pessoas" userName={profile?.full_name ?? undefined}>
