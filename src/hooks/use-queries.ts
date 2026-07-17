@@ -418,6 +418,8 @@ export const useModuleRanking = () =>
   useQuery({ queryKey: ["module-ranking"], queryFn: () => Del.getModuleRanking(supabase) });
 export const useModuleAccess = (module: DelegationModule) =>
   useQuery({ queryKey: ["module-access", module], queryFn: () => Del.checkModuleAccess(supabase, module), staleTime: 60000 });
+export const useMyActiveModules = () =>
+  useQuery({ queryKey: ["my-active-modules"], queryFn: () => Del.listMyActiveModules(supabase), staleTime: 60000 });
 
 // C20 — Score do Membro + Aniversariantes
 import * as MS from "@/services/memberScore";
