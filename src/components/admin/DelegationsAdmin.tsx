@@ -31,6 +31,10 @@ const MODULE_LABELS: Record<DelegationModule, string> = {
   finance:       "💰 Financeiro",
   patrimony:     "🏛️ Patrimônio",
   audit:         "📋 Auditoria",
+  administrativo: "⚙️ Administrativo",
+  comunicacao:    "📣 Comunicação",
+  documentacao:   "🗂️ Documentação",
+  supervisao:     "🧭 Supervisão Ministerial",
 };
 const SCOPE_LABELS: Record<string, string> = {
   lg: "Life Group", setor: "Setor", area: "Área",
