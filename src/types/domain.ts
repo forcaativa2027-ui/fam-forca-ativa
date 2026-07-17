@@ -935,7 +935,7 @@ export type CardStatus =
 
 export interface MemberCard {
   member_id: string; cec_id: string | null; card_status: CardStatus;
-  card_approved_at: string | null; qr_token: string;
+  card_approved_at: string | null; card_issued_at: string | null; qr_token: string;
   categoria: string; completion_percent: number;
 }
 
