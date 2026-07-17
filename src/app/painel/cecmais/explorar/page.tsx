@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, ChevronRight, HeartPulse, ShieldCheck, GraduationCap, BookOpen, Library, Sparkles as SparklesIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useMyProfile, useMyMember } from "@/hooks/use-queries";
+import { useMyProfile, useMyMember, useMemberCard } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { MemberHeader } from "@/components/panel/MemberHeader";
 import { MaisCategoria } from "@/components/shared/CECmaisBrand";
@@ -23,6 +23,7 @@ const ICONS: Record<string, React.ReactNode> = {
 export default function ExplorarPage() {
   const { data: profile } = useMyProfile();
   const { data: member } = useMyMember();
+  const { data: card } = useMemberCard(member?.id ?? null);
   const isAdmin = profile?.role && profile.role !== "membro" && profile.role !== "visitante";
 
   async function signOut() {
@@ -33,7 +34,7 @@ export default function ExplorarPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <MemberHeader active="cecmais" isAdmin={!!isAdmin} onSignOut={signOut} />
+      <MemberHeader active="cecmais" isAdmin={!!isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
 
       <main className="container max-w-4xl space-y-6 py-8">
         <div className="flex items-center gap-3">
