@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Info, GraduationCap, Repeat, Package, FileDown, Percent } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useMyProfile, useMyMember, useCecmaisOferta } from "@/hooks/use-queries";
+import { useMyProfile, useMyMember, useCecmaisOferta, useMemberCard } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { MemberHeader } from "@/components/panel/MemberHeader";
 import { getCategoria } from "@/lib/cecmais-categorias";
@@ -18,6 +18,7 @@ export default function OfertaPage({ params }: { params: { slug: string; ofertaI
 
   const { data: profile } = useMyProfile();
   const { data: member } = useMyMember();
+  const { data: card } = useMemberCard(member?.id ?? null);
   const isAdmin = profile?.role && profile.role !== "membro" && profile.role !== "visitante";
 
   async function signOut() {
@@ -30,7 +31,7 @@ export default function OfertaPage({ params }: { params: { slug: string; ofertaI
 
   return (
     <div className="min-h-screen bg-background">
-      <MemberHeader active="cecmais" isAdmin={!!isAdmin} onSignOut={signOut} />
+      <MemberHeader active="cecmais" isAdmin={!!isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
 
       <main className="container max-w-2xl space-y-5 py-8">
         <div className="flex items-center gap-3">
