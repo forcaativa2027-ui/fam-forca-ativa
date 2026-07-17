@@ -15,9 +15,9 @@ import { logAudit } from "@/services/audit";
 import type { Member } from "@/types/domain";
 
 interface FormValues {
-  birth_date: string; phone: string;
+  birth_date: string; phone: string; phone_is_whatsapp: boolean;
   cpf: string; rg: string; rg_orgao_expedidor: string;
-  phone_recado: string; phone_recado_nome: string; whatsapp: string;
+  phone_recado: string; phone_recado_nome: string;
   cep: string; address: string; numero: string; complemento: string; neighborhood: string; city: string; state: string;
   gender: string; marital_status: string;
 }
@@ -134,8 +134,9 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
   const { register, handleSubmit } = useForm<FormValues>({
     defaultValues: {
       birth_date: member.birth_date ?? "", phone: member.phone ?? "",
+      phone_is_whatsapp: !!member.whatsapp && member.whatsapp === member.phone,
       cpf: member.cpf ?? "", rg: member.rg ?? "", rg_orgao_expedidor: member.rg_orgao_expedidor ?? "",
-      phone_recado: member.phone_recado ?? "", phone_recado_nome: member.phone_recado_nome ?? "", whatsapp: member.whatsapp ?? "",
+      phone_recado: member.phone_recado ?? "", phone_recado_nome: member.phone_recado_nome ?? "",
       cep: member.cep ?? "", address: member.address ?? "", numero: member.numero ?? "", complemento: member.complemento ?? "",
       neighborhood: member.neighborhood ?? "", city: member.city ?? "", state: member.state ?? "",
       gender: member.gender ?? "", marital_status: member.marital_status ?? "",
@@ -157,8 +158,10 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
       if (photoFile) {
         photoUrl = await uploadMemberPhoto(supabase, member.id, photoFile);
       }
+      const { phone_is_whatsapp, ...rest } = v;
       await updateMember(supabase, member.id, {
-        ...v,
+        ...rest,
+        whatsapp: phone_is_whatsapp ? v.phone : null,
         photo_url: photoUrl,
         consent_accepted_at: new Date().toISOString(),
         photo_consent_accepted_at: photoConsent ? new Date().toISOString() : member.photo_consent_accepted_at ?? null,
@@ -198,7 +201,14 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div><Label>Data de nascimento</Label><Input type="date" {...register("birth_date")} /></div>
-            <div><Label>Telefone principal</Label><Input {...register("phone")} placeholder="(00) 00000-0000" /></div>
+            <div>
+              <Label>Telefone principal</Label>
+              <Input {...register("phone")} placeholder="(00) 00000-0000" />
+              <label className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <input type="checkbox" {...register("phone_is_whatsapp")} />
+                Este número também é WhatsApp
+              </label>
+            </div>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -229,7 +239,6 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
             <div><Label>Telefone de recado</Label><Input {...register("phone_recado")} /></div>
             <div><Label>Nome do contato de recado</Label><Input {...register("phone_recado_nome")} /></div>
           </div>
-          <div><Label>WhatsApp</Label><Input {...register("whatsapp")} /></div>
 
           <div className="rounded-md border bg-muted/20 p-3 space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Endereço</p>

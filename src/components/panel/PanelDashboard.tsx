@@ -22,7 +22,7 @@ import { NotificationsPanel, useNotificationCount, NotificationBadge } from "./N
 import { supabase } from "@/lib/supabase/client";
 import {
   useMyProfile, useDashboard, useChurches, useMdaAlerts,
-  useMyMember, useCells, useCellMembers,
+  useMyMember, useCells, useCellMembers, useMemberCard,
   useMyActiveDiscipleship, useMyDisciples,
   useMyTimeline, useCellPrayers,
 } from "@/hooks/use-queries";
@@ -55,6 +55,7 @@ const STAGE_LABELS: Record<string, string> = {
 export default function PanelDashboard() {
   const { data: profile } = useMyProfile();
   const { data: member } = useMyMember();
+  const { data: card } = useMemberCard(member?.id ?? null);
   const { data: allChurches = [] } = useChurches();
   const myChurchName = allChurches.find((c) => c.id === member?.church_id)?.name ?? null;
   const isAdmin = profile?.role === "apostolo" || profile?.role === "pastor";
@@ -68,7 +69,7 @@ export default function PanelDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <MemberHeader active="dashboard" isAdmin={isAdmin} onSignOut={signOut} />
+      <MemberHeader active="dashboard" isAdmin={isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
 
       <main className="container space-y-8 py-8">
         <div>
