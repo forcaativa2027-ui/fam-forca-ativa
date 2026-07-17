@@ -89,7 +89,7 @@ export default function CarteiraPage() {
   if (!member || !card) {
     return (
       <div className="min-h-screen bg-background">
-        <MemberHeader active="carteira" isAdmin={!!isAdmin} onSignOut={signOut} />
+        <MemberHeader active="carteira" isAdmin={!!isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
         <main className="container py-8"><p className="text-sm text-muted-foreground">Carregando…</p></main>
       </div>
     );
@@ -103,7 +103,7 @@ export default function CarteiraPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <MemberHeader active="carteira" isAdmin={!!isAdmin} onSignOut={signOut} />
+      <MemberHeader active="carteira" isAdmin={!!isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
 
       <main className="container max-w-5xl space-y-6 py-8">
         {/* Cabeçalho da página */}
