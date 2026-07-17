@@ -631,7 +631,7 @@ export interface ControlTowerSummary {
 }
 
 // C19 — Governança por Delegação
-export type DelegationModule = "intelligence"|"reports"|"control_tower"|"finance"|"patrimony"|"audit";
+export type DelegationModule = "intelligence"|"reports"|"control_tower"|"finance"|"patrimony"|"audit"|"administrativo"|"comunicacao"|"documentacao"|"supervisao";
 export type DelegationScope  = "lg"|"setor"|"area"|"distrito"|"nucleo"|"sede"|"nacional";
 export type DelegationStatus = "pendente"|"ativo"|"rejeitado"|"revogado"|"expirado";
 export type CouncilVote      = "aprovado"|"reprovado"|"abstencao";
