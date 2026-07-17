@@ -7,6 +7,13 @@ export async function listChurchAncestry(sb: SupabaseClient): Promise<{ church_i
   return data ?? [];
 }
 
+/** Nome do Estado resolvido pela árvore territorial real (Estado→Núcleo→Distrito→Setor→Igreja), respeitando níveis pulados. */
+export async function getChurchStateName(sb: SupabaseClient, churchId: string): Promise<string | null> {
+  const { data, error } = await sb.rpc("church_state_name", { p_church_id: churchId });
+  if (error) { console.error("[churches] getChurchStateName", error); return null; }
+  return data ?? null;
+}
+
 export async function listStates(sb: SupabaseClient): Promise<State[]> {
   const { data, error } = await sb.from("states").select("*").order("name");
   if (error) throw error;
