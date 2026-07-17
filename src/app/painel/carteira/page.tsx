@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  useMyProfile, useMyMember, useChurches, useCells, useMyMinistries, useMemberCard,
+  useMyProfile, useMyMember, useChurches, useCells, useMyMinistries, useMemberCard, useChurchStateName,
 } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { MemberHeader } from "@/components/panel/MemberHeader";
@@ -66,6 +66,7 @@ export default function CarteiraPage() {
 
   const isAdmin = profile?.role && profile.role !== "membro" && profile.role !== "visitante";
   const church = churches.find((c) => c.id === member?.church_id);
+  const { data: territorialStateName } = useChurchStateName(member?.church_id ?? null);
   const lg = cells.find((c) => c.id === member?.life_group_id);
 
   async function signOut() {
@@ -149,7 +150,7 @@ export default function CarteiraPage() {
                 <div>
                   <p className="text-[11px] font-bold uppercase tracking-widest text-white/70">Comunidade Evangélica Cristã</p>
                   <p className="font-display text-base font-bold text-gold">{church?.name ?? "—"}</p>
-                  {church?.state && <p className="text-[11px] uppercase tracking-wide text-white/60">{church.state}</p>}
+                  {territorialStateName && <p className="text-[11px] uppercase tracking-wide text-white/60">{territorialStateName}</p>}
                 </div>
               </div>
 
@@ -188,7 +189,7 @@ export default function CarteiraPage() {
             </div>
             <div>
               <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/60"><CalendarCheck className="h-3 w-3" /> Emissão</p>
-              <p className="text-sm font-semibold">{card.card_status === "emitida" ? new Date().toLocaleDateString("pt-BR") : "—"}</p>
+              <p className="text-sm font-semibold">{card.card_issued_at ? new Date(card.card_issued_at).toLocaleDateString("pt-BR") : "—"}</p>
             </div>
           </div>
         </div>
