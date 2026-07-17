@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Wrench, GraduationCap, Library, Repeat, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useMyProfile, useMyMember } from "@/hooks/use-queries";
+import { useMyProfile, useMyMember, useMemberCard } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { MemberHeader } from "@/components/panel/MemberHeader";
 import { CECmaisSubNav } from "@/components/panel/CECmaisSubNav";
@@ -29,6 +29,7 @@ function SectionCard({ icon, title, description, ctaLabel, href }: {
 export default function MinhaAreaPage() {
   const { data: profile } = useMyProfile();
   const { data: member } = useMyMember();
+  const { data: card } = useMemberCard(member?.id ?? null);
   const isAdmin = profile?.role && profile.role !== "membro" && profile.role !== "visitante";
 
   async function signOut() {
@@ -39,7 +40,7 @@ export default function MinhaAreaPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <MemberHeader active="cecmais" isAdmin={!!isAdmin} onSignOut={signOut} />
+      <MemberHeader active="cecmais" isAdmin={!!isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
 
       <main className="container max-w-3xl space-y-6 py-8">
         <div>
