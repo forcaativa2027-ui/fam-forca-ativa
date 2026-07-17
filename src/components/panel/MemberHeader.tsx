@@ -4,9 +4,10 @@ import { Sparkles, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Mais } from "@/components/shared/CECmaisBrand";
 
-export function MemberHeader({ active, isAdmin, onSignOut }: {
+export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
   active: "dashboard" | "carteira" | "cecmais";
   isAdmin?: boolean;
+  cardReady?: boolean;
   onSignOut: () => void;
 }) {
   return (
@@ -24,14 +25,16 @@ export function MemberHeader({ active, isAdmin, onSignOut }: {
             >
               Área do membro
             </Link>
-            <Link
-              href="/painel/carteira"
-              className={`rounded px-2 py-1.5 text-xs font-semibold transition ${
-                active === "carteira" ? "border-b-2 border-gold text-white" : "text-white/60 hover:text-white"
-              }`}
-            >
-              Carteira de Membro
-            </Link>
+            {cardReady && (
+              <Link
+                href="/painel/carteira"
+                className={`rounded px-2 py-1.5 text-xs font-semibold transition ${
+                  active === "carteira" ? "border-b-2 border-gold text-white" : "text-white/60 hover:text-white"
+                }`}
+              >
+                Carteira Digital
+              </Link>
+            )}
             <Link
               href="/painel/cecmais/explorar"
               className={`rounded px-2 py-1.5 text-xs font-semibold transition ${
