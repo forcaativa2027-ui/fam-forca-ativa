@@ -20,8 +20,9 @@ import {
   useMyProfile, useSermons, useEvents,
   useDistricts, useAreas, useSectors, useCells,
   useChurches, useAllServiceTimes, useDailyWords,
-  usePendingCounts,
+  usePendingCounts, useMyActiveModules,
 } from "@/hooks/use-queries";
+import { DELEGATION_TAB_MAP } from "@/services/delegations";
 import { supabase } from "@/lib/supabase/client";
 import { youtubeThumb } from "@/services/content";
 import { logAudit } from "@/services/audit";
@@ -69,7 +70,8 @@ import { BirthdaysAdmin } from "./BirthdaysAdmin";
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
   const { data: counts } = usePendingCounts();
-  const isAdmin = me && ["apostolo", "pastor"].includes(me.role);
+  const { data: myModules = [] } = useMyActiveModules();
+  const isAdmin = me && (me.role === "apostolo" || myModules.length > 0);
 
   const [activeTab, setActiveTab] = useState<TabKey>("org-dashboard");
   const [previousTab, setPreviousTab] = useState<TabKey | null>(null);
@@ -94,7 +96,8 @@ export default function AdminPanel() {
           <CardContent className="pt-8 pb-8">
             <h2 className="font-display text-xl text-navy">Acesso restrito</h2>
             <p className="mt-2 text-sm text-muted">
-              O painel administrativo é exclusivo para liderança apostólica (apóstolo ou pastor).
+              O painel administrativo exige uma delegação ativa. Fale com o Administrador
+              Nacional, Estadual ou o Pastor Principal da sua igreja pra solicitar acesso.
             </p>
             <Button asChild variant="link" className="mt-4">
               <Link href="/painel">← Voltar ao painel</Link>
@@ -184,6 +187,29 @@ export default function AdminPanel() {
 // ─── Roteador de conteúdo ─────────────────────────────────────────────────────
 
 function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: (tab: TabKey) => void }) {
+  const { data: profile } = useMyProfile();
+  const { data: activeModules = [] } = useMyActiveModules();
+  const isApostolo = profile?.role === "apostolo";
+
+  if (!isApostolo) {
+    const allowedTabKeys = new Set(activeModules.flatMap((m) => DELEGATION_TAB_MAP[m] ?? []));
+    if (!allowedTabKeys.has(activeTab)) {
+      return (
+        <div className="grid min-h-[60vh] place-items-center">
+          <Card className="mx-auto max-w-md text-center">
+            <CardContent className="pt-8 pb-8">
+              <h2 className="font-display text-xl text-navy">Sem permissão para este módulo</h2>
+              <p className="mt-2 text-sm text-muted">
+                Você não tem uma delegação ativa pra acessar essa área. Fale com o Administrador
+                Nacional, Estadual ou o Pastor Principal da sua igreja pra solicitar acesso.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+  }
+
   switch (activeTab) {
     case "delegations":         return <DelegationsAdmin />;
     case "invites":             return <InviteLinksAdmin />;

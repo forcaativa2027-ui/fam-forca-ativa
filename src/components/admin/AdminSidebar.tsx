@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useMyProfile, useMyActiveModules } from "@/hooks/use-queries";
+import { DELEGATION_TAB_MAP } from "@/services/delegations";
 
 export type TabKey =
   | "supervision" | "org-dashboard"
@@ -188,7 +190,18 @@ function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
 export function AdminSidebar({
   activeTab, onNavigate, counts = {}, userName, userRole, onSearch, mobileOnly = false,
 }: AdminSidebarProps) {
-  const groups = buildGroups(counts);
+  const { data: profile } = useMyProfile();
+  const { data: activeModules = [] } = useMyActiveModules();
+  const isApostolo = profile?.role === "apostolo";
+
+  let groups = buildGroups(counts);
+  if (!isApostolo) {
+    const allowedTabKeys = new Set(activeModules.flatMap((m) => DELEGATION_TAB_MAP[m] ?? []));
+    groups = groups
+      .map((g) => ({ ...g, items: g.items.filter((i) => allowedTabKeys.has(i.key)) }))
+      .filter((g) => g.items.length > 0);
+  }
+
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const activeGroupId = groups.find((g) => g.items.some((i) => i.key === activeTab))?.id ?? "";
