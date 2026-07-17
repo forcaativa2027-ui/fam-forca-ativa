@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useMyProfile, useMyMember, useCecmaisOfertas } from "@/hooks/use-queries";
+import { useMyProfile, useMyMember, useCecmaisOfertas, useMemberCard } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { MemberHeader } from "@/components/panel/MemberHeader";
 import { MaisCategoria } from "@/components/shared/CECmaisBrand";
@@ -20,6 +20,7 @@ export default function CategoriaPage({ params }: { params: { slug: string } }) 
 
   const { data: profile } = useMyProfile();
   const { data: member } = useMyMember();
+  const { data: card } = useMemberCard(member?.id ?? null);
   const isAdmin = profile?.role && profile.role !== "membro" && profile.role !== "visitante";
 
   async function signOut() {
@@ -32,7 +33,7 @@ export default function CategoriaPage({ params }: { params: { slug: string } }) 
 
   return (
     <div className="min-h-screen bg-background">
-      <MemberHeader active="cecmais" isAdmin={!!isAdmin} onSignOut={signOut} />
+      <MemberHeader active="cecmais" isAdmin={!!isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
 
       <main className="container max-w-3xl space-y-6 py-8">
         <div className="flex items-center gap-3">
