@@ -276,7 +276,7 @@ function GrantDelegationDialog({ onClose }: { onClose: () => void }) {
       qc.invalidateQueries({ queryKey: ["delegations"] });
       onClose();
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Erro ao conceder delegação.");
+      setErr((e as { message?: string })?.message ?? "Erro ao conceder delegação.");
     } finally { setBusy(false); }
   }
 
@@ -614,7 +614,7 @@ function RequestTab() {
       });
       setSent(true);
     } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : "Erro ao enviar");
+      setErr((e as { message?: string })?.message ?? "Erro ao enviar");
     } finally { setBusy(false); }
   }
 
