@@ -57,7 +57,7 @@ interface AdminSidebarProps {
   mobileOnly?: boolean;
 }
 
-function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
+export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
   return [
     {
       id: "dashboard",

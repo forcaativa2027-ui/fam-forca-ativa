@@ -61,7 +61,7 @@ import { AcolhimentoAdmin } from "./AcolhimentoAdmin";
 import { EvasionAdmin } from "./EvasionAdmin";
 import { MinistriesAdmin } from "./MinistriesAdmin";
 import { HealthAdmin } from "./HealthAdmin";
-import { AdminSidebar, type TabKey } from "./AdminSidebar";
+import { AdminSidebar, buildGroups, type TabKey } from "./AdminSidebar";
 import { AuditAdmin } from "./AuditAdmin";
 import { MetasPlaceholder } from "./Placeholders";
 import { MemberScoreAdmin } from "./MemberScoreAdmin";
@@ -189,22 +189,49 @@ export default function AdminPanel() {
 function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: (tab: TabKey) => void }) {
   const { data: profile } = useMyProfile();
   const { data: activeModules = [] } = useMyActiveModules();
+  const { data: counts } = usePendingCounts();
   const isApostolo = profile?.role === "apostolo";
 
   if (!isApostolo) {
     const allowedTabKeys = new Set(activeModules.flatMap((m) => DELEGATION_TAB_MAP[m] ?? []));
     if (!allowedTabKeys.has(activeTab)) {
+      const shortcuts = buildGroups(counts)
+        .flatMap((g) => g.items)
+        .filter((i) => allowedTabKeys.has(i.key as TabKey));
+
       return (
-        <div className="grid min-h-[60vh] place-items-center">
-          <Card className="mx-auto max-w-md text-center">
-            <CardContent className="pt-8 pb-8">
-              <h2 className="font-display text-xl text-navy">Sem permissão para este módulo</h2>
-              <p className="mt-2 text-sm text-muted">
-                Você não tem uma delegação ativa pra acessar essa área. Fale com o Administrador
-                Nacional, Estadual ou o Pastor Principal da sua igreja pra solicitar acesso.
-              </p>
-            </CardContent>
-          </Card>
+        <div className="mx-auto max-w-2xl py-10">
+          <div className="text-center">
+            <h2 className="font-display text-xl text-navy">Escolha um módulo</h2>
+            <p className="mt-1 text-sm text-muted">
+              Aqui estão as áreas liberadas pela sua delegação ativa.
+            </p>
+          </div>
+
+          {shortcuts.length === 0 ? (
+            <Card className="mx-auto mt-6 max-w-md text-center">
+              <CardContent className="pt-8 pb-8">
+                <h3 className="font-display text-lg text-navy">Nenhuma delegação ativa</h3>
+                <p className="mt-2 text-sm text-muted">
+                  Fale com o Administrador Nacional, Estadual ou o Pastor Principal da sua igreja
+                  pra solicitar acesso a um módulo.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {shortcuts.map((item) => (
+                <button
+                  key={item.key}
+                  onClick={() => onNavigate(item.key as TabKey)}
+                  className="flex flex-col items-center gap-2 rounded-xl border bg-card p-4 text-center shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                  <span className="text-navy">{item.icon}</span>
+                  <span className="text-sm font-semibold text-navy">{item.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       );
     }
