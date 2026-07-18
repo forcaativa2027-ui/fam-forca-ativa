@@ -4,6 +4,7 @@ import { getMyProfile } from "@/services/profiles";
 import type { Member } from "@/types/domain";
 import { WorkspaceShell } from "../../../WorkspaceShell";
 import { MembroPanelTabs } from "./MembroPanelTabs";
+import { requireWorkspaceAccess } from "../../../requireWorkspaceAccess";
 
 const STAGE_LABELS: Record<string, string> = {
   visitante: "Visitante", novo_convertido: "Novo convertido", consolidacao: "Consolidação",
@@ -16,6 +17,7 @@ export default async function MembroPage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   const supabase = await createClient();
   const profile = await getMyProfile(supabase);
+  await requireWorkspaceAccess(supabase, profile);
 
   const { data: member } = await supabase
     .from("members")
