@@ -2,10 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getMyProfile } from "@/services/profiles";
 import { WorkspaceShell } from "../WorkspaceShell";
 import { ExecutivoTabs } from "./ExecutivoTabs";
+import { requireWorkspaceAccess } from "../requireWorkspaceAccess";
 
 export default async function ExecutivoPage() {
   const supabase = await createClient();
   const profile = await getMyProfile(supabase);
+  await requireWorkspaceAccess(supabase, profile);
 
   return (
     <WorkspaceShell title="Centro Executivo" userName={profile?.full_name ?? undefined}>
