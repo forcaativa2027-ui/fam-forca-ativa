@@ -4,11 +4,13 @@ import { getMyProfile } from "@/services/profiles";
 import type { Church } from "@/types/domain";
 import { WorkspaceShell } from "../../../WorkspaceShell";
 import { ComunidadePanelTabs } from "./ComunidadePanelTabs";
+import { requireWorkspaceAccess } from "../../../requireWorkspaceAccess";
 
 export default async function ComunidadePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
   const profile = await getMyProfile(supabase);
+  await requireWorkspaceAccess(supabase, profile);
 
   const { data: church } = await supabase
     .from("churches")
