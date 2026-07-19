@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   Shield, Users, AlertTriangle, CheckCircle2, XCircle, Clock,
   Plus, Trash2, Pencil, Eye, BarChart3, Zap, RefreshCw, Lock, Search,
@@ -255,8 +255,21 @@ function GrantDelegationDialog({ onClose }: { onClose: () => void }) {
   const [scopeName, setScopeName] = useState("Nacional");
   const [reason, setReason] = useState("");
   const [expires, setExpires] = useState("");
+  const [propagates, setPropagates] = useState(true);
+  const [selectedPerms, setSelectedPerms] = useState<Set<string>>(new Set());
+  const { data: modulePerms = [] } = useQuery({
+    queryKey: ["permissions", module], queryFn: () => Del.listPermissions(supabase, module),
+  });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+
+  function togglePerm(key: string) {
+    setSelectedPerms((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
 
   async function handleGrant() {
     if (!profileId) { setErr("Selecione um membro na busca."); return; }
@@ -267,12 +280,16 @@ function GrantDelegationDialog({ onClose }: { onClose: () => void }) {
         scope, scope_name: scopeName,
         request_reason: reason || `Delegação concedida diretamente via painel de Governança.`,
         expires_at: expires || null,
+        propagates_to_subordinates: propagates,
       });
       await Del.approveDelegation(supabase, created.id, {
         trust_level: Number(level), scope, scope_name: scopeName,
         review_notes: "Concedida diretamente (sem solicitação prévia).",
         expires_at: expires || null,
       });
+      if (selectedPerms.size > 0) {
+        await Del.setDelegationPermissions(supabase, created.id, Array.from(selectedPerms));
+      }
       qc.invalidateQueries({ queryKey: ["delegations"] });
       onClose();
     } catch (e: unknown) {
@@ -311,6 +328,24 @@ function GrantDelegationDialog({ onClose }: { onClose: () => void }) {
           <div><Label className="text-xs">Nome do escopo</Label>
             <Input value={scopeName} onChange={e => setScopeName(e.target.value)} placeholder="Ex: Distrito Centro-Oeste"/>
           </div>
+          <label className="flex items-start gap-2 text-xs text-muted-foreground">
+            <input type="checkbox" checked={propagates} onChange={(e) => setPropagates(e.target.checked)} className="mt-0.5" />
+            Propaga para as unidades subordinadas ao escopo (ex: Distrito alcança Núcleos/Setores/Igrejas dele). Se desmarcado, vale só a unidade exata.
+          </label>
+          {modulePerms.length > 0 && (
+            <div className="rounded-md border p-2.5">
+              <Label className="text-xs">Permissões específicas (opcional)</Label>
+              <p className="mb-1.5 text-[11px] text-muted-foreground">Deixe tudo desmarcado para liberar o módulo inteiro (padrão atual).</p>
+              <div className="max-h-32 space-y-1 overflow-y-auto">
+                {modulePerms.map((p) => (
+                  <label key={p.key} className="flex items-center gap-1.5 text-xs">
+                    <input type="checkbox" checked={selectedPerms.has(p.key)} onChange={() => togglePerm(p.key)} />
+                    {p.label} {p.is_write ? "" : <span className="text-muted-foreground">(leitura)</span>}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
           <div><Label className="text-xs">Validade (opcional)</Label>
             <Input type="date" value={expires} onChange={e => setExpires(e.target.value)}/>
             <p className="text-xs text-muted-foreground mt-1">Deixe em branco para acesso permanente.</p>
