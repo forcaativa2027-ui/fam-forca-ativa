@@ -42,7 +42,7 @@ interface NavGroup {
   icon: React.ReactNode;
   items: NavItem[];
 }
-interface AdminSidebarProps {
+export interface AdminSidebarProps {
   activeTab: TabKey;
   onNavigate: (tab: TabKey) => void;
   counts?: {
