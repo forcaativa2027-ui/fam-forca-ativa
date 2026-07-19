@@ -185,16 +185,18 @@ export const DELEGATION_MODULE_LABELS: Record<DelegationModule, string> = {
   finance: "💰 Financeiro", patrimony: "🏛️ Patrimônio", audit: "📋 Auditoria",
   administrativo: "⚙️ Administrativo", comunicacao: "📣 Comunicação",
   documentacao: "🗂️ Documentação", supervisao: "🧭 Supervisão Ministerial",
+  usuarios: "👤 Administração de Usuários",
 };
 
 export const DELEGATION_TAB_MAP: Record<DelegationModule, string[]> = {
   administrativo: [
-    "org-dashboard", "metas", "members", "leadership", "score", "birthdays", "discipleship",
+    "org-dashboard", "metas", "leadership", "score", "birthdays", "discipleship",
     "acolhimento", "evasao", "crm", "prayer-requests", "visit-requests",
     "communities", "structure", "life-groups", "expansion-map", "genealogy",
-    "invites", "permissions", "delegations", "evangelism-groups",
+    "evangelism-groups",
     "mda", "mda-health", "saude", "ministerios", "ministerial-reports", "export", "gpv",
   ],
+  usuarios: ["members", "invites", "permissions", "delegations"],
   finance: ["finance"],
   patrimony: ["patrimony"],
   intelligence: ["intelligence"],
