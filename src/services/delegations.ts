@@ -180,6 +180,13 @@ export async function listMyActiveModules(sb: SupabaseClient): Promise<Delegatio
 }
 
 /** Quais abas (TabKey do AdminSidebar) cada módulo de delegação libera. */
+export const DELEGATION_MODULE_LABELS: Record<DelegationModule, string> = {
+  intelligence: "🧠 Inteligência", reports: "📊 Relatórios", control_tower: "🗼 Torre de Controle",
+  finance: "💰 Financeiro", patrimony: "🏛️ Patrimônio", audit: "📋 Auditoria",
+  administrativo: "⚙️ Administrativo", comunicacao: "📣 Comunicação",
+  documentacao: "🗂️ Documentação", supervisao: "🧭 Supervisão Ministerial",
+};
+
 export const DELEGATION_TAB_MAP: Record<DelegationModule, string[]> = {
   administrativo: [
     "org-dashboard", "metas", "members", "leadership", "score", "birthdays", "discipleship",
