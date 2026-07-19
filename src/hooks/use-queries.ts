@@ -14,6 +14,7 @@ import * as Tl from "@/services/timeline";
 import * as Pr from "@/services/prayer";
 import * as Rm from "@/services/relmdaReports";
 import * as Ev from "@/services/events";
+import * as Gs from "@/services/globalSearch";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -597,4 +598,11 @@ export const useEventRegistrationSummary = (eventId: string | null) =>
     queryKey: ["event-registration-summary", eventId],
     queryFn: () => Ev.getRegistrationSummary(supabase, eventId as string),
     enabled: !!eventId,
+  });
+
+export const useGlobalSearch = (query: string) =>
+  useQuery({
+    queryKey: ["global-search", query],
+    queryFn: () => Gs.globalSearch(supabase, query),
+    enabled: query.trim().length >= 2,
   });
