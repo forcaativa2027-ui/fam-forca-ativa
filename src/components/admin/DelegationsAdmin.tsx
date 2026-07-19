@@ -15,16 +15,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  import {
   useDelegations, useCouncilMembers, useRoleDelegations,
   useEmergencyAccess, useComplianceDashboard, useModuleRanking,
-  useChurches, useAllMembers,
+  useChurches, useAllMembers, useMyProfile,
 } from "@/hooks/use-queries";
 import * as Del from "@/services/delegations";
 import { supabase } from "@/lib/supabase/client";
 import type { DelegationPanel, DelegationModule, DelegationScope, CouncilVote } from "@/types/domain";
 
 // ── Config visual ─────────────────────────────────────────────
-const MODULE_LABELS: Record<DelegationModule, string> = {
+cconst MODULE_LABELS: Record<DelegationModule, string> = {
   intelligence:  "🧠 Inteligência",
   reports:       "📊 Relatórios",
   control_tower: "🗼 Torre de Controle",
@@ -35,6 +36,7 @@ const MODULE_LABELS: Record<DelegationModule, string> = {
   comunicacao:    "📣 Comunicação",
   documentacao:   "🗂️ Documentação",
   supervisao:     "🧭 Supervisão Ministerial",
+  usuarios:       "👤 Administração de Usuários",
 };
 const SCOPE_LABELS: Record<string, string> = {
   lg: "Life Group", setor: "Setor", area: "Área",
@@ -831,12 +833,11 @@ function ActionModal({ action, delegation, onClose, onDone }: {
 // ══════════════════════════════════════════════════════════════
 export function DelegationsAdmin() {
   const qc = useQueryClient();
+  const { data: me } = useMyProfile();
   const { data: pending = [] } = useDelegations({ status: "pendente" });
   const [modal, setModal] = useState<{ action: string; d: DelegationPanel } | null>(null);
 
-  // TODO: buscar role do usuário logado do contexto
-  // Por ora, assumimos que só apóstolo acessa esta tela
-  const isApostolo = true;
+  const isApostolo = me?.role === "apostolo";
 
   function handleAction(action: string, d: DelegationPanel) {
     setModal({ action, d });
