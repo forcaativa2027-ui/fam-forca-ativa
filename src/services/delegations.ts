@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   DelegationPanel, ModuleDelegation, DelegationApproval, RoleDelegation,
   EmergencyAccess, ComplianceDashboard, ModuleDelegationRanking,
-  CouncilMember, DelegationModule, DelegationScope, CouncilVote,
+  CouncilMember, DelegationModule, DelegationScope, CouncilVote, Permission,
 } from "@/types/domain";
 
 // ── Conselho Diretor ──────────────────────────────────────────
@@ -45,7 +45,7 @@ export async function listDelegations(
 export async function requestDelegation(sb: SupabaseClient, payload: {
   profile_id: string; module: DelegationModule; trust_level: number;
   scope: DelegationScope; scope_id?: string|null; scope_name: string;
-  request_reason: string; expires_at?: string|null;
+  request_reason: string; expires_at?: string|null; propagates_to_subordinates?: boolean;
 }): Promise<ModuleDelegation> {
   const { data, error } = await sb
     .from("module_delegations").insert(payload).select().single();
@@ -198,3 +198,37 @@ export const DELEGATION_TAB_MAP: Record<DelegationModule, string[]> = {
   comunicacao: ["news", "banners", "sermons", "events", "services", "word"],
   documentacao: [],
 };
+
+// ── Permissões atômicas (evolução pro modelo de 4 camadas) ───
+export async function listPermissions(sb: SupabaseClient, module?: DelegationModule): Promise<Permission[]> {
+  let q = sb.from("permissions").select("*").order("key");
+  if (module) q = q.eq("module", module);
+  const { data, error } = await q;
+  if (error) { console.error("[delegations] listPermissions", error); return []; }
+  return (data ?? []) as Permission[];
+}
+
+export async function listDelegationPermissions(sb: SupabaseClient, delegationId: string): Promise<string[]> {
+  const { data, error } = await sb.from("delegation_permissions").select("permission_key").eq("delegation_id", delegationId);
+  if (error) { console.error("[delegations] listDelegationPermissions", error); return []; }
+  return (data ?? []).map((r) => r.permission_key as string);
+}
+
+/** Substitui as permissões específicas da delegação. Lista vazia = libera todas as do módulo (padrão). */
+export async function setDelegationPermissions(sb: SupabaseClient, delegationId: string, permissionKeys: string[]): Promise<void> {
+  const { error: delErr } = await sb.from("delegation_permissions").delete().eq("delegation_id", delegationId);
+  if (delErr) throw delErr;
+  if (permissionKeys.length === 0) return;
+  const { error } = await sb.from("delegation_permissions").insert(
+    permissionKeys.map((permission_key) => ({ delegation_id: delegationId, permission_key }))
+  );
+  if (error) throw error;
+}
+
+export async function hasPermission(sb: SupabaseClient, profileId: string, permissionKey: string, targetChurchId?: string | null): Promise<boolean> {
+  const { data, error } = await sb.rpc("has_permission", {
+    p_profile_id: profileId, p_permission_key: permissionKey, p_target_church_id: targetChurchId ?? null,
+  });
+  if (error) { console.error("[delegations] hasPermission", error); return false; }
+  return !!data;
+}
