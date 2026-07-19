@@ -24,18 +24,18 @@ import { supabase } from "@/lib/supabase/client";
 import type { DelegationPanel, DelegationModule, DelegationScope, CouncilVote } from "@/types/domain";
 
 // ── Config visual ─────────────────────────────────────────────
-const MODULE_LABELS: Record<DelegationModule, string> = {
-  intelligence:  "🧠 Inteligência",
-  reports:       "📊 Relatórios",
+export const DELEGATION_MODULE_LABELS: Record<DelegationModule, string> = {
+  intelligence: "🧠 Inteligência", 
+  reports: "📊 Relatórios", 
   control_tower: "🗼 Torre de Controle",
-  finance:       "💰 Financeiro",
-  patrimony:     "🏛️ Patrimônio",
-  audit:         "📋 Auditoria",
-  administrativo: "⚙️ Administrativo",
-  comunicacao:    "📣 Comunicação",
-  documentacao:   "🗂️ Documentação",
-  supervisao:     "🧭 Supervisão Ministerial",
-  usuarios:       "👤 Administração de Usuários",
+  finance: "💰 Financeiro", 
+  patrimony: "🏛️ Patrimônio", 
+  audit: "📋 Auditoria",
+  administrativo: "⚙️ Administrativo", 
+  comunicacao: "📣 Comunicação",
+  documentacao: "🗂️ Documentação", 
+  supervisao: "🧭 Supervisão Ministerial",
+  usuarios: "👤 Administração de Usuários",
 };
 const SCOPE_LABELS: Record<string, string> = {
   lg: "Life Group", setor: "Setor", area: "Área",
