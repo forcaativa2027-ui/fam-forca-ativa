@@ -24,7 +24,7 @@ import { supabase } from "@/lib/supabase/client";
 import type { DelegationPanel, DelegationModule, DelegationScope, CouncilVote } from "@/types/domain";
 
 // ── Config visual ─────────────────────────────────────────────
-export const DELEGATION_MODULE_LABELS: Record<DelegationModule, string> = {
+const MODULE_LABELS: Record<DelegationModule, string> = {
   intelligence: "🧠 Inteligência", 
   reports: "📊 Relatórios", 
   control_tower: "🗼 Torre de Controle",
