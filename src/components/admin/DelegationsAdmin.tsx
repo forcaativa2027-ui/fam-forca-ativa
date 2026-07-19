@@ -15,7 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  import {
   useDelegations, useCouncilMembers, useRoleDelegations,
   useEmergencyAccess, useComplianceDashboard, useModuleRanking,
   useChurches, useAllMembers, useMyProfile,
@@ -25,7 +24,7 @@ import { supabase } from "@/lib/supabase/client";
 import type { DelegationPanel, DelegationModule, DelegationScope, CouncilVote } from "@/types/domain";
 
 // ── Config visual ─────────────────────────────────────────────
-cconst MODULE_LABELS: Record<DelegationModule, string> = {
+const MODULE_LABELS: Record<DelegationModule, string> = {
   intelligence:  "🧠 Inteligência",
   reports:       "📊 Relatórios",
   control_tower: "🗼 Torre de Controle",
