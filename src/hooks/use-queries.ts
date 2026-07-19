@@ -420,6 +420,16 @@ export const useModuleAccess = (module: DelegationModule) =>
   useQuery({ queryKey: ["module-access", module], queryFn: () => Del.checkModuleAccess(supabase, module), staleTime: 60000 });
 export const useMyActiveModules = () =>
   useQuery({ queryKey: ["my-active-modules"], queryFn: () => Del.listMyActiveModules(supabase), staleTime: 60000 });
+export const useHasPermission = (permissionKey: string, targetChurchId?: string | null) =>
+  useQuery({
+    queryKey: ["has-permission", permissionKey, targetChurchId],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return false;
+      return Del.hasPermission(supabase, u.user.id, permissionKey, targetChurchId);
+    },
+    staleTime: 60000,
+  });
 
 // C20 — Score do Membro + Aniversariantes
 import * as MS from "@/services/memberScore";
