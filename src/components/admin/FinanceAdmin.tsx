@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { financeSchema, type FinanceFormInput } from "@/schemas";
 import {
   useChurches, useFinances, useFinanceFlow,
-  useFinanceCategories, useFinanceBudgets,
+  useFinanceCategories, useFinanceBudgets, useHasPermission,
 } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import {
@@ -56,6 +56,9 @@ function LancamentosTab({ churchId, year, month }: { churchId:string; year:numbe
   const qc = useQueryClient();
   const today = new Date();
   const { data: items = [] } = useFinances(churchId||null, year, month);
+  const { data: canLancar = true } = useHasPermission("financeiro.lancar", churchId || null);
+  const { data: canAprovar = true } = useHasPermission("financeiro.aprovar", churchId || null);
+  const canWrite = canLancar || canAprovar;
   const [err, setErr] = useState("");
   const [editing, setEditing] = useState<Finance|null>(null);
 
@@ -124,43 +127,45 @@ function LancamentosTab({ churchId, year, month }: { churchId:string; year:numbe
         </CardContent></Card>
       </div>
 
-      <Card>
-        <CardHeader><CardTitle className="text-base">{editing?"✏️ Editar lançamento":"➕ Novo lançamento"}</CardTitle></CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-            <input type="hidden" {...register("church_id")} value={churchId}/>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Tipo">
-                <select {...register("direction")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                  <option value="entrada">Entrada</option><option value="saida">Saída</option>
-                </select>
-              </Field>
-              <Field label="Categoria">
-                <select {...register("kind")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                  {(direction==="saida"?SAIDAS:ENTRADAS).map(k=><option key={k} value={k}>{KIND_LABELS[k]}</option>)}
-                </select>
-              </Field>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Valor (R$)" error={errors.amount?.message}>
-                <Input type="number" step="0.01" min="0" {...register("amount")} placeholder="0,00"/>
-              </Field>
-              <Field label="Data" error={errors.occurred_on?.message}>
-                <Input type="date" {...register("occurred_on")}/>
-              </Field>
-            </div>
-            {direction==="entrada"&&<Field label="Ofertante (opcional)"><Input {...register("payer_name")} placeholder="Nome"/></Field>}
-            <Field label="Descrição"><Input {...register("description")} placeholder="Detalhes"/></Field>
-            {err&&<p className="text-sm text-destructive">{err}</p>}
-            <div className="flex gap-2">
-              <Button type="submit" disabled={isSubmitting} className="gap-2">
-                {editing?<><Check className="h-4 w-4"/>Salvar</>:<><Plus className="h-4 w-4"/>Lançar</>}
-              </Button>
-              {editing&&<Button type="button" variant="outline" onClick={()=>{setEditing(null);reset();}}><X className="h-4 w-4 mr-1"/>Cancelar</Button>}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      {canWrite && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">{editing?"✏️ Editar lançamento":"➕ Novo lançamento"}</CardTitle></CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+              <input type="hidden" {...register("church_id")} value={churchId}/>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Tipo">
+                  <select {...register("direction")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                    <option value="entrada">Entrada</option><option value="saida">Saída</option>
+                  </select>
+                </Field>
+                <Field label="Categoria">
+                  <select {...register("kind")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                    {(direction==="saida"?SAIDAS:ENTRADAS).map(k=><option key={k} value={k}>{KIND_LABELS[k]}</option>)}
+                  </select>
+                </Field>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Valor (R$)" error={errors.amount?.message}>
+                  <Input type="number" step="0.01" min="0" {...register("amount")} placeholder="0,00"/>
+                </Field>
+                <Field label="Data" error={errors.occurred_on?.message}>
+                  <Input type="date" {...register("occurred_on")}/>
+                </Field>
+              </div>
+              {direction==="entrada"&&<Field label="Ofertante (opcional)"><Input {...register("payer_name")} placeholder="Nome"/></Field>}
+              <Field label="Descrição"><Input {...register("description")} placeholder="Detalhes"/></Field>
+              {err&&<p className="text-sm text-destructive">{err}</p>}
+              <div className="flex gap-2">
+                <Button type="submit" disabled={isSubmitting} className="gap-2">
+                  {editing?<><Check className="h-4 w-4"/>Salvar</>:<><Plus className="h-4 w-4"/>Lançar</>}
+                </Button>
+                {editing&&<Button type="button" variant="outline" onClick={()=>{setEditing(null);reset();}}><X className="h-4 w-4 mr-1"/>Cancelar</Button>}
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader><CardTitle className="text-base">Lançamentos de {MONTHS[month-1]}/{year} ({items.length})</CardTitle></CardHeader>
@@ -180,10 +185,12 @@ function LancamentosTab({ churchId, year, month }: { churchId:string; year:numbe
                   <b className={`text-sm font-extrabold shrink-0 ${i.direction==="entrada"?"text-green-700":"text-red-700"}`}>
                     {i.direction==="entrada"?"+":"-"} {fmt(Number(i.amount))}
                   </b>
-                  <div className="flex gap-1 shrink-0">
-                    <Button onClick={()=>startEdit(i)} variant="ghost" size="sm"><Pencil className="h-3.5 w-3.5"/></Button>
-                    <Button onClick={()=>remove(i.id)} variant="ghost" size="sm" className="text-red-500"><Trash2 className="h-3.5 w-3.5"/></Button>
-                  </div>
+                  {canWrite && (
+                    <div className="flex gap-1 shrink-0">
+                      <Button onClick={()=>startEdit(i)} variant="ghost" size="sm"><Pencil className="h-3.5 w-3.5"/></Button>
+                      <Button onClick={()=>remove(i.id)} variant="ghost" size="sm" className="text-red-500"><Trash2 className="h-3.5 w-3.5"/></Button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -451,6 +458,7 @@ function OrcamentoTab({ churchId, year }: { churchId:string; year:number }) {
 function ExportacaoTab({ churchId, year, month, churchName }: { churchId:string; year:number; month:number; churchName:string }) {
   const { data:items=[] } = useFinances(churchId||null, year, month);
   const { data:flow=[] }  = useFinanceFlow(churchId);
+  const { data: canExport = true } = useHasPermission("financeiro.exportar", churchId || null);
 
   function exportCSV() {
     const h=["Data","Tipo","Categoria","Valor","Ofertante","Descrição"];
@@ -477,12 +485,13 @@ function ExportacaoTab({ churchId, year, month, churchName }: { churchId:string;
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between p-4 rounded-lg border bg-gray-50">
             <div><p className="font-semibold text-[#0E2A47]">Lançamentos do mês</p><p className="text-xs text-muted-foreground">{MONTHS[month-1]}/{year} · {items.length} lançamentos</p></div>
-            <Button onClick={exportCSV} disabled={items.length===0} className="gap-2"><Download className="h-4 w-4"/>Exportar CSV</Button>
+            <Button onClick={exportCSV} disabled={items.length===0 || !canExport} className="gap-2"><Download className="h-4 w-4"/>Exportar CSV</Button>
           </div>
           <div className="flex items-center justify-between p-4 rounded-lg border bg-gray-50">
             <div><p className="font-semibold text-[#0E2A47]">Fluxo de caixa anual</p><p className="text-xs text-muted-foreground">{flow.length} meses · {churchName}</p></div>
-            <Button onClick={exportFluxo} disabled={flow.length===0} variant="outline" className="gap-2"><Download className="h-4 w-4"/>Exportar CSV</Button>
+            <Button onClick={exportFluxo} disabled={flow.length===0 || !canExport} variant="outline" className="gap-2"><Download className="h-4 w-4"/>Exportar CSV</Button>
           </div>
+          {!canExport && <p className="text-xs text-muted-foreground italic">Sua delegação não inclui permissão de exportação de dados financeiros.</p>}
         </CardContent>
       </Card>
       <p className="text-xs text-muted-foreground text-center">💡 No Excel: Dados → De Texto/CSV → delimitador ponto e vírgula</p>
