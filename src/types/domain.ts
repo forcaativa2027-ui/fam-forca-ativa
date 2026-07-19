@@ -632,8 +632,12 @@ export interface ControlTowerSummary {
 
 // C19 — Governança por Delegação
 export type DelegationModule = "intelligence"|"reports"|"control_tower"|"finance"|"patrimony"|"audit"|"administrativo"|"comunicacao"|"documentacao"|"supervisao";
+
+export interface Permission {
+  key: string; module: DelegationModule; label: string; description: string | null; is_write: boolean;
+}
 export type DelegationScope  = "lg"|"setor"|"area"|"distrito"|"nucleo"|"sede"|"nacional";
-export type DelegationStatus = "pendente"|"ativo"|"rejeitado"|"revogado"|"expirado";
+export type DelegationStatus = "pendente"|"ativo"|"rejeitado"|"revogado"|"expirado"|"programada"|"concluida";
 export type CouncilVote      = "aprovado"|"reprovado"|"abstencao";
 
 export interface CouncilMember {
@@ -648,6 +652,7 @@ export interface ModuleDelegation {
   is_critical: boolean; council_pauta: boolean; council_pauta_at: string|null;
   reviewed_by: string|null; reviewed_at: string|null; review_notes: string|null;
   revoked_by: string|null; revoked_at: string|null; revoke_reason: string|null;
+  propagates_to_subordinates?: boolean; scope_exceptions?: string[];
   created_at: string; updated_at: string;
 }
 export interface DelegationPanel extends ModuleDelegation {
