@@ -196,7 +196,7 @@ export const DELEGATION_TAB_MAP: Record<DelegationModule, string[]> = {
     "evangelism-groups",
     "mda", "mda-health", "saude", "ministerios", "ministerial-reports", "export", "gpv",
   ],
-  usuarios: ["members", "invites", "permissions", "delegations"],
+  usuarios: ["members", "leadership", "invites", "permissions", "delegations"],
   finance: ["finance"],
   patrimony: ["patrimony"],
   intelligence: ["intelligence"],
