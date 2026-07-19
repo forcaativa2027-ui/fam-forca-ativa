@@ -631,7 +631,7 @@ export interface ControlTowerSummary {
 }
 
 // C19 — Governança por Delegação
-export type DelegationModule = "intelligence"|"reports"|"control_tower"|"finance"|"patrimony"|"audit"|"administrativo"|"comunicacao"|"documentacao"|"supervisao";
+export type DelegationModule = "intelligence"|"reports"|"control_tower"|"finance"|"patrimony"|"audit"|"administrativo"|"comunicacao"|"documentacao"|"supervisao"|"usuarios";
 
 export interface Permission {
   key: string; module: DelegationModule; label: string; description: string | null; is_write: boolean;
