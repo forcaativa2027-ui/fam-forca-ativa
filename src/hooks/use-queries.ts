@@ -273,6 +273,12 @@ export const useMyMinistries = () =>
     queryKey: ["my-ministries"],
     queryFn: () => Mn.listMyMinistries(supabase),
   });
+export const useMinistriesByMember = (memberId: string | null) =>
+  useQuery({
+    queryKey: ["ministries-by-member", memberId],
+    queryFn: () => memberId ? Mn.listMinistriesByMember(supabase, memberId) : Promise.resolve([]),
+    enabled: !!memberId,
+  });
 export const useMinistryMembers = (ministryId: string | null) =>
   useQuery({
     queryKey: ["ministry-members", ministryId],
