@@ -68,6 +68,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "pendencias",    label: "Pendências",  icon: <ClipboardList size={15} /> },
         { key: "agenda",        label: "Agenda",       icon: <CalendarRange size={15} /> },
         { key: "notificacoes",  label: "Notificações", icon: <Bell size={15} /> },
+        { key: "relmda-dashboard", label: "M.D.A. — Visão Geral", icon: <BarChart3 size={15} /> },
         { key: "supervision",   label: "Supervisão",  icon: <BarChart3 size={15} /> },
       ],
     },
