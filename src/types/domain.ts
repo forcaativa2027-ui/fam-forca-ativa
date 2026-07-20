@@ -1231,3 +1231,30 @@ export interface RelmdaDeadlineConfig {
   correction_deadline_days: number;
   reminder_before_hours: number;
 }
+
+// Formação — Cursos, Turmas, Matrículas
+export type EnrollmentStatus = "matriculado" | "cursando" | "concluido" | "desistente";
+export type ClassStatus = "planejada" | "em_andamento" | "concluida" | "cancelada";
+
+export interface Course {
+  id: string; name: string; description: string | null; category: string | null;
+  church_id: string | null; is_active: boolean; created_at: string;
+}
+export interface CourseClass {
+  id: string; course_id: string; church_id: string | null; name: string;
+  instructor_id: string | null; location: string | null;
+  start_date: string | null; end_date: string | null; max_vagas: number | null;
+  status: ClassStatus; created_at: string;
+}
+export interface CourseEnrollment {
+  id: string; class_id: string; member_id: string; status: EnrollmentStatus;
+  enrolled_at: string; completed_at: string | null; certificate_issued: boolean; notes: string | null;
+}
+export interface CourseEnrollmentView extends CourseEnrollment {
+  member_name: string; class_name: string; class_status: ClassStatus;
+  start_date: string | null; end_date: string | null; course_name: string; course_category: string | null;
+}
+export interface FormacaoStats {
+  total_cursos: number; total_turmas_ativas: number;
+  total_matriculados: number; total_concluintes_90d: number;
+}
