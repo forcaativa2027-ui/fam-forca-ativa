@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Plus, Trash2, Pencil, X, Users, Building2, Send, FileText,
-  Flame, Music, Sparkles, Flower, HandHelping, Heart, Crown, Award,
+  Flame, Music, Sparkles, Flower, HandHelping, Heart, Crown, Award, Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,8 @@ import {
   ministrySchema, type MinistryInput,
   ministryPostSchema, type MinistryPostInput,
 } from "@/schemas";
-import { useMinistries, useMinistryMembers, useMinistryPosts, useChurches, useAllMembers } from "@/hooks/use-queries";
+import { useMinistries, useMinistryMembers, useMinistryPosts, useChurches, useAllMembers, useMinistryGoalsVsActual } from "@/hooks/use-queries";
+import { setMinistryGoal } from "@/services/goals";
 import { supabase } from "@/lib/supabase/client";
 import {
   createMinistry, updateMinistry, deleteMinistry,
@@ -280,6 +281,8 @@ function MinistryDetail({ ministry: ms, church, onClose }: { ministry: Ministry;
           <EditMinistryForm ministry={ms} onSaved={() => { setEditingMs(false); qc.invalidateQueries({ queryKey: ["ministries"] }); }} />
         )}
 
+        <MinistryGoalWidget ministryId={ms.id} ministryName={ms.name} currentCount={members.length} />
+
         {/* MEMBROS DO MINISTÉRIO */}
         <section>
           <h3 className="mb-2 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-navy-600">
@@ -522,5 +525,57 @@ function Field({ label, error, children }: { label: string; error?: string; chil
       <Label>{label}</Label>{children}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
+  );
+}
+
+// ============================================================
+// META DE INTEGRANTES DO MINISTÉRIO (UX-003 Cap. 3 Parte 3)
+// ============================================================
+function MinistryGoalWidget({ ministryId, ministryName, currentCount }: { ministryId: string; ministryName: string; currentCount: number }) {
+  const qc = useQueryClient();
+  const { data: goals = [] } = useMinistryGoalsVsActual();
+  const goal = goals.find((g) => g.scope_id === ministryId);
+  const [editing, setEditing] = useState(false);
+  const [target, setTarget] = useState(String(goal?.target_value ?? ""));
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    const n = Number(target);
+    if (!n || n <= 0) return;
+    setBusy(true);
+    try {
+      await setMinistryGoal(supabase, ministryId, ministryName, new Date().getFullYear(), n);
+      qc.invalidateQueries({ queryKey: ["ministry-goals-vs-actual"] });
+      setEditing(false);
+    } finally { setBusy(false); }
+  }
+
+  const STATUS_COLOR: Record<string, string> = { atingido: "text-green-600", no_caminho: "text-gold", atencao: "text-red-500" };
+
+  return (
+    <section className="rounded-md border p-3">
+      <div className="flex items-center justify-between">
+        <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-navy-600">
+          <Target className="h-3.5 w-3.5 text-gold" />Meta de integrantes ({new Date().getFullYear()})
+        </h3>
+        {!editing && <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>{goal ? "Editar" : "Definir meta"}</Button>}
+      </div>
+      {editing ? (
+        <div className="mt-2 flex items-center gap-2">
+          <Input type="number" min={1} value={target} onChange={(e) => setTarget(e.target.value)} placeholder="Ex: 20" className="h-8 w-28" />
+          <Button size="sm" onClick={save} disabled={busy}>{busy ? "Salvando…" : "Salvar"}</Button>
+          <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>Cancelar</Button>
+        </div>
+      ) : goal ? (
+        <div className="mt-1.5">
+          <p className={`text-sm font-bold ${STATUS_COLOR[goal.status_meta]}`}>{currentCount} de {goal.target_value} ({goal.pct_atingido}%)</p>
+          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-gold" style={{ width: `${Math.min(100, goal.pct_atingido)}%` }} />
+          </div>
+        </div>
+      ) : (
+        <p className="mt-1 text-xs italic text-muted-foreground">Sem meta definida ainda.</p>
+      )}
+    </section>
   );
 }
