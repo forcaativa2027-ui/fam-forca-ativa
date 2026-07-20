@@ -15,6 +15,7 @@ import * as Pr from "@/services/prayer";
 import * as Rm from "@/services/relmdaReports";
 import * as Ev from "@/services/events";
 import * as Gs from "@/services/globalSearch";
+import * as Sec from "@/services/security";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -606,3 +607,6 @@ export const useGlobalSearch = (query: string) =>
     queryFn: () => Gs.globalSearch(supabase, query),
     enabled: query.trim().length >= 2,
   });
+
+export const useMySessions = () =>
+  useQuery({ queryKey: ["my-sessions"], queryFn: () => Sec.listMySessions(supabase) });
