@@ -1,6 +1,6 @@
 "use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, History, BookOpen, GraduationCap, MapPin, Mic2, Network } from "lucide-react";
+import { LayoutDashboard, History, BookOpen, GraduationCap, MapPin, Mic2, Network, Heart } from "lucide-react";
 import { VisaoGeralMembro } from "./VisaoGeralMembro";
 import { LinhaDoTempoMembro } from "./LinhaDoTempoMembro";
 import { DiscipuladoMembro } from "./DiscipuladoMembro";
@@ -9,6 +9,7 @@ import { OrganizacaoMembro } from "./OrganizacaoMembro";
 import { FormacaoMembro } from "./FormacaoMembro";
 import { MinisteriosMembro } from "./MinisteriosMembro";
 import { RedeRelacionamentosMembro } from "./RedeRelacionamentosMembro";
+import { FamiliaMembro } from "./FamiliaMembro";
 import type { Member } from "@/types/domain";
 
 export function MembroPanelTabs({ memberId, member }: { memberId: string; member: Member }) {
@@ -17,6 +18,7 @@ export function MembroPanelTabs({ memberId, member }: { memberId: string; member
       <TabsList className="flex-wrap h-auto">
         <TabsTrigger value="visao-geral" className="gap-1.5"><LayoutDashboard size={14} /> Visão Geral</TabsTrigger>
         <TabsTrigger value="organizacao" className="gap-1.5"><MapPin size={14} /> Organização</TabsTrigger>
+        <TabsTrigger value="familia" className="gap-1.5"><Heart size={14} /> Família</TabsTrigger>
         <TabsTrigger value="maturidade" className="gap-1.5"><GraduationCap size={14} /> Maturidade</TabsTrigger>
         <TabsTrigger value="formacao" className="gap-1.5"><GraduationCap size={14} /> Formação</TabsTrigger>
         <TabsTrigger value="ministerios" className="gap-1.5"><Mic2 size={14} /> Ministérios</TabsTrigger>
@@ -26,6 +28,7 @@ export function MembroPanelTabs({ memberId, member }: { memberId: string; member
       </TabsList>
       <TabsContent value="visao-geral"><VisaoGeralMembro memberId={memberId} /></TabsContent>
       <TabsContent value="organizacao"><OrganizacaoMembro member={member} /></TabsContent>
+      <TabsContent value="familia"><FamiliaMembro memberId={memberId} /></TabsContent>
       <TabsContent value="maturidade"><TrilhaMaturidadeMembro memberId={memberId} /></TabsContent>
       <TabsContent value="formacao"><FormacaoMembro memberId={memberId} /></TabsContent>
       <TabsContent value="ministerios"><MinisteriosMembro memberId={memberId} /></TabsContent>
