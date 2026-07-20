@@ -14,7 +14,7 @@ create table if not exists public.evangelism_groups (
   neighborhood   text,
   city           text,
   state          text,
-  meeting_weekday weekday_enum,
+  meeting_weekday text,
   meeting_time   time,
   is_active      boolean not null default true,
   created_at     timestamptz not null default now(),
