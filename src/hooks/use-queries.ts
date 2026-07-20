@@ -94,6 +94,18 @@ export const useMyActiveDiscipleship = (myMemberId: string|null) =>
     queryFn: () => Di.getMyActiveDiscipleship(supabase, myMemberId),
     enabled: !!myMemberId,
   });
+export const useDisciplesWithNames = (memberId: string | null) =>
+  useQuery({
+    queryKey: ["disciples-with-names", memberId],
+    queryFn: () => Di.listDisciplesWithNames(supabase, memberId as string),
+    enabled: !!memberId,
+  });
+export const useDiscipleshipChainUp = (memberId: string | null) =>
+  useQuery({
+    queryKey: ["discipleship-chain-up", memberId],
+    queryFn: () => Di.getDiscipleshipChainUp(supabase, memberId as string),
+    enabled: !!memberId,
+  });
 export const useMyDisciples = (myMemberId: string|null) =>
   useQuery({
     queryKey: ["my-disciples", myMemberId ?? "none"],
