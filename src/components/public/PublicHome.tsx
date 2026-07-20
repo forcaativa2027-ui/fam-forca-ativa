@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
-  usePublicSermons, usePublicEvents, useChurches, useCells,
+  usePublicSermons, usePublicEvents, useChurches, useCells, usePublicNews,
   useServiceTimes, useTodaysWord, useActiveBanners, useActiveCommunity,
 } from "@/hooks/use-queries";
 import { youtubeThumb } from "@/services/content";
@@ -45,6 +45,7 @@ export default function PublicHome() {
   const { data: community } = useActiveCommunity();
   const communityId = community?.id ?? null;
   const { data: sermons = [] } = usePublicSermons(communityId);
+  const { data: news = [] } = usePublicNews(undefined, communityId);
   const { data: events = [] } = usePublicEvents(communityId);
   const { data: churches = [] } = useChurches();
   const { data: cells = [] } = useCells();
@@ -146,12 +147,56 @@ export default function PublicHome() {
             </section>
           )}
 
+          {/* Últimas Notícias */}
+          {news.length > 0 && (
+            <section>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-display text-xl text-navy">Últimas notícias</h2>
+                <Button variant="ghost" onClick={() => setTab("noticias")} className="gap-2">Ver todas <ArrowRight className="h-4 w-4" /></Button>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {news.slice(0, 3).map((n) => (
+                  <button key={n.id} onClick={() => setTab("noticias")} className="block overflow-hidden rounded-xl border bg-card text-left transition-shadow hover:shadow-md">
+                    {n.cover_url && <img src={n.cover_url} alt="" className="aspect-[16/9] w-full object-cover" />}
+                    <div className="p-3">
+                      <b className="line-clamp-2 text-sm text-ink">{n.title}</b>
+                      {n.published_at && <p className="mt-1 text-xs text-muted">{new Date(n.published_at).toLocaleDateString("pt-BR")}</p>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Próximos eventos resumo */}
           {events.length > 0 && (
             <section>
               <h2 className="mb-4 font-display text-xl text-navy">Próximos eventos</h2>
               <div className="space-y-3">{events.slice(0, 3).map((ev) => <EventRow key={ev.id} ev={ev} />)}</div>
               <Button variant="ghost" onClick={() => setTab("agenda")} className="mt-4 gap-2">Ver agenda completa <ArrowRight className="h-4 w-4" /></Button>
+            </section>
+          )}
+
+          {/* Próximos Cultos */}
+          {services.length > 0 && (
+            <section>
+              <h2 className="mb-4 font-display text-xl text-navy">Próximos cultos</h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {services.slice(0, 4).map((s) => (
+                  <Card key={s.id} className="border-l-4 border-l-gold">
+                    <CardContent className="flex items-center gap-4 pt-6">
+                      <div className="text-center">
+                        <b className="block font-display text-xl text-navy">{s.time.slice(0, 5)}</b>
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-muted">{WEEKDAY_LABELS[s.weekday]}</span>
+                      </div>
+                      <div className="flex-1 border-l border-border pl-4">
+                        <b className="text-ink">{s.description ?? "Culto"}</b>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <Button variant="ghost" onClick={() => setTab("cultos")} className="mt-4 gap-2">Ver todos os cultos <ArrowRight className="h-4 w-4" /></Button>
             </section>
           )}
         </TabsContent>
