@@ -659,3 +659,12 @@ export const useMemberRelationships = (memberId: string | null) =>
     queryFn: () => Fam.listMemberRelationships(supabase, memberId as string),
     enabled: !!memberId,
   });
+
+// ── Motor de Regras Ministeriais ─────────────────────────────
+import * as Rec from "@/services/recommendations";
+export const useMemberRecommendations = (memberId: string | null) =>
+  useQuery({
+    queryKey: ["member-recommendations", memberId],
+    queryFn: () => Rec.getMemberRecommendations(supabase, memberId as string),
+    enabled: !!memberId,
+  });
