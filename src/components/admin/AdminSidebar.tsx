@@ -84,8 +84,6 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
       label: "Pessoas",
       icon: <Users size={16} />,
       items: [
-        { key: "members",          label: "Membros",             icon: <Users2 size={15} /> },
-        { key: "leadership",       label: "Liderança",           icon: <UserCog2 size={15} /> },
         { key: "score",            label: "Score",               icon: <Star size={15} /> },
         { key: "birthdays",        label: "Aniversários",        icon: <Cake size={15} /> },
         { key: "discipleship",     label: "Discipulado",         icon: <BookOpen size={15} /> },
@@ -111,7 +109,6 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "mda-health",    label: "Saúde MDA",      icon: <Heart size={15} /> },
         { key: "saude",         label: "Saúde",          icon: <Heart size={15} /> },
         { key: "expansion-map", label: "Mapa de Expansão",icon: <Map size={15} /> },
-        { key: "permissions",   label: "Permissões",     icon: <Shield size={15} /> },
       ],
     },
     {
@@ -167,13 +164,23 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
       ],
     },
     {
+      id: "usuarios",
+      label: "Administração de Usuários",
+      icon: <UserCog2 size={16} />,
+      items: [
+        { key: "members",     label: "Membros",             icon: <Users2 size={15} /> },
+        { key: "leadership",  label: "Liderança / Níveis",  icon: <UserCog2 size={15} /> },
+        { key: "invites",     label: "Convites",            icon: <Link2 size={15} /> },
+        { key: "permissions", label: "Permissões",          icon: <Shield size={15} /> },
+        { key: "delegations", label: "Delegações",          icon: <Gavel size={15} /> },
+      ],
+    },
+    {
       id: "governanca",
       label: "Governança",
       icon: <Lock size={16} />,
       items: [
-        { key: "delegations", label: "Delegações", icon: <Gavel size={15} /> },
-        { key: "invites",     label: "Convites",   icon: <Link2 size={15} /> },
-        { key: "audit",       label: "Auditoria",  icon: <ClipboardList size={15} /> },
+        { key: "audit", label: "Auditoria", icon: <ClipboardList size={15} /> },
       ],
     },
     {
