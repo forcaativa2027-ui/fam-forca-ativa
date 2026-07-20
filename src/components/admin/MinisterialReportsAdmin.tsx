@@ -20,6 +20,7 @@ const INDICATOR_LABELS: Record<GoalIndicator,string> = {
   batismos:"💧 Batismos", multiplicacoes:"🌱 Multiplicações", lgs_ativos:"🔥 Life Groups Ativos",
   disc_ativos:"📖 Discipulados Ativos", integrados:"🤝 Integrados",
   relatorios_enviados:"📋 Relatórios Enviados", novos_membros:"⭐ Novos Membros",
+  integrantes_ministerio:"🎼 Integrantes de Ministério",
 };
 const STATUS_CONFIG: Record<string,{color:string;icon:string;label:string}> = {
   atingido:{color:"bg-green-100 text-green-800 border-green-300",icon:"✅",label:"Atingido"},
