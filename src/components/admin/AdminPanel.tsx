@@ -50,6 +50,7 @@ import { DelegationsAdmin } from "./DelegationsAdmin";
 import { GlobalSearchDialog } from "./GlobalSearchDialog";
 import { PendenciasAdmin } from "./PendenciasAdmin";
 import { AgendaAdmin } from "./AgendaAdmin";
+import { NotificacoesAdmin } from "./NotificacoesAdmin";
 import { MinisterialReportsAdmin } from "./MinisterialReportsAdmin";
 import { GenealogyAdmin } from "./GenealogyAdmin";
 import { ExpansionMapAdmin } from "./ExpansionMapAdmin";
@@ -286,6 +287,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
   }
 
   switch (activeTab) {
+    case "notificacoes":         return <NotificacoesAdmin />;
     case "agenda":               return <AgendaAdmin onNavigate={onNavigate} />;
     case "pendencias":          return <PendenciasAdmin onNavigate={onNavigate} />;
     case "delegations":         return <DelegationsAdmin />;
