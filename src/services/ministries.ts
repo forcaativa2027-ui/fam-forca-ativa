@@ -44,6 +44,19 @@ export async function listMyMinistries(sb: SupabaseClient): Promise<Ministry[]> 
 // ============================================================
 // MINISTRY MEMBERS
 // ============================================================
+export async function listMinistriesByMember(sb: SupabaseClient, memberId: string) {
+  const { data, error } = await sb
+    .from("ministry_members")
+    .select("*, ministries(name, color, icon)")
+    .eq("member_id", memberId)
+    .order("joined_at", { ascending: false });
+  if (error) { console.error("[ministries] listMinistriesByMember", error); return []; }
+  return (data ?? []).map((r: any) => ({
+    id: r.id, ministry_id: r.ministry_id, role: r.role, joined_at: r.joined_at, is_active: r.is_active,
+    ministry_name: r.ministries?.name as string, ministry_color: r.ministries?.color as string | null,
+  }));
+}
+
 export async function listMinistryMembers(sb: SupabaseClient, ministryId: string): Promise<MinistryMember[]> {
   const { data, error } = await sb.from("ministry_members").select("*").eq("ministry_id", ministryId);
   if (error) return [];
