@@ -1,10 +1,10 @@
 "use client";
 import {
   Activity, Building2, Users, Heart, MapPin, Sparkles, TrendingUp,
-  FileText, Award, Calendar, Globe2, Split,
+  FileText, Award, Calendar, Globe2, Split, CalendarClock, Ticket,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useOrgKpis, useGrowthMonthly, useMyProfile, useChurches } from "@/hooks/use-queries";
+import { useOrgKpis, useGrowthMonthly, useMyProfile, useChurches, useMinisteriosEventosStats, useMinisteriosRanking } from "@/hooks/use-queries";
 import { HierarchyExplorer } from "./HierarchyExplorer";
 import { CommunityIdentity } from "@/components/shared/CommunityIdentity";
 import type { TabKey } from "./AdminSidebar";
@@ -18,6 +18,8 @@ export function OrgDashboardAdmin({ onNavigate }: { onNavigate?: (tab: TabKey) =
   const { data: growth = [] } = useGrowthMonthly();
   const { data: me } = useMyProfile();
   const { data: churches = [] } = useChurches();
+  const { data: minEvStats } = useMinisteriosEventosStats(null);
+  const { data: minRanking = [] } = useMinisteriosRanking(null);
   const activeCommunity = churches.find(c => c.id === me?.church_id);
 
   if (isLoading) {
@@ -91,6 +93,38 @@ export function OrgDashboardAdmin({ onNavigate }: { onNavigate?: (tab: TabKey) =
           <KpiCard icon={<Award />} label="Ministérios" value={kpis.total_ministerios} accent="purple" onClick={() => onNavigate?.("ministerios")} />
         </div>
       </section>
+
+      {/* Bloco 3.5 — Ministérios e Eventos */}
+      {minEvStats && (
+        <section>
+          <SectionTitle icon={<Award />} title="Ministérios e Eventos" />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <KpiCard icon={<Award />} label="Ministérios" value={minEvStats.total_ministerios}
+              sublabel={`${minEvStats.total_integrantes} integrantes no total`} accent="purple" onClick={() => onNavigate?.("ministerios")} />
+            <KpiCard icon={<CalendarClock />} label="Eventos futuros" value={minEvStats.eventos_futuros}
+              accent="blue" onClick={() => onNavigate?.("events")} />
+            <KpiCard icon={<Calendar />} label="Eventos realizados" value={minEvStats.eventos_realizados_30d}
+              sublabel="últimos 30 dias" accent="gold" onClick={() => onNavigate?.("events")} />
+            <KpiCard icon={<Ticket />} label="Inscrições" value={minEvStats.total_inscricoes_30d}
+              sublabel="últimos 30 dias" accent="green" onClick={() => onNavigate?.("events")} />
+          </div>
+          {minRanking.length > 0 && (
+            <Card className="mt-3">
+              <CardContent className="pt-4">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">Ministérios com mais integrantes</p>
+                <div className="space-y-1.5">
+                  {minRanking.map((r) => (
+                    <div key={r.nome} className="flex items-center justify-between text-sm">
+                      <span className="text-navy">{r.nome}</span>
+                      <span className="font-bold text-gold">{r.integrantes}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </section>
+      )}
 
       {/* Bloco 4 — Crescimento mensal (gráfico de barras simples) */}
       {growth.length > 0 && (
