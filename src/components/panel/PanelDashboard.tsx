@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +20,7 @@ import { MyCredentialCard } from "./MyCredentialCard";
 import { MemberHeader } from "./MemberHeader";
 import { NotificationsPanel, useNotificationCount, NotificationBadge } from "./NotificationsPanel";
 import { supabase } from "@/lib/supabase/client";
+import { touchCurrentSession } from "@/services/security";
 import {
   useMyProfile, useDashboard, useChurches, useMdaAlerts,
   useMyMember, useCells, useCellMembers, useMemberCard,
@@ -61,6 +62,10 @@ export default function PanelDashboard() {
   const isAdmin = profile?.role === "apostolo" || profile?.role === "pastor";
   const notifCount = useNotificationCount();
 
+  useEffect(() => {
+    touchCurrentSession(supabase);
+  }, []);
+
   async function signOut() {
     if (profile) await logAudit(supabase, "logout", "auth", profile.id);
     await supabase.auth.signOut();
@@ -76,6 +81,9 @@ export default function PanelDashboard() {
           <p className="text-xs font-semibold uppercase tracking-widest text-muted">Painel</p>
           <h1 className="mt-1 font-display text-3xl text-navy">{profile ? `Paz, ${profile.full_name.split(" ")[0]}.` : "Bem-vindo"}</h1>
           {profile && <p className="mt-1 text-sm font-bold text-gold">{ROLE_LABELS[profile.role] ?? profile.role}</p>}
+          <Link href="/painel/seguranca" className="mt-1 inline-block text-xs text-muted-foreground underline underline-offset-2 hover:text-navy">
+            Segurança e senha
+          </Link>
         </div>
 
         <Tabs defaultValue={isAdmin ? "geral" : "celula"}>
