@@ -23,6 +23,21 @@ export async function listMyDisciples(sb: SupabaseClient, myMemberId: string | n
   } catch { return []; }
 }
 
+export async function listDisciplesWithNames(sb: SupabaseClient, discipleId: string): Promise<{ member_id: string; full_name: string }[]> {
+  const { data, error } = await sb.from("discipleship").select("disciple_id").eq("discipler_id", discipleId).eq("status", "ativo");
+  if (error || !data || data.length === 0) { if (error) console.error("[discipleship] listDisciplesWithNames", error); return []; }
+  const ids = data.map((r) => r.disciple_id as string);
+  const { data: members, error: mErr } = await sb.from("members").select("id, full_name").in("id", ids);
+  if (mErr) { console.error("[discipleship] listDisciplesWithNames members", mErr); return []; }
+  return (members ?? []).map((m) => ({ member_id: m.id as string, full_name: m.full_name as string }));
+}
+
+export async function getDiscipleshipChainUp(sb: SupabaseClient, memberId: string): Promise<{ level: number; member_id: string; full_name: string }[]> {
+  const { data, error } = await sb.rpc("discipleship_chain_up", { p_member_id: memberId });
+  if (error) { console.error("[discipleship] getDiscipleshipChainUp", error); return []; }
+  return data ?? [];
+}
+
 export async function listAllDiscipleships(sb: SupabaseClient): Promise<Discipleship[]> {
   try {
     const { data, error } = await sb.from("discipleship").select("*").order("started_on", { ascending: false });
