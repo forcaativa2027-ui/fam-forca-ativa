@@ -10,6 +10,7 @@ import { FormacaoMembro } from "./FormacaoMembro";
 import { MinisteriosMembro } from "./MinisteriosMembro";
 import { RedeRelacionamentosMembro } from "./RedeRelacionamentosMembro";
 import { FamiliaMembro } from "./FamiliaMembro";
+import { RecomendacoesMembro } from "./RecomendacoesMembro";
 import type { Member } from "@/types/domain";
 
 export function MembroPanelTabs({ memberId, member }: { memberId: string; member: Member }) {
@@ -26,7 +27,10 @@ export function MembroPanelTabs({ memberId, member }: { memberId: string; member
         <TabsTrigger value="discipulado" className="gap-1.5"><BookOpen size={14} /> Discipulado</TabsTrigger>
         <TabsTrigger value="rede" className="gap-1.5"><Network size={14} /> Rede</TabsTrigger>
       </TabsList>
-      <TabsContent value="visao-geral"><VisaoGeralMembro memberId={memberId} /></TabsContent>
+      <TabsContent value="visao-geral" className="space-y-4">
+        <RecomendacoesMembro memberId={memberId} />
+        <VisaoGeralMembro memberId={memberId} />
+      </TabsContent>
       <TabsContent value="organizacao"><OrganizacaoMembro member={member} /></TabsContent>
       <TabsContent value="familia"><FamiliaMembro memberId={memberId} /></TabsContent>
       <TabsContent value="maturidade"><TrilhaMaturidadeMembro memberId={memberId} /></TabsContent>
