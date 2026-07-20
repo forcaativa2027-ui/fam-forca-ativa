@@ -32,6 +32,18 @@ import { addPrayer, markPrayerAnswered } from "@/services/prayer";
 import { profileEditSchema, newPrayerSchema, type ProfileEditInput, type NewPrayerInput } from "@/schemas";
 import type { Cell, Member, PastoralTimeline } from "@/types/domain";
 
+const INSTITUTIONAL_LINKS: { tab: string; label: string }[] = [
+  { tab: "inicio", label: "Início" },
+  { tab: "noticias", label: "Notícias" },
+  { tab: "cultos", label: "Cultos" },
+  { tab: "videos", label: "Vídeos" },
+  { tab: "agenda", label: "Agenda" },
+  { tab: "igrejas", label: "Igrejas" },
+  { tab: "celulas", label: "Mapa de Life Groups" },
+  { tab: "participar", label: "Quero participar" },
+  { tab: "contato", label: "Quero conversar" },
+];
+
 const ROLE_LABELS: Record<string, string> = {
   apostolo:"Apóstolo", pastor:"Pastor", supervisor:"Supervisor",
   lider:"Líder", anfitriao:"Anfitrião", discipulador:"Discipulador",
@@ -75,6 +87,17 @@ export default function PanelDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <MemberHeader active="dashboard" isAdmin={isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
+
+      {/* Menu Institucional Permanente — leva pra home pública já com a aba certa aberta */}
+      <div className="border-b bg-navy/95">
+        <nav className="container flex flex-wrap items-center gap-1 overflow-x-auto py-1.5">
+          {INSTITUTIONAL_LINKS.map((l) => (
+            <Link key={l.tab} href={`/?tab=${l.tab}`} className="whitespace-nowrap rounded px-2.5 py-1 text-[11px] font-semibold text-white/70 transition hover:bg-white/10 hover:text-white">
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+      </div>
 
       <main className="container space-y-8 py-8">
         <div>
