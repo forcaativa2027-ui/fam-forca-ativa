@@ -33,3 +33,22 @@ export const CATEGORIA_LABELS: Record<PendenciaItem["categoria"], string> = {
   oracao: "🙏 Oração", visita: "🏠 Visita", contato: "📞 Novo contato",
   delegacao: "🛡️ Delegação", carteirinha: "🪪 Carteirinha", relmda: "📋 RELMDA",
 };
+
+// ── Indicadores de Ministérios e Eventos (UX-003 Cap. 3 Parte 3) ─
+export interface MinisteriosEventosStats {
+  total_ministerios: number; total_integrantes: number;
+  eventos_futuros: number; eventos_realizados_30d: number; total_inscricoes_30d: number;
+}
+export interface MinisterioRankingRow { nome: string; integrantes: number; }
+
+export async function getMinisteriosEventosStats(sb: SupabaseClient, churchId: string | null): Promise<MinisteriosEventosStats | null> {
+  const { data, error } = await sb.rpc("dashboard_ministerios_eventos_scoped", { p_church_id: churchId }).maybeSingle();
+  if (error) { console.error("[dashboard] getMinisteriosEventosStats", error); return null; }
+  return data as MinisteriosEventosStats | null;
+}
+
+export async function getMinisteriosRanking(sb: SupabaseClient, churchId: string | null): Promise<MinisterioRankingRow[]> {
+  const { data, error } = await sb.rpc("dashboard_ministerios_ranking", { p_church_id: churchId });
+  if (error) { console.error("[dashboard] getMinisteriosRanking", error); return []; }
+  return (data ?? []) as MinisterioRankingRow[];
+}
