@@ -6,6 +6,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useOrgKpis, useGrowthMonthly, useMyProfile, useChurches, useMinisteriosEventosStats, useMinisteriosRanking } from "@/hooks/use-queries";
 import { HierarchyExplorer } from "./HierarchyExplorer";
+import { IntelligenceInsights } from "./IntelligenceInsights";
 import { CommunityIdentity } from "@/components/shared/CommunityIdentity";
 import type { TabKey } from "./AdminSidebar";
 
@@ -56,6 +57,8 @@ export function OrgDashboardAdmin({ onNavigate }: { onNavigate?: (tab: TabKey) =
           <CardDescription>Visão executiva consolidada da rede CEC Brasil</CardDescription>
         </CardHeader>
       </Card>
+
+      <IntelligenceInsights />
 
       {/* Bloco 1 — Rede CEC */}
       <section>
