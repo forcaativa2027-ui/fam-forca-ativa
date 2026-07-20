@@ -15,3 +15,21 @@ export async function getDashboardStats(sb: SupabaseClient, churchId: string|nul
     return EMPTY;
   }
 }
+
+// ── Central de Pendências (UX-003 Cap. 3 Parte 4) ──────────────
+export interface PendenciaItem {
+  categoria: "oracao" | "visita" | "contato" | "delegacao" | "carteirinha" | "relmda";
+  id: string; titulo: string; subtitulo: string | null;
+  created_at: string; aba_destino: string;
+}
+
+export async function listCentralPendencias(sb: SupabaseClient): Promise<PendenciaItem[]> {
+  const { data, error } = await sb.rpc("central_pendencias");
+  if (error) { console.error("[dashboard] listCentralPendencias", error); return []; }
+  return (data ?? []) as PendenciaItem[];
+}
+
+export const CATEGORIA_LABELS: Record<PendenciaItem["categoria"], string> = {
+  oracao: "🙏 Oração", visita: "🏠 Visita", contato: "📞 Novo contato",
+  delegacao: "🛡️ Delegação", carteirinha: "🪪 Carteirinha", relmda: "📋 RELMDA",
+};
