@@ -650,3 +650,12 @@ export const useMemberEnrollments = (memberId: string | null) =>
   useQuery({ queryKey: ["member-enrollments", memberId], queryFn: () => Fo.listMemberEnrollments(supabase, memberId as string), enabled: !!memberId });
 export const useFormacaoStats = (churchId: string | null) =>
   useQuery({ queryKey: ["formacao-stats", churchId], queryFn: () => Fo.getFormacaoStats(supabase, churchId) });
+
+// ── Família ──────────────────────────────────────────────────
+import * as Fam from "@/services/family";
+export const useMemberRelationships = (memberId: string | null) =>
+  useQuery({
+    queryKey: ["member-relationships", memberId],
+    queryFn: () => Fam.listMemberRelationships(supabase, memberId as string),
+    enabled: !!memberId,
+  });
