@@ -16,7 +16,7 @@ const youtubeUrl = z.string().url("URL invalida")
 export const sermonSchema = z.object({
   title: reqText("Titulo", 3),
   youtube_url: youtubeUrl,
-  reference: optionalText, speaker: optionalText, category: optionalText,
+  reference: optionalText, speaker: optionalText, category: optionalText, duration: optionalText,
   is_featured: z.boolean().default(false),
 });
 export type SermonInput = z.infer<typeof sermonSchema>;
