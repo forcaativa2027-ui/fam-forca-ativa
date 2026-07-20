@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { News, NewsCategory } from "@/types/domain";
 
 export async function listPublicNews(sb: SupabaseClient, category?: NewsCategory, churchId?: string | null): Promise<News[]> {
-  let q = sb.from("news").select("*").eq("is_published", true).order("published_at", { ascending: false });
+  let q = sb.from("news").select("*").eq("is_published", true).order("sort_order", { ascending: true });
   if (category) q = q.eq("category", category);
   if (churchId) q = q.or(`church_id.eq.${churchId},church_id.is.null`);
   const { data, error } = await q;
@@ -39,4 +39,11 @@ export function slugify(text: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 80);
+}
+
+export async function swapNewsOrder(sb: SupabaseClient, a: News, b: News): Promise<void> {
+  const { error: e1 } = await sb.from("news").update({ sort_order: b.sort_order }).eq("id", a.id);
+  if (e1) throw e1;
+  const { error: e2 } = await sb.from("news").update({ sort_order: a.sort_order }).eq("id", b.id);
+  if (e2) throw e2;
 }
