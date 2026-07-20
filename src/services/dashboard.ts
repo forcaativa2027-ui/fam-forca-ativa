@@ -52,3 +52,24 @@ export async function getMinisteriosRanking(sb: SupabaseClient, churchId: string
   if (error) { console.error("[dashboard] getMinisteriosRanking", error); return []; }
   return (data ?? []) as MinisterioRankingRow[];
 }
+
+// ── Inteligência Ministerial (UX-003 Cap. 3 Parte 3) ────────────
+export interface SectorGrowthRow {
+  sector_id: string; sector_name: string;
+  members_last_6m: number; members_prior_6m: number; growth_pct: number | null;
+}
+export interface OverallGrowthRow {
+  members_last_6m: number; members_prior_6m: number; growth_pct: number | null;
+}
+
+export async function getGrowthBySector(sb: SupabaseClient): Promise<SectorGrowthRow[]> {
+  const { data, error } = await sb.rpc("intelligence_growth_by_sector");
+  if (error) { console.error("[dashboard] getGrowthBySector", error); return []; }
+  return (data ?? []) as SectorGrowthRow[];
+}
+
+export async function getGrowthOverall(sb: SupabaseClient): Promise<OverallGrowthRow | null> {
+  const { data, error } = await sb.rpc("intelligence_growth_overall").maybeSingle();
+  if (error) { console.error("[dashboard] getGrowthOverall", error); return null; }
+  return data as OverallGrowthRow | null;
+}
