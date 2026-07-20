@@ -84,7 +84,7 @@ export default function PublicHome() {
             <NavTrigger value="videos">Vídeos</NavTrigger>
             <NavTrigger value="agenda">Agenda</NavTrigger>
             <NavTrigger value="igrejas">Igrejas</NavTrigger>
-            <NavTrigger value="celulas">Mapa de Células</NavTrigger>
+            <NavTrigger value="celulas">Mapa de Life Groups</NavTrigger>
             <NavTrigger value="participar">Quero participar</NavTrigger>
             <NavTrigger value="contato">Quero conversar</NavTrigger>
           </TabsList>
@@ -226,7 +226,7 @@ export default function PublicHome() {
 
         {/* === MAPA DAS CÉLULAS === */}
         <TabsContent value="celulas">
-          <h2 className="mb-2 font-display text-2xl text-navy">Mapa das células</h2>
+          <h2 className="mb-2 font-display text-2xl text-navy">Mapa de Life Groups</h2>
           <p className="mb-6 text-sm text-muted">Encontre a célula (Life Group) mais próxima de você.</p>
           <CellsSearch cells={cells} />
         </TabsContent>
