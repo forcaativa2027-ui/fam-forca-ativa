@@ -13,6 +13,7 @@ import {
   useMemberRelocations, useLeadershipAssignments, useAllMembers, useMemberCard, useMemberStructureNames,
 } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
+import { sendPasswordResetTo } from "@/services/security";
 import { updateMember } from "@/services/members";
 import { relocateMember } from "@/services/relocations";
 import { assignLeadership, encerrarLideranca } from "@/services/leadership";
@@ -81,6 +82,8 @@ function PersonalDataTab({ member }: { member: Member }) {
   const qc = useQueryClient();
   const [err, setErr] = useState("");
   const [saved, setSaved] = useState(false);
+  const [pwMsg, setPwMsg] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
   const { register, handleSubmit, formState: { isSubmitting } } = useForm({
     defaultValues: {
       full_name: member.full_name, social_name: member.social_name ?? "",
@@ -104,6 +107,17 @@ function PersonalDataTab({ member }: { member: Member }) {
       qc.invalidateQueries({ queryKey: ["all-members"] });
       setSaved(true); setTimeout(() => setSaved(false), 2000);
     } catch (e) { setErr((e as { message?: string })?.message ?? "Erro ao salvar"); }
+  }
+
+  async function handleSendReset() {
+    if (!member.email) { setPwMsg("Este membro não tem e-mail cadastrado."); return; }
+    setPwBusy(true); setPwMsg("");
+    try {
+      await sendPasswordResetTo(supabase, member.email);
+      setPwMsg("Link de redefinição enviado por e-mail.");
+    } catch (e) {
+      setPwMsg((e as { message?: string })?.message ?? "Erro ao enviar.");
+    } finally { setPwBusy(false); }
   }
 
   return (
@@ -155,6 +169,15 @@ function PersonalDataTab({ member }: { member: Member }) {
       <Button type="submit" disabled={isSubmitting} className="w-full gap-1.5">
         <Save size={16} /> {isSubmitting ? "Salvando…" : saved ? "Salvo!" : "Salvar dados pessoais"}
       </Button>
+
+      <div className="rounded-md border p-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Segurança da conta</p>
+        <p className="mt-1 text-xs text-muted-foreground">Envia um link por e-mail pra esse membro criar uma nova senha. Você nunca vê a senha atual dele.</p>
+        <Button type="button" variant="outline" size="sm" className="mt-2" onClick={handleSendReset} disabled={pwBusy}>
+          {pwBusy ? "Enviando…" : "Enviar redefinição de senha"}
+        </Button>
+        {pwMsg && <p className="mt-1.5 text-xs text-muted-foreground">{pwMsg}</p>}
+      </div>
     </form>
   );
 }
