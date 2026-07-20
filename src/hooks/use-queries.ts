@@ -401,6 +401,8 @@ export const useGoals = (year?: number) =>
   useQuery({ queryKey: ["goals", year], queryFn: () => Goals.listGoals(supabase, year) });
 export const useGoalsVsActual = (year?: number) =>
   useQuery({ queryKey: ["goals-vs-actual", year], queryFn: () => Goals.listGoalsVsActual(supabase, year) });
+export const useMinistryGoalsVsActual = () =>
+  useQuery({ queryKey: ["ministry-goals-vs-actual"], queryFn: () => Goals.listMinistryGoalsVsActual(supabase) });
 
 // C18 — Torre de Controle
 import * as CT from "@/services/controlTower";
