@@ -393,10 +393,11 @@ function SermonsAdmin() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
             <Field label="Título" error={errors.title?.message}><Input {...register("title")} placeholder="Ex: O Bezerro de Ouro" /></Field>
             <Field label="Link do YouTube" error={errors.youtube_url?.message}><Input {...register("youtube_url")} placeholder="https://youtube.com/watch?v=..." /></Field>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-4">
               <Field label="Referência"><Input {...register("reference")} placeholder="Ex 32:1-14" /></Field>
               <Field label="Pregador"><Input {...register("speaker")} placeholder="Pra. Anne" /></Field>
               <Field label="Categoria"><Input {...register("category")} placeholder="Série" /></Field>
+              <Field label="Duração"><Input {...register("duration")} placeholder="Ex: 42:15" /></Field>
             </div>
             {urlWatch && youtubeThumb(urlWatch) && <img src={youtubeThumb(urlWatch)!} alt="" className="h-24 rounded-md border" />}
             {err && <p className="text-sm text-destructive">{err}</p>}
