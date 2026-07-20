@@ -1,6 +1,6 @@
 "use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, History, BookOpen, GraduationCap, MapPin, Mic2 } from "lucide-react";
+import { LayoutDashboard, History, BookOpen, GraduationCap, MapPin, Mic2, Network } from "lucide-react";
 import { VisaoGeralMembro } from "./VisaoGeralMembro";
 import { LinhaDoTempoMembro } from "./LinhaDoTempoMembro";
 import { DiscipuladoMembro } from "./DiscipuladoMembro";
@@ -8,6 +8,7 @@ import { TrilhaMaturidadeMembro } from "./TrilhaMaturidadeMembro";
 import { OrganizacaoMembro } from "./OrganizacaoMembro";
 import { FormacaoMembro } from "./FormacaoMembro";
 import { MinisteriosMembro } from "./MinisteriosMembro";
+import { RedeRelacionamentosMembro } from "./RedeRelacionamentosMembro";
 import type { Member } from "@/types/domain";
 
 export function MembroPanelTabs({ memberId, member }: { memberId: string; member: Member }) {
@@ -21,6 +22,7 @@ export function MembroPanelTabs({ memberId, member }: { memberId: string; member
         <TabsTrigger value="ministerios" className="gap-1.5"><Mic2 size={14} /> Ministérios</TabsTrigger>
         <TabsTrigger value="timeline" className="gap-1.5"><History size={14} /> Jornada Ministerial</TabsTrigger>
         <TabsTrigger value="discipulado" className="gap-1.5"><BookOpen size={14} /> Discipulado</TabsTrigger>
+        <TabsTrigger value="rede" className="gap-1.5"><Network size={14} /> Rede</TabsTrigger>
       </TabsList>
       <TabsContent value="visao-geral"><VisaoGeralMembro memberId={memberId} /></TabsContent>
       <TabsContent value="organizacao"><OrganizacaoMembro member={member} /></TabsContent>
@@ -29,6 +31,7 @@ export function MembroPanelTabs({ memberId, member }: { memberId: string; member
       <TabsContent value="ministerios"><MinisteriosMembro memberId={memberId} /></TabsContent>
       <TabsContent value="timeline"><LinhaDoTempoMembro memberId={memberId} /></TabsContent>
       <TabsContent value="discipulado"><DiscipuladoMembro memberId={memberId} /></TabsContent>
+      <TabsContent value="rede"><RedeRelacionamentosMembro memberId={memberId} memberName={member.full_name} /></TabsContent>
     </Tabs>
   );
 }
