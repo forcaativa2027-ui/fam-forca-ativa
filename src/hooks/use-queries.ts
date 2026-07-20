@@ -619,3 +619,15 @@ export const useGlobalSearch = (query: string) =>
 
 export const useMySessions = () =>
   useQuery({ queryKey: ["my-sessions"], queryFn: () => Sec.listMySessions(supabase) });
+
+// ── Formação (Cursos/Turmas/Matrículas) ─────────────────────────
+import * as Fo from "@/services/formacao";
+export const useCourses = () => useQuery({ queryKey: ["courses"], queryFn: () => Fo.listCourses(supabase) });
+export const useCourseClasses = (courseId?: string) =>
+  useQuery({ queryKey: ["course-classes", courseId], queryFn: () => Fo.listClasses(supabase, courseId) });
+export const useEnrollments = (classId?: string) =>
+  useQuery({ queryKey: ["enrollments", classId], queryFn: () => Fo.listEnrollments(supabase, classId), enabled: !!classId });
+export const useMemberEnrollments = (memberId: string | null) =>
+  useQuery({ queryKey: ["member-enrollments", memberId], queryFn: () => Fo.listMemberEnrollments(supabase, memberId as string), enabled: !!memberId });
+export const useFormacaoStats = (churchId: string | null) =>
+  useQuery({ queryKey: ["formacao-stats", churchId], queryFn: () => Fo.getFormacaoStats(supabase, churchId) });
