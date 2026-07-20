@@ -34,6 +34,18 @@ export const CATEGORIA_LABELS: Record<PendenciaItem["categoria"], string> = {
   delegacao: "🛡️ Delegação", carteirinha: "🪪 Carteirinha", relmda: "📋 RELMDA",
 };
 
+// ── Painel de Usuários (UX-003 Cap. 3 Parte 7) ──────────────────
+export interface UsuariosStats {
+  total_cadastrados: number; total_ativos: number; total_inativos: number; total_afastados: number;
+  sessoes_ativas: number; convites_usados_30d: number; delegacoes_ativas: number; eventos_auditoria_7d: number;
+}
+
+export async function getUsuariosStats(sb: SupabaseClient): Promise<UsuariosStats | null> {
+  const { data, error } = await sb.rpc("dashboard_usuarios_scoped").maybeSingle();
+  if (error) { console.error("[dashboard] getUsuariosStats", error); return null; }
+  return data as UsuariosStats | null;
+}
+
 // ── Indicadores de Ministérios e Eventos (UX-003 Cap. 3 Parte 3) ─
 export interface MinisteriosEventosStats {
   total_ministerios: number; total_integrantes: number;
