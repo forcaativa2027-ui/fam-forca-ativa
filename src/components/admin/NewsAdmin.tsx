@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, X, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Eye, EyeOff, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { newsSchema, type NewsInput } from "@/schemas";
 import { useAllNews, useChurches } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
-import { createNews, updateNews, deleteNews, slugify } from "@/services/news";
+import { createNews, updateNews, deleteNews, slugify, swapNewsOrder } from "@/services/news";
 import { logAudit } from "@/services/audit";
 import type { News, NewsCategory } from "@/types/domain";
 
@@ -68,7 +68,8 @@ export function NewsAdmin() {
         await updateNews(supabase, editing.id, payload);
         await logAudit(supabase, "update", "news", editing.id, { title: v.title });
       } else {
-        const created = await createNews(supabase, payload);
+        const next_order = news.length > 0 ? Math.max(...news.map((n) => n.sort_order)) + 1 : 0;
+        const created = await createNews(supabase, { ...payload, sort_order: next_order });
         await logAudit(supabase, "insert", "news", created.id, { title: v.title });
       }
       cancelEdit();
@@ -87,6 +88,16 @@ export function NewsAdmin() {
         published_at: !n.is_published ? new Date().toISOString() : null,
       });
       await logAudit(supabase, "update", "news", n.id, { action: !n.is_published ? "publish" : "unpublish" });
+      qc.invalidateQueries({ queryKey: ["all-news"] });
+      qc.invalidateQueries({ queryKey: ["public-news"] });
+    } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }
+  }
+  async function move(n: News, sortedList: News[], dir: "up" | "down") {
+    const idx = sortedList.findIndex((x) => x.id === n.id);
+    const swapIdx = dir === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= sortedList.length) return;
+    try {
+      await swapNewsOrder(supabase, sortedList[idx], sortedList[swapIdx]);
       qc.invalidateQueries({ queryKey: ["all-news"] });
       qc.invalidateQueries({ queryKey: ["public-news"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }
@@ -178,10 +189,14 @@ export function NewsAdmin() {
       <h3 className="font-display text-lg text-navy">Notícias ({news.length})</h3>
       <div className="space-y-2">
         {news.length === 0 && <p className="text-sm italic text-muted">Nenhuma notícia criada ainda.</p>}
-        {news.map((n) => {
+        {[...news].sort((a, b) => a.sort_order - b.sort_order).map((n, idx, sortedList) => {
           const cat = CATEGORIES.find((c) => c.value === n.category)?.label ?? n.category;
           return (
             <div key={n.id} className="flex items-center gap-3 rounded-xl border bg-card p-3">
+              <div className="flex flex-col gap-0.5">
+                <button onClick={() => move(n, sortedList, "up")} disabled={idx === 0} className="text-muted-foreground hover:text-navy disabled:opacity-30"><ChevronUp className="h-4 w-4" /></button>
+                <button onClick={() => move(n, sortedList, "down")} disabled={idx === sortedList.length - 1} className="text-muted-foreground hover:text-navy disabled:opacity-30"><ChevronDown className="h-4 w-4" /></button>
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <b className="truncate text-navy">{n.title}</b>
@@ -189,6 +204,11 @@ export function NewsAdmin() {
                   {!n.is_published && <span className="rounded-full bg-muted/20 px-2 py-0.5 text-[10px] font-bold uppercase text-muted">Rascunho</span>}
                 </div>
                 {n.summary && <p className="truncate text-xs text-muted">{n.summary}</p>}
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  {n.author_name ? `Por ${n.author_name} · ` : ""}
+                  Cadastrada em {new Date(n.created_at).toLocaleDateString("pt-BR")}
+                  {n.published_at ? ` · Publicação: ${new Date(n.published_at).toLocaleDateString("pt-BR")}` : ""}
+                </p>
               </div>
               <Button onClick={() => togglePublish(n)} variant="outline" size="sm" title={n.is_published ? "Despublicar" : "Publicar"}>
                 {n.is_published ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
