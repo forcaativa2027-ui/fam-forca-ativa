@@ -585,8 +585,8 @@ export interface GrowthVariation {
 }
 
 // C17 — Central de Metas
-export type GoalScope = "nacional"|"sede"|"nucleo"|"distrito"|"area"|"setor"|"lg";
-export type GoalIndicator = "membros_ativos"|"visitantes"|"decisoes"|"batismos"|"multiplicacoes"|"lgs_ativos"|"disc_ativos"|"integrados"|"relatorios_enviados"|"novos_membros";
+export type GoalScope = "nacional"|"sede"|"nucleo"|"distrito"|"area"|"setor"|"lg"|"ministerio";
+export type GoalIndicator = "membros_ativos"|"visitantes"|"decisoes"|"batismos"|"multiplicacoes"|"lgs_ativos"|"disc_ativos"|"integrados"|"relatorios_enviados"|"novos_membros"|"integrantes_ministerio";
 export type GoalStatus = "atingido"|"no_caminho"|"atencao";
 export interface MinistryGoal {
   id: string; scope: GoalScope; scope_id: string | null; scope_name: string;
@@ -596,6 +596,9 @@ export interface MinistryGoal {
 }
 export interface GoalVsActual extends MinistryGoal {
   actual_value: number; pct_atingido: number; status_meta: GoalStatus;
+}
+export interface MinistryGoalVsActual extends MinistryGoal {
+  ministry_name: string; actual_value: number; pct_atingido: number; status_meta: GoalStatus;
 }
 
 // C18 — Torre de Controle
