@@ -1,10 +1,10 @@
 "use client";
 import {
   Activity, Building2, Users, Heart, MapPin, Sparkles, TrendingUp,
-  FileText, Award, Calendar, Globe2, Split, CalendarClock, Ticket,
+  FileText, Award, Calendar, Globe2, Split, CalendarClock, Ticket, GraduationCap,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useOrgKpis, useGrowthMonthly, useMyProfile, useChurches, useMinisteriosEventosStats, useMinisteriosRanking } from "@/hooks/use-queries";
+import { useOrgKpis, useGrowthMonthly, useMyProfile, useChurches, useMinisteriosEventosStats, useMinisteriosRanking, useFormacaoStats } from "@/hooks/use-queries";
 import { HierarchyExplorer } from "./HierarchyExplorer";
 import { IntelligenceInsights } from "./IntelligenceInsights";
 import { CommunityIdentity } from "@/components/shared/CommunityIdentity";
@@ -21,6 +21,7 @@ export function OrgDashboardAdmin({ onNavigate }: { onNavigate?: (tab: TabKey) =
   const { data: churches = [] } = useChurches();
   const { data: minEvStats } = useMinisteriosEventosStats(null);
   const { data: minRanking = [] } = useMinisteriosRanking(null);
+  const { data: formacaoStats } = useFormacaoStats(null);
   const activeCommunity = churches.find(c => c.id === me?.church_id);
 
   if (isLoading) {
@@ -96,6 +97,23 @@ export function OrgDashboardAdmin({ onNavigate }: { onNavigate?: (tab: TabKey) =
           <KpiCard icon={<Award />} label="Ministérios" value={kpis.total_ministerios} accent="purple" onClick={() => onNavigate?.("ministerios")} />
         </div>
       </section>
+
+      {/* Bloco 3.6 — Formação */}
+      {formacaoStats && (
+        <section>
+          <SectionTitle icon={<GraduationCap />} title="Formação" />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <KpiCard icon={<GraduationCap />} label="Cursos ativos" value={formacaoStats.total_cursos}
+              accent="purple" onClick={() => onNavigate?.("formacao")} />
+            <KpiCard icon={<Users />} label="Turmas em andamento" value={formacaoStats.total_turmas_ativas}
+              accent="blue" onClick={() => onNavigate?.("formacao")} />
+            <KpiCard icon={<FileText />} label="Matriculados" value={formacaoStats.total_matriculados}
+              accent="gold" onClick={() => onNavigate?.("formacao")} />
+            <KpiCard icon={<Award />} label="Concluintes" value={formacaoStats.total_concluintes_90d}
+              sublabel="últimos 90 dias" accent="green" onClick={() => onNavigate?.("formacao")} />
+          </div>
+        </section>
+      )}
 
       {/* Bloco 3.5 — Ministérios e Eventos */}
       {minEvStats && (
