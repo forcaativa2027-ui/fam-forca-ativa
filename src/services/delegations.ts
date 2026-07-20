@@ -190,7 +190,7 @@ export const DELEGATION_MODULE_LABELS: Record<DelegationModule, string> = {
 
 export const DELEGATION_TAB_MAP: Record<DelegationModule, string[]> = {
   administrativo: [
-    "org-dashboard", "pendencias", "metas", "leadership", "score", "birthdays", "discipleship",
+    "org-dashboard", "pendencias", "agenda", "metas", "leadership", "score", "birthdays", "discipleship",
     "acolhimento", "evasao", "crm", "prayer-requests", "visit-requests",
     "communities", "structure", "life-groups", "expansion-map", "genealogy",
     "evangelism-groups",
