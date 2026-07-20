@@ -1,16 +1,17 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Play, Calendar, Music, MapPin, Church as ChurchIcon, Sun, Sparkles,
-  Clock, ArrowRight, ExternalLink
+  Clock, ArrowRight, ExternalLink, LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   usePublicSermons, usePublicEvents, useChurches, useCells, usePublicNews,
-  useServiceTimes, useTodaysWord, useActiveBanners, useActiveCommunity,
+  useServiceTimes, useTodaysWord, useActiveBanners, useActiveCommunity, useMyProfile,
 } from "@/hooks/use-queries";
 import { youtubeThumb } from "@/services/content";
 import { defaultServiceTimes, defaultWord } from "@/services/institutional";
@@ -41,7 +42,10 @@ const WEEKDAY_LABELS: Record<string, string> = {
 };
 
 export default function PublicHome() {
-  const [tab, setTab] = useState("inicio");
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get("tab") ?? "inicio";
+  const [tab, setTab] = useState(initialTab);
+  const { data: profile } = useMyProfile();
   const { data: community } = useActiveCommunity();
   const communityId = community?.id ?? null;
   const { data: sermons = [] } = usePublicSermons(communityId);
@@ -72,7 +76,9 @@ export default function PublicHome() {
               {community?.name ? community.name.toUpperCase() : "CEC FAMILY"}
             </span>
           </Link>
-          <Button asChild size="sm"><Link href="/entrar">Área do membro</Link></Button>
+          <Button asChild size="sm">
+            <Link href={profile ? "/painel" : "/entrar"}>{profile ? "Meu Painel" : "Área do membro"}</Link>
+          </Button>
         </div>
       </header>
 
@@ -292,7 +298,7 @@ export default function PublicHome() {
           {community?.name ?? "CEC Manaus"} · Comunidade Evangélica Cristã
           {community?.whatsapp_phone && <> · WhatsApp: <a href={`https://wa.me/${community.whatsapp_phone.replace(/\D/g, '')}`} className="hover:underline">{community.whatsapp_phone}</a></>}
         </p>
-        <Link href="/entrar" className="text-xs font-bold text-gold hover:underline">Área do membro →</Link>
+        <Link href={profile ? "/painel" : "/entrar"} className="text-xs font-bold text-gold hover:underline">{profile ? "Meu Painel" : "Área do membro"} →</Link>
       </footer>
     </div>
   );
