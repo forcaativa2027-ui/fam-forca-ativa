@@ -1258,3 +1258,11 @@ export interface FormacaoStats {
   total_cursos: number; total_turmas_ativas: number;
   total_matriculados: number; total_concluintes_90d: number;
 }
+
+// Família (UX-003 §6.29/6.53)
+export type FamilyRelationshipType = "pai" | "mae" | "conjuge" | "filho" | "irmao" | "responsavel_legal" | "outro";
+export interface MemberRelationship {
+  id: string; member_id: string; related_member_id: string | null;
+  relationship_type: FamilyRelationshipType; related_name: string; related_phone: string | null;
+  notes: string | null; created_at: string;
+}
