@@ -59,6 +59,7 @@ export const useSermons        = () => useQuery({ queryKey: ["sermons"], queryFn
 export const useEvents         = () => useQuery({ queryKey: ["events"],  queryFn: () => Co.listEvents(supabase) });
 export const useAuditLogs      = () => useQuery({ queryKey: ["audit-logs"], queryFn: () => A.listAuditLogs(supabase) });
 export const useDashboard      = (churchId: string|null) => useQuery({ queryKey: ["dashboard", churchId ?? "all"], queryFn: () => D.getDashboardStats(supabase, churchId) });
+export const useCentralPendencias = () => useQuery({ queryKey: ["central-pendencias"], queryFn: () => D.listCentralPendencias(supabase) });
 
 // B2 — conteudo institucional
 export const useServiceTimes   = (churchId: string|null) => useQuery({ queryKey: ["service-times", churchId ?? "none"], queryFn: () => I.listServiceTimes(supabase, churchId) });
