@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Play, Calendar, Music, MapPin, Church as ChurchIcon, Sun, Sparkles,
-  Clock, ArrowRight, ExternalLink, LayoutDashboard
+  Clock, ArrowRight, ExternalLink, LayoutDashboard, FileDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -242,16 +242,22 @@ export default function PublicHome() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {sermons.map((s) => (
-                <a key={s.id} href={s.youtube_url} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md">
-                  <div className="relative">
+                <div key={s.id} className="group overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md">
+                  <a href={s.youtube_url} target="_blank" rel="noreferrer" className="block relative">
                     <img src={s.thumbnail_url || youtubeThumb(s.youtube_url) || ""} alt="" className="aspect-video w-full object-cover" />
                     <div className="absolute inset-0 m-auto flex h-12 w-12 items-center justify-center rounded-full bg-navy/85 text-white"><Play className="h-5 w-5" /></div>
-                  </div>
+                  </a>
                   <div className="p-4">
                     <b className="block text-sm text-ink">{s.title}</b>
                     <p className="mt-1 text-xs text-muted">{[s.reference, s.speaker].filter(Boolean).join(" · ")}</p>
+                    {s.description && <p className="mt-1 text-xs text-muted line-clamp-2">{s.description}</p>}
+                    {s.pdf_url && (
+                      <a href={s.pdf_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-gold hover:underline">
+                        <FileDown className="h-3.5 w-3.5" /> Baixar PDF da palavra
+                      </a>
+                    )}
                   </div>
-                </a>
+                </div>
               ))}
             </div>
           )}
