@@ -9,11 +9,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { newsSchema, type NewsInput } from "@/schemas";
-import { useAllNews, useChurches } from "@/hooks/use-queries";
+import { useAllNews, useChurches, useMyProfile } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { createNews, updateNews, deleteNews, slugify, swapNewsOrder } from "@/services/news";
 import { logAudit } from "@/services/audit";
 import type { News, NewsCategory } from "@/types/domain";
+
+const ROLE_LABELS: Record<string, string> = {
+  apostolo: "Apóstolo", pastor: "Pastor", supervisor: "Supervisor",
+  lider: "Líder", anfitriao: "Anfitrião", discipulador: "Discipulador", membro: "Membro",
+};
 
 const CATEGORIES: { value: NewsCategory; label: string }[] = [
   { value: "minha_comunidade", label: "Minha comunidade" },
@@ -25,19 +30,23 @@ const CATEGORIES: { value: NewsCategory; label: string }[] = [
 export function NewsAdmin() {
   const { data: news = [] } = useAllNews();
   const { data: churches = [] } = useChurches();
+  const { data: myProfile } = useMyProfile();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<News | null>(null);
   const [err, setErr] = useState("");
   const [churchId, setChurchId] = useState<string>("");
+  const [scheduledAt, setScheduledAt] = useState<string>("");
 
-  const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } =
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } =
     useForm<NewsInput>({ resolver: zodResolver(newsSchema), defaultValues: { category: "geral", is_published: false } });
 
   const title = watch("title");
+  const isPublishedNow = watch("is_published");
 
   function startEdit(n: News) {
     setEditing(n); setErr("");
     setChurchId(n.church_id ?? "");
+    setScheduledAt(n.published_at && new Date(n.published_at) > new Date() ? n.published_at.slice(0, 16) : "");
     reset({
       title: n.title, category: n.category,
       summary: n.summary ?? "", body: n.body ?? "",
@@ -47,18 +56,23 @@ export function NewsAdmin() {
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-  function cancelEdit() { setEditing(null); setChurchId(""); reset({ category: "geral", is_published: false }); }
+  function cancelEdit() { setEditing(null); setChurchId(""); setScheduledAt(""); reset({ category: "geral", is_published: false }); }
 
   async function onSubmit(v: NewsInput) {
     setErr("");
     try {
+      const authorLabel = myProfile
+        ? `${myProfile.full_name}${ROLE_LABELS[myProfile.role] ? ` (${ROLE_LABELS[myProfile.role]})` : ""}`
+        : (v.author_name || null);
+      const churchName = churches.find((c) => c.id === (churchId || myProfile?.church_id))?.name;
       const payload: Partial<News> = {
         slug: slugify(v.title),
         title: v.title, category: v.category,
         summary: v.summary || null, body: v.body || null,
-        cover_url: v.cover_url || null, author_name: v.author_name || null,
+        cover_url: v.cover_url || null,
+        author_name: authorLabel ? `${authorLabel}${churchName ? ` — ${churchName}` : ""}` : null,
         is_published: v.is_published,
-        published_at: v.is_published ? new Date().toISOString() : null,
+        published_at: v.is_published ? (scheduledAt ? new Date(scheduledAt).toISOString() : new Date().toISOString()) : null,
         meta_title: v.meta_title || v.title,
         meta_description: v.meta_description || v.summary || null,
         og_image_url: v.cover_url || null,
@@ -143,7 +157,9 @@ export function NewsAdmin() {
                   {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               </Field>
-              <Field label="Autor"><Input {...register("author_name")} placeholder="Pr. João" /></Field>
+              <Field label="Autor (automático)">
+                <Input disabled value={myProfile ? `${myProfile.full_name}${ROLE_LABELS[myProfile.role] ? ` (${ROLE_LABELS[myProfile.role]})` : ""}` : "Carregando…"} />
+              </Field>
             </div>
             <Field label="Resumo (chamada da home)" error={errors.summary?.message}>
               <textarea {...register("summary")} rows={2}
@@ -175,8 +191,13 @@ export function NewsAdmin() {
 
             <label className="flex items-center gap-2">
               <input type="checkbox" {...register("is_published")} className="h-4 w-4 accent-gold" />
-              <span className="text-sm font-semibold text-navy-600">Publicar imediatamente</span>
+              <span className="text-sm font-semibold text-navy-600">Publicar</span>
             </label>
+            {isPublishedNow && (
+              <Field label="Data programada de publicação (opcional — deixe em branco pra publicar agora)">
+                <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
+              </Field>
+            )}
 
             {err && <p className="text-sm text-destructive">{err}</p>}
             <Button type="submit" disabled={isSubmitting} className="gap-2">
@@ -205,9 +226,13 @@ export function NewsAdmin() {
                 </div>
                 {n.summary && <p className="truncate text-xs text-muted">{n.summary}</p>}
                 <p className="mt-0.5 text-[11px] text-muted-foreground">
-                  {n.author_name ? `Por ${n.author_name} · ` : ""}
-                  Cadastrada em {new Date(n.created_at).toLocaleDateString("pt-BR")}
-                  {n.published_at ? ` · Publicação: ${new Date(n.published_at).toLocaleDateString("pt-BR")}` : ""}
+                  {n.author_name ? `Publicado por ${n.author_name} · ` : ""}
+                  Cadastrada em {new Date(n.created_at).toLocaleDateString("pt-BR")} às {new Date(n.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  {n.published_at && (
+                    new Date(n.published_at) > new Date()
+                      ? ` · Agendada para ${new Date(n.published_at).toLocaleDateString("pt-BR")} às ${new Date(n.published_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+                      : ` · Publicada em ${new Date(n.published_at).toLocaleDateString("pt-BR")} às ${new Date(n.published_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+                  )}
                 </p>
               </div>
               <Button onClick={() => togglePublish(n)} variant="outline" size="sm" title={n.is_published ? "Despublicar" : "Publicar"}>
