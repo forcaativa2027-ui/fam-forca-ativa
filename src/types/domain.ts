@@ -1266,3 +1266,8 @@ export interface MemberRelationship {
   relationship_type: FamilyRelationshipType; related_name: string; related_phone: string | null;
   notes: string | null; created_at: string;
 }
+
+// Motor de Regras Ministeriais (UX-003 §6.47)
+export interface MemberRecommendation {
+  rule_key: string; message: string; priority: "critico" | "atencao" | "info";
+}
