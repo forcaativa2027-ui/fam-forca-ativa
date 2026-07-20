@@ -64,6 +64,7 @@ export const useMinisteriosEventosStats = (churchId: string | null) =>
   useQuery({ queryKey: ["ministerios-eventos-stats", churchId], queryFn: () => D.getMinisteriosEventosStats(supabase, churchId) });
 export const useMinisteriosRanking = (churchId: string | null) =>
   useQuery({ queryKey: ["ministerios-ranking", churchId], queryFn: () => D.getMinisteriosRanking(supabase, churchId) });
+export const useUsuariosStats = () => useQuery({ queryKey: ["usuarios-stats"], queryFn: () => D.getUsuariosStats(supabase) });
 export const useGrowthBySector = () => useQuery({ queryKey: ["growth-by-sector"], queryFn: () => D.getGrowthBySector(supabase) });
 export const useGrowthOverall = () => useQuery({ queryKey: ["growth-overall"], queryFn: () => D.getGrowthOverall(supabase) });
 
