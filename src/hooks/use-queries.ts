@@ -60,6 +60,10 @@ export const useEvents         = () => useQuery({ queryKey: ["events"],  queryFn
 export const useAuditLogs      = () => useQuery({ queryKey: ["audit-logs"], queryFn: () => A.listAuditLogs(supabase) });
 export const useDashboard      = (churchId: string|null) => useQuery({ queryKey: ["dashboard", churchId ?? "all"], queryFn: () => D.getDashboardStats(supabase, churchId) });
 export const useCentralPendencias = () => useQuery({ queryKey: ["central-pendencias"], queryFn: () => D.listCentralPendencias(supabase) });
+export const useMinisteriosEventosStats = (churchId: string | null) =>
+  useQuery({ queryKey: ["ministerios-eventos-stats", churchId], queryFn: () => D.getMinisteriosEventosStats(supabase, churchId) });
+export const useMinisteriosRanking = (churchId: string | null) =>
+  useQuery({ queryKey: ["ministerios-ranking", churchId], queryFn: () => D.getMinisteriosRanking(supabase, churchId) });
 
 // B2 — conteudo institucional
 export const useServiceTimes   = (churchId: string|null) => useQuery({ queryKey: ["service-times", churchId ?? "none"], queryFn: () => I.listServiceTimes(supabase, churchId) });
