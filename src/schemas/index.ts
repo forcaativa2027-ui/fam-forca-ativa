@@ -17,6 +17,7 @@ export const sermonSchema = z.object({
   title: reqText("Titulo", 3),
   youtube_url: youtubeUrl,
   reference: optionalText, speaker: optionalText, category: optionalText, duration: optionalText,
+  published_at: optionalText,
   is_featured: z.boolean().default(false),
 });
 export type SermonInput = z.infer<typeof sermonSchema>;
