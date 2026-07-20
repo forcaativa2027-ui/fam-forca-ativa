@@ -10,7 +10,7 @@ import {
   Download, Search, Bell,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import { useMyProfile, useMyActiveModules } from "@/hooks/use-queries";
 import { DELEGATION_TAB_MAP } from "@/services/delegations";
 
 export type TabKey =
-  | "supervision" | "org-dashboard" | "pendencias" | "agenda" | "notificacoes"
+  | "supervision" | "org-dashboard" | "pendencias" | "agenda" | "notificacoes" | "usuarios-painel"
   | "control-tower" | "intelligence" | "ministerial-reports" | "metas"
   | "members" | "leadership" | "score" | "birthdays" | "discipleship"
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
@@ -172,6 +172,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
       label: "Administração de Usuários",
       icon: <UserCog2 size={16} />,
       items: [
+        { key: "usuarios-painel", label: "Painel de Usuários", icon: <Activity size={15} /> },
         { key: "members",     label: "Membros",             icon: <Users2 size={15} /> },
         { key: "leadership",  label: "Liderança / Níveis",  icon: <UserCog2 size={15} /> },
         { key: "invites",     label: "Convites",            icon: <Link2 size={15} /> },

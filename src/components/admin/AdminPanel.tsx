@@ -52,6 +52,7 @@ import { PendenciasAdmin } from "./PendenciasAdmin";
 import { AgendaAdmin } from "./AgendaAdmin";
 import { NotificacoesAdmin } from "./NotificacoesAdmin";
 import { FormacaoAdmin } from "./FormacaoAdmin";
+import { PainelUsuariosAdmin } from "./PainelUsuariosAdmin";
 import { MinisterialReportsAdmin } from "./MinisterialReportsAdmin";
 import { GenealogyAdmin } from "./GenealogyAdmin";
 import { ExpansionMapAdmin } from "./ExpansionMapAdmin";
@@ -288,6 +289,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
   }
 
   switch (activeTab) {
+    case "usuarios-painel":      return <PainelUsuariosAdmin onNavigate={onNavigate} />;
     case "formacao":             return <FormacaoAdmin />;
     case "notificacoes":         return <NotificacoesAdmin />;
     case "agenda":               return <AgendaAdmin onNavigate={onNavigate} />;
