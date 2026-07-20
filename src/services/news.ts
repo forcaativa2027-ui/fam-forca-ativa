@@ -2,7 +2,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { News, NewsCategory } from "@/types/domain";
 
 export async function listPublicNews(sb: SupabaseClient, category?: NewsCategory, churchId?: string | null): Promise<News[]> {
-  let q = sb.from("news").select("*").eq("is_published", true).order("sort_order", { ascending: true });
+  let q = sb.from("news").select("*")
+    .eq("is_published", true)
+    .lte("published_at", new Date().toISOString())
+    .order("sort_order", { ascending: true });
   if (category) q = q.eq("category", category);
   if (churchId) q = q.or(`church_id.eq.${churchId},church_id.is.null`);
   const { data, error } = await q;
