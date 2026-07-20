@@ -57,8 +57,6 @@ export default function PublicHome() {
   const services = dbServices.length > 0 ? dbServices : defaultServiceTimes(sede);
   const word = dbWord ?? defaultWord();
 
-  const featured = sermons.find((s) => s.is_featured) ?? sermons[0];
-
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-20 border-b-[3px] border-gold bg-navy">
@@ -120,20 +118,31 @@ export default function PublicHome() {
             </Card>
           </section>
 
-          {/* Mensagem em destaque */}
-          {featured && (
+          {/* Últimos Vídeos */}
+          {sermons.length > 0 && (
             <section>
-              <h2 className="mb-4 font-display text-xl text-navy">Mensagem em destaque</h2>
-              <a href={featured.youtube_url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-2xl border bg-navy">
-                <div className="relative">
-                  <img src={featured.thumbnail_url || youtubeThumb(featured.youtube_url) || ""} alt="" className="aspect-video w-full object-cover" />
-                  <div className="absolute inset-0 m-auto flex h-16 w-16 items-center justify-center rounded-full bg-gold/95 text-navy"><Play className="h-7 w-7" /></div>
-                </div>
-                <div className="p-5">
-                  <b className="text-lg text-white">{featured.title}</b>
-                  <p className="mt-1 text-sm text-white/70">{[featured.reference, featured.speaker].filter(Boolean).join(" · ")}</p>
-                </div>
-              </a>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-display text-xl text-navy">Últimos vídeos</h2>
+                <Button variant="ghost" onClick={() => setTab("videos")} className="gap-2">Mais vídeos... <ArrowRight className="h-4 w-4" /></Button>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {sermons.slice(0, 5).map((s) => (
+                  <a key={s.id} href={s.youtube_url} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md">
+                    <div className="relative">
+                      <img src={s.thumbnail_url || youtubeThumb(s.youtube_url) || ""} alt="" className="aspect-video w-full object-cover" />
+                      <div className="absolute inset-0 m-auto flex h-12 w-12 items-center justify-center rounded-full bg-navy/85 text-white"><Play className="h-5 w-5" /></div>
+                      {s.duration && <span className="absolute bottom-1.5 right-1.5 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-semibold text-white">{s.duration}</span>}
+                    </div>
+                    <div className="p-4">
+                      <b className="block text-sm text-ink">{s.title}</b>
+                      <p className="mt-1 text-xs text-muted">
+                        {new Date(s.published_at).toLocaleDateString("pt-BR")}
+                        {s.speaker ? ` · ${s.speaker}` : ""}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
             </section>
           )}
 
