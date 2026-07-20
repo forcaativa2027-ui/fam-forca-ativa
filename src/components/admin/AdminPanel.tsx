@@ -4,7 +4,7 @@ import { LeadershipAdmin } from "./LeadershipAdmin";
 import { CECmaisOfertasAdmin } from "./CECmaisOfertasAdmin";
 import { MdaStructureAdmin } from "./MdaStructureAdmin";
 import { EvangelismGroupsAdmin } from "./EvangelismGroupsAdmin";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,6 +47,8 @@ import { OrgDashboardAdmin } from "./OrgDashboardAdmin";
 import { IntelligenceAdmin } from "./IntelligenceAdmin";
 import { ControlTowerAdmin } from "./ControlTowerAdmin";
 import { DelegationsAdmin } from "./DelegationsAdmin";
+import { GlobalSearchDialog } from "./GlobalSearchDialog";
+import { PendenciasAdmin } from "./PendenciasAdmin";
 import { MinisterialReportsAdmin } from "./MinisterialReportsAdmin";
 import { GenealogyAdmin } from "./GenealogyAdmin";
 import { ExpansionMapAdmin } from "./ExpansionMapAdmin";
@@ -75,6 +77,18 @@ export default function AdminPanel() {
 
   const [activeTab, setActiveTab] = useState<TabKey>("org-dashboard");
   const [previousTab, setPreviousTab] = useState<TabKey | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const handleNavigate = useCallback((tab: TabKey) => {
     setActiveTab((prev) => {
@@ -121,6 +135,7 @@ export default function AdminPanel() {
         }}
         userName={me?.full_name ?? undefined}
         userRole={me?.role ?? undefined}
+        onSearch={() => setSearchOpen(true)}
       />
 
       {/* ── Área principal ── */}
@@ -140,6 +155,7 @@ export default function AdminPanel() {
                 }}
                 userName={me?.full_name ?? undefined}
                 userRole={me?.role ?? undefined}
+                onSearch={() => setSearchOpen(true)}
                 mobileOnly
               />
               <span className="font-display text-sm font-semibold text-white/70">CEC Family</span>
@@ -180,6 +196,8 @@ export default function AdminPanel() {
           </div>
         </main>
       </div>
+
+      <GlobalSearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} onNavigate={handleNavigate} />
     </div>
   );
 }
@@ -267,6 +285,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
   }
 
   switch (activeTab) {
+    case "pendencias":          return <PendenciasAdmin onNavigate={onNavigate} />;
     case "delegations":         return <DelegationsAdmin />;
     case "invites":             return <InviteLinksAdmin />;
     case "audit":               return <AuditView />;
