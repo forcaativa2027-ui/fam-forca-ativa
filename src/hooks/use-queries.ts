@@ -670,3 +670,13 @@ export const useMemberRecommendations = (memberId: string | null) =>
     queryFn: () => Rec.getMemberRecommendations(supabase, memberId as string),
     enabled: !!memberId,
   });
+
+// ── Relatório Consolidado por Área ──────────────────────────────
+import * as AreaRep from "@/services/areaReport";
+export const useAccessibleAreas = () => useQuery({ queryKey: ["accessible-areas"], queryFn: () => AreaRep.listAccessibleAreas(supabase) });
+export const useAreaConsolidado = (areaId: string | null, month: number, year: number) =>
+  useQuery({
+    queryKey: ["area-consolidado", areaId, month, year],
+    queryFn: () => AreaRep.getAreaConsolidado(supabase, areaId as string, month, year),
+    enabled: !!areaId,
+  });
