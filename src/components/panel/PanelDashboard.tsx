@@ -189,11 +189,11 @@ function GeneralView() {
       )}
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <Kpi label="Membros"    value={stats?.total_members ?? 0} hero/>
-        <Kpi label="Visitantes" value={stats?.total_visitors ?? 0}/>
-        <Kpi label="Células"    value={stats?.total_groups ?? 0}/>
-        <Kpi label="Relatórios" value={stats?.total_reports ?? 0}/>
-        <Kpi label="Batismos"   value={stats?.baptisms ?? 0}/>
+        <Kpi label="Membros"    value={stats?.total_members ?? 0} hero href="/admin?tab=members"/>
+        <Kpi label="Visitantes" value={stats?.total_visitors ?? 0} href="/admin?tab=crm"/>
+        <Kpi label="Células"    value={stats?.total_groups ?? 0} href="/admin?tab=life-groups"/>
+        <Kpi label="Relatórios" value={stats?.total_reports ?? 0} href="/admin?tab=weekly"/>
+        <Kpi label="Batismos"   value={stats?.baptisms ?? 0} href="/admin?tab=members"/>
       </section>
 
       {stats && Object.keys(stats.by_stage).length > 0 && (
@@ -209,15 +209,16 @@ function GeneralView() {
   );
 }
 
-function Kpi({ label, value, hero }:{ label:string; value:number; hero?:boolean }) {
-  return (
-    <Card className={hero ? "bg-navy text-white" : ""}>
+function Kpi({ label, value, hero, href }:{ label:string; value:number; hero?:boolean; href?:string }) {
+  const card = (
+    <Card className={`${hero ? "bg-navy text-white" : ""} ${href ? "transition hover:shadow-md cursor-pointer" : ""}`}>
       <CardContent className="pt-6">
         <p className={`font-display text-3xl font-semibold ${hero ? "text-gold":"text-navy"}`}>{value}</p>
         <p className={`mt-1 text-xs font-semibold uppercase ${hero ? "text-white/70":"text-muted"}`}>{label}</p>
       </CardContent>
     </Card>
   );
+  return href ? <Link href={href}>{card}</Link> : card;
 }
 function JourneyBars({ byStage }: { byStage: Record<string, number> }) {
   const entries = Object.entries(byStage).sort((a,b)=>b[1]-a[1]);
