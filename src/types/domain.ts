@@ -1272,6 +1272,18 @@ export interface MemberRecommendation {
   rule_key: string; message: string; priority: "critico" | "atencao" | "info";
 }
 
+// Relatório Consolidado por Área (demanda adicional)
+export interface AreaConsolidadoRow {
+  sector_id: string; sector_name: string;
+  lg_id: string; bairro: string | null; lider_nome: string | null; lider_fone: string | null;
+  auxiliar_nome: string | null; dia_semana: string | null; membros: number;
+  discipuladores: number; mda_semanal: number; cc: number; cel: number;
+  pct_mda: number; ge: boolean; visitantes: number;
+  oferta_pix: number; oferta_especie: number; total_presencas: number; kg_amor: number;
+  relatorio_enviado: boolean;
+}
+export interface AccessibleArea { area_id: string; area_name: string; sector_id: string; sector_name: string; }
+
 // GOV-002 §9 — Central de Delegações (diretório de usuários pra busca)
 export interface AdminUserDirectoryRow {
   profile_id: string; member_id: string | null;
