@@ -48,6 +48,7 @@ const TRUST_LABELS: Record<number, string> = {
 const STATUS_CONFIG: Record<string, { color: string; icon: string; label: string }> = {
   pendente:  { color: "bg-yellow-100 text-yellow-800 border-yellow-300", icon: "⏳", label: "Pendente" },
   ativo:     { color: "bg-green-100 text-green-800 border-green-300",  icon: "✅", label: "Ativo" },
+  suspensa:  { color: "bg-orange-100 text-orange-800 border-orange-300", icon: "⏸️", label: "Suspensa" },
   rejeitado: { color: "bg-red-100 text-red-800 border-red-300",        icon: "❌", label: "Rejeitado" },
   revogado:  { color: "bg-gray-100 text-gray-700 border-gray-300",     icon: "🚫", label: "Revogado" },
   expirado:  { color: "bg-orange-100 text-orange-800 border-orange-300",icon: "⏰", label: "Expirado" },
@@ -179,8 +180,16 @@ function DelegationCard({ d, isApostolo, onAction }: {
                 </>
               )}
               {d.status === "ativo" && (
-                <Button size="sm" variant="outline" className="h-7 text-xs text-red-500 border-red-300"
-                  onClick={() => onAction("revoke", d)}>🚫 Revogar</Button>
+                <>
+                  <Button size="sm" variant="outline" className="h-7 text-xs border-amber-400 text-amber-700"
+                    onClick={() => onAction("suspend", d)}>⏸️ Suspender</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs text-red-500 border-red-300"
+                    onClick={() => onAction("revoke", d)}>🚫 Revogar</Button>
+                </>
+              )}
+              {d.status === "suspensa" && (
+                <Button size="sm" className="h-7 text-xs bg-green-600 hover:bg-green-700"
+                  onClick={() => onAction("reactivate", d)}>▶️ Reativar</Button>
               )}
               <Button size="sm" variant="ghost" className="h-7 text-xs"
                 onClick={() => onAction("view", d)}>👁️ Ver</Button>
@@ -734,6 +743,10 @@ function ActionModal({ action, delegation, onClose, onDone }: {
         await Del.rejectDelegation(supabase, delegation.id, notes);
       } else if (action === "revoke") {
         await Del.revokeDelegation(supabase, delegation.id, notes);
+      } else if (action === "suspend") {
+        await Del.suspendDelegation(supabase, delegation.id, notes);
+      } else if (action === "reactivate") {
+        await Del.reactivateDelegation(supabase, delegation.id);
       } else if (action === "pauta") {
         await Del.pautarConselho(supabase, delegation.id);
       }
@@ -745,6 +758,8 @@ function ActionModal({ action, delegation, onClose, onDone }: {
     approve: "✅ Aprovar Delegação",
     reject:  "❌ Rejeitar Solicitação",
     revoke:  "🚫 Revogar Delegação",
+    suspend: "⏸️ Suspender Delegação",
+    reactivate: "▶️ Reativar Delegação",
     pauta:   "🗳️ Pautar no Conselho",
     view:    "👁️ Detalhes da Delegação",
   };
@@ -793,8 +808,8 @@ function ActionModal({ action, delegation, onClose, onDone }: {
             </p>
           )}
 
-          {(action === "reject" || action === "revoke" || action === "approve") && (
-            <div><Label className="text-xs">{action === "approve" ? "Observações (opcional)" : "Justificativa *"}</Label>
+          {(action === "reject" || action === "revoke" || action === "approve" || action === "suspend") && (
+            <div><Label className="text-xs">{action === "approve" ? "Observações (opcional)" : action === "suspend" ? "Motivo da suspensão (opcional)" : "Justificativa *"}</Label>
               <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
                 placeholder={action === "approve" ? "Observações da diretoria…" : "Motivo da decisão…"}/>
             </div>
@@ -815,9 +830,14 @@ function ActionModal({ action, delegation, onClose, onDone }: {
             <div className="flex gap-2 justify-end pt-2">
               <Button variant="outline" onClick={onClose}>Cancelar</Button>
               <Button
-                className={action === "approve" ? "bg-green-600 hover:bg-green-700" : action === "pauta" ? "bg-blue-600 hover:bg-blue-700" : "bg-red-600 hover:bg-red-700"}
+                className={
+                  action === "approve" || action === "reactivate" ? "bg-green-600 hover:bg-green-700"
+                  : action === "pauta" ? "bg-blue-600 hover:bg-blue-700"
+                  : action === "suspend" ? "bg-amber-600 hover:bg-amber-700"
+                  : "bg-red-600 hover:bg-red-700"
+                }
                 onClick={handle} disabled={busy}>
-                {busy ? "Processando…" : action === "approve" ? "Confirmar aprovação" : action === "pauta" ? "Confirmar pauta" : "Confirmar"}
+                {busy ? "Processando…" : action === "approve" ? "Confirmar aprovação" : action === "pauta" ? "Confirmar pauta" : action === "suspend" ? "Confirmar suspensão" : action === "reactivate" ? "Confirmar reativação" : "Confirmar"}
               </Button>
             </div>
           )}
