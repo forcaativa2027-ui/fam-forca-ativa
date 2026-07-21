@@ -5,6 +5,7 @@ import { CECmaisOfertasAdmin } from "./CECmaisOfertasAdmin";
 import { MdaStructureAdmin } from "./MdaStructureAdmin";
 import { EvangelismGroupsAdmin } from "./EvangelismGroupsAdmin";
 import { useState, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -80,7 +81,9 @@ export default function AdminPanel() {
   const { data: myModules = [] } = useMyActiveModules();
   const isAdmin = me && (me.role === "apostolo" || myModules.length > 0);
 
-  const [activeTab, setActiveTab] = useState<TabKey>("org-dashboard");
+  const searchParams = useSearchParams();
+  const urlTab = searchParams.get("tab") as TabKey | null;
+  const [activeTab, setActiveTab] = useState<TabKey>(urlTab ?? "org-dashboard");
   const [previousTab, setPreviousTab] = useState<TabKey | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
 
