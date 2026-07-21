@@ -640,7 +640,7 @@ export interface Permission {
   key: string; module: DelegationModule; label: string; description: string | null; is_write: boolean;
 }
 export type DelegationScope  = "lg"|"setor"|"area"|"distrito"|"nucleo"|"sede"|"nacional";
-export type DelegationStatus = "pendente"|"ativo"|"rejeitado"|"revogado"|"expirado"|"programada"|"concluida";
+export type DelegationStatus = "pendente"|"ativo"|"rejeitado"|"revogado"|"expirado"|"programada"|"concluida"|"suspensa";
 export type CouncilVote      = "aprovado"|"reprovado"|"abstencao";
 
 export interface CouncilMember {
