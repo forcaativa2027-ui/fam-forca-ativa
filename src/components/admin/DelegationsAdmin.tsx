@@ -153,6 +153,7 @@ function DelegationCard({ d, isApostolo, onAction }: {
             <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
               <span>👤 {d.profile_role} · {d.profile_church_name ?? "—"}</span>
               {d.requested_by_name && <span>📝 Solicitado por: {d.requested_by_name}</span>}
+              {d.reviewed_by_name && <span>✅ Atribuído por: {d.reviewed_by_name}</span>}
               {d.expires_at && (
                 <span className={d.days_remaining !== null && d.days_remaining < 7 ? "text-red-500 font-semibold" : ""}>
                   ⏰ Expira em {d.days_remaining ?? 0} dia(s)
@@ -229,7 +230,6 @@ function PendingTab({ isApostolo, onAction }: { isApostolo: boolean; onAction: (
 function ActiveTab({ isApostolo, onAction }: { isApostolo: boolean; onAction: (a: string, d: DelegationPanel) => void }) {
   const [moduleFilter, setModuleFilter] = useState<DelegationModule|"">("");
   const { data: active = [], isLoading } = useDelegations({ status: "ativo", module: moduleFilter||undefined });
-  const [showGrant, setShowGrant] = useState(false);
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -243,14 +243,26 @@ function ActiveTab({ isApostolo, onAction }: { isApostolo: boolean; onAction: (a
           </Select>
           <span className="flex items-center text-sm text-muted-foreground">{active.length} delegação(ões) ativa(s)</span>
         </div>
-        {isApostolo && (
-          <Button size="sm" onClick={() => setShowGrant(true)}><Plus className="h-4 w-4 mr-1"/>Nova Delegação</Button>
-        )}
       </div>
       {isLoading && <p className="text-sm text-muted-foreground">Carregando…</p>}
       <div className="space-y-3">
         {active.map(d => <DelegationCard key={d.id} d={d} isApostolo={isApostolo} onAction={onAction}/>)}
         {!isLoading && active.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Nenhuma delegação ativa.</p>}
+      </div>
+    </div>
+  );
+}
+
+function AtribuicoesTab({ isApostolo }: { isApostolo: boolean }) {
+  const [showGrant, setShowGrant] = useState(false);
+  if (!isApostolo) {
+    return <p className="py-8 text-center text-sm text-muted-foreground">Apenas o Apóstolo pode atribuir delegações diretamente por aqui.</p>;
+  }
+  return (
+    <div className="space-y-4">
+      <div className="rounded-lg border border-gold/30 bg-gold/5 p-4">
+        <p className="text-sm text-navy">Escolha um membro e atribua uma nova delegação a ele.</p>
+        <Button size="sm" className="mt-3" onClick={() => setShowGrant(true)}><Plus className="h-4 w-4 mr-1"/>Nova Atribuição</Button>
       </div>
       {showGrant && <GrantDelegationDialog onClose={() => setShowGrant(false)} />}
     </div>
@@ -906,6 +918,7 @@ export function DelegationsAdmin() {
             )}
           </TabsTrigger>
           <TabsTrigger value="active">✅ Ativas</TabsTrigger>
+          <TabsTrigger value="atribuicoes">➕ Atribuições</TabsTrigger>
           <TabsTrigger value="council">🏛️ Conselho</TabsTrigger>
           <TabsTrigger value="emergency">⚡ Emergencial</TabsTrigger>
           <TabsTrigger value="compliance">📊 Compliance</TabsTrigger>
@@ -917,6 +930,7 @@ export function DelegationsAdmin() {
           <TabsContent value="perfis"><PerfisProntosAdmin /></TabsContent>
           <TabsContent value="pending"><PendingTab isApostolo={isApostolo} onAction={handleAction}/></TabsContent>
           <TabsContent value="active"><ActiveTab isApostolo={isApostolo} onAction={handleAction}/></TabsContent>
+          <TabsContent value="atribuicoes"><AtribuicoesTab isApostolo={isApostolo} /></TabsContent>
           <TabsContent value="council"><CouncilTab isApostolo={isApostolo}/></TabsContent>
           <TabsContent value="emergency"><EmergencyTab isApostolo={isApostolo}/></TabsContent>
           <TabsContent value="compliance"><ComplianceTab/></TabsContent>
