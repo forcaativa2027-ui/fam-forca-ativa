@@ -88,30 +88,22 @@ export default function PanelDashboard() {
     <div className="min-h-screen bg-background">
       <MemberHeader active="dashboard" isAdmin={isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
 
-      {/* Menu Institucional Permanente — leva pra home pública já com a aba certa aberta */}
-      <div className="border-b bg-navy/95">
-        <nav className="container flex flex-wrap items-center gap-1 overflow-x-auto py-1.5">
-          {INSTITUTIONAL_LINKS.map((l) => (
-            <Link key={l.tab} href={`/?tab=${l.tab}`} className="whitespace-nowrap rounded px-2.5 py-1 text-[11px] font-semibold text-white/70 transition hover:bg-white/10 hover:text-white">
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-
-      <main className="container space-y-8 py-8">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted">Painel</p>
-          <h1 className="mt-1 font-display text-3xl text-navy">{profile ? `Paz, ${profile.full_name.split(" ")[0]}.` : "Bem-vindo"}</h1>
-          {profile && <p className="mt-1 text-sm font-bold text-gold">{ROLE_LABELS[profile.role] ?? profile.role}</p>}
-          <Link href="/painel/seguranca" className="mt-1 inline-block text-xs text-muted-foreground underline underline-offset-2 hover:text-navy">
-            Segurança e senha
-          </Link>
+      <Tabs defaultValue={isAdmin ? "geral" : "celula"}>
+        {/* Menu Institucional Permanente — leva pra home pública já com a aba certa aberta */}
+        <div className="border-b bg-navy/95">
+          <nav className="container flex flex-wrap items-center gap-1 overflow-x-auto py-1.5">
+            {INSTITUTIONAL_LINKS.map((l) => (
+              <Link key={l.tab} href={`/?tab=${l.tab}`} className="whitespace-nowrap rounded px-2.5 py-1 text-[11px] font-semibold text-white/70 transition hover:bg-white/10 hover:text-white">
+                {l.label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
-        <Tabs defaultValue={isAdmin ? "geral" : "celula"}>
-          <div className="overflow-x-auto">
-            <TabsList className="mb-6 min-w-max">
+        {/* Abas pessoais do painel — logo abaixo da barra institucional */}
+        <div className="border-b bg-card">
+          <div className="container overflow-x-auto">
+            <TabsList className="my-1.5 min-w-max">
               {isAdmin && <TabsTrigger value="geral"><BarChart3 className="mr-1 h-4 w-4" />Visão geral</TabsTrigger>}
               <TabsTrigger value="alertas" className="flex items-center gap-1.5">
                 <NotificationBadge count={notifCount} />
@@ -125,6 +117,17 @@ export default function PanelDashboard() {
               <TabsTrigger value="perfil"><User className="mr-1 h-4 w-4" />Meu Perfil/Atualizar</TabsTrigger>
             </TabsList>
           </div>
+        </div>
+
+        <main className="container space-y-8 py-8">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted">Painel</p>
+            <h1 className="mt-1 font-display text-3xl text-navy">{profile ? `Paz, ${profile.full_name.split(" ")[0]}.` : "Bem-vindo"}</h1>
+            {profile && <p className="mt-1 text-sm font-bold text-gold">{ROLE_LABELS[profile.role] ?? profile.role}</p>}
+            <Link href="/painel/seguranca" className="mt-1 inline-block text-xs text-muted-foreground underline underline-offset-2 hover:text-navy">
+              Segurança e senha
+            </Link>
+          </div>
 
           {isAdmin && <TabsContent value="geral"><GeneralView /></TabsContent>}
           <TabsContent value="alertas"><NotificationsPanel /></TabsContent>
@@ -134,8 +137,8 @@ export default function PanelDashboard() {
           <TabsContent value="oracao"><PrayerTab member={member ?? null} /></TabsContent>
           <TabsContent value="ministerio"><MyMinistriesPanel /></TabsContent>
           <TabsContent value="perfil"><ProfileTab /></TabsContent>
-        </Tabs>
-      </main>
+        </main>
+      </Tabs>
     </div>
   );
 }
