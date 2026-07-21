@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { FichaUsuarioAdmin } from "./FichaUsuarioAdmin";
 import { BuscaUsuariosAdmin } from "./BuscaUsuariosAdmin";
 import {
   useDelegations, useCouncilMembers, useRoleDelegations,
@@ -256,10 +257,10 @@ function ActiveTab({ isApostolo, onAction }: { isApostolo: boolean; onAction: (a
 }
 
 // ── Dialog: conceder nova delegação direta (busca membro + módulo) ──
-function GrantDelegationDialog({ onClose }: { onClose: () => void }) {
+export function GrantDelegationDialog({ onClose, presetProfileId, presetProfileName }: { onClose: () => void; presetProfileId?: string; presetProfileName?: string }) {
   const qc = useQueryClient();
-  const [profileId, setProfileId] = useState("");
-  const [memberName, setMemberName] = useState("");
+  const [profileId, setProfileId] = useState(presetProfileId ?? "");
+  const [memberName, setMemberName] = useState(presetProfileName ?? "");
   const [module, setModule] = useState<DelegationModule>("finance");
   const [level, setLevel] = useState("3");
   const [scope, setScope] = useState<DelegationScope>("nacional");
@@ -313,9 +314,15 @@ function GrantDelegationDialog({ onClose }: { onClose: () => void }) {
       <DialogContent className="max-w-md">
         <DialogHeader><DialogTitle>➕ Nova Delegação</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <div><Label className="text-xs">Membro *</Label>
-            <MemberSearchInput selectedName={memberName} onSelect={(pid, name) => { setProfileId(pid); setMemberName(name); }} />
-          </div>
+          {presetProfileId ? (
+            <div><Label className="text-xs">Membro</Label>
+              <div className="flex h-10 items-center rounded-md border bg-muted/30 px-3 text-sm font-medium text-navy">{memberName}</div>
+            </div>
+          ) : (
+            <div><Label className="text-xs">Membro *</Label>
+              <MemberSearchInput selectedName={memberName} onSelect={(pid, name) => { setProfileId(pid); setMemberName(name); }} />
+            </div>
+          )}
           <div><Label className="text-xs">Módulo *</Label>
             <Select value={module} onValueChange={v => setModule(v as DelegationModule)}>
               <SelectTrigger><SelectValue/></SelectTrigger>
@@ -721,7 +728,7 @@ function RequestTab() {
 // ══════════════════════════════════════════════════════════════
 // MODAIS DE AÇÃO (Aprovar / Rejeitar / Revogar / Ver)
 // ══════════════════════════════════════════════════════════════
-function ActionModal({ action, delegation, onClose, onDone }: {
+export function ActionModal({ action, delegation, onClose, onDone }: {
   action: string; delegation: DelegationPanel;
   onClose: () => void; onDone: () => void;
 }) {
@@ -856,8 +863,17 @@ export function DelegationsAdmin() {
   const { data: me } = useMyProfile();
   const { data: pending = [] } = useDelegations({ status: "pendente" });
   const [modal, setModal] = useState<{ action: string; d: DelegationPanel } | null>(null);
+  const [selectedUser, setSelectedUser] = useState<{ profileId: string; fullName: string } | null>(null);
 
   const isApostolo = me?.role === "apostolo";
+
+  if (selectedUser) {
+    return (
+      <div className="space-y-5 p-4">
+        <FichaUsuarioAdmin profileId={selectedUser.profileId} fullName={selectedUser.fullName} onBack={() => setSelectedUser(null)} />
+      </div>
+    );
+  }
 
   function handleAction(action: string, d: DelegationPanel) {
     setModal({ action, d });
@@ -895,7 +911,7 @@ export function DelegationsAdmin() {
           {!isApostolo && <TabsTrigger value="request">📝 Solicitar</TabsTrigger>}
         </TabsList>
         <div className="mt-4">
-          <TabsContent value="buscar"><BuscaUsuariosAdmin onManage={(pid, name) => alert(`Ficha administrativa de ${name} — em construção (próxima etapa: §10).`)} /></TabsContent>
+          <TabsContent value="buscar"><BuscaUsuariosAdmin onManage={(pid, name) => setSelectedUser({ profileId: pid, fullName: name })} /></TabsContent>
           <TabsContent value="pending"><PendingTab isApostolo={isApostolo} onAction={handleAction}/></TabsContent>
           <TabsContent value="active"><ActiveTab isApostolo={isApostolo} onAction={handleAction}/></TabsContent>
           <TabsContent value="council"><CouncilTab isApostolo={isApostolo}/></TabsContent>
