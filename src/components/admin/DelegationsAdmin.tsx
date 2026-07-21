@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { FichaUsuarioAdmin } from "./FichaUsuarioAdmin";
+import { PerfisProntosAdmin } from "./PerfisProntosAdmin";
 import { BuscaUsuariosAdmin } from "./BuscaUsuariosAdmin";
 import {
   useDelegations, useCouncilMembers, useRoleDelegations,
@@ -908,10 +909,12 @@ export function DelegationsAdmin() {
           <TabsTrigger value="council">🏛️ Conselho</TabsTrigger>
           <TabsTrigger value="emergency">⚡ Emergencial</TabsTrigger>
           <TabsTrigger value="compliance">📊 Compliance</TabsTrigger>
+          <TabsTrigger value="perfis">👤 Perfis Prontos</TabsTrigger>
           {!isApostolo && <TabsTrigger value="request">📝 Solicitar</TabsTrigger>}
         </TabsList>
         <div className="mt-4">
           <TabsContent value="buscar"><BuscaUsuariosAdmin onManage={(pid, name) => setSelectedUser({ profileId: pid, fullName: name })} /></TabsContent>
+          <TabsContent value="perfis"><PerfisProntosAdmin /></TabsContent>
           <TabsContent value="pending"><PendingTab isApostolo={isApostolo} onAction={handleAction}/></TabsContent>
           <TabsContent value="active"><ActiveTab isApostolo={isApostolo} onAction={handleAction}/></TabsContent>
           <TabsContent value="council"><CouncilTab isApostolo={isApostolo}/></TabsContent>

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useUsersDirectorySearch, useDelegations } from "@/hooks/use-queries";
+import { useUsersDirectorySearch, useDelegations, useRoleDelegations } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import * as Del from "@/services/delegations";
 import { DELEGATION_MODULE_LABELS } from "@/services/delegations";
@@ -139,6 +139,9 @@ function DelegationRow({ d, actions }: { d: DelegationPanel; actions?: React.Rea
 }
 
 function NewDelegationForm({ profileId, onDone, onCancel }: { profileId: string; onDone: () => void; onCancel: () => void }) {
+  const { data: roleDelegations = [] } = useRoleDelegations();
+  const profileNames = Array.from(new Set(roleDelegations.map((r) => r.role_name)));
+  const [appliedProfile, setAppliedProfile] = useState("");
   const [module, setModule] = useState<DelegationModule>("reports");
   const [level, setLevel] = useState("1");
   const [scope, setScope] = useState<DelegationScope>("lg");
@@ -148,19 +151,44 @@ function NewDelegationForm({ profileId, onDone, onCancel }: { profileId: string;
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
+  function applyProfile(name: string) {
+    setAppliedProfile(name);
+    if (!name) return;
+    const rows = roleDelegations.filter((r) => r.role_name === name);
+    if (rows.length === 0) return;
+    // Aplica o primeiro módulo do perfil nos campos — os demais módulos do
+    // mesmo perfil ficam listados abaixo pra conceder também, se quiser.
+    const first = rows[0];
+    setModule(first.module);
+    setLevel(String(first.trust_level));
+    setScope(first.scope as DelegationScope);
+  }
+
+  const profileRows = appliedProfile ? roleDelegations.filter((r) => r.role_name === appliedProfile) : [];
+
   async function grant() {
     if (!scopeName.trim()) { setErr("Informe a unidade de atuação (nome do escopo)."); return; }
     setBusy(true); setErr("");
     try {
       const created = await Del.requestDelegation(supabase, {
         profile_id: profileId, module, trust_level: Number(level), scope, scope_name: scopeName,
-        request_reason: "Concedida diretamente pela Ficha Administrativa do Usuário.",
+        request_reason: appliedProfile ? `Perfil pronto aplicado: ${appliedProfile}.` : "Concedida diretamente pela Ficha Administrativa do Usuário.",
         expires_at: expires || null,
       });
       await Del.approveDelegation(supabase, created.id, {
         trust_level: Number(level), scope, scope_name: scopeName, review_notes: notes || undefined,
         expires_at: expires || null,
       });
+      // Se o perfil tiver mais módulos além do que está no formulário, concede os demais também,
+      // reaproveitando a mesma unidade de atuação e vigência.
+      const remaining = profileRows.filter((r) => r.module !== module);
+      for (const r of remaining) {
+        const c = await Del.requestDelegation(supabase, {
+          profile_id: profileId, module: r.module, trust_level: r.trust_level, scope: r.scope as DelegationScope, scope_name: scopeName,
+          request_reason: `Perfil pronto aplicado: ${appliedProfile}.`, expires_at: expires || null,
+        });
+        await Del.approveDelegation(supabase, c.id, { trust_level: r.trust_level, scope: r.scope as DelegationScope, scope_name: scopeName, expires_at: expires || null });
+      }
       onDone();
     } catch (e) {
       setErr((e as { message?: string })?.message ?? "Erro ao conceder");
@@ -171,6 +199,24 @@ function NewDelegationForm({ profileId, onDone, onCancel }: { profileId: string;
     <Card>
       <CardHeader><CardTitle className="text-base flex items-center justify-between">Conceder nova delegação<Button size="sm" variant="ghost" onClick={onCancel}><X className="h-4 w-4" /></Button></CardTitle></CardHeader>
       <CardContent className="space-y-3">
+        {profileNames.length > 0 && (
+          <div className="rounded-md border border-gold/30 bg-gold/5 p-3">
+            <Label className="text-xs">Aplicar perfil pronto (opcional)</Label>
+            <Select value={appliedProfile} onValueChange={applyProfile}>
+              <SelectTrigger><SelectValue placeholder="Nenhum — preencher manualmente" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Nenhum — preencher manualmente</SelectItem>
+                {profileNames.map((n) => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {profileRows.length > 1 && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Esse perfil também concede: {profileRows.filter((r) => r.module !== module).map((r) => DELEGATION_MODULE_LABELS[r.module]).join(", ")}.
+                Revise abaixo e confirme — todos serão criados com a mesma unidade de atuação.
+              </p>
+            )}
+          </div>
+        )}
         <div>
           <Label className="text-xs">Módulo</Label>
           <Select value={module} onValueChange={(v) => setModule(v as DelegationModule)}>
