@@ -90,6 +90,16 @@ export async function revokeDelegation(sb: SupabaseClient, id: string, revoke_re
   if (error) throw error;
 }
 
+export async function suspendDelegation(sb: SupabaseClient, id: string, reason?: string): Promise<void> {
+  const { error } = await sb.rpc("suspend_delegation", { p_delegation_id: id, p_reason: reason ?? null });
+  if (error) throw error;
+}
+
+export async function reactivateDelegation(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.rpc("reactivate_delegation", { p_delegation_id: id });
+  if (error) throw error;
+}
+
 // ── Votos do Conselho ────────────────────────────────────────
 export async function castVote(sb: SupabaseClient, delegation_id: string, vote: CouncilVote, observation?: string): Promise<void> {
   const { error } = await sb.from("delegation_approvals")
