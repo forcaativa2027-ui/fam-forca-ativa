@@ -34,8 +34,8 @@ const WEEK_FIELDS: { key: keyof MonthlyReportWeek; label: string; money?: boolea
   { key: "oferta_pix",            label: "Oferta PIX", money: true },
   { key: "oferta_especie",        label: "Oferta em espécie", money: true },
   { key: "ebd",                   label: "EBD" },
-  { key: "cc",                    label: "CC (Cap. da Casa)" },
-  { key: "cel",                   label: "CEL (Cap. da Célula)" },
+  { key: "cc",                    label: "C.C" },
+  { key: "cel",                   label: "CEL" },
   { key: "kg_amor",               label: "KG do Amor (kg)" },
 ];
 

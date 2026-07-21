@@ -346,8 +346,8 @@ export function WeeklyReportsAdmin() {
                   <Field label="EBD (membros)"><Input type="number" min={0} {...register("ebd_count")} placeholder="0" /></Field>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <Field label="CC — Cap. da Casa"><Input type="number" min={0} {...register("cc_count")} placeholder="0" /></Field>
-                  <Field label="CEL — Cap. da Célula"><Input type="number" min={0} {...register("cel_count")} placeholder="0" /></Field>
+                  <Field label="C.C"><Input type="number" min={0} {...register("cc_count")} placeholder="0" /></Field>
+                  <Field label="CEL"><Input type="number" min={0} {...register("cel_count")} placeholder="0" /></Field>
                   <Field label="KG do Amor (kg)"><Input type="number" step="0.5" min={0} {...register("kg_amor")} placeholder="0" /></Field>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-2">

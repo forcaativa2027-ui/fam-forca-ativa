@@ -124,8 +124,8 @@ export function ReportDetailView({ reportId }: { reportId: string }) {
           <div className="grid gap-2 sm:grid-cols-4">
             <SmallStat label="Membros c/ discipuladores" value={report.members_with_disciplers ?? 0} />
             <SmallStat label="EBD (membros)" value={report.ebd_count ?? 0} />
-            <SmallStat label="CC — Cap. da Casa" value={report.cc_count ?? 0} />
-            <SmallStat label="CEL — Cap. da Célula" value={report.cel_count ?? 0} />
+            <SmallStat label="C.C" value={report.cc_count ?? 0} />
+            <SmallStat label="CEL" value={report.cel_count ?? 0} />
           </div>
 
           <div className="mt-2 grid gap-2 sm:grid-cols-3">
