@@ -1271,3 +1271,13 @@ export interface MemberRelationship {
 export interface MemberRecommendation {
   rule_key: string; message: string; priority: "critico" | "atencao" | "info";
 }
+
+// GOV-002 §9 — Central de Delegações (diretório de usuários pra busca)
+export interface AdminUserDirectoryRow {
+  profile_id: string; member_id: string | null;
+  full_name: string; email: string | null; phone: string | null; cec_id: string | null; photo_url: string | null;
+  role: string; journey_stage: string | null; member_status: string | null;
+  church_id: string | null; church_name: string | null;
+  state_id: string | null; state_name: string | null;
+  delegacoes_ativas: number;
+}
