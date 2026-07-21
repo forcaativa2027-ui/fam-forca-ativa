@@ -175,11 +175,11 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
       ],
     },
     {
-      id: "governanca",
-      label: "Governança",
-      icon: <Lock size={16} />,
+      id: "auditoria",
+      label: "Auditoria",
+      icon: <ClipboardList size={16} />,
       items: [
-        { key: "audit", label: "Auditoria", icon: <ClipboardList size={15} /> },
+        { key: "audit", label: "Registros de Auditoria", icon: <ClipboardList size={15} /> },
       ],
     },
     {
