@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { BuscaUsuariosAdmin } from "./BuscaUsuariosAdmin";
 import {
   useDelegations, useCouncilMembers, useRoleDelegations,
   useEmergencyAccess, useComplianceDashboard, useModuleRanking,
@@ -880,6 +881,7 @@ export function DelegationsAdmin() {
 
       <Tabs defaultValue="pending">
         <TabsList className="flex-wrap h-auto gap-1">
+          <TabsTrigger value="buscar">🔎 Buscar Usuário</TabsTrigger>
           <TabsTrigger value="pending" className="gap-1.5">
             ⏳ Pendentes
             {pending.length > 0 && (
@@ -893,6 +895,7 @@ export function DelegationsAdmin() {
           {!isApostolo && <TabsTrigger value="request">📝 Solicitar</TabsTrigger>}
         </TabsList>
         <div className="mt-4">
+          <TabsContent value="buscar"><BuscaUsuariosAdmin onManage={(pid, name) => alert(`Ficha administrativa de ${name} — em construção (próxima etapa: §10).`)} /></TabsContent>
           <TabsContent value="pending"><PendingTab isApostolo={isApostolo} onAction={handleAction}/></TabsContent>
           <TabsContent value="active"><ActiveTab isApostolo={isApostolo} onAction={handleAction}/></TabsContent>
           <TabsContent value="council"><CouncilTab isApostolo={isApostolo}/></TabsContent>
