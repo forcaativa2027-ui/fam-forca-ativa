@@ -24,7 +24,7 @@ export type TabKey =
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
-  | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "cec-id-portaria"
+  | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
   | "news" | "banners" | "sermons" | "events" | "services" | "word"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "invites" | "audit"
@@ -112,6 +112,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "relmda-consolidacao", label: "M.D.A. — Consolidação", icon: <Network size={15} /> },
         { key: "relmda-dashboard", label: "M.D.A. — Visão Geral", icon: <BarChart3 size={15} /> },
         { key: "relmda-prazos", label: "M.D.A. — Prazos", icon: <Clock size={15} /> },
+        { key: "relmda-area", label: "M.D.A. — Consolidado por Área", icon: <FileBarChart size={15} /> },
       ],
     },
     {
