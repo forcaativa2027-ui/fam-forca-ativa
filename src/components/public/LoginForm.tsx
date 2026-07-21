@@ -58,7 +58,7 @@ export default function LoginForm() {
           </div>
         </div>
         {err && <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{err}</p>}
-        <Button type="submit" disabled={isSubmitting} className="mt-5 w-full bg-[#0E2A47] hover:bg-[#16345A]">
+        <Button type="submit" disabled={isSubmitting} className="mt-5 w-full bg-[#0E2A47] text-white hover:bg-[#16345A] hover:text-white">
           {isSubmitting ? "Entrando…" : "Entrar"}
         </Button>
         <div className="mt-3 text-center">
