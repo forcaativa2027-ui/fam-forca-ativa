@@ -25,16 +25,14 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
             >
               Área do membro
             </Link>
-            {cardReady && (
-              <Link
-                href="/painel/carteira"
-                className={`rounded px-2 py-1.5 text-xs font-semibold transition ${
-                  active === "carteira" ? "border-b-2 border-gold text-white" : "text-white/60 hover:text-white"
-                }`}
-              >
-                Carteira Digital
-              </Link>
-            )}
+            <Link
+              href="/painel/carteira"
+              className={`rounded px-2 py-1.5 text-xs font-semibold transition ${
+                active === "carteira" ? "border-b-2 border-gold text-white" : "text-white/60 hover:text-white"
+              }`}
+            >
+              Carteira Digital
+            </Link>
             <Link
               href="/painel/cecmais/explorar"
               className={`rounded px-2 py-1.5 text-xs font-semibold transition ${
