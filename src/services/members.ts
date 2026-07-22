@@ -51,8 +51,13 @@ export async function createMember(sb: SupabaseClient, input: Partial<Member>): 
 }
 
 export async function updateMember(sb: SupabaseClient, id: string, input: Partial<Member>): Promise<void> {
-  const { error } = await sb.from("members").update(input).eq("id", id);
+  const { data, error } = await sb.from("members").update(input).eq("id", id).select("id");
   if (error) throw error;
+  if (!data || data.length === 0) {
+    throw new Error(
+      "Nada foi salvo. Você pode não ter permissão para editar este cadastro, ou o registro não foi encontrado."
+    );
+  }
 }
 
 export async function deleteMember(sb: SupabaseClient, id: string): Promise<void> {
