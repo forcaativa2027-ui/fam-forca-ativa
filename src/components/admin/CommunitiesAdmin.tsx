@@ -47,6 +47,7 @@ const communitySchema = z.object({
   pix_key: z.string().trim().optional().or(z.literal("")),
   pix_key_type: z.enum(["cpf","cnpj","email","telefone","aleatoria"]).optional().or(z.literal("")),
   bank_info: z.string().trim().optional().or(z.literal("")),
+  qr_code_url: z.string().trim().optional().or(z.literal("")),
 });
 type CommunityInput = z.infer<typeof communitySchema>;
 
@@ -99,6 +100,7 @@ export function CommunitiesAdmin() {
       pix_key: c.pix_key ?? "",
       pix_key_type: c.pix_key_type ?? "",
       bank_info: c.bank_info ?? "",
+      qr_code_url: c.qr_code_url ?? "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -135,6 +137,7 @@ export function CommunitiesAdmin() {
         pix_key: v.pix_key || null,
         pix_key_type: v.pix_key_type || null,
         bank_info: v.bank_info || null,
+        qr_code_url: v.qr_code_url || null,
         is_active: v.status_admin !== "inativa",
       };
       console.log("[CommunitiesAdmin] Payload:", payload);
@@ -384,6 +387,12 @@ export function CommunitiesAdmin() {
                 </div>
                 <Field label="Dados bancários (opcional, para TED/DOC)" error={errors.bank_info?.message}>
                   <textarea {...register("bank_info")} rows={3} placeholder="Banco, agência, conta, favorecido..." className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+                </Field>
+                <Field label="URL da imagem do QR Code do PIX (opcional)" error={errors.qr_code_url?.message}>
+                  <Input {...register("qr_code_url")} placeholder="/images/pix-qrcodes/nome-do-arquivo.jpg" />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Igrejas que usam a mesma conta bancária (ex: duas sedes da mesma Comunidade) podem colar exatamente a mesma URL aqui.
+                  </p>
                 </Field>
               </div>
             </details>
