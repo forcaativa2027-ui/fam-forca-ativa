@@ -30,6 +30,33 @@ export async function createPipelineEntry(sb: SupabaseClient, input: PipelineCre
   return data as string;
 }
 
+export interface PipelineCreateFullInput extends PipelineCreateInput {
+  cpf?: string; gender?: string; marital_status?: string; birth_date?: string;
+  country?: string; address?: string; neighborhood?: string;
+  baptized?: boolean; baptism_date?: string; last_church?: string;
+  holy_spirit_baptized?: boolean; holy_spirit_baptism_date?: string;
+  seeking_reason?: string; life_before_church?: string; testimony?: string;
+  belongs_to_group?: boolean; group_name?: string;
+}
+
+/** Cria entrada completa no pipeline (cadastro estilo "história de fé"). Requer usuário autenticado (após signUp). */
+export async function createPipelineEntryFull(sb: SupabaseClient, input: PipelineCreateFullInput): Promise<string> {
+  const { data, error } = await sb.rpc("visitor_pipeline_create_v2", {
+    p_community_id: input.community_id, p_intent: input.intent, p_full_name: input.full_name, p_phone: input.phone,
+    p_email: input.email ?? null, p_state: input.state ?? null, p_city: input.city ?? null,
+    p_cep: input.cep ?? null, p_life_group_id: input.life_group_id ?? null,
+    p_cpf: input.cpf ?? null, p_gender: input.gender ?? null, p_marital_status: input.marital_status ?? null,
+    p_birth_date: input.birth_date ?? null, p_country: input.country ?? null,
+    p_address: input.address ?? null, p_neighborhood: input.neighborhood ?? null,
+    p_baptized: input.baptized ?? null, p_baptism_date: input.baptism_date ?? null, p_last_church: input.last_church ?? null,
+    p_holy_spirit_baptized: input.holy_spirit_baptized ?? null, p_holy_spirit_baptism_date: input.holy_spirit_baptism_date ?? null,
+    p_seeking_reason: input.seeking_reason ?? null, p_life_before_church: input.life_before_church ?? null,
+    p_testimony: input.testimony ?? null, p_belongs_to_group: input.belongs_to_group ?? null, p_group_name: input.group_name ?? null,
+  });
+  if (error) throw error;
+  return data as string;
+}
+
 // ---------- ViaCEP (API publica gratuita) ----------
 export interface CepInfo {
   cep: string;
