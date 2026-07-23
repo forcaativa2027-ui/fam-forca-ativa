@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Workflow, Mail, Phone, MapPin, ArrowRight, Trash2,
   Building2, Clock, ChevronDown, ChevronUp, User as UserIcon,
+  Droplets, Flame, BookHeart, UsersRound, IdCard, Cake, HeartHandshake,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -189,6 +190,11 @@ export function PipelineCard({ item: it, church }: { item: VisitorPipeline; chur
                   <Building2 className="h-2.5 w-2.5" />{church.name}
                 </span>
               )}
+              {it.baptized === true && (
+                <span className="inline-flex items-center gap-0.5 rounded-full bg-cyan-50 px-2 py-0.5 text-[10px] font-bold uppercase text-cyan-700 border border-cyan-200">
+                  <Droplets className="h-2.5 w-2.5" />Batizado(a)
+                </span>
+              )}
             </div>
             <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted">
               {it.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{it.phone}</span>}
@@ -205,6 +211,7 @@ export function PipelineCard({ item: it, church }: { item: VisitorPipeline; chur
         {expanded && (
           <div className="mt-4 space-y-3 border-t pt-4">
             <Timeline item={it} />
+            <FaithHistoryPanel item={it} />
 
             {/* M6 — Sugestão automática de LG, só se ainda não tem LG */}
             {!it.life_group_id && <LgSuggestionBlock pipelineId={it.id} />}
@@ -239,6 +246,100 @@ export function PipelineCard({ item: it, church }: { item: VisitorPipeline; chur
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function FaithHistoryPanel({ item: it }: { item: VisitorPipeline }) {
+  const hasAnything = it.cpf || it.gender || it.marital_status || it.birth_date || it.address || it.neighborhood
+    || it.baptized !== null && it.baptized !== undefined || it.last_church
+    || (it.holy_spirit_baptized !== null && it.holy_spirit_baptized !== undefined) || it.holy_spirit_baptism_date
+    || it.seeking_reason || it.life_before_church || it.testimony
+    || (it.belongs_to_group !== null && it.belongs_to_group !== undefined) || it.group_name;
+
+  if (!hasAnything) return null;
+
+  const age = (() => {
+    if (!it.birth_date) return null;
+    const b = new Date(it.birth_date);
+    if (isNaN(b.getTime())) return null;
+    const today = new Date();
+    let a = today.getFullYear() - b.getFullYear();
+    const m = today.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < b.getDate())) a--;
+    return a;
+  })();
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-navy bg-[#0E2A47] p-4 text-white">
+      <p className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gold">
+        <BookHeart className="h-3.5 w-3.5" />História de fé
+      </p>
+
+      <div className="grid gap-x-4 gap-y-2.5 sm:grid-cols-2">
+        {it.cpf && (
+          <InfoRow icon={<IdCard className="h-3.5 w-3.5" />} label="CPF" value={it.cpf} />
+        )}
+        {(it.gender || it.marital_status) && (
+          <InfoRow icon={<UserIcon className="h-3.5 w-3.5" />} label="Perfil" value={[it.gender === "masculino" ? "Masculino" : it.gender === "feminino" ? "Feminino" : null, it.marital_status].filter(Boolean).join(" · ")} />
+        )}
+        {it.birth_date && (
+          <InfoRow icon={<Cake className="h-3.5 w-3.5" />} label="Nascimento" value={`${new Date(it.birth_date).toLocaleDateString("pt-BR")}${age !== null ? ` (${age} anos)` : ""}`} />
+        )}
+        {(it.address || it.neighborhood) && (
+          <InfoRow icon={<MapPin className="h-3.5 w-3.5" />} label="Endereço" value={[it.address, it.neighborhood].filter(Boolean).join(", ")} />
+        )}
+        {it.baptized !== null && it.baptized !== undefined && (
+          <InfoRow icon={<Droplets className="h-3.5 w-3.5" />} label="Batizado nas águas"
+            value={it.baptized ? `Sim${it.baptism_date ? ` — ${new Date(it.baptism_date).toLocaleDateString("pt-BR")}` : ""}` : "Ainda não"} />
+        )}
+        {it.holy_spirit_baptized !== null && it.holy_spirit_baptized !== undefined && (
+          <InfoRow icon={<Flame className="h-3.5 w-3.5" />} label="Batizado no Espírito Santo"
+            value={it.holy_spirit_baptized ? `Sim${it.holy_spirit_baptism_date ? ` — ${new Date(it.holy_spirit_baptism_date).toLocaleDateString("pt-BR")}` : ""}` : "Ainda não"} />
+        )}
+        {it.last_church && (
+          <InfoRow icon={<Building2 className="h-3.5 w-3.5" />} label="Última igreja" value={it.last_church} />
+        )}
+        {it.belongs_to_group !== null && it.belongs_to_group !== undefined && (
+          <InfoRow icon={<UsersRound className="h-3.5 w-3.5" />} label="Já pertence a um grupo"
+            value={it.belongs_to_group ? (it.group_name || "Sim") : "Não"} />
+        )}
+      </div>
+
+      {(it.seeking_reason || it.life_before_church || it.testimony) && (
+        <div className="mt-3 space-y-2.5 border-t border-white/15 pt-3">
+          {it.seeking_reason && (
+            <div>
+              <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-gold"><HeartHandshake className="h-3 w-3" />Motivo da busca</p>
+              <p className="mt-0.5 text-sm text-white/90">{it.seeking_reason}</p>
+            </div>
+          )}
+          {it.life_before_church && (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-gold">Vida antes da igreja</p>
+              <p className="mt-0.5 text-sm text-white/90">{it.life_before_church}</p>
+            </div>
+          )}
+          {it.testimony && (
+            <div className="rounded-lg bg-white/10 p-2.5">
+              <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-gold"><BookHeart className="h-3 w-3" />Testemunho</p>
+              <p className="mt-1 text-sm italic text-white/90">"{it.testimony}"</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-2">
+      <span className="mt-0.5 shrink-0 text-gold">{icon}</span>
+      <div className="min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">{label}</p>
+        <p className="truncate text-sm text-white/90">{value}</p>
+      </div>
+    </div>
   );
 }
 
