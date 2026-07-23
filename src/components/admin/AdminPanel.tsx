@@ -37,6 +37,7 @@ import { RelmdaConsolidacaoAdmin } from "./RelmdaConsolidacaoAdmin";
 import { RelmdaDashboardAdmin } from "./RelmdaDashboardAdmin";
 import { RelmdaDeadlineAdmin } from "./RelmdaDeadlineAdmin";
 import { AreaConsolidadoAdmin } from "./AreaConsolidadoAdmin";
+import { GivingAdmin } from "./GivingAdmin";
 import { CecIdPortariaAdmin } from "./CecIdPortariaAdmin";
 import { FinanceAdmin } from "./FinanceAdmin";
 import { NewsAdmin } from "./NewsAdmin";
@@ -341,6 +342,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
     case "news":                return <NewsAdmin />;
     case "banners":             return <BannersAdmin />;
     case "sermons":             return <SermonsAdmin />;
+    case "giving":               return <GivingAdmin />;
     case "events":              return <EventsAdmin />;
     case "services":            return <ServiceTimesAdmin />;
     case "word":                return <DailyWordsAdmin />;
