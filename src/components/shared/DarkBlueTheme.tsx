@@ -22,6 +22,11 @@ export function DarkBlueTheme({ children, className = "" }: { children: React.Re
     <div
       className={`dark-blue-theme min-h-screen ${className}`}
       style={{
+        // Pinta o PRÓPRIO fundo (não basta definir a variável --background:
+        // se nenhum elemento filho tiver bg-background/bg-card explícito,
+        // sem isso aparece o branco da página por trás do texto branco).
+        backgroundColor: "hsl(213, 67%, 15%)",
+        color: "#ffffff",
         // Fundo da página (azul mais escuro) e texto padrão (branco)
         "--background": "213 67% 15%",
         "--foreground": "0 0% 100%",
