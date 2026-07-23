@@ -44,6 +44,9 @@ const communitySchema = z.object({
   founded_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida").optional().or(z.literal("")),
   status_admin: z.enum(["ativa","em_implantacao","inativa"]).default("ativa"),
   observations: z.string().trim().optional().or(z.literal("")),
+  pix_key: z.string().trim().optional().or(z.literal("")),
+  pix_key_type: z.enum(["cpf","cnpj","email","telefone","aleatoria"]).optional().or(z.literal("")),
+  bank_info: z.string().trim().optional().or(z.literal("")),
 });
 type CommunityInput = z.infer<typeof communitySchema>;
 
@@ -93,6 +96,9 @@ export function CommunitiesAdmin() {
       founded_at: c.founded_at ?? "",
       status_admin: (c.status_admin as "ativa") ?? "ativa",
       observations: c.observations ?? "",
+      pix_key: c.pix_key ?? "",
+      pix_key_type: c.pix_key_type ?? "",
+      bank_info: c.bank_info ?? "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -126,6 +132,9 @@ export function CommunitiesAdmin() {
         founded_at: v.founded_at || null,
         status_admin: v.status_admin || "ativa",
         observations: v.observations || null,
+        pix_key: v.pix_key || null,
+        pix_key_type: v.pix_key_type || null,
+        bank_info: v.bank_info || null,
         is_active: v.status_admin !== "inativa",
       };
       console.log("[CommunitiesAdmin] Payload:", payload);
@@ -347,6 +356,34 @@ export function CommunitiesAdmin() {
                 </Field>
                 <Field label="WhatsApp" error={errors.whatsapp_phone?.message}>
                   <Input {...register("whatsapp_phone")} placeholder="(61) 90000-0000" />
+                </Field>
+              </div>
+            </details>
+
+            <details className="rounded-md border bg-navy-50/50 p-3">
+              <summary className="cursor-pointer text-xs font-bold uppercase tracking-wider text-navy-600">Dízimo e Ofertas</summary>
+              <div className="mt-3 space-y-3">
+                <p className="text-[11px] text-muted-foreground">
+                  Essas informações aparecem na página pública "Dízimo e Ofertas". O pagamento online por cartão ainda não está disponível
+                  (depende de escolher um gateway de pagamento) — por enquanto, PIX e transferência bancária.
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Tipo da chave PIX">
+                    <select {...register("pix_key_type")} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
+                      <option value="">Selecione</option>
+                      <option value="cpf">CPF</option>
+                      <option value="cnpj">CNPJ</option>
+                      <option value="email">E-mail</option>
+                      <option value="telefone">Telefone</option>
+                      <option value="aleatoria">Chave aleatória</option>
+                    </select>
+                  </Field>
+                  <Field label="Chave PIX" error={errors.pix_key?.message}>
+                    <Input {...register("pix_key")} placeholder="Chave PIX da comunidade" />
+                  </Field>
+                </div>
+                <Field label="Dados bancários (opcional, para TED/DOC)" error={errors.bank_info?.message}>
+                  <textarea {...register("bank_info")} rows={3} placeholder="Banco, agência, conta, favorecido..." className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
                 </Field>
               </div>
             </details>
