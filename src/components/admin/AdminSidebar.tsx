@@ -10,7 +10,7 @@ import {
   Download, Search, Bell,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HeartHandshake,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ export type TabKey =
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
-  | "news" | "banners" | "sermons" | "events" | "services" | "word"
+  | "news" | "banners" | "sermons" | "events" | "services" | "word" | "giving"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "invites" | "audit"
   | "export";
@@ -124,6 +124,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "banners", label: "Banners",      icon: <Image size={15} /> },
         { key: "sermons", label: "Pregações",    icon: <Mic2 size={15} /> },
         { key: "events",  label: "Agenda",       icon: <CalendarDays size={15} /> },
+        { key: "giving",  label: "Momento da Generosidade", icon: <HeartHandshake size={15} /> },
         { key: "services",label: "Cultos",       icon: <Radio size={15} /> },
         { key: "word",    label: "Palavra do dia",icon: <BookOpen size={15} /> },
       ],
