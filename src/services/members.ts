@@ -1,6 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Member } from "@/types/domain";
 
+/** Cria (uma única vez) o registro de membro do próprio usuário logado, quando ele ainda não existe. */
+export async function createMyMemberRecord(sb: SupabaseClient): Promise<string> {
+  const { data, error } = await sb.rpc("create_my_member_record");
+  if (error) throw error;
+  return data as string;
+}
+
 export async function getMyMember(sb: SupabaseClient): Promise<Member | null> {
   const { data: u } = await sb.auth.getUser();
   if (!u.user) return null;
