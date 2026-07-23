@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Play, Calendar, Music, MapPin, Church as ChurchIcon, Sun, Sparkles,
-  Clock, ArrowRight, ExternalLink, LayoutDashboard, FileDown
+  Clock, ArrowRight, ExternalLink, LayoutDashboard, FileDown, Search, Navigation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -125,6 +125,9 @@ export default function PublicHome() {
             </Card>
           </section>
 
+          {/* Endereços próximos + Sedes Regionais */}
+          <NearbyAddressesTeaser churches={churches} onGoTo={() => setTab("igrejas")} />
+
           {/* Últimos Vídeos */}
           {sermons.length > 0 && (
             <section>
@@ -160,13 +163,24 @@ export default function PublicHome() {
                 <h2 className="font-display text-xl text-navy">Últimas notícias</h2>
                 <Button variant="ghost" onClick={() => setTab("noticias")} className="gap-2">Ver todas <ArrowRight className="h-4 w-4" /></Button>
               </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {news.slice(0, 3).map((n) => (
-                  <button key={n.id} onClick={() => setTab("noticias")} className="block overflow-hidden rounded-xl border bg-card text-left transition-shadow hover:shadow-md">
+              <div className="space-y-3">
+                {news.slice(0, 1).map((n) => (
+                  <button key={n.id} onClick={() => setTab("noticias")} className="block w-full overflow-hidden rounded-2xl border bg-card text-left transition-shadow hover:shadow-md">
                     {n.cover_url && <img src={n.cover_url} alt="" className="aspect-[16/9] w-full object-cover" />}
-                    <div className="p-3">
-                      <b className="line-clamp-2 text-sm text-ink">{n.title}</b>
-                      {n.published_at && <p className="mt-1 text-xs text-muted">{new Date(n.published_at).toLocaleDateString("pt-BR")}</p>}
+                    <div className="p-4">
+                      <span className="mb-2 inline-block rounded bg-red-600 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white">Notícias</span>
+                      <b className="block text-lg leading-snug text-ink">{n.title}</b>
+                      {n.published_at && <p className="mt-1.5 text-xs text-muted">{new Date(n.published_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>}
+                    </div>
+                  </button>
+                ))}
+                {news.slice(1, 4).map((n) => (
+                  <button key={n.id} onClick={() => setTab("noticias")} className="flex w-full items-center gap-3 overflow-hidden rounded-xl border bg-card p-2 text-left transition-shadow hover:shadow-md">
+                    {n.cover_url && <img src={n.cover_url} alt="" className="h-16 w-16 shrink-0 rounded-lg object-cover" />}
+                    <div className="min-w-0 flex-1">
+                      <span className="mb-1 inline-block rounded bg-red-600 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-white">Notícias</span>
+                      <b className="block truncate text-sm text-ink">{n.title}</b>
+                      {n.published_at && <p className="mt-0.5 text-[11px] text-muted">{new Date(n.published_at).toLocaleDateString("pt-BR")}</p>}
                     </div>
                   </button>
                 ))}
@@ -269,16 +283,9 @@ export default function PublicHome() {
           <AgendaList events={events} />
         </TabsContent>
 
-        {/* === IGREJAS === */}
+        {/* === IGREJAS / ENDEREÇOS === */}
         <TabsContent value="igrejas">
-          <h2 className="mb-4 font-display text-2xl text-navy">Nossas igrejas</h2>
-          {churches.length === 0 ? (
-            <p className="py-8 text-center italic text-muted">Nenhuma igreja cadastrada.</p>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {churches.map((c) => <ChurchCard key={c.id} church={c} />)}
-            </div>
-          )}
+          <AddressesBrowser churches={churches} />
         </TabsContent>
 
         {/* === MAPA DAS CÉLULAS === */}
@@ -344,12 +351,100 @@ function EventRow({ ev, light }: { ev: EventItem; light?: boolean }) {
   );
 }
 
+function AddressesBrowser({ churches }: { churches: Church[] }) {
+  const [search, setSearch] = useState("");
+  const term = search.trim().toLowerCase();
+  const matches = (c: Church) => !term || [c.name, c.city, c.state, c.address].filter(Boolean).join(" ").toLowerCase().includes(term);
+
+  const locais = churches.filter((c) => c.type === "igreja_local" && matches(c));
+  const regionais = churches.filter((c) => c.type === "nucleo" && matches(c));
+  const sedes = churches.filter((c) => c.type === "sede" && matches(c));
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h2 className="mb-1 font-display text-2xl text-navy">Endereços</h2>
+        <p className="mb-4 text-sm text-muted">Encontre a Comunidade Evangélica Cristã mais próxima de você.</p>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+          <input
+            value={search} onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por igreja, cidade ou endereço..."
+            className="w-full rounded-full border border-border bg-card py-2.5 pl-10 pr-4 text-sm outline-none focus:border-gold"
+          />
+        </div>
+      </div>
+
+      <AddressSection title="Igrejas Locais" icon={<ChurchIcon className="h-5 w-5" />} churches={locais} />
+      <AddressSection title="Sedes Regionais" icon={<Navigation className="h-5 w-5" />} churches={regionais} />
+      <AddressSection title="Sede" icon={<Sparkles className="h-5 w-5" />} churches={sedes} />
+    </div>
+  );
+}
+
+function AddressSection({ title, icon, churches }: { title: string; icon: React.ReactNode; churches: Church[] }) {
+  if (churches.length === 0) return null;
+  return (
+    <section>
+      <h3 className="mb-3 flex items-center gap-2 font-display text-lg text-navy"><span className="text-gold">{icon}</span>{title}</h3>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {churches.map((c) => <ChurchCard key={c.id} church={c} />)}
+      </div>
+    </section>
+  );
+}
+
+/** Teaser da home: prévia de igrejas + botão "Ir para Endereços" / "Sede Regional". */
+function NearbyAddressesTeaser({ churches, onGoTo }: { churches: Church[]; onGoTo: () => void }) {
+  const locais = churches.filter((c) => c.type === "igreja_local").slice(0, 3);
+  const regionais = churches.filter((c) => c.type === "nucleo").slice(0, 3);
+  if (locais.length === 0 && regionais.length === 0) return null;
+
+  return (
+    <section className="space-y-4">
+      {locais.length > 0 && (
+        <div>
+          <h2 className="mb-3 flex items-center gap-2 font-display text-xl text-navy"><ChurchIcon className="h-5 w-5 text-gold" />Comunidade mais próxima</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {locais.map((c) => (
+              <div key={c.id} className="w-48 shrink-0 overflow-hidden rounded-xl border bg-card">
+                {c.banner_url ? <img src={c.banner_url} alt={c.name} className="aspect-[4/3] w-full object-cover" /> : <div className="grid aspect-[4/3] place-items-center bg-navy/10"><ChurchIcon className="h-8 w-8 text-navy/40" /></div>}
+                <p className="p-2 text-xs font-bold uppercase text-navy">{c.name}</p>
+              </div>
+            ))}
+          </div>
+          <Button onClick={onGoTo} className="mt-3 w-full gap-2 rounded-full"><ChurchIcon className="h-4 w-4" />Ir para Endereços</Button>
+        </div>
+      )}
+      {regionais.length > 0 && (
+        <div>
+          <h2 className="mb-3 flex items-center gap-2 font-display text-xl text-navy"><Navigation className="h-5 w-5 text-gold" />Sedes Regionais</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {regionais.map((c) => (
+              <div key={c.id} className="w-48 shrink-0 overflow-hidden rounded-xl border bg-card">
+                {c.banner_url ? <img src={c.banner_url} alt={c.name} className="aspect-[4/3] w-full object-cover" /> : <div className="grid aspect-[4/3] place-items-center bg-navy/10"><Navigation className="h-8 w-8 text-navy/40" /></div>}
+                <p className="p-2 text-xs font-bold uppercase text-navy">{c.name}</p>
+              </div>
+            ))}
+          </div>
+          <Button onClick={onGoTo} variant="outline" className="mt-3 w-full gap-2 rounded-full">Ir para Sede Regional</Button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function ChurchCard({ church }: { church: Church }) {
   const fullAddress = [church.address, church.city, church.state].filter(Boolean).join(", ");
   const mapsUrl = fullAddress ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}` : null;
   const typeLabel = church.type === "sede" ? "SEDE" : church.type === "nucleo" ? "NÚCLEO" : "IGREJA LOCAL";
   return (
-    <Card>
+    <Card className="overflow-hidden">
+      {church.banner_url ? (
+        <img src={church.banner_url} alt={church.name} className="aspect-[16/10] w-full object-cover" />
+      ) : (
+        <div className="grid aspect-[16/10] w-full place-items-center bg-navy/10"><ChurchIcon className="h-10 w-10 text-navy/40" /></div>
+      )}
       <CardHeader>
         <span className="text-[10px] font-extrabold tracking-widest text-gold">{typeLabel}</span>
         <CardTitle className="flex items-center gap-2"><ChurchIcon className="h-5 w-5 text-navy" />{church.name}</CardTitle>
