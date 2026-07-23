@@ -457,6 +457,13 @@ export interface VisitorPipeline {
   suggestion_calculated_at: string | null;
   evangelism_group_id?: string | null;
   created_at: string;
+  // REG001 — história de fé (cadastro completo)
+  cpf?: string | null; gender?: string | null; marital_status?: string | null; birth_date?: string | null;
+  country?: string | null; address?: string | null; neighborhood?: string | null;
+  baptized?: boolean | null; last_church?: string | null;
+  holy_spirit_baptized?: boolean | null; holy_spirit_baptism_date?: string | null;
+  seeking_reason?: string | null; life_before_church?: string | null; testimony?: string | null;
+  belongs_to_group?: boolean | null; group_name?: string | null;
 }
 
 export interface LgSuggestion {
