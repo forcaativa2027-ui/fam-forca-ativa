@@ -61,15 +61,15 @@ export function MemberEditDialog({ member, onClose }: { member: Member; onClose:
         <Tabs defaultValue="pessoais" className="space-y-3">
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="pessoais">Dados Pessoais</TabsTrigger>
-            <TabsTrigger value="classificacao">Classificação</TabsTrigger>
             <TabsTrigger value="estrutura">Estrutura</TabsTrigger>
             <TabsTrigger value="lideranca">Liderança</TabsTrigger>
+            <TabsTrigger value="classificacao">Classificação</TabsTrigger>
             <TabsTrigger value="historico">Histórico</TabsTrigger>
           </TabsList>
           <TabsContent value="pessoais"><PersonalDataTab member={member} /></TabsContent>
-          <TabsContent value="classificacao"><ClassificationTab member={member} /></TabsContent>
           <TabsContent value="estrutura"><StructureTab member={member} onClose={onClose} /></TabsContent>
           <TabsContent value="lideranca"><LeadershipTab member={member} /></TabsContent>
+          <TabsContent value="classificacao"><ClassificationTab member={member} /></TabsContent>
           <TabsContent value="historico"><HistoryTab member={member} /></TabsContent>
         </Tabs>
       </DialogContent>
