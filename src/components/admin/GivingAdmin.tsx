@@ -1,14 +1,14 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { HeartHandshake } from "lucide-react";
+import { HeartHandshake, Upload } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase/client";
 import { useMyProfile, useChurchGivingInfo } from "@/hooks/use-queries";
-import { upsertChurchGivingInfo } from "@/services/giving";
+import { upsertChurchGivingInfo, uploadGivingQrCode } from "@/services/giving";
 
 /**
  * Momento da Generosidade — cadastro do QR Code Pix, chave, razão
@@ -27,6 +27,8 @@ export function GivingAdmin() {
   const [banco, setBanco] = useState("");
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
   useEffect(() => {
@@ -38,6 +40,23 @@ export function GivingAdmin() {
       setBanco(giving.banco ?? "");
     }
   }, [giving]);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !churchId) return;
+    setUploading(true);
+    try {
+      const url = await uploadGivingQrCode(supabase, churchId, file);
+      setQrUrl(url);
+      await upsertChurchGivingInfo(supabase, { church_id: churchId, qr_code_url: url });
+      qc.invalidateQueries({ queryKey: ["church-giving-info", churchId] });
+    } catch (e) {
+      alert((e as { message?: string })?.message ?? "Erro ao enviar a imagem.");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
 
   async function save() {
     if (!churchId) return;
@@ -64,14 +83,21 @@ export function GivingAdmin() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Dados de contribuição</CardTitle>
-          <CardDescription>
-            A imagem do QR Code precisa estar hospedada num link (ex: envie a imagem pra uma pasta pública do
-            Google Drive/Supabase Storage e cole o link direto da imagem aqui).
-          </CardDescription>
+          <CardDescription>Envie a imagem do QR Code direto do seu computador.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div><Label className="text-xs">URL da imagem do QR Code Pix</Label><Input value={qrUrl} onChange={(e) => setQrUrl(e.target.value)} placeholder="https://…/qrcode.png" /></div>
-          {qrUrl && <img src={qrUrl} alt="Pré-visualização" className="h-40 w-40 rounded-lg border object-contain" />}
+          <div>
+            <Label className="text-xs">Imagem do QR Code Pix</Label>
+            <div className="mt-1 flex items-center gap-3">
+              {qrUrl && <img src={qrUrl} alt="QR Code" className="h-24 w-24 rounded-lg border object-contain" />}
+              <div>
+                <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" id="qr-upload" />
+                <Button type="button" variant="outline" size="sm" className="gap-1.5" disabled={uploading} onClick={() => fileRef.current?.click()}>
+                  <Upload className="h-3.5 w-3.5" /> {uploading ? "Enviando…" : qrUrl ? "Trocar imagem" : "Enviar imagem"}
+                </Button>
+              </div>
+            </div>
+          </div>
           <div><Label className="text-xs">Chave Pix</Label><Input value={pixKey} onChange={(e) => setPixKey(e.target.value)} placeholder="CNPJ, e-mail, telefone ou chave aleatória" /></div>
           <div><Label className="text-xs">Razão Social</Label><Input value={razaoSocial} onChange={(e) => setRazaoSocial(e.target.value)} placeholder="Comunidade Evangélica Cristã de Águas Claras" /></div>
           <div className="grid grid-cols-2 gap-3">
