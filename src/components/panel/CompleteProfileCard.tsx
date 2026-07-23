@@ -15,7 +15,7 @@ import { logAudit } from "@/services/audit";
 import type { Member } from "@/types/domain";
 
 interface FormValues {
-  birth_date: string; phone: string; phone_is_whatsapp: boolean;
+  email: string; birth_date: string; phone: string; phone_is_whatsapp: boolean;
   cpf: string; rg: string; rg_orgao_expedidor: string;
   phone_recado: string; phone_recado_nome: string;
   cep: string; address: string; numero: string; complemento: string; neighborhood: string; city: string; state: string;
@@ -133,6 +133,7 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
 
   const { register, handleSubmit } = useForm<FormValues>({
     defaultValues: {
+      email: member.email ?? "",
       birth_date: member.birth_date ?? "", phone: member.phone ?? "",
       phone_is_whatsapp: !!member.whatsapp && member.whatsapp === member.phone,
       cpf: member.cpf ?? "", rg: member.rg ?? "", rg_orgao_expedidor: member.rg_orgao_expedidor ?? "",
@@ -200,7 +201,10 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
+            <div><Label>E-mail</Label><Input type="email" {...register("email")} placeholder="seu@email.com" /></div>
             <div><Label>Data de nascimento</Label><Input type="date" {...register("birth_date")} /></div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <Label>Telefone principal</Label>
               <Input {...register("phone")} placeholder="(00) 00000-0000" />

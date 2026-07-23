@@ -145,6 +145,8 @@ export default function PanelDashboard() {
             </Link>
           </div>
 
+          <CompleteProfileCard member={member ?? null} />
+
           {isAdmin && <TabsContent value="geral"><GeneralView /></TabsContent>}
           <TabsContent value="alertas"><NotificationsPanel /></TabsContent>
           <TabsContent value="celula"><MyCellTab member={member ?? null} profileId={profile?.id ?? null} /></TabsContent>
@@ -536,7 +538,6 @@ function ProfileTab() {
 
   return (
     <div className="space-y-4">
-      <CompleteProfileCard member={member} />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><User className="h-5 w-5 text-gold"/>Meu Perfil/Atualizar</CardTitle>
