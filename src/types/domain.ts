@@ -128,6 +128,7 @@ export interface Church {
   pix_key?: string | null;
   pix_key_type?: "cpf" | "cnpj" | "email" | "telefone" | "aleatoria" | null;
   bank_info?: string | null;
+  qr_code_url?: string | null;
 }
 export interface ChurchDependencies {
   children:number; life_groups:number; members:number; reports:number; total:number;
