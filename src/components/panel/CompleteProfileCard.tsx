@@ -39,7 +39,19 @@ export function CompleteProfileCard({ member }: { member: Member | null | undefi
     return until ? new Date(until) > new Date() : false;
   });
 
-  if (!member) return null;
+  if (!member) {
+    return (
+      <Card className="border border-amber-300/50 bg-amber-500/10">
+        <CardContent className="pt-4">
+          <p className="text-sm text-white/80">
+            Não encontramos um cadastro de membro vinculado à sua conta ainda — por isso não é possível completar
+            endereço, documentos e foto por aqui. Fale com a secretaria ou liderança da sua igreja pra vincular seu
+            usuário a um cadastro de membro.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   function snooze() {
     const until = new Date(); until.setDate(until.getDate() + 7);
