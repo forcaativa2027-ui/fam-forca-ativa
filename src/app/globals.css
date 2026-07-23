@@ -26,3 +26,32 @@
   * { @apply border-border; }
   body { @apply bg-background text-foreground font-sans antialiased; }
 }
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/*
+  Overrides escopados do tema azul (público + painel do membro).
+  Só afeta o que estiver DENTRO de um elemento com a classe
+  .dark-blue-theme (aplicada pelo componente DarkBlueTheme) — o
+  painel administrativo nunca usa essa classe, então continua
+  exatamente igual. Isso cobre classes de cor "fixas" do Tailwind
+  (text-navy, text-ink, text-muted, bg-white) que NÃO são variáveis
+  CSS e por isso não seriam trocadas só pelo wrapper de variáveis.
+*/
+.dark-blue-theme .text-navy,
+.dark-blue-theme .text-navy-600,
+.dark-blue-theme .text-ink {
+  color: #ffffff;
+}
+.dark-blue-theme .text-muted {
+  color: rgba(255, 255, 255, 0.65);
+}
+.dark-blue-theme .bg-white {
+  background-color: transparent;
+}
+.dark-blue-theme .border-border {
+  border-color: rgba(255, 255, 255, 0.12);
+}
