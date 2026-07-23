@@ -671,6 +671,15 @@ export const useMemberRecommendations = (memberId: string | null) =>
     enabled: !!memberId,
   });
 
+// ── Dízimos e Ofertas ────────────────────────────────────────
+import * as Giving from "@/services/giving";
+export const useChurchGivingInfo = (churchId: string | null) =>
+  useQuery({
+    queryKey: ["church-giving-info", churchId],
+    queryFn: () => Giving.getChurchGivingInfo(supabase, churchId as string),
+    enabled: !!churchId,
+  });
+
 // ── Relatório Consolidado por Área ──────────────────────────────
 import * as AreaRep from "@/services/areaReport";
 export const useAccessibleAreas = () => useQuery({ queryKey: ["accessible-areas"], queryFn: () => AreaRep.listAccessibleAreas(supabase) });
