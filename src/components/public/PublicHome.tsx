@@ -5,10 +5,13 @@ import { useSearchParams } from "next/navigation";
 import {
   Play, Calendar, Music, MapPin, Church as ChurchIcon, Sun, Sparkles,
   Clock, ArrowRight, ExternalLink, LayoutDashboard, FileDown, Search, Navigation,
+  Home as HomeIcon, Newspaper, PlayCircle, CalendarDays, HandCoins, LogIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DarkBlueTheme } from "@/components/shared/DarkBlueTheme";
+import { BottomNav, type BottomNavItem } from "@/components/shared/BottomNav";
 import {
   usePublicSermons, usePublicEvents, useChurches, useCells, usePublicNews,
   useServiceTimes, useTodaysWord, useActiveBanners, useActiveCommunity, useMyProfile,
@@ -45,6 +48,10 @@ export default function PublicHome() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") ?? "inicio";
   const [tab, setTab] = useState(initialTab);
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (t && t !== tab) setTab(t);
+  }, [searchParams]);
   const { data: profile } = useMyProfile();
   const { data: community } = useActiveCommunity();
   const communityId = community?.id ?? null;
@@ -62,16 +69,23 @@ export default function PublicHome() {
   const services = dbServices.length > 0 ? dbServices : defaultServiceTimes(sede);
   const word = dbWord ?? defaultWord();
 
+  const navItems: BottomNavItem[] = [
+    { href: "/?tab=inicio", label: "Home", icon: HomeIcon, isActive: (p) => p === "/" && tab === "inicio" },
+    { href: "/?tab=noticias", label: "Notícias", icon: Newspaper, isActive: (p) => p === "/" && tab === "noticias" },
+    { href: "/?tab=videos", label: "Vídeos", icon: PlayCircle, isActive: (p) => p === "/" && tab === "videos" },
+    { href: "/?tab=cultos", label: "Cultos", icon: Clock, isActive: (p) => p === "/" && tab === "cultos" },
+    { href: "/?tab=agenda", label: "Agenda", icon: CalendarDays, isActive: (p) => p === "/" && tab === "agenda" },
+    { href: "/?tab=igrejas", label: "Endereços", icon: MapPin, isActive: (p) => p === "/" && tab === "igrejas" },
+    { href: "/dizimo", label: "Doação", icon: HandCoins },
+    { href: profile ? "/painel" : "/entrar", label: profile ? "Meu Painel" : "Entrar", icon: LogIn },
+  ];
+
   return (
-    <div className="min-h-screen bg-background">
+    <DarkBlueTheme>
       <header className="sticky top-0 z-20 border-b-[3px] border-gold bg-navy">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-white">
-            {community?.logo_url ? (
-              <img src={community.logo_url} alt={community.name} className="h-8 w-8 rounded-full object-cover" />
-            ) : (
-              <Sparkles className="h-5 w-5 text-gold" />
-            )}
+            <img src={community?.logo_url || "/images/cec-family-logo.png"} alt={community?.name ?? "CEC Family"} className="h-9 w-9 rounded-full object-contain bg-white/5" />
             <span className="font-display text-lg font-bold tracking-wide">
               {community?.name ? community.name.toUpperCase() : "CEC FAMILY"}
             </span>
@@ -82,23 +96,18 @@ export default function PublicHome() {
         </div>
       </header>
 
-      <Tabs value={tab} onValueChange={setTab} className="container py-4">
-        <div className="overflow-x-auto">
-          <TabsList className="bg-transparent border-b border-border rounded-none h-auto justify-start gap-0 p-0 min-w-max">
-            <NavTrigger value="inicio">Início</NavTrigger>
-            <NavTrigger value="noticias">Notícias</NavTrigger>
-            <NavTrigger value="cultos">Cultos</NavTrigger>
-            <NavTrigger value="videos">Vídeos</NavTrigger>
-            <NavTrigger value="agenda">Agenda</NavTrigger>
-            <NavTrigger value="igrejas">Igrejas</NavTrigger>
-            <NavTrigger value="celulas">Mapa de Life Groups</NavTrigger>
-            <NavTrigger value="participar">Quero participar</NavTrigger>
-            <NavTrigger value="contato">Quero conversar</NavTrigger>
-            <Link href="/dizimo" className="rounded-none bg-transparent px-4 py-3 text-sm font-semibold text-gold hover:text-gold/80 whitespace-nowrap">
-              Dízimo e Ofertas
-            </Link>
-          </TabsList>
-        </div>
+      <Tabs value={tab} onValueChange={setTab} className="container py-4 pb-24">
+        <TabsList className="sr-only">
+          <NavTrigger value="inicio">Início</NavTrigger>
+          <NavTrigger value="noticias">Notícias</NavTrigger>
+          <NavTrigger value="cultos">Cultos</NavTrigger>
+          <NavTrigger value="videos">Vídeos</NavTrigger>
+          <NavTrigger value="agenda">Agenda</NavTrigger>
+          <NavTrigger value="igrejas">Igrejas</NavTrigger>
+          <NavTrigger value="celulas">Mapa de Life Groups</NavTrigger>
+          <NavTrigger value="participar">Quero participar</NavTrigger>
+          <NavTrigger value="contato">Quero conversar</NavTrigger>
+        </TabsList>
 
         {/* === INÍCIO === */}
         <TabsContent value="inicio" className="space-y-8">
@@ -309,14 +318,15 @@ export default function PublicHome() {
         </TabsContent>
       </Tabs>
 
-      <footer className="container flex flex-wrap items-center justify-between gap-3 border-t py-6">
-        <p className="text-xs text-muted">
+      <footer className="container flex flex-wrap items-center justify-between gap-3 border-t border-white/10 py-6 pb-24">
+        <p className="text-xs text-white/60">
           {community?.name ?? "CEC Manaus"} · Comunidade Evangélica Cristã
           {community?.whatsapp_phone && <> · WhatsApp: <a href={`https://wa.me/${community.whatsapp_phone.replace(/\D/g, '')}`} className="hover:underline">{community.whatsapp_phone}</a></>}
         </p>
-        <Link href={profile ? "/painel" : "/entrar"} className="text-xs font-bold text-gold hover:underline">{profile ? "Meu Painel" : "Área do membro"} →</Link>
       </footer>
-    </div>
+
+      <BottomNav items={navItems} />
+    </DarkBlueTheme>
   );
 }
 

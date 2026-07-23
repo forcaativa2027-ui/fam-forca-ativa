@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
-  ArrowLeft, ArrowRight, Check, Sparkles, Heart, Users, MessageCircleHeart,
+  ArrowLeft, ArrowRight, Check, Heart, Users, MessageCircleHeart,
   Home as HomeIcon, Eye, HandHeart, Droplets, Hand, HelpCircle, Loader2,
   MessageCircle, Phone as PhoneIcon, User, Flame, Church as ChurchIcon,
   BookHeart, UsersRound, PartyPopper,
@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Turnstile } from "@marsidev/react-turnstile";
+import { DarkBlueTheme } from "@/components/shared/DarkBlueTheme";
 import { supabase } from "@/lib/supabase/client";
 import { useChurches, useActiveCommunity, useCells } from "@/hooks/use-queries";
 import { lookupCep, maskPhone, maskCep, createPipelineEntryFull } from "@/services/pipeline";
@@ -93,20 +94,20 @@ export default function RegisterWizard() {
   if (done) return <FinishedScreen hasLg={!!s.life_group_id} />;
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_30%_20%,#16345A,#0E2A47_60%)] p-4">
+    <DarkBlueTheme className="p-4">
       <div className="mx-auto max-w-xl py-8">
         <Link href="/" className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-white/80 hover:text-white">
           <ArrowLeft className="h-4 w-4" /> Voltar à página inicial
         </Link>
 
         <Card className="overflow-hidden">
-          <div className="border-b bg-navy-50 px-6 py-4">
+          <div className="border-b border-white/10 bg-white/5 px-6 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-navy">
-                <Sparkles className="h-4 w-4 text-gold" />
+              <div className="flex items-center gap-2 text-white">
+                <img src="/images/cec-family-logo.png" alt="CEC Family" className="h-6 w-6 object-contain" />
                 <b className="font-display text-base">Cadastro CEC Family</b>
               </div>
-              <span className="text-xs font-bold uppercase tracking-wider text-muted">Etapa {s.step} de {TOTAL_STEPS}</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-white/60">Etapa {s.step} de {TOTAL_STEPS}</span>
             </div>
             <div className="mt-3 flex gap-1">
               {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
@@ -130,7 +131,7 @@ export default function RegisterWizard() {
           </CardContent>
         </Card>
       </div>
-    </main>
+    </DarkBlueTheme>
   );
 }
 
@@ -720,31 +721,31 @@ function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s: State
 // ============================================================
 function FinishedScreen({ hasLg }: { hasLg: boolean }) {
   return (
-    <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_30%_20%,#16345A,#0E2A47_60%)] p-5">
+    <DarkBlueTheme className="grid place-items-center p-5">
       <Card className="max-w-md text-center">
         <CardContent className="space-y-3 px-8 py-10">
           <Check className="mx-auto h-12 w-12 text-gold" />
-          <h1 className="font-display text-2xl text-navy">Cadastro recebido!</h1>
+          <h1 className="font-display text-2xl text-white">Cadastro recebido!</h1>
 
-          <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-800 text-left space-y-1">
+          <div className="rounded-lg bg-blue-500/10 border border-blue-400/30 px-4 py-3 text-sm text-blue-100 text-left space-y-1">
             <p className="font-semibold">📧 Verifique seu e-mail</p>
             <p>
               Enviamos um link de confirmação para o e-mail informado.
               Clique no link para ativar sua conta antes de fazer login.
             </p>
-            <p className="text-xs text-blue-600">Não recebeu? Verifique a pasta de spam.</p>
+            <p className="text-xs text-blue-200">Não recebeu? Verifique a pasta de spam.</p>
           </div>
 
           {hasLg ? (
-            <p className="text-sm text-muted">
+            <p className="text-sm text-white/70">
               Sua história foi registrada com a liderança.
               Em breve um líder entrará em contato com você.
             </p>
           ) : (
-            <p className="text-sm text-muted">
+            <p className="text-sm text-white/70">
               Sua história foi registrada com a liderança.
               <br /><br />
-              <b className="text-navy">Um(a) pastor(a) entrará em contato em breve</b> para te indicar o Life Group ideal pra você.
+              <b className="text-white">Um(a) pastor(a) entrará em contato em breve</b> para te indicar o Life Group ideal pra você.
             </p>
           )}
           <div className="flex flex-col gap-2 pt-2">
@@ -753,7 +754,7 @@ function FinishedScreen({ hasLg }: { hasLg: boolean }) {
           </div>
         </CardContent>
       </Card>
-    </main>
+    </DarkBlueTheme>
   );
 }
 
