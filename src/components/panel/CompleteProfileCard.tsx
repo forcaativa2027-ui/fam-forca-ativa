@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMemberCompletion } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
-import { updateMember, uploadMemberPhoto } from "@/services/members";
+import { updateMember, uploadMemberPhoto, createMyMemberRecord } from "@/services/members";
 import { logAudit } from "@/services/audit";
 import type { Member } from "@/types/domain";
 
@@ -23,6 +23,44 @@ interface FormValues {
 }
 
 const LOCAL_STORAGE_SNOOZE_KEY = "cec_complete_profile_snoozed_until";
+
+/** Mostrado quando o usuário logado ainda não tem nenhum registro de membro — ele mesmo pode criar o próprio cadastro. */
+function CreateMemberPrompt() {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function handleCreate() {
+    setBusy(true); setErr("");
+    try {
+      await createMyMemberRecord(supabase);
+      qc.invalidateQueries({ queryKey: ["my-member"] });
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Erro ao criar cadastro. Tente novamente.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card className="border-2 border-gold/40 bg-gold/5">
+      <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-4">
+        <div className="min-w-[220px] flex-1">
+          <p className="font-display text-base font-bold text-white">Complete seu cadastro</p>
+          <p className="mt-1 text-xs text-white/70">
+            Você ainda não tem um cadastro de membro. Preencha seus dados agora — depois a liderança só precisa
+            confirmar seu Life Group (se você não escolher um) e liberar sua Carteirinha.
+          </p>
+          {err && <p className="mt-1 text-xs text-red-300">{err}</p>}
+        </div>
+        <Button onClick={handleCreate} disabled={busy} className="gap-1.5 shrink-0">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
+          {busy ? "Criando…" : "Começar cadastro"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
 
 /**
  * Card "Complete seu cadastro" (script Cadastro/Realocação/Carteirinha, Seção 8-9).
@@ -40,17 +78,7 @@ export function CompleteProfileCard({ member }: { member: Member | null | undefi
   });
 
   if (!member) {
-    return (
-      <Card className="border border-amber-300/50 bg-amber-500/10">
-        <CardContent className="pt-4">
-          <p className="text-sm text-white/80">
-            Não encontramos um cadastro de membro vinculado à sua conta ainda — por isso não é possível completar
-            endereço, documentos e foto por aqui. Fale com a secretaria ou liderança da sua igreja pra vincular seu
-            usuário a um cadastro de membro.
-          </p>
-        </CardContent>
-      </Card>
-    );
+    return <CreateMemberPrompt />;
   }
 
   function snooze() {
