@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Sparkles, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Mais } from "@/components/shared/CECmaisBrand";
 
@@ -14,7 +14,7 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
     <header className="border-b-[3px] border-gold bg-navy">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2 text-white">
-          <Sparkles className="h-5 w-5 text-gold" />
+          <img src="/images/cec-family-logo.png" alt="CEC Family" className="h-7 w-7 object-contain" />
           <span className="font-display text-lg font-bold tracking-wide">CEC FAMILY</span>
           <nav className="ml-3 hidden items-center gap-1 border-l border-white/20 pl-3 sm:flex">
             <Link
