@@ -94,6 +94,9 @@ export default function PublicHome() {
             <NavTrigger value="celulas">Mapa de Life Groups</NavTrigger>
             <NavTrigger value="participar">Quero participar</NavTrigger>
             <NavTrigger value="contato">Quero conversar</NavTrigger>
+            <Link href="/dizimo" className="rounded-none bg-transparent px-4 py-3 text-sm font-semibold text-gold hover:text-gold/80 whitespace-nowrap">
+              Dízimo e Ofertas
+            </Link>
           </TabsList>
         </div>
 
