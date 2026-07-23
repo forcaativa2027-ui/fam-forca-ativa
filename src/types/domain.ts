@@ -125,6 +125,10 @@ export interface Church {
   founded_at?:string|null;
   status_admin?:ChurchStatus;
   observations?:string|null;
+  pix_key?: string | null;
+  pix_key_type?: "cpf" | "cnpj" | "email" | "telefone" | "aleatoria" | null;
+  bank_info?: string | null;
+  qr_code_url?: string | null;
 }
 export interface ChurchDependencies {
   children:number; life_groups:number; members:number; reports:number; total:number;
@@ -454,6 +458,13 @@ export interface VisitorPipeline {
   suggestion_calculated_at: string | null;
   evangelism_group_id?: string | null;
   created_at: string;
+  // REG001 — história de fé (cadastro completo)
+  cpf?: string | null; gender?: string | null; marital_status?: string | null; birth_date?: string | null;
+  country?: string | null; address?: string | null; neighborhood?: string | null;
+  baptized?: boolean | null; last_church?: string | null;
+  holy_spirit_baptized?: boolean | null; holy_spirit_baptism_date?: string | null;
+  seeking_reason?: string | null; life_before_church?: string | null; testimony?: string | null;
+  belongs_to_group?: boolean | null; group_name?: string | null;
 }
 
 export interface LgSuggestion {
@@ -1270,13 +1281,6 @@ export interface MemberRelationship {
 // Motor de Regras Ministeriais (UX-003 §6.47)
 export interface MemberRecommendation {
   rule_key: string; message: string; priority: "critico" | "atencao" | "info";
-}
-
-// Dízimos e Ofertas (QR Code PIX por igreja)
-export interface ChurchGivingInfo {
-  id: string; church_id: string; qr_code_url: string | null;
-  cnpj: string | null; razao_social: string | null; banco: string | null;
-  pix_key: string | null; is_active: boolean; updated_at: string;
 }
 
 // Relatório Consolidado por Área (demanda adicional)
