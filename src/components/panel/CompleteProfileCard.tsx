@@ -1,8 +1,9 @@
 "use client";
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { Camera, ChevronRight, X, Check, Loader2, ShieldCheck } from "lucide-react";
+import { Camera, ChevronRight, X, Check, Loader2, ShieldCheck, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,31 @@ interface FormValues {
 }
 
 const LOCAL_STORAGE_SNOOZE_KEY = "cec_complete_profile_snoozed_until";
+
+/**
+ * Alerta compacto e amarelo, pra aparecer em QUALQUER aba do painel — leva
+ * direto pra aba Perfil, onde fica a funcionalidade completa de cadastro.
+ * Some sozinho quando o cadastro já está 100% completo.
+ */
+export function ProfileAlertBanner({ member }: { member: Member | null | undefined }) {
+  const { data: percent = 0 } = useMemberCompletion(member?.id ?? null);
+  if (member && percent >= 100) return null;
+
+  return (
+    <Link
+      href="/painel?ptab=perfil"
+      className="flex items-center gap-2 rounded-lg border-2 border-amber-400/50 bg-amber-400/10 px-4 py-2.5 text-sm text-amber-100 transition hover:bg-amber-400/15"
+    >
+      <AlertTriangle className="h-4 w-4 shrink-0 text-amber-300" />
+      <span className="flex-1">
+        {member
+          ? `Seu cadastro está ${percent}% completo — finalize pra liberar sua Carteirinha de Membro.`
+          : "Você ainda não completou seu cadastro de membro."}
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0" />
+    </Link>
+  );
+}
 
 /** Mostrado quando o usuário logado ainda não tem nenhum registro de membro — ele mesmo pode criar o próprio cadastro. */
 function CreateMemberPrompt() {

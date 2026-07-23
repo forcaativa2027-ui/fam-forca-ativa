@@ -18,7 +18,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DarkBlueTheme } from "@/components/shared/DarkBlueTheme";
 import { BottomNav, type BottomNavItem } from "@/components/shared/BottomNav";
 import { MyMinistriesPanel } from "./MyMinistriesPanel";
-import { CompleteProfileCard } from "./CompleteProfileCard";
+import { CompleteProfileCard, ProfileAlertBanner } from "./CompleteProfileCard";
 import { MyCredentialCard } from "./MyCredentialCard";
 import { MemberHeader } from "./MemberHeader";
 import { NotificationsPanel, useNotificationCount } from "./NotificationsPanel";
@@ -145,7 +145,7 @@ export default function PanelDashboard() {
             </Link>
           </div>
 
-          <CompleteProfileCard member={member ?? null} />
+          <ProfileAlertBanner member={member ?? null} />
 
           {isAdmin && <TabsContent value="geral"><GeneralView /></TabsContent>}
           <TabsContent value="alertas"><NotificationsPanel /></TabsContent>
@@ -538,6 +538,7 @@ function ProfileTab() {
 
   return (
     <div className="space-y-4">
+      <CompleteProfileCard member={member ?? null} />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><User className="h-5 w-5 text-gold"/>Meu Perfil/Atualizar</CardTitle>
