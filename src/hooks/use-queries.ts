@@ -670,9 +670,9 @@ export const useMemberRecommendations = (memberId: string | null) =>
     queryFn: () => Rec.getMemberRecommendations(supabase, memberId as string),
     enabled: !!memberId,
   });
+import * as Giving from "@/services/giving";
 
 // ── Dízimos e Ofertas ────────────────────────────────────────
-import * as Giving from "@/services/giving";
 export const useChurchGivingInfo = (churchId: string | null) =>
   useQuery({
     queryKey: ["church-giving-info", churchId],
