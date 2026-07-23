@@ -1304,3 +1304,13 @@ export interface AdminUserDirectoryRow {
   state_id: string | null; state_name: string | null;
   delegacoes_ativas: number;
 }
+
+// Dízimos e Ofertas — "Momento da Generosidade"
+export interface ChurchGivingInfo {
+  church_id: string;
+  qr_code_url: string | null;
+  pix_key: string | null;
+  razao_social: string | null;
+  cnpj: string | null;
+  banco: string | null;
+}
