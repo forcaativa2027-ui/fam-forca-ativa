@@ -1,24 +1,27 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   LogOut, Sparkles, AlertTriangle, BarChart3, Users, Heart, Map,
   Clock, MessageSquareHeart, User, Check, Plus, Calendar as Cal,
-  Award, ClipboardList,
+  Award, ClipboardList, IdCard, Home as HomeIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DarkBlueTheme } from "@/components/shared/DarkBlueTheme";
+import { BottomNav, type BottomNavItem } from "@/components/shared/BottomNav";
 import { MyMinistriesPanel } from "./MyMinistriesPanel";
 import { CompleteProfileCard } from "./CompleteProfileCard";
 import { MyCredentialCard } from "./MyCredentialCard";
 import { MemberHeader } from "./MemberHeader";
-import { NotificationsPanel, useNotificationCount, NotificationBadge } from "./NotificationsPanel";
+import { NotificationsPanel, useNotificationCount } from "./NotificationsPanel";
 import { supabase } from "@/lib/supabase/client";
 import { touchCurrentSession } from "@/services/security";
 import {
@@ -66,6 +69,7 @@ const STAGE_LABELS: Record<string, string> = {
 };
 
 export default function PanelDashboard() {
+  const searchParams = useSearchParams();
   const { data: profile } = useMyProfile();
   const { data: member } = useMyMember();
   const { data: card } = useMemberCard(member?.id ?? null);
@@ -73,6 +77,13 @@ export default function PanelDashboard() {
   const myChurchName = allChurches.find((c) => c.id === member?.church_id)?.name ?? null;
   const isAdmin = profile?.role === "apostolo" || profile?.role === "pastor";
   const notifCount = useNotificationCount();
+  const cardReady = card?.card_status === "elegivel" || card?.card_status === "emitida";
+
+  const [ptab, setPtab] = useState(searchParams.get("ptab") ?? (isAdmin ? "geral" : "celula"));
+  useEffect(() => {
+    const t = searchParams.get("ptab");
+    if (t && t !== ptab) setPtab(t);
+  }, [searchParams]);
 
   useEffect(() => {
     touchCurrentSession(supabase);
@@ -84,13 +95,26 @@ export default function PanelDashboard() {
     window.location.href = "/";
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <MemberHeader active="dashboard" isAdmin={isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
+  const navItems: BottomNavItem[] = [
+    ...(isAdmin ? [{ href: "/painel?ptab=geral", label: "Visão geral", icon: BarChart3, isActive: () => ptab === "geral" }] : []),
+    { href: "/painel?ptab=alertas", label: notifCount > 0 ? `Alertas (${notifCount})` : "Alertas", icon: AlertTriangle, isActive: () => ptab === "alertas" },
+    { href: "/painel?ptab=celula", label: "Minha célula", icon: Users, isActive: () => ptab === "celula" },
+    { href: "/painel?ptab=discipulado", label: "Discipulado", icon: Heart, isActive: () => ptab === "discipulado" },
+    { href: "/painel?ptab=jornada", label: "Jornada", icon: Map, isActive: () => ptab === "jornada" },
+    { href: "/painel?ptab=oracao", label: "Oração", icon: MessageSquareHeart, isActive: () => ptab === "oracao" },
+    { href: "/painel?ptab=ministerio", label: "Ministério", icon: Award, isActive: () => ptab === "ministerio" },
+    { href: "/painel/carteira", label: "Carteira", icon: IdCard },
+    { href: "/painel?ptab=perfil", label: "Perfil", icon: User, isActive: () => ptab === "perfil" },
+    { href: "/", label: "Site", icon: HomeIcon },
+  ];
 
-      <Tabs defaultValue={isAdmin ? "geral" : "celula"}>
+  return (
+    <DarkBlueTheme>
+      <MemberHeader active="dashboard" isAdmin={isAdmin} cardReady={cardReady} onSignOut={signOut} />
+
+      <Tabs value={ptab} onValueChange={setPtab}>
         {/* Menu Institucional Permanente — leva pra home pública já com a aba certa aberta */}
-        <div className="border-b bg-navy/95">
+        <div className="border-b border-white/10 bg-navy/95">
           <nav className="container flex flex-wrap items-center gap-1 overflow-x-auto py-1.5">
             {INSTITUTIONAL_LINKS.map((l) => (
               <Link key={l.tab} href={`/?tab=${l.tab}`} className="whitespace-nowrap rounded px-2.5 py-1 text-[11px] font-semibold text-white/70 transition hover:bg-white/10 hover:text-white">
@@ -100,31 +124,23 @@ export default function PanelDashboard() {
           </nav>
         </div>
 
-        {/* Abas pessoais do painel — logo abaixo da barra institucional */}
-        <div className="border-b bg-card">
-          <div className="container overflow-x-auto">
-            <TabsList className="my-1.5 min-w-max">
-              {isAdmin && <TabsTrigger value="geral"><BarChart3 className="mr-1 h-4 w-4" />Visão geral</TabsTrigger>}
-              <TabsTrigger value="alertas" className="flex items-center gap-1.5">
-                <NotificationBadge count={notifCount} />
-                <span>Alertas{notifCount > 0 ? ` (${notifCount})` : ""}</span>
-              </TabsTrigger>
-              <TabsTrigger value="celula"><Users className="mr-1 h-4 w-4" />Minha célula</TabsTrigger>
-              <TabsTrigger value="discipulado"><Heart className="mr-1 h-4 w-4" />Discipulado</TabsTrigger>
-              <TabsTrigger value="jornada"><Map className="mr-1 h-4 w-4" />Minha jornada</TabsTrigger>
-              <TabsTrigger value="oracao"><MessageSquareHeart className="mr-1 h-4 w-4" />Oração</TabsTrigger>
-              <TabsTrigger value="ministerio"><Award className="mr-1 h-4 w-4" />Ministério</TabsTrigger>
-              <TabsTrigger value="perfil"><User className="mr-1 h-4 w-4" />Meu Perfil/Atualizar</TabsTrigger>
-            </TabsList>
-          </div>
-        </div>
+        <TabsList className="sr-only">
+          {isAdmin && <TabsTrigger value="geral">Visão geral</TabsTrigger>}
+          <TabsTrigger value="alertas">Alertas</TabsTrigger>
+          <TabsTrigger value="celula">Minha célula</TabsTrigger>
+          <TabsTrigger value="discipulado">Discipulado</TabsTrigger>
+          <TabsTrigger value="jornada">Minha jornada</TabsTrigger>
+          <TabsTrigger value="oracao">Oração</TabsTrigger>
+          <TabsTrigger value="ministerio">Ministério</TabsTrigger>
+          <TabsTrigger value="perfil">Meu Perfil/Atualizar</TabsTrigger>
+        </TabsList>
 
-        <main className="container space-y-8 py-8">
+        <main className="container space-y-8 py-8 pb-24">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted">Painel</p>
-            <h1 className="mt-1 font-display text-3xl text-navy">{profile ? `Paz, ${profile.full_name.split(" ")[0]}.` : "Bem-vindo"}</h1>
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/60">Painel</p>
+            <h1 className="mt-1 font-display text-3xl text-white">{profile ? `Paz, ${profile.full_name.split(" ")[0]}.` : "Bem-vindo"}</h1>
             {profile && <p className="mt-1 text-sm font-bold text-gold">{ROLE_LABELS[profile.role] ?? profile.role}</p>}
-            <Link href="/painel/seguranca" className="mt-1 inline-block text-xs text-muted-foreground underline underline-offset-2 hover:text-navy">
+            <Link href="/painel/seguranca" className="mt-1 inline-block text-xs text-white/50 underline underline-offset-2 hover:text-white">
               Segurança e senha
             </Link>
           </div>
@@ -139,7 +155,9 @@ export default function PanelDashboard() {
           <TabsContent value="perfil"><ProfileTab /></TabsContent>
         </main>
       </Tabs>
-    </div>
+
+      <BottomNav items={navItems} />
+    </DarkBlueTheme>
   );
 }
 
