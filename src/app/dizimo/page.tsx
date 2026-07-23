@@ -7,9 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { DarkBlueTheme } from "@/components/shared/DarkBlueTheme";
 import { useActiveCommunity } from "@/hooks/use-queries";
 
-const PIX_TYPE_LABELS: Record<string, string> = {
-  cpf: "CPF", cnpj: "CNPJ", email: "E-mail", telefone: "Telefone", aleatoria: "Chave aleatória",
-};
+// QR Code padrão (Águas Claras / Taguatinga Norte) — usado até cada igreja
+// cadastrar o próprio QR Code em Admin → Organização → Comunidades.
+const DEFAULT_QR_CODE = "/images/pix-qrcodes/aguas-claras-taguatinga-norte.jpg";
 
 export default function DizimoPage() {
   const { data: community } = useActiveCommunity();
@@ -40,11 +40,15 @@ export default function DizimoPage() {
 
         <Card className="overflow-hidden">
           <CardContent className="space-y-5 p-6">
-            {community?.pix_key ? (
-              <div>
-                <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gold">
-                  <Sparkles className="h-3.5 w-3.5" />PIX — {community.pix_key_type ? PIX_TYPE_LABELS[community.pix_key_type] : "Chave"}
-                </p>
+            <div>
+              <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gold">
+                <Sparkles className="h-3.5 w-3.5" />Momento da Generosidade
+              </p>
+              <div className="mb-3 flex justify-center rounded-xl bg-white p-3">
+                <img src={community?.qr_code_url || DEFAULT_QR_CODE} alt="QR Code PIX" className="h-56 w-56 object-contain" />
+              </div>
+
+              {community?.pix_key && (
                 <div className="flex items-center gap-2 rounded-xl border-2 border-gold/30 bg-gold/10 p-4">
                   <span className="flex-1 truncate font-mono text-base font-bold text-white">{community.pix_key}</span>
                   <Button size="sm" variant={copied ? "default" : "outline"} onClick={copyPix} className="shrink-0 gap-1.5">
@@ -52,15 +56,11 @@ export default function DizimoPage() {
                     {copied ? "Copiado!" : "Copiar"}
                   </Button>
                 </div>
-                <p className="mt-2 text-[11px] text-white/60">
-                  Abra o app do seu banco, escolha PIX, cole a chave acima e confirme o valor da sua oferta ou dízimo.
-                </p>
-              </div>
-            ) : (
-              <p className="rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-sm text-amber-200">
-                A chave PIX desta comunidade ainda não foi cadastrada. Fale com a secretaria da sua igreja para saber como contribuir.
+              )}
+              <p className="mt-2 text-[11px] text-white/60">
+                Abra o app do seu banco, escolha PIX e escaneie o QR Code acima{community?.pix_key ? " (ou cole a chave)" : ""} para confirmar o valor da sua oferta ou dízimo.
               </p>
-            )}
+            </div>
 
             {community?.bank_info && (
               <div>
