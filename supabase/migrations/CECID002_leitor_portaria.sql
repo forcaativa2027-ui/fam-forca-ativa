@@ -65,7 +65,7 @@ language sql stable security definer set search_path = public as $$
   from public.members_card_view mcv
   join public.members m on m.id = mcv.member_id
   left join public.churches ch on ch.id = m.church_id
-  where mcv.qr_token::text = p_token;
+  where mcv.qr_token = p_token;
 $$;
 grant execute on function public.checkin_lookup_by_token(text) to authenticated;
 
