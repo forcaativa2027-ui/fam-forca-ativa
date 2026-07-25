@@ -10,7 +10,7 @@ import {
   Download, Search, Bell,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HeartHandshake,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ interface NavItem {
   label: string;
   icon: React.ReactNode;
   badge?: number;
+  sectionLabel?: string; // se preenchido, exibe um sub-cabeçalho antes deste item
 }
 interface NavGroup {
   id: string;
@@ -74,22 +75,22 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
     },
     {
       id: "estrategico",
-      label: "Estratégico",
+      label: "Gestão Estratégica",
       icon: <Zap size={16} />,
       items: [
         { key: "control-tower",       label: "Torre de Controle", icon: <RadioTower size={15} />, badge: counts.tower_alerts },
-        { key: "intelligence",        label: "Inteligência",       icon: <Brain size={15} /> },
-        { key: "ministerial-reports", label: "Relatórios",         icon: <BarChart3 size={15} /> },
-        { key: "metas",               label: "Metas",              icon: <Target size={15} /> },
+        { key: "intelligence",        label: "Inteligência Ministerial", icon: <Brain size={15} /> },
+        { key: "ministerial-reports", label: "Relatórios Estratégicos", icon: <BarChart3 size={15} /> },
+        { key: "metas",               label: "Metas e Indicadores", icon: <Target size={15} /> },
       ],
     },
     {
       id: "organizacao",
-      label: "Organização",
+      label: "Organização Institucional",
       icon: <Building2 size={16} />,
       items: [
         { key: "communities",   label: "Comunidades",    icon: <Building2 size={15} /> },
-        { key: "structure",     label: "Estrutura",      icon: <GitBranch size={15} /> },
+        { key: "structure",     label: "Estrutura Organizacional", icon: <GitBranch size={15} /> },
         { key: "genealogy",     label: "Genealogia",     icon: <Network size={15} /> },
         { key: "ministerios",   label: "Ministérios",    icon: <Mic2 size={15} /> },
         { key: "formacao",      label: "Formação",       icon: <GraduationCap size={15} /> },
@@ -97,7 +98,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "evangelism-groups", label: "Grupos de Evangelismo", icon: <Megaphone size={15} /> },
         { key: "mda",           label: "Estrutura MDA",  icon: <Network size={15} /> },
         { key: "mda-health",    label: "Saúde MDA",      icon: <Heart size={15} /> },
-        { key: "saude",         label: "Saúde",          icon: <Heart size={15} /> },
+        { key: "saude",         label: "Saúde e Acompanhamento", icon: <Heart size={15} /> },
         { key: "expansion-map", label: "Mapa de Expansão",icon: <Map size={15} /> },
       ],
     },
@@ -117,14 +118,14 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
     },
     {
       id: "conteudo",
-      label: "Conteúdo",
+      label: "Conteúdo e Comunicação",
       icon: <Megaphone size={16} />,
       items: [
         { key: "news",    label: "Notícias",     icon: <Megaphone size={15} /> },
         { key: "banners", label: "Banners",      icon: <Image size={15} /> },
         { key: "sermons", label: "Pregações",    icon: <Mic2 size={15} /> },
         { key: "events",  label: "Agenda",       icon: <CalendarDays size={15} /> },
-        { key: "giving",  label: "Momento da Generosidade", icon: <HeartHandshake size={15} /> },
+        { key: "giving",  label: "Momento da Generosidade", icon: <HandCoins size={15} /> },
         { key: "services",label: "Cultos",       icon: <Radio size={15} /> },
         { key: "word",    label: "Palavra do dia",icon: <BookOpen size={15} /> },
       ],
@@ -160,7 +161,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
       label: "Administração de Usuários",
       icon: <UserCog2 size={16} />,
       items: [
-        { key: "usuarios-painel", label: "Painel de Usuários", icon: <Activity size={15} /> },
+        { key: "usuarios-painel", label: "Painel de Usuários", icon: <Activity size={15} />, sectionLabel: "Painel de Usuários" },
         { key: "members",     label: "Membros",             icon: <Users2 size={15} /> },
         { key: "leadership",  label: "Liderança / Níveis",  icon: <UserCog2 size={15} /> },
         { key: "invites",     label: "Convites",            icon: <Link2 size={15} /> },
@@ -168,9 +169,9 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "delegations", label: "Delegações",          icon: <Gavel size={15} /> },
         { key: "score",            label: "Score",               icon: <Star size={15} /> },
         { key: "birthdays",        label: "Aniversários",        icon: <Cake size={15} /> },
-        { key: "discipleship",     label: "Discipulado",         icon: <BookOpen size={15} /> },
+        { key: "discipleship",     label: "Discipulado",         icon: <BookOpen size={15} />, sectionLabel: "Cuidado e Acompanhamento" },
         { key: "acolhimento",      label: "Acolhimento",         icon: <Heart size={15} /> },
-        { key: "evasao",           label: "Em risco",            icon: <TrendingDown size={15} /> },
+        { key: "evasao",           label: "Pessoas em Risco",    icon: <TrendingDown size={15} /> },
         { key: "crm",              label: "CRM",                 icon: <Briefcase size={15} />, badge: counts.pipeline_new },
         { key: "prayer-requests",  label: "Pedidos de oração",   icon: <Bell size={15} />, badge: counts.prayer_pending },
         { key: "visit-requests",   label: "Visitas",             icon: <Users size={15} />, badge: counts.visit_pending },
@@ -178,7 +179,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
     },
     {
       id: "auditoria",
-      label: "Auditoria",
+      label: "Auditoria e Segurança",
       icon: <ClipboardList size={16} />,
       items: [
         { key: "audit", label: "Registros de Auditoria", icon: <ClipboardList size={15} /> },
@@ -189,7 +190,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
       label: "Ferramentas",
       icon: <Download size={16} />,
       items: [
-        { key: "export", label: "Exportar", icon: <Download size={15} /> },
+        { key: "export", label: "Exportar Dados", icon: <Download size={15} /> },
       ],
     },
   ];
@@ -307,8 +308,11 @@ export function AdminSidebar({
                   {group.items.map((item) => {
                     const isActive = item.key === activeTab;
                     return (
-                      <button
-                        key={item.key}
+                      <div key={item.key}>
+                        {item.sectionLabel && !collapsed && (
+                          <p className="mb-0.5 mt-2 px-3 text-[10px] font-bold uppercase tracking-wider text-white/35 first:mt-0">{item.sectionLabel}</p>
+                        )}
+                        <button
                         onClick={() => handleNavigate(item.key)}
                         title={collapsed ? item.label : undefined}
                         className={[
@@ -329,6 +333,7 @@ export function AdminSidebar({
                           </>
                         )}
                       </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -419,7 +424,11 @@ export function AdminSidebar({
                               {group.items.map((item) => {
                                 const isActive = item.key === activeTab;
                                 return (
-                                  <button key={item.key} onClick={() => handleNavigate(item.key)}
+                                  <div key={item.key}>
+                                  {item.sectionLabel && (
+                                    <p className="mb-0.5 mt-2 px-6 text-[10px] font-bold uppercase tracking-wider text-white/35 first:mt-0">{item.sectionLabel}</p>
+                                  )}
+                                  <button onClick={() => handleNavigate(item.key)}
                                     className={["flex w-full items-center gap-2.5 px-6 py-2 text-sm transition-all",
                                       isActive ? "bg-gold/15 font-semibold text-gold" : "text-white/65 hover:bg-white/8 hover:text-white"].join(" ")}>
                                     <span>{item.icon}</span>
@@ -430,6 +439,7 @@ export function AdminSidebar({
                                       </span>
                                     )}
                                   </button>
+                                  </div>
                                 );
                               })}
                             </div>
