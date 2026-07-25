@@ -1,27 +1,25 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   LogOut, Sparkles, AlertTriangle, BarChart3, Users, Heart, Map,
   Clock, MessageSquareHeart, User, Check, Plus, Calendar as Cal,
-  Award, ClipboardList, IdCard, Home as HomeIcon,
+  Award, ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { DarkBlueTheme } from "@/components/shared/DarkBlueTheme";
-import { BottomNav, type BottomNavItem } from "@/components/shared/BottomNav";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { BottomNav, BottomNavSpacer, type BottomNavItem } from "@/components/shared/BottomNav";
 import { MyMinistriesPanel } from "./MyMinistriesPanel";
-import { CompleteProfileCard, ProfileAlertBanner } from "./CompleteProfileCard";
+import { CompleteProfileCard } from "./CompleteProfileCard";
 import { MyCredentialCard } from "./MyCredentialCard";
 import { MemberHeader } from "./MemberHeader";
-import { NotificationsPanel, useNotificationCount } from "./NotificationsPanel";
+import { NotificationsPanel, useNotificationCount, NotificationBadge } from "./NotificationsPanel";
 import { supabase } from "@/lib/supabase/client";
 import { touchCurrentSession } from "@/services/security";
 import {
@@ -34,18 +32,6 @@ import { logAudit } from "@/services/audit";
 import { addPrayer, markPrayerAnswered } from "@/services/prayer";
 import { profileEditSchema, newPrayerSchema, type ProfileEditInput, type NewPrayerInput } from "@/schemas";
 import type { Cell, Member, PastoralTimeline } from "@/types/domain";
-
-const INSTITUTIONAL_LINKS: { tab: string; label: string }[] = [
-  { tab: "inicio", label: "Início" },
-  { tab: "noticias", label: "Notícias" },
-  { tab: "cultos", label: "Cultos" },
-  { tab: "videos", label: "Vídeos" },
-  { tab: "agenda", label: "Agenda" },
-  { tab: "igrejas", label: "Igrejas" },
-  { tab: "celulas", label: "Mapa de Life Groups" },
-  { tab: "participar", label: "Quero participar" },
-  { tab: "contato", label: "Quero conversar" },
-];
 
 const ROLE_LABELS: Record<string, string> = {
   apostolo:"Apóstolo", pastor:"Pastor", supervisor:"Supervisor",
@@ -69,7 +55,6 @@ const STAGE_LABELS: Record<string, string> = {
 };
 
 export default function PanelDashboard() {
-  const searchParams = useSearchParams();
   const { data: profile } = useMyProfile();
   const { data: member } = useMyMember();
   const { data: card } = useMemberCard(member?.id ?? null);
@@ -77,13 +62,7 @@ export default function PanelDashboard() {
   const myChurchName = allChurches.find((c) => c.id === member?.church_id)?.name ?? null;
   const isAdmin = profile?.role === "apostolo" || profile?.role === "pastor";
   const notifCount = useNotificationCount();
-  const cardReady = card?.card_status === "elegivel" || card?.card_status === "emitida";
-
-  const [ptab, setPtab] = useState(searchParams.get("ptab") ?? (isAdmin ? "geral" : "celula"));
-  useEffect(() => {
-    const t = searchParams.get("ptab");
-    if (t && t !== ptab) setPtab(t);
-  }, [searchParams]);
+  const [tab, setTab] = useState(isAdmin ? "geral" : "celula");
 
   useEffect(() => {
     touchCurrentSession(supabase);
@@ -95,57 +74,33 @@ export default function PanelDashboard() {
     window.location.href = "/";
   }
 
-  const navItems: BottomNavItem[] = [
-    ...(isAdmin ? [{ href: "/painel?ptab=geral", label: "Visão geral", icon: BarChart3, isActive: () => ptab === "geral" }] : []),
-    { href: "/painel?ptab=alertas", label: notifCount > 0 ? `Alertas (${notifCount})` : "Alertas", icon: AlertTriangle, isActive: () => ptab === "alertas" },
-    { href: "/painel?ptab=celula", label: "Minha célula", icon: Users, isActive: () => ptab === "celula" },
-    { href: "/painel?ptab=discipulado", label: "Discipulado", icon: Heart, isActive: () => ptab === "discipulado" },
-    { href: "/painel?ptab=jornada", label: "Jornada", icon: Map, isActive: () => ptab === "jornada" },
-    { href: "/painel?ptab=oracao", label: "Oração", icon: MessageSquareHeart, isActive: () => ptab === "oracao" },
-    { href: "/painel?ptab=ministerio", label: "Ministério", icon: Award, isActive: () => ptab === "ministerio" },
-    { href: "/painel/carteira", label: "Carteira", icon: IdCard },
-    { href: "/painel?ptab=perfil", label: "Perfil", icon: User, isActive: () => ptab === "perfil" },
-    { href: "/", label: "Site", icon: HomeIcon },
+  const panelNavItems: BottomNavItem[] = [
+    ...(isAdmin ? [{ key: "geral", label: "Visão Geral", icon: <BarChart3 size={18} />, onClick: () => setTab("geral") }] : []),
+    { key: "alertas", label: "Alertas", icon: <NotificationBadge count={notifCount} />, onClick: () => setTab("alertas") },
+    { key: "celula", label: "Meu LG", icon: <Users size={18} />, onClick: () => setTab("celula") },
+    { key: "discipulado", label: "Discipulado", icon: <Heart size={18} />, onClick: () => setTab("discipulado") },
+    { key: "jornada", label: "Jornada", icon: <Map size={18} />, onClick: () => setTab("jornada") },
+    { key: "oracao", label: "Oração", icon: <MessageSquareHeart size={18} />, onClick: () => setTab("oracao") },
+    { key: "ministerio", label: "Ministério", icon: <Award size={18} />, onClick: () => setTab("ministerio") },
+    { key: "carteira", label: "Carteira", icon: <ClipboardList size={18} />, onClick: () => { window.location.href = "/painel/carteira"; } },
+    { key: "perfil", label: "Perfil", icon: <User size={18} />, onClick: () => setTab("perfil") },
+    { key: "site", label: "Site", icon: <Sparkles size={18} />, onClick: () => { window.location.href = "/"; } },
   ];
 
   return (
-    <DarkBlueTheme>
-      <MemberHeader active="dashboard" isAdmin={isAdmin} cardReady={cardReady} onSignOut={signOut} />
+    <div className="min-h-screen bg-background">
+      <MemberHeader active="dashboard" isAdmin={isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
 
-      <Tabs value={ptab} onValueChange={setPtab}>
-        {/* Menu Institucional Permanente — leva pra home pública já com a aba certa aberta */}
-        <div className="border-b border-white/10 bg-navy/95">
-          <nav className="container flex flex-wrap items-center gap-1 overflow-x-auto py-1.5">
-            {INSTITUTIONAL_LINKS.map((l) => (
-              <Link key={l.tab} href={`/?tab=${l.tab}`} className="whitespace-nowrap rounded px-2.5 py-1 text-[11px] font-semibold text-white/70 transition hover:bg-white/10 hover:text-white">
-                {l.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-
-        <TabsList className="sr-only">
-          {isAdmin && <TabsTrigger value="geral">Visão geral</TabsTrigger>}
-          <TabsTrigger value="alertas">Alertas</TabsTrigger>
-          <TabsTrigger value="celula">Minha célula</TabsTrigger>
-          <TabsTrigger value="discipulado">Discipulado</TabsTrigger>
-          <TabsTrigger value="jornada">Minha jornada</TabsTrigger>
-          <TabsTrigger value="oracao">Oração</TabsTrigger>
-          <TabsTrigger value="ministerio">Ministério</TabsTrigger>
-          <TabsTrigger value="perfil">Meu Perfil/Atualizar</TabsTrigger>
-        </TabsList>
-
-        <main className="container space-y-8 py-8 pb-24">
+      <Tabs value={tab} onValueChange={setTab}>
+        <main className="container space-y-8 py-8">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-white/60">Painel</p>
-            <h1 className="mt-1 font-display text-3xl text-white">{profile ? `Paz, ${profile.full_name.split(" ")[0]}.` : "Bem-vindo"}</h1>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted">Painel</p>
+            <h1 className="mt-1 font-display text-3xl text-navy">{profile ? `Paz, ${profile.full_name.split(" ")[0]}.` : "Bem-vindo"}</h1>
             {profile && <p className="mt-1 text-sm font-bold text-gold">{ROLE_LABELS[profile.role] ?? profile.role}</p>}
-            <Link href="/painel/seguranca" className="mt-1 inline-block text-xs text-white/50 underline underline-offset-2 hover:text-white">
+            <Link href="/painel/seguranca" className="mt-1 inline-block text-xs text-muted-foreground underline underline-offset-2 hover:text-navy">
               Segurança e senha
             </Link>
           </div>
-
-          <ProfileAlertBanner member={member ?? null} />
 
           {isAdmin && <TabsContent value="geral"><GeneralView /></TabsContent>}
           <TabsContent value="alertas"><NotificationsPanel /></TabsContent>
@@ -156,10 +111,10 @@ export default function PanelDashboard() {
           <TabsContent value="ministerio"><MyMinistriesPanel /></TabsContent>
           <TabsContent value="perfil"><ProfileTab /></TabsContent>
         </main>
+        <BottomNavSpacer />
       </Tabs>
-
-      <BottomNav items={navItems} />
-    </DarkBlueTheme>
+      <BottomNav items={panelNavItems} activeKey={tab} />
+    </div>
   );
 }
 
@@ -538,7 +493,7 @@ function ProfileTab() {
 
   return (
     <div className="space-y-4">
-      <CompleteProfileCard member={member ?? null} />
+      <CompleteProfileCard member={member} />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><User className="h-5 w-5 text-gold"/>Meu Perfil/Atualizar</CardTitle>
