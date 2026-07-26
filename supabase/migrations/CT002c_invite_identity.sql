@@ -6,6 +6,7 @@
 -- Idempotente.
 -- ============================================================
 
+drop function if exists public.validate_invite_token(text);
 create or replace function public.validate_invite_token(p_token text)
 returns table (
   valid boolean, reason text,

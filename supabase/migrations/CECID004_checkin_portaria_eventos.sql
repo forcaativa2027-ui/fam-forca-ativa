@@ -36,6 +36,7 @@ grant insert on public.cec_id_checkins to authenticated;
 -- ============================================================
 -- RPC: busca pra check-in a partir do token do QR
 -- ============================================================
+drop function if exists public.checkin_lookup_by_token(text);
 create or replace function public.checkin_lookup_by_token(p_token text)
 returns table (
   member_id uuid, cec_id text, full_name text, photo_url text,
@@ -46,7 +47,7 @@ language sql stable security definer set search_path = public as $$
          public.member_category(m.id), ch.name, m.church_id, m.card_status::text
   from public.members m
   left join public.churches ch on ch.id = m.church_id
-  where m.qr_token = p_token
+  where m.qr_token::text = p_token
   limit 1;
 $$;
 grant execute on function public.checkin_lookup_by_token(text) to authenticated;
@@ -54,6 +55,7 @@ grant execute on function public.checkin_lookup_by_token(text) to authenticated;
 -- ============================================================
 -- RPC: busca manual pra check-in por CEC ID digitado
 -- ============================================================
+drop function if exists public.checkin_lookup_by_cec_id(text);
 create or replace function public.checkin_lookup_by_cec_id(p_cec_id text)
 returns table (
   member_id uuid, cec_id text, full_name text, photo_url text,
@@ -72,6 +74,7 @@ grant execute on function public.checkin_lookup_by_cec_id(text) to authenticated
 -- ============================================================
 -- RPC: registra a entrada
 -- ============================================================
+drop function if exists public.register_checkin(uuid, text, text);
 create or replace function public.register_checkin(p_member_id uuid, p_event_label text, p_method text)
 returns uuid
 language plpgsql security definer set search_path = public as $$

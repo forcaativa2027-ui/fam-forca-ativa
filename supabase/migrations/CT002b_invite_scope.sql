@@ -79,6 +79,8 @@ grant execute on function public.create_invite_link(
 ) to authenticated;
 
 -- ---------- validate_invite_token: devolve também o nome do escopo, pra exibir na tela pública ----------
+-- (drop necessário: mudar o formato das colunas de retorno não é permitido via "create or replace")
+drop function if exists public.validate_invite_token(text);
 create or replace function public.validate_invite_token(p_token text)
 returns table (
   valid boolean, reason text,
