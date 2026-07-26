@@ -25,7 +25,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 grant execute on function public.can_see_national_alerts() to authenticated;
 
-drop view if exists public.control_tower_alerts;
+drop view if exists public.control_tower_alerts cascade;
 create view public.control_tower_alerts as
 select * from (
 
@@ -175,4 +175,24 @@ comment on view public.control_tower_alerts is
   'Torre de Controle: alertas críticos consolidados, escopados pela abrangência de quem consulta.';
 
 grant select on public.control_tower_alerts to authenticated;
+
+-- Recriada porque o CASCADE do drop acima a derruba junto (ela depende de control_tower_alerts)
+create view public.control_tower_summary as
+select
+  count(*) filter (where severity = 'critico')::int    as total_criticos,
+  count(*) filter (where severity = 'atencao')::int    as total_atencao,
+  count(*)::int                                         as total_alertas,
+  count(*) filter (where alert_type = 'sem_relatorio')::int   as alertas_sem_relatorio,
+  count(*) filter (where alert_type = 'oracao_urgente')::int  as alertas_oracao_urgente,
+  count(*) filter (where alert_type = 'visita_pastoral')::int as alertas_visita_pastoral,
+  count(*) filter (where alert_type = 'score_critico')::int   as alertas_score_critico,
+  count(*) filter (where alert_type = 'sem_membros')::int     as alertas_sem_membros,
+  count(*) filter (where alert_type = 'meta_atrasada')::int   as alertas_meta_atrasada,
+  count(distinct lg_id) filter (where lg_id is not null)::int as lgs_afetados,
+  count(distinct church_id) filter (where church_id is not null)::int as igrejas_afetadas
+from public.control_tower_alerts;
+
+comment on view public.control_tower_summary is
+  'Resumo executivo da Torre de Controle, já escopado pela abrangência de quem consulta.';
+
 grant select on public.control_tower_summary to authenticated;

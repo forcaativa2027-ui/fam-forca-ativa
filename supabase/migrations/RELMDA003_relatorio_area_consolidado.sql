@@ -47,20 +47,20 @@ language sql stable security definer set search_path = public as $$
     order by r.meeting_date desc
     limit 1
   ) mr on true
-  where ca.area_id = p_area_id and c.is_active
+  where ca.district_id = p_area_id and c.is_active
   order by ca.sector_name, c.neighborhood;
 $$;
 grant execute on function public.relatorio_area_consolidado(uuid, int, int) to authenticated;
 
 -- ============================================================
--- Lista de áreas acessíveis pro seletor da tela
+-- Lista de áreas (distritos) acessíveis pro seletor da tela
 -- ============================================================
 create or replace function public.list_accessible_areas()
 returns table (area_id uuid, area_name text, sector_id uuid, sector_name text)
 language sql stable security definer set search_path = public as $$
-  select distinct ca.area_id, ca.area_name, ca.sector_id, ca.sector_name
+  select distinct ca.district_id, ca.district_name, ca.sector_id, ca.sector_name
   from public.church_ancestry ca
-  where ca.church_id in (select public.accessible_church_ids()) and ca.area_id is not null
-  order by ca.area_name;
+  where ca.church_id in (select public.accessible_church_ids()) and ca.district_id is not null
+  order by ca.district_name;
 $$;
 grant execute on function public.list_accessible_areas() to authenticated;

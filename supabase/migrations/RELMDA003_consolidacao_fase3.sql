@@ -8,7 +8,9 @@
 -- Idempotente (create or replace substitui a versão da RELMDA002).
 -- ============================================================
 
-create or replace function public.relmda_supervisor_overview(
+drop function if exists public.relmda_supervisor_overview(smallint, smallint, smallint);
+
+create function public.relmda_supervisor_overview(
   p_week_number smallint, p_month smallint, p_year smallint
 ) returns table (
   life_group_id       uuid,
