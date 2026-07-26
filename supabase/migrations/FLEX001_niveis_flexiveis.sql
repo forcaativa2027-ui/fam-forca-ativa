@@ -98,8 +98,8 @@ grant execute on function public.resolve_church_ancestry(uuid) to authenticated;
 -- a recursão a cada policy/consulta — usada por accessible_church_ids e pela
 -- view de saúde do dashboard).
 create or replace view public.church_ancestry as
-select ch.id as church_id, anc.state_id as state_id, anc.nucleo_id as nucleo_id,
-       anc.district_id as district_id, anc.sector_id as sector_id
+select ch.id as church_id, anc.out_state_id as state_id, anc.out_nucleo_id as nucleo_id,
+       anc.out_district_id as district_id, anc.out_sector_id as sector_id
 from public.churches ch
 cross join lateral public.resolve_church_ancestry(ch.id) anc;
 
