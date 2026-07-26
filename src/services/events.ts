@@ -69,6 +69,11 @@ export async function updateRegistrationEvent(sb: SupabaseClient, id: string, in
   return data as RegistrationEvent;
 }
 
+export async function deleteRegistrationEvent(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("registration_events").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function listEventRegistrations(sb: SupabaseClient, eventId: string): Promise<EventRegistration[]> {
   const { data, error } = await sb.from("event_registrations").select("*").eq("event_id", eventId).order("registered_at");
   if (error) throw error;
