@@ -25,7 +25,7 @@ export type TabKey =
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
-  | "news" | "banners" | "sermons" | "events" | "services" | "word" | "giving"
+  | "news" | "banners" | "sermons" | "events" | "registration-events" | "services" | "word" | "giving"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "invites" | "audit"
   | "export";
@@ -125,6 +125,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "banners", label: "Banners",      icon: <Image size={15} /> },
         { key: "sermons", label: "Pregações",    icon: <Mic2 size={15} /> },
         { key: "events",  label: "Agenda",       icon: <CalendarDays size={15} /> },
+        { key: "registration-events", label: "Eventos com Inscrição", icon: <ClipboardList size={15} /> },
         { key: "giving",  label: "Momento da Generosidade", icon: <HandCoins size={15} /> },
         { key: "services",label: "Cultos",       icon: <Radio size={15} /> },
         { key: "word",    label: "Palavra do dia",icon: <BookOpen size={15} /> },
