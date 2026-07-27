@@ -6,8 +6,20 @@ import type {
 
 // ---------- Público ----------
 export async function listPublicRegistrationEvents(sb: SupabaseClient, churchId?: string | null): Promise<RegistrationEvent[]> {
+  // Regra combinada:
+  //  - church_id nulo         → evento nacional/rede, visível pra todo mundo.
+  //  - church_id de uma Sede  → visível pra todo mundo (Sede não é "só mais uma igreja").
+  //  - church_id de igreja local (não-Sede) → visível só pra quem é dessa igreja.
+  const { data: sedes } = await sb.from("churches").select("id").eq("type", "sede");
+  const sedeIds = (sedes ?? []).map((s: { id: string }) => s.id);
+  const visibleIds = new Set<string>(sedeIds);
+  if (churchId) visibleIds.add(churchId);
+
   let q = sb.from("registration_events").select("*").eq("status", "publicado").order("start_at", { ascending: true });
-  if (churchId) q = q.or(`church_id.eq.${churchId},church_id.is.null`);
+  q = visibleIds.size > 0
+    ? q.or(`church_id.is.null,church_id.in.(${Array.from(visibleIds).join(",")})`)
+    : q.is("church_id", null);
+
   const { data, error } = await q;
   if (error) return [];
   return (data ?? []) as RegistrationEvent[];
