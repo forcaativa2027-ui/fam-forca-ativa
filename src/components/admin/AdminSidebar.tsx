@@ -25,7 +25,7 @@ export type TabKey =
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
-  | "news" | "banners" | "sermons" | "events" | "registration-events" | "event-checkin" | "services" | "word" | "giving"
+  | "news" | "banners" | "sermons" | "events" | "registration-events" | "event-checkin" | "services" | "word" | "giving" | "editorial-dashboard"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "invites" | "audit"
   | "export";
@@ -121,6 +121,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
       label: "Conteúdo e Comunicação",
       icon: <Megaphone size={16} />,
       items: [
+        { key: "editorial-dashboard", label: "Dashboard Editorial", icon: <LayoutDashboard size={15} /> },
         { key: "news",    label: "Notícias",     icon: <Megaphone size={15} /> },
         { key: "banners", label: "Banners",      icon: <Image size={15} /> },
         { key: "sermons", label: "Pregações",    icon: <Mic2 size={15} /> },
