@@ -14,6 +14,7 @@ import * as Tl from "@/services/timeline";
 import * as Pr from "@/services/prayer";
 import * as Rm from "@/services/relmdaReports";
 import * as Ev from "@/services/events";
+import * as EvA from "@/services/eventAnalytics";
 import * as Gs from "@/services/globalSearch";
 import * as Sec from "@/services/security";
 
@@ -628,6 +629,20 @@ export const useEventRegistrationSummary = (eventId: string | null) =>
   useQuery({
     queryKey: ["event-registration-summary", eventId],
     queryFn: () => Ev.getRegistrationSummary(supabase, eventId as string),
+    enabled: !!eventId,
+  });
+
+export const useEventFunnel = (eventId: string | null) =>
+  useQuery({
+    queryKey: ["event-funnel", eventId],
+    queryFn: () => EvA.getEventFunnel(supabase, eventId as string),
+    enabled: !!eventId,
+  });
+
+export const useEventAnalyticsByOrigin = (eventId: string | null) =>
+  useQuery({
+    queryKey: ["event-analytics-origin", eventId],
+    queryFn: () => EvA.getEventAnalyticsByOrigin(supabase, eventId as string),
     enabled: !!eventId,
   });
 
