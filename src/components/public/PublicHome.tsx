@@ -49,6 +49,7 @@ export default function PublicHome() {
   const searchParams = useSearchParams();
   const initialTab = searchParams.get("tab") ?? "inicio";
   const [tab, setTab] = useState(initialTab);
+  const [regEventCategory, setRegEventCategory] = useState<string>("todos");
   const { data: profile } = useMyProfile();
   const { data: community } = useActiveCommunity();
   const communityId = community?.id ?? null;
@@ -277,15 +278,52 @@ export default function PublicHome() {
           {registrationEvents.length > 0 && (
             <div className="mb-6 space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Eventos com inscrição</h3>
-              {[...registrationEvents].sort((a, b) => (b.highlight_public ? 1 : 0) - (a.highlight_public ? 1 : 0)).map((ev) => (
-                <EventSignupCard
-                  key={ev.id}
-                  event={ev}
-                  origin="agenda"
-                  highlighted={ev.highlight_public}
-                  prefill={profile ? { full_name: profile.full_name, email: profile.email, phone: profile.phone } : null}
-                />
-              ))}
+              {(() => {
+                const categories = Array.from(new Set(registrationEvents.map((e) => e.category).filter((c): c is string => !!c)));
+                const filtered = regEventCategory === "todos" ? registrationEvents : registrationEvents.filter((e) => e.category === regEventCategory);
+                return (
+                  <>
+                    {categories.length > 1 && (
+                      <div className="mb-2 overflow-x-auto">
+                        <div className="flex min-w-max gap-1.5">
+                          <button
+                            onClick={() => setRegEventCategory("todos")}
+                            className={`rounded-full border px-3 py-1.5 text-xs font-bold uppercase transition ${
+                              regEventCategory === "todos" ? "bg-navy text-white border-navy" : "bg-card text-muted border-border hover:border-navy/30"
+                            }`}
+                          >
+                            Todos
+                          </button>
+                          {categories.map((c) => (
+                            <button
+                              key={c}
+                              onClick={() => setRegEventCategory(c)}
+                              className={`rounded-full border px-3 py-1.5 text-xs font-bold uppercase transition ${
+                                regEventCategory === c ? "bg-navy text-white border-navy" : "bg-card text-muted border-border hover:border-navy/30"
+                              }`}
+                            >
+                              {c}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {filtered.length === 0 ? (
+                      <p className="py-4 text-center text-sm italic text-muted-foreground">Nenhum evento nessa categoria.</p>
+                    ) : (
+                      [...filtered].sort((a, b) => (b.highlight_public ? 1 : 0) - (a.highlight_public ? 1 : 0)).map((ev) => (
+                        <EventSignupCard
+                          key={ev.id}
+                          event={ev}
+                          origin="agenda"
+                          highlighted={ev.highlight_public}
+                          prefill={profile ? { full_name: profile.full_name, email: profile.email, phone: profile.phone } : null}
+                        />
+                      ))
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
           <AgendaList events={events} />
