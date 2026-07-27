@@ -4,9 +4,12 @@ import { Bell, BellRing, CalendarDays, ClipboardX, Heart, Target, Home, CheckCir
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
+import { listPublicRegistrationEvents, listMyEventRegistrations } from "@/services/events";
+import { EventSignupCard } from "@/components/shared/EventSignupCard";
+import type { RegistrationEvent } from "@/types/domain";
 
 // ── Tipos ─────────────────────────────────────────────────────
-type NotifKind = "aniversario" | "sem_relatorio" | "oracao_urgente" | "visita_pastoral" | "meta_atrasada";
+type NotifKind = "aniversario" | "sem_relatorio" | "oracao_urgente" | "visita_pastoral" | "meta_atrasada" | "evento";
 
 interface Notif {
   id: string;
@@ -14,6 +17,8 @@ interface Notif {
   title: string;
   detail: string;
   urgency: "critico" | "atencao" | "info";
+  eventObj?: RegistrationEvent;
+  prefill?: { full_name: string; email: string | null; phone: string | null } | null;
 }
 
 const KIND_CONFIG: Record<NotifKind, { icon: React.ReactNode; color: string; bg: string; label: string }> = {
@@ -22,6 +27,7 @@ const KIND_CONFIG: Record<NotifKind, { icon: React.ReactNode; color: string; bg:
   oracao_urgente:  { icon: <Heart className="h-4 w-4"/>,       color:"text-red-600",    bg:"bg-red-50 border-red-200",     label:"Oração Urgente"    },
   visita_pastoral: { icon: <Home className="h-4 w-4"/>,        color:"text-yellow-600", bg:"bg-yellow-50 border-yellow-200",label:"Visita Pastoral"  },
   meta_atrasada:   { icon: <Target className="h-4 w-4"/>,      color:"text-orange-600", bg:"bg-orange-50 border-orange-200",label:"Meta Atrasada"    },
+  evento:          { icon: <CalendarDays className="h-4 w-4"/>, color:"text-red-600",    bg:"bg-red-50 border-red-200",     label:"Eventos"           },
 };
 
 // ── Buscar notificações ───────────────────────────────────────
@@ -96,6 +102,29 @@ async function fetchNotifications(): Promise<Notif[]> {
       urgency: "atencao",
     }));
   }
+
+  // Eventos com inscrição — Sede (rede toda) + eventos da própria igreja, excluindo os já inscritos
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: prof } = await supabase.from("profiles").select("full_name,email,phone,church_id").eq("id", user.id).maybeSingle();
+      const prefill = prof ? { full_name: prof.full_name, email: prof.email, phone: prof.phone } : null;
+      const [visibleEvents, myRegs] = await Promise.all([
+        listPublicRegistrationEvents(supabase, prof?.church_id ?? null),
+        listMyEventRegistrations(supabase),
+      ]);
+      const registeredIds = new Set(myRegs.filter((r) => r.status !== "cancelada").map((r) => r.event_id));
+      visibleEvents.filter((e) => !registeredIds.has(e.id)).forEach((e) => notifs.push({
+        id: `evento-${e.id}`,
+        kind: "evento",
+        title: e.name,
+        detail: new Date(e.start_at).toLocaleDateString("pt-BR"),
+        urgency: "critico",
+        eventObj: e,
+        prefill,
+      }));
+    }
+  } catch { /* eventos são um extra — não derruba o resto das notificações se falhar */ }
 
   // Ordenar: críticos primeiro, depois atenção, depois info
   return notifs.sort((a, b) => {
@@ -178,7 +207,7 @@ export function NotificationsPanel() {
       </div>
 
       {/* Lista por categoria */}
-      {(["aniversario","sem_relatorio","oracao_urgente","visita_pastoral","meta_atrasada"] as NotifKind[]).map(kind => {
+      {(["evento","aniversario","sem_relatorio","oracao_urgente","visita_pastoral","meta_atrasada"] as NotifKind[]).map(kind => {
         const group = visible.filter(n => n.kind === kind);
         if (group.length === 0) return null;
         const cfg = KIND_CONFIG[kind];
@@ -189,6 +218,17 @@ export function NotificationsPanel() {
             </h3>
             <div className="space-y-1.5">
               {group.map(n => (
+                kind === "evento" && n.eventObj ? (
+                  <EventSignupCard
+                    key={n.id}
+                    event={n.eventObj}
+                    compact
+                    urgent
+                    showDetailsLink
+                    prefill={n.prefill}
+                    onRegistered={() => setDismissed(d => new Set([...d, n.id]))}
+                  />
+                ) : (
                 <div key={n.id} className={`flex items-start justify-between gap-3 rounded-lg border p-3 ${cfg.bg}`}>
                   <div className="flex-1 min-w-0">
                     <p className={`text-sm font-semibold ${cfg.color}`}>{n.title}</p>
@@ -202,6 +242,7 @@ export function NotificationsPanel() {
                     <CheckCircle2 className="h-4 w-4"/>
                   </button>
                 </div>
+                )
               ))}
             </div>
           </div>

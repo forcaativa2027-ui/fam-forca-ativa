@@ -20,6 +20,7 @@ import { CompleteProfileCard } from "./CompleteProfileCard";
 import { MyCredentialCard } from "./MyCredentialCard";
 import { MemberHeader } from "./MemberHeader";
 import { NotificationsPanel, useNotificationCount, NotificationBadge } from "./NotificationsPanel";
+import { EventLoginPopup } from "./EventLoginPopup";
 import { supabase } from "@/lib/supabase/client";
 import { touchCurrentSession } from "@/services/security";
 import {
@@ -89,6 +90,7 @@ export default function PanelDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <EventLoginPopup profile={profile} />
       <MemberHeader active="dashboard" isAdmin={isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
 
       <Tabs value={tab} onValueChange={setTab}>
