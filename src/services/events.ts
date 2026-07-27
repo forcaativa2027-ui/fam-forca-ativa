@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   RegistrationEvent, RegistrationEventInput, EventRegistration, EventRegistrationSummary,
   RegisterForEventResult, MyEventRegistration, GroupRegistrationResult,
-  EventCheckinLookup, EventGroupMember, RecentEventCheckin, EventSpeaker, PendingPromotion,
+  EventCheckinLookup, EventGroupMember, RecentEventCheckin, EventSpeaker, PendingPromotion, EventChange,
 } from "@/types/domain";
 
 const PUBLIC_VISIBLE_STATUSES = [
@@ -210,5 +210,17 @@ export async function listMyPendingPromotions(sb: SupabaseClient): Promise<Pendi
 
 export async function acknowledgeEventPromotion(sb: SupabaseClient, registrationId: string): Promise<void> {
   const { error } = await sb.rpc("acknowledge_event_promotion", { p_registration_id: registrationId });
+  if (error) throw error;
+}
+
+// ---------- Mudanças de evento (EVT009) ----------
+export async function listMyEventChanges(sb: SupabaseClient): Promise<EventChange[]> {
+  const { data, error } = await sb.rpc("list_my_event_changes");
+  if (error) return [];
+  return (data ?? []) as EventChange[];
+}
+
+export async function acknowledgeEventChange(sb: SupabaseClient, registrationId: string): Promise<void> {
+  const { error } = await sb.rpc("acknowledge_event_change", { p_registration_id: registrationId });
   if (error) throw error;
 }
