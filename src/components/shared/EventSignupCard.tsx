@@ -1,11 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CalendarDays, MapPin, Video, X, Check, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase/client";
 import { registerForEvent } from "@/services/events";
+import { logEventView, logEventClick } from "@/services/eventAnalytics";
 import { registrationProtocol, googleCalendarUrl, icsDownloadUrl } from "@/lib/eventShare";
 import { EventShareButtons } from "@/components/shared/EventShareButtons";
 import { CalendarPlus } from "lucide-react";
@@ -18,7 +19,7 @@ interface Prefill {
 }
 
 export function EventSignupCard({
-  event, compact = false, urgent = false, hideHeader = false, showDetailsLink = false, prefill = null, onRegistered,
+  event, compact = false, urgent = false, hideHeader = false, showDetailsLink = false, prefill = null, origin = null, onRegistered,
 }: {
   event: RegistrationEvent;
   /** versão compacta usada na aba Alertas */
@@ -31,6 +32,8 @@ export function EventSignupCard({
   showDetailsLink?: boolean;
   /** dados do membro logado, pra pular o formulário */
   prefill?: Prefill | null;
+  /** de onde esse card está sendo mostrado (agenda | alertas | popup | pagina_publica...) — vira indicador no admin */
+  origin?: string | null;
   onRegistered?: () => void;
 }) {
   const [showForm, setShowForm] = useState(false);
@@ -41,6 +44,11 @@ export function EventSignupCard({
   const [result, setResult] = useState<"confirmada" | "lista_espera" | null>(null);
   const [registrationId, setRegistrationId] = useState<string | null>(null);
   const [err, setErr] = useState("");
+
+  useEffect(() => {
+    logEventView(supabase, event.id, origin);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event.id]);
 
   const dateLabel = new Date(event.start_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 
@@ -59,6 +67,7 @@ export function EventSignupCard({
 
   // Membro logado com dados completos → um clique só, sem formulário.
   async function quickSubmit() {
+    logEventClick(supabase, event.id, origin);
     if (!prefill?.full_name) { setShowForm(true); return; }
     setBusy(true); setErr("");
     try {
@@ -124,7 +133,7 @@ export function EventSignupCard({
             </p>
             {!compact && event.description && <p className="mt-1.5 text-sm text-muted-foreground">{event.description}</p>}
             {showDetailsLink && (
-              <Link href={`/eventos/${event.slug}`} className={`mt-1 inline-flex items-center gap-1 text-xs font-semibold underline ${urgent ? "text-red-700" : "text-navy"}`}>
+              <Link href={`/eventos/${event.slug}${origin ? `?origem=${origin}` : ""}`} className={`mt-1 inline-flex items-center gap-1 text-xs font-semibold underline ${urgent ? "text-red-700" : "text-navy"}`}>
                 Ver detalhes <ArrowRight className="h-3 w-3" />
               </Link>
             )}
