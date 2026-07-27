@@ -45,6 +45,18 @@ export function icsDownloadUrl(event: RegistrationEvent): string {
   return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
 }
 
+/** QR Code de check-in da inscrição — mesmo padrão usado na Carteira CEC ID (api.qrserver.com). */
+export function eventCheckinQrUrl(registrationId: string): string {
+  const base = typeof window !== "undefined" ? window.location.origin : "https://cec-painel.vercel.app";
+  const validationUrl = `${base}/checkin/${registrationId}`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(validationUrl)}`;
+}
+export function extractRegistrationIdFromQr(raw: string): string {
+  const trimmed = raw.trim();
+  const match = trimmed.match(/\/checkin\/([A-Za-z0-9-]+)/);
+  return match ? match[1] : trimmed;
+}
+
 export function whatsappShareUrl(event: RegistrationEvent): string {
   const text = `${event.name}\n${new Date(event.start_at).toLocaleString("pt-BR", { dateStyle: "long", timeStyle: "short" })}\n${eventPublicUrl(event)}`;
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
