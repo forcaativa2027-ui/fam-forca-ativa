@@ -225,6 +225,7 @@ export function NotificationsPanel() {
                     compact
                     urgent
                     showDetailsLink
+                    origin="alertas"
                     prefill={n.prefill}
                     onRegistered={() => setDismissed(d => new Set([...d, n.id]))}
                   />
