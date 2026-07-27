@@ -120,6 +120,7 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
   const [slug, setSlug] = useState(event?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(!!event);
   const [description, setDescription] = useState(event?.description ?? "");
+  const [bannerUrl, setBannerUrl] = useState(event?.banner_url ?? "");
   const [churchId, setChurchId] = useState(event?.church_id ?? "");
   const [location, setLocation] = useState(event?.location ?? "");
   const [isOnline, setIsOnline] = useState(event?.is_online ?? false);
@@ -149,6 +150,7 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
         name: name.trim(),
         slug: slug.trim(),
         description: description || null,
+        banner_url: bannerUrl || null,
         church_id: churchId || null,
         location: location || null,
         is_online: isOnline,
@@ -190,6 +192,9 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
           </Field>
           <Field label="Descrição">
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full rounded-md border bg-background px-3 py-2 text-sm" />
+          </Field>
+          <Field label="Imagem de divulgação (URL — opcional, usada no pop-up e na página do evento)">
+            <Input value={bannerUrl} onChange={(e) => setBannerUrl(e.target.value)} placeholder="https://…" />
           </Field>
 
           <Field label="Igreja (opcional — vazio = evento nacional/rede)">
