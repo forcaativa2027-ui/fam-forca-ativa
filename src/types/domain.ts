@@ -1283,6 +1283,14 @@ export interface RecentEventCheckin {
   checked_in_at: string;
 }
 
+export interface PendingPromotion {
+  registration_id: string;
+  event_id: string;
+  event_name: string;
+  event_slug: string;
+  promoted_at: string;
+}
+
 export interface EventRegistrationSummary {
   confirmadas: number;
   lista_espera: number;
