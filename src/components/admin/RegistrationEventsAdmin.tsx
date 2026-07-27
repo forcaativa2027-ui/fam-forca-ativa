@@ -202,6 +202,7 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
   const [regClosesAt, setRegClosesAt] = useState(event?.registration_closes_at ? event.registration_closes_at.slice(0, 16) : "");
   const [capacity, setCapacity] = useState(event?.capacity?.toString() ?? "");
   const [status, setStatus] = useState<RegistrationEventStatus>(event?.status ?? "rascunho");
+  const [cancellationReason, setCancellationReason] = useState(event?.cancellation_reason ?? "");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
@@ -235,6 +236,7 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
     if (!slug.trim()) { setErr("Slug é obrigatório."); return; }
     if (!startAt) { setErr("Data/hora de início é obrigatória."); return; }
     if (isOnline && !onlineUrl.trim()) { setErr("Informe o link do evento online."); return; }
+    if (status === "cancelado" && !cancellationReason.trim()) { setErr("Informe o motivo do cancelamento — os inscritos verão essa mensagem."); return; }
     setBusy(true); setErr("");
     try {
       const payload = {
@@ -264,6 +266,7 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
         popup_template: popupTemplate,
         popup_repeat_mode: popupRepeatMode,
         popup_repeat_interval_hours: popupRepeatMode === "intervalo_horas" ? Number(popupRepeatIntervalHours) || 24 : null,
+        cancellation_reason: status === "cancelado" ? cancellationReason.trim() : null,
       };
       let eventId = event?.id;
       if (event) {
@@ -408,6 +411,18 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
             <b> Agendado</b>, <b>Inscrições encerradas</b>, <b>Lotado</b>, <b>Em andamento</b>, <b>Finalizado</b> e <b>Cancelado</b> ficam visíveis (sem inscrição).
             <b> Rascunho</b>, <b>Em revisão</b> e <b>Arquivado</b> ficam escondidos do público.
           </p>
+
+          {status === "cancelado" && (
+            <Field label="Motivo do cancelamento (obrigatório — os inscritos vão ver essa mensagem)">
+              <textarea
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+                rows={2}
+                className="w-full rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm"
+                placeholder="Ex: Evento remarcado por questões de agenda da igreja."
+              />
+            </Field>
+          )}
 
           <div className="flex flex-wrap items-center gap-4 rounded-md border p-3">
             <label className="flex items-center gap-2 text-sm">
