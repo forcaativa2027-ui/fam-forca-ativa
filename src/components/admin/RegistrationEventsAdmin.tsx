@@ -182,6 +182,7 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
   const [requiresImageConsent, setRequiresImageConsent] = useState(event?.requires_image_consent ?? false);
   const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>(event?.custom_fields ?? []);
   const [bannerUrl, setBannerUrl] = useState(event?.banner_url ?? "");
+  const [popupVideoUrl, setPopupVideoUrl] = useState(event?.popup_video_url ?? "");
   const [churchId, setChurchId] = useState(event?.church_id ?? "");
   const [location, setLocation] = useState(event?.location ?? "");
   const [isOnline, setIsOnline] = useState(event?.is_online ?? false);
@@ -227,6 +228,7 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
         highlight_dashboard: highlightDashboard,
         highlight_public: highlightPublic,
         banner_url: bannerUrl || null,
+        popup_video_url: popupVideoUrl || null,
         church_id: churchId || null,
         location: location || null,
         is_online: isOnline,
@@ -288,6 +290,9 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
           </Field>
           <Field label="Imagem de divulgação (URL — opcional, usada no pop-up e na página do evento)">
             <Input value={bannerUrl} onChange={(e) => setBannerUrl(e.target.value)} placeholder="https://…" />
+          </Field>
+          <Field label="Vídeo curto de divulgação (URL de um .mp4 direto — opcional, toca no pop-up de login)">
+            <Input value={popupVideoUrl} onChange={(e) => setPopupVideoUrl(e.target.value)} placeholder="https://…/video.mp4" />
           </Field>
 
           <Field label="Igreja (opcional — vazio = evento nacional/rede)">
