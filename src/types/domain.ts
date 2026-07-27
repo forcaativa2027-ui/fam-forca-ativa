@@ -1183,6 +1183,15 @@ export type RegistrationEventStatus =
   | "lotado" | "em_andamento" | "finalizado" | "cancelado" | "arquivado";
 export type EventRegistrationStatus = "confirmada" | "lista_espera" | "cancelada";
 
+export type CustomFieldType = "texto_curto" | "texto_longo" | "selecao_unica" | "selecao_multipla" | "sim_nao" | "data";
+export interface CustomFieldDefinition {
+  id: string;
+  label: string;
+  type: CustomFieldType;
+  options?: string[];
+  required?: boolean;
+}
+
 export interface RegistrationEvent {
   id: string;
   church_id: string | null;
@@ -1205,6 +1214,9 @@ export interface RegistrationEvent {
   target_audience: string | null;
   highlight_dashboard: boolean;
   highlight_public: boolean;
+  requires_cpf: boolean;
+  requires_image_consent: boolean;
+  custom_fields: CustomFieldDefinition[];
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -1218,6 +1230,11 @@ export interface EventRegistration {
   full_name: string;
   email: string | null;
   phone: string | null;
+  cpf: string | null;
+  accepted_privacy_policy: boolean;
+  accepted_image_use: boolean;
+  custom_answers: Record<string, unknown>;
+  group_id: string | null;
   status: EventRegistrationStatus;
   registered_at: string;
   cancelled_at: string | null;
@@ -1234,6 +1251,10 @@ export interface RegisterForEventResult {
   registration_id: string;
   reg_status: EventRegistrationStatus;
   queue_position: number | null;
+}
+
+export interface GroupRegistrationResult extends RegisterForEventResult {
+  full_name: string;
 }
 
 export interface MyEventRegistration extends EventRegistration {
