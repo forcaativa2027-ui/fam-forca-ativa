@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   RegistrationEvent, RegistrationEventInput, EventRegistration, EventRegistrationSummary,
   RegisterForEventResult, MyEventRegistration, GroupRegistrationResult,
-  EventCheckinLookup, EventGroupMember, RecentEventCheckin,
+  EventCheckinLookup, EventGroupMember, RecentEventCheckin, EventSpeaker,
 } from "@/types/domain";
 
 const PUBLIC_VISIBLE_STATUSES = [
@@ -171,4 +171,22 @@ export async function listRecentEventCheckins(sb: SupabaseClient, eventId: strin
   const { data, error } = await sb.rpc("list_recent_event_checkins", { p_event_id: eventId, p_limit: 20 });
   if (error) throw error;
   return (data ?? []) as RecentEventCheckin[];
+}
+
+// ---------- Palestrantes (EVT007) ----------
+export async function listEventSpeakers(sb: SupabaseClient, eventId: string): Promise<EventSpeaker[]> {
+  const { data, error } = await sb.from("event_speakers").select("*").eq("event_id", eventId).order("order_index");
+  if (error) return [];
+  return (data ?? []) as EventSpeaker[];
+}
+
+export async function saveEventSpeakers(sb: SupabaseClient, eventId: string, speakers: Omit<EventSpeaker, "event_id" | "created_at">[]): Promise<void> {
+  // Substitui a lista inteira — mais simples e previsível do que diffs parciais pra um formulário pequeno como esse.
+  const { error: delErr } = await sb.from("event_speakers").delete().eq("event_id", eventId);
+  if (delErr) throw delErr;
+  if (speakers.length === 0) return;
+  const { error } = await sb.from("event_speakers").insert(
+    speakers.map((s, i) => ({ id: s.id, event_id: eventId, name: s.name, photo_url: s.photo_url, topic: s.topic, order_index: i }))
+  );
+  if (error) throw error;
 }
