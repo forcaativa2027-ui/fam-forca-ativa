@@ -1,22 +1,25 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, X, Users, FileDown, ArrowLeft } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Users, FileDown, ArrowLeft, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   useRegistrationEventsAdmin, useEventRegistrations, useEventRegistrationSummary, useChurches,
-  useEventFunnel, useEventAnalyticsByOrigin,
+  useEventFunnel, useEventAnalyticsByOrigin, useEventSpeakers,
 } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import {
-  createRegistrationEvent, updateRegistrationEvent, deleteRegistrationEvent, cancelRegistration,
+  createRegistrationEvent, updateRegistrationEvent, deleteRegistrationEvent, cancelRegistration, saveEventSpeakers,
 } from "@/services/events";
 import { logAudit } from "@/services/audit";
 import { exportToExcel } from "@/lib/export";
-import type { RegistrationEvent, RegistrationEventStatus, CustomFieldDefinition, CustomFieldType } from "@/types/domain";
+import type {
+  RegistrationEvent, RegistrationEventStatus, CustomFieldDefinition, CustomFieldType,
+  PopupTemplate, PopupRepeatMode, EventSpeaker,
+} from "@/types/domain";
 
 const STATUS_LABELS: Record<RegistrationEventStatus, string> = {
   rascunho: "Rascunho",
@@ -183,6 +186,12 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
   const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>(event?.custom_fields ?? []);
   const [bannerUrl, setBannerUrl] = useState(event?.banner_url ?? "");
   const [popupVideoUrl, setPopupVideoUrl] = useState(event?.popup_video_url ?? "");
+  const [popupTemplate, setPopupTemplate] = useState<PopupTemplate>(event?.popup_template ?? "classico");
+  const [popupRepeatMode, setPopupRepeatMode] = useState<PopupRepeatMode>(event?.popup_repeat_mode ?? "uma_vez_por_sessao");
+  const [popupRepeatIntervalHours, setPopupRepeatIntervalHours] = useState(event?.popup_repeat_interval_hours?.toString() ?? "24");
+  const { data: existingSpeakers = [] } = useEventSpeakers(event?.id ?? null);
+  const [speakers, setSpeakers] = useState<EventSpeaker[]>([]);
+  useEffect(() => { if (existingSpeakers.length > 0) setSpeakers(existingSpeakers); }, [existingSpeakers]);
   const [churchId, setChurchId] = useState(event?.church_id ?? "");
   const [location, setLocation] = useState(event?.location ?? "");
   const [isOnline, setIsOnline] = useState(event?.is_online ?? false);
@@ -209,6 +218,16 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
   }
   function removeCustomField(i: number) {
     setCustomFields((f) => f.filter((_, idx) => idx !== i));
+  }
+
+  function addSpeaker() {
+    setSpeakers((s) => [...s, { id: crypto.randomUUID(), event_id: event?.id ?? "", name: "", photo_url: null, topic: null, order_index: s.length, created_at: "" }]);
+  }
+  function updateSpeaker(i: number, patch: Partial<EventSpeaker>) {
+    setSpeakers((s) => s.map((sp, idx) => (idx === i ? { ...sp, ...patch } : sp)));
+  }
+  function removeSpeaker(i: number) {
+    setSpeakers((s) => s.filter((_, idx) => idx !== i));
   }
 
   async function save() {
@@ -242,13 +261,21 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
         requires_cpf: requiresCpf,
         requires_image_consent: requiresImageConsent,
         custom_fields: customFields.filter((f) => f.label.trim() !== ""),
+        popup_template: popupTemplate,
+        popup_repeat_mode: popupRepeatMode,
+        popup_repeat_interval_hours: popupRepeatMode === "intervalo_horas" ? Number(popupRepeatIntervalHours) || 24 : null,
       };
+      let eventId = event?.id;
       if (event) {
         await updateRegistrationEvent(supabase, event.id, payload);
         await logAudit(supabase, "update", "registration_events", event.id, { name });
       } else {
         const created = await createRegistrationEvent(supabase, payload);
+        eventId = created.id;
         await logAudit(supabase, "insert", "registration_events", created.id, { name });
+      }
+      if (eventId) {
+        await saveEventSpeakers(supabase, eventId, speakers.filter((s) => s.name.trim() !== ""));
       }
       qc.invalidateQueries({ queryKey: ["registration-events-admin"] });
       qc.invalidateQueries({ queryKey: ["registration-events-public"] });
@@ -294,6 +321,50 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
           <Field label="Vídeo curto de divulgação (URL de um .mp4 direto — opcional, toca no pop-up de login)">
             <Input value={popupVideoUrl} onChange={(e) => setPopupVideoUrl(e.target.value)} placeholder="https://…/video.mp4" />
           </Field>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Estilo visual do pop-up">
+              <select value={popupTemplate} onChange={(e) => setPopupTemplate(e.target.value as PopupTemplate)} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="classico">Clássico (azul-marinho/dourado)</option>
+                <option value="moderno">Moderno (gradiente)</option>
+                <option value="jovem">Jovem (cores vibrantes)</option>
+              </select>
+            </Field>
+            <Field label="Repetir pop-up">
+              <select value={popupRepeatMode} onChange={(e) => setPopupRepeatMode(e.target.value as PopupRepeatMode)} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="uma_vez_por_sessao">Uma vez por sessão (padrão)</option>
+                <option value="sempre">Sempre que fizer login</option>
+                <option value="intervalo_horas">A cada X horas</option>
+                <option value="uma_vez_so">Só uma vez (nunca mais depois de fechar)</option>
+              </select>
+            </Field>
+          </div>
+          {popupRepeatMode === "intervalo_horas" && (
+            <Field label="Intervalo (horas)">
+              <Input type="number" min="1" value={popupRepeatIntervalHours} onChange={(e) => setPopupRepeatIntervalHours(e.target.value)} />
+            </Field>
+          )}
+
+          <div className="rounded-md border p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Palestrantes/convidados (opcional)</p>
+              <Button type="button" size="sm" variant="outline" onClick={addSpeaker} className="gap-1.5">
+                <Plus className="h-3.5 w-3.5" /> Adicionar palestrante
+              </Button>
+            </div>
+            {speakers.length === 0 && <p className="text-xs italic text-muted-foreground">Nenhum palestrante cadastrado.</p>}
+            <div className="space-y-2">
+              {speakers.map((s, i) => (
+                <div key={s.id} className="flex items-center gap-2 rounded border p-2">
+                  <Mic className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <Input placeholder="Nome" value={s.name} onChange={(e) => updateSpeaker(i, { name: e.target.value })} />
+                  <Input placeholder="Tema (opcional)" value={s.topic ?? ""} onChange={(e) => updateSpeaker(i, { topic: e.target.value })} />
+                  <Input placeholder="Foto (URL, opcional)" value={s.photo_url ?? ""} onChange={(e) => updateSpeaker(i, { photo_url: e.target.value })} className="max-w-[160px]" />
+                  <Button type="button" size="sm" variant="ghost" onClick={() => removeSpeaker(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <Field label="Igreja (opcional — vazio = evento nacional/rede)">
             <select value={churchId} onChange={(e) => setChurchId(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
