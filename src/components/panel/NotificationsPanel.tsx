@@ -1,16 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Bell, BellRing, CalendarDays, ClipboardX, Heart, Target, Home, CheckCircle2, Ticket, PartyPopper } from "lucide-react";
+import { Bell, BellRing, CalendarDays, ClipboardX, Heart, Target, Home, CheckCircle2, Ticket, PartyPopper, AlertTriangle, Clock3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
-import { listPublicRegistrationEvents, listMyEventRegistrations, listMyPendingPromotions, acknowledgeEventPromotion } from "@/services/events";
+import { listPublicRegistrationEvents, listMyEventRegistrations, listMyPendingPromotions, acknowledgeEventPromotion, listMyEventChanges, acknowledgeEventChange } from "@/services/events";
 import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import type { RegistrationEvent } from "@/types/domain";
 
 // ── Tipos ─────────────────────────────────────────────────────
-type NotifKind = "aniversario" | "sem_relatorio" | "oracao_urgente" | "visita_pastoral" | "meta_atrasada" | "evento" | "promocao";
+type NotifKind = "aniversario" | "sem_relatorio" | "oracao_urgente" | "visita_pastoral" | "meta_atrasada" | "evento" | "promocao" | "mudanca_evento" | "lembrete_evento";
 
 interface Notif {
   id: string;
@@ -31,6 +31,8 @@ const KIND_CONFIG: Record<NotifKind, { icon: React.ReactNode; color: string; bg:
   meta_atrasada:   { icon: <Target className="h-4 w-4"/>,      color:"text-orange-600", bg:"bg-orange-50 border-orange-200",label:"Meta Atrasada"    },
   evento:          { icon: <CalendarDays className="h-4 w-4"/>, color:"text-red-600",    bg:"bg-red-50 border-red-200",     label:"Eventos"           },
   promocao:        { icon: <PartyPopper className="h-4 w-4"/>, color:"text-emerald-600", bg:"bg-emerald-50 border-emerald-200", label:"Boas notícias"  },
+  mudanca_evento:  { icon: <AlertTriangle className="h-4 w-4"/>, color:"text-orange-700", bg:"bg-orange-50 border-orange-300", label:"Mudança em evento" },
+  lembrete_evento: { icon: <Clock3 className="h-4 w-4"/>,      color:"text-sky-700",     bg:"bg-sky-50 border-sky-200",     label:"Lembrete"          },
 };
 
 // ── Buscar notificações ───────────────────────────────────────
@@ -142,6 +144,52 @@ async function fetchNotifications(): Promise<Notif[]> {
     }));
   } catch { /* idem */ }
 
+  // Mudanças em evento (data/local/cancelamento) e lembretes — sem depender de e-mail/cron
+  try {
+    const [changes, myRegs] = await Promise.all([
+      listMyEventChanges(supabase),
+      listMyEventRegistrations(supabase),
+    ]);
+
+    changes.forEach((c) => {
+      let title = "";
+      let detail = "";
+      if (c.change_type === "cancelado") {
+        title = `Evento cancelado: "${c.event_name}"`;
+        detail = c.cancellation_reason ? `Motivo: ${c.cancellation_reason}` : "O organizador cancelou este evento.";
+      } else if (c.change_type === "horario") {
+        title = `Mudou o horário de "${c.event_name}"`;
+        detail = `De ${new Date(c.old_start_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })} para ${new Date(c.new_start_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}.`;
+      } else {
+        title = `Mudou o local de "${c.event_name}"`;
+        detail = `Novo local: ${c.new_location ?? "verificar na página do evento"}.`;
+      }
+      notifs.push({ id: `mudanca-${c.registration_id}`, kind: "mudanca_evento", title, detail, urgency: "atencao", registrationId: c.registration_id });
+    });
+
+    const now48h = Date.now() + 48 * 3_600_000;
+    myRegs
+      .filter((r) => r.status === "confirmada" && ["inscricoes_abertas", "em_andamento"].includes(r.event.status))
+      .filter((r) => {
+        const start = new Date(r.event.start_at).getTime();
+        return start > Date.now() && start <= now48h;
+      })
+      .forEach((r) => {
+        let seen = false;
+        try { seen = sessionStorage.getItem(`cec-event-reminder-${r.event_id}`) === "1"; } catch { /* sem storage — sempre mostra */ }
+        if (seen) return;
+        const hoursLeft = Math.round((new Date(r.event.start_at).getTime() - Date.now()) / 3_600_000);
+        notifs.push({
+          id: `lembrete-${r.event_id}`,
+          kind: "lembrete_evento",
+          title: `"${r.event.name}" é ${hoursLeft <= 24 ? "em breve" : "em breve"}!`,
+          detail: hoursLeft <= 1 ? "Começa daqui a pouco." : `Faltam cerca de ${hoursLeft} horas.` + (r.event.is_online && r.event.online_url ? ` Link: ${r.event.online_url}` : ""),
+          urgency: "atencao",
+          registrationId: r.event_id,
+        });
+      });
+  } catch { /* idem */ }
+
   // Ordenar: críticos primeiro, depois atenção, depois info
   return notifs.sort((a, b) => {
     const order = { critico: 0, atencao: 1, info: 2 };
@@ -231,7 +279,7 @@ export function NotificationsPanel() {
       </div>
 
       {/* Lista por categoria */}
-      {(["promocao","evento","aniversario","sem_relatorio","oracao_urgente","visita_pastoral","meta_atrasada"] as NotifKind[]).map(kind => {
+      {(["promocao","mudanca_evento","evento","lembrete_evento","aniversario","sem_relatorio","oracao_urgente","visita_pastoral","meta_atrasada"] as NotifKind[]).map(kind => {
         const group = visible.filter(n => n.kind === kind);
         if (group.length === 0) return null;
         const cfg = KIND_CONFIG[kind];
@@ -263,6 +311,10 @@ export function NotificationsPanel() {
                     onClick={() => {
                       setDismissed(d => new Set([...d, n.id]));
                       if (kind === "promocao" && n.registrationId) acknowledgeEventPromotion(supabase, n.registrationId).catch(() => {});
+                      if (kind === "mudanca_evento" && n.registrationId) acknowledgeEventChange(supabase, n.registrationId).catch(() => {});
+                      if (kind === "lembrete_evento" && n.registrationId) {
+                        try { sessionStorage.setItem(`cec-event-reminder-${n.registrationId}`, "1"); } catch { /* sem storage — sem problema */ }
+                      }
                     }}
                     className="text-muted-foreground hover:text-gray-600 shrink-0 mt-0.5"
                     title="Dispensar"
