@@ -1178,7 +1178,9 @@ export interface RelmdaMonthlyComparisonRow {
 // Eventos com Inscrição (sem pagamento por enquanto)
 // Diferente de EventItem/EventStatus acima, que são da Agenda simples.
 // ============================================================
-export type RegistrationEventStatus = "rascunho" | "publicado" | "encerrado" | "cancelado";
+export type RegistrationEventStatus =
+  | "rascunho" | "em_revisao" | "agendado" | "inscricoes_abertas" | "inscricoes_encerradas"
+  | "lotado" | "em_andamento" | "finalizado" | "cancelado" | "arquivado";
 export type EventRegistrationStatus = "confirmada" | "lista_espera" | "cancelada";
 
 export interface RegistrationEvent {
@@ -1198,6 +1200,11 @@ export interface RegistrationEvent {
   capacity: number | null;
   is_free: boolean;
   status: RegistrationEventStatus;
+  category: string | null;
+  subtitle: string | null;
+  target_audience: string | null;
+  highlight_dashboard: boolean;
+  highlight_public: boolean;
   created_by: string | null;
   created_at: string;
   updated_at: string;
