@@ -119,6 +119,16 @@ export async function updateRegistrationEvent(sb: SupabaseClient, id: string, in
   return data as RegistrationEvent;
 }
 
+export async function listHighlightedRegistrationEvents(sb: SupabaseClient): Promise<RegistrationEvent[]> {
+  const { data, error } = await sb.from("registration_events").select("*")
+    .eq("highlight_dashboard", true)
+    .in("status", ["agendado", "inscricoes_abertas", "em_andamento"])
+    .order("start_at", { ascending: true })
+    .limit(5);
+  if (error) return [];
+  return (data ?? []) as RegistrationEvent[];
+}
+
 export async function deleteRegistrationEvent(sb: SupabaseClient, id: string): Promise<void> {
   const { error } = await sb.from("registration_events").delete().eq("id", id);
   if (error) throw error;
