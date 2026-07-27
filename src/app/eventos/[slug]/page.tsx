@@ -7,9 +7,10 @@ import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import { EventShareButtons } from "@/components/shared/EventShareButtons";
 import { useRegistrationEventBySlug, useMyProfile } from "@/hooks/use-queries";
 
-export default function EventoPage({ params }: { params: { slug: string } }) {
+export default function EventoPage({ params, searchParams }: { params: { slug: string }; searchParams: { origem?: string } }) {
   const { data: event, isLoading } = useRegistrationEventBySlug(params.slug);
   const { data: profile } = useMyProfile();
+  const origin = searchParams?.origem || "pagina_publica";
 
   return (
     <DarkBlueTheme className="p-4">
@@ -51,6 +52,7 @@ export default function EventoPage({ params }: { params: { slug: string } }) {
                 <EventSignupCard
                   event={event}
                   hideHeader
+                  origin={origin}
                   prefill={profile ? { full_name: profile.full_name, email: profile.email, phone: profile.phone } : null}
                 />
               </CardContent>
