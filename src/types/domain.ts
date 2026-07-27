@@ -1238,6 +1238,33 @@ export interface EventRegistration {
   status: EventRegistrationStatus;
   registered_at: string;
   cancelled_at: string | null;
+  checked_in_at: string | null;
+  checked_in_by: string | null;
+}
+
+export interface EventCheckinLookup {
+  registration_id: string;
+  event_id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  status: string;
+  checked_in_at: string | null;
+  group_id: string | null;
+  event_name: string;
+}
+
+export interface EventGroupMember {
+  registration_id: string;
+  full_name: string;
+  status: string;
+  checked_in_at: string | null;
+}
+
+export interface RecentEventCheckin {
+  registration_id: string;
+  full_name: string;
+  checked_in_at: string;
 }
 
 export interface EventRegistrationSummary {
