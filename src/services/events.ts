@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   RegistrationEvent, RegistrationEventInput, EventRegistration, EventRegistrationSummary,
   RegisterForEventResult, MyEventRegistration, GroupRegistrationResult,
-  EventCheckinLookup, EventGroupMember, RecentEventCheckin, EventSpeaker,
+  EventCheckinLookup, EventGroupMember, RecentEventCheckin, EventSpeaker, PendingPromotion,
 } from "@/types/domain";
 
 const PUBLIC_VISIBLE_STATUSES = [
@@ -198,5 +198,17 @@ export async function saveEventSpeakers(sb: SupabaseClient, eventId: string, spe
   const { error } = await sb.from("event_speakers").insert(
     speakers.map((s, i) => ({ id: s.id, event_id: eventId, name: s.name, photo_url: s.photo_url, topic: s.topic, order_index: i }))
   );
+  if (error) throw error;
+}
+
+// ---------- Promoção de lista de espera (EVT008) ----------
+export async function listMyPendingPromotions(sb: SupabaseClient): Promise<PendingPromotion[]> {
+  const { data, error } = await sb.rpc("list_my_pending_promotions");
+  if (error) return [];
+  return (data ?? []) as PendingPromotion[];
+}
+
+export async function acknowledgeEventPromotion(sb: SupabaseClient, registrationId: string): Promise<void> {
+  const { error } = await sb.rpc("acknowledge_event_promotion", { p_registration_id: registrationId });
   if (error) throw error;
 }
