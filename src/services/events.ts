@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   RegistrationEvent, RegistrationEventInput, EventRegistration, EventRegistrationSummary,
   RegisterForEventResult, MyEventRegistration, GroupRegistrationResult,
+  EventCheckinLookup, EventGroupMember, RecentEventCheckin,
 } from "@/types/domain";
 
 const PUBLIC_VISIBLE_STATUSES = [
@@ -133,4 +134,41 @@ export async function getRegistrationSummary(sb: SupabaseClient, eventId: string
   const { data, error } = await sb.rpc("event_registration_summary", { p_event_id: eventId }).maybeSingle();
   if (error) throw error;
   return data as EventRegistrationSummary | null;
+}
+
+// ---------- Check-in (EVT005) ----------
+export async function lookupEventRegistrationForCheckin(sb: SupabaseClient, registrationId: string): Promise<EventCheckinLookup | null> {
+  const { data, error } = await sb.rpc("lookup_event_registration_for_checkin", { p_registration_id: registrationId }).maybeSingle();
+  if (error) throw error;
+  return data as EventCheckinLookup | null;
+}
+
+export async function searchEventRegistrations(sb: SupabaseClient, eventId: string, query: string): Promise<EventGroupMember[]> {
+  const { data, error } = await sb.rpc("search_event_registrations", { p_event_id: eventId, p_query: query });
+  if (error) throw error;
+  return (data ?? []) as EventGroupMember[];
+}
+
+export async function listGroupRegistrations(sb: SupabaseClient, groupId: string): Promise<EventGroupMember[]> {
+  const { data, error } = await sb.rpc("list_group_registrations", { p_group_id: groupId });
+  if (error) throw error;
+  return (data ?? []) as EventGroupMember[];
+}
+
+export async function checkinEventRegistration(sb: SupabaseClient, registrationId: string): Promise<string> {
+  const { data, error } = await sb.rpc("checkin_event_registration", { p_registration_id: registrationId });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function checkinEventGroup(sb: SupabaseClient, groupId: string): Promise<number> {
+  const { data, error } = await sb.rpc("checkin_event_group", { p_group_id: groupId });
+  if (error) throw error;
+  return data as number;
+}
+
+export async function listRecentEventCheckins(sb: SupabaseClient, eventId: string): Promise<RecentEventCheckin[]> {
+  const { data, error } = await sb.rpc("list_recent_event_checkins", { p_event_id: eventId, p_limit: 20 });
+  if (error) throw error;
+  return (data ?? []) as RecentEventCheckin[];
 }
