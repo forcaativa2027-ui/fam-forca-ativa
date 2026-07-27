@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase/client";
 import { registerForEvent, registerGroupForEvent, type GroupParticipantInput } from "@/services/events";
 import { logEventView, logEventClick } from "@/services/eventAnalytics";
-import { registrationProtocol, googleCalendarUrl, icsDownloadUrl } from "@/lib/eventShare";
+import { registrationProtocol, googleCalendarUrl, icsDownloadUrl, eventCheckinQrUrl } from "@/lib/eventShare";
 import { EventShareButtons } from "@/components/shared/EventShareButtons";
 import type { RegistrationEvent, CustomFieldDefinition } from "@/types/domain";
 
@@ -204,6 +204,16 @@ export function EventSignupCard({
           <p className="text-xs text-emerald-700/80">
             Protocolo: <b className="font-mono">{registrationProtocol(firstId)}</b>
           </p>
+        )}
+        {!compact && (
+          <div className="flex flex-wrap gap-3">
+            {results.filter((r) => r.status === "confirmada").map((r) => (
+              <div key={r.registration_id} className="rounded-lg border bg-white p-2 text-center">
+                <img src={eventCheckinQrUrl(r.registration_id)} alt={`QR Code — ${r.full_name}`} className="h-24 w-24" />
+                <p className="mt-1 max-w-[96px] truncate text-[10px] text-muted-foreground">{r.full_name}</p>
+              </div>
+            ))}
+          </div>
         )}
         {!compact && (
           <div className="flex flex-wrap items-center gap-2 border-t border-emerald-200 pt-3">
