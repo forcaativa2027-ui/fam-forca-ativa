@@ -1183,6 +1183,18 @@ export type RegistrationEventStatus =
   | "lotado" | "em_andamento" | "finalizado" | "cancelado" | "arquivado";
 export type EventRegistrationStatus = "confirmada" | "lista_espera" | "cancelada";
 
+export type PopupTemplate = "classico" | "moderno" | "jovem";
+export type PopupRepeatMode = "sempre" | "uma_vez_por_sessao" | "intervalo_horas" | "uma_vez_so";
+
+export interface EventSpeaker {
+  id: string;
+  event_id: string;
+  name: string;
+  photo_url: string | null;
+  topic: string | null;
+  order_index: number;
+  created_at: string;
+}
 export type CustomFieldType = "texto_curto" | "texto_longo" | "selecao_unica" | "selecao_multipla" | "sim_nao" | "data";
 export interface CustomFieldDefinition {
   id: string;
@@ -1218,6 +1230,9 @@ export interface RegistrationEvent {
   requires_image_consent: boolean;
   custom_fields: CustomFieldDefinition[];
   popup_video_url: string | null;
+  popup_template: PopupTemplate;
+  popup_repeat_mode: PopupRepeatMode;
+  popup_repeat_interval_hours: number | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
