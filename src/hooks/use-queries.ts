@@ -661,6 +661,12 @@ export const useEventSpeakers = (eventId: string | null) =>
     enabled: !!eventId,
   });
 
+export const useHighlightedRegistrationEvents = () =>
+  useQuery({
+    queryKey: ["registration-events-highlighted"],
+    queryFn: () => Ev.listHighlightedRegistrationEvents(supabase),
+  });
+
 export const useGlobalSearch = (query: string) =>
   useQuery({
     queryKey: ["global-search", query],
