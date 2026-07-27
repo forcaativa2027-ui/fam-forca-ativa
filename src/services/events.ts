@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   RegistrationEvent, RegistrationEventInput, EventRegistration, EventRegistrationSummary,
-  RegisterForEventResult, MyEventRegistration,
+  RegisterForEventResult, MyEventRegistration, GroupRegistrationResult,
 } from "@/types/domain";
 
 const PUBLIC_VISIBLE_STATUSES = [
@@ -35,14 +35,47 @@ export async function getRegistrationEventBySlug(sb: SupabaseClient, slug: strin
   return data as RegistrationEvent | null;
 }
 
+export interface RegisterOptions {
+  cpf?: string | null;
+  acceptedPrivacyPolicy: boolean;
+  acceptedImageUse?: boolean;
+  customAnswers?: Record<string, unknown>;
+}
+
 export async function registerForEvent(
-  sb: SupabaseClient, eventId: string, fullName: string, email?: string | null, phone?: string | null
+  sb: SupabaseClient, eventId: string, fullName: string, email: string | null | undefined,
+  phone: string | null | undefined, options: RegisterOptions
 ): Promise<RegisterForEventResult> {
   const { data, error } = await sb.rpc("register_for_event", {
     p_event_id: eventId, p_full_name: fullName, p_email: email ?? null, p_phone: phone ?? null,
+    p_cpf: options.cpf ?? null,
+    p_accepted_privacy_policy: options.acceptedPrivacyPolicy,
+    p_accepted_image_use: options.acceptedImageUse ?? false,
+    p_custom_answers: options.customAnswers ?? {},
   }).single();
   if (error) throw error;
   return data as RegisterForEventResult;
+}
+
+export interface GroupParticipantInput {
+  full_name: string;
+  email?: string | null;
+  phone?: string | null;
+  cpf?: string | null;
+  custom_answers?: Record<string, unknown>;
+}
+
+export async function registerGroupForEvent(
+  sb: SupabaseClient, eventId: string, participants: GroupParticipantInput[], options: RegisterOptions
+): Promise<GroupRegistrationResult[]> {
+  const { data, error } = await sb.rpc("register_group_for_event", {
+    p_event_id: eventId,
+    p_participants: participants,
+    p_accepted_privacy_policy: options.acceptedPrivacyPolicy,
+    p_accepted_image_use: options.acceptedImageUse ?? false,
+  });
+  if (error) throw error;
+  return (data ?? []) as GroupRegistrationResult[];
 }
 
 export async function cancelRegistration(sb: SupabaseClient, registrationId: string): Promise<void> {
