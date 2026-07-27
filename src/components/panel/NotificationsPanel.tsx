@@ -1,16 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Bell, BellRing, CalendarDays, ClipboardX, Heart, Target, Home, CheckCircle2, Ticket } from "lucide-react";
+import { Bell, BellRing, CalendarDays, ClipboardX, Heart, Target, Home, CheckCircle2, Ticket, PartyPopper } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
-import { listPublicRegistrationEvents, listMyEventRegistrations } from "@/services/events";
+import { listPublicRegistrationEvents, listMyEventRegistrations, listMyPendingPromotions, acknowledgeEventPromotion } from "@/services/events";
 import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import type { RegistrationEvent } from "@/types/domain";
 
 // ── Tipos ─────────────────────────────────────────────────────
-type NotifKind = "aniversario" | "sem_relatorio" | "oracao_urgente" | "visita_pastoral" | "meta_atrasada" | "evento";
+type NotifKind = "aniversario" | "sem_relatorio" | "oracao_urgente" | "visita_pastoral" | "meta_atrasada" | "evento" | "promocao";
 
 interface Notif {
   id: string;
@@ -20,6 +20,7 @@ interface Notif {
   urgency: "critico" | "atencao" | "info";
   eventObj?: RegistrationEvent;
   prefill?: { full_name: string; email: string | null; phone: string | null } | null;
+  registrationId?: string;
 }
 
 const KIND_CONFIG: Record<NotifKind, { icon: React.ReactNode; color: string; bg: string; label: string }> = {
@@ -29,6 +30,7 @@ const KIND_CONFIG: Record<NotifKind, { icon: React.ReactNode; color: string; bg:
   visita_pastoral: { icon: <Home className="h-4 w-4"/>,        color:"text-yellow-600", bg:"bg-yellow-50 border-yellow-200",label:"Visita Pastoral"  },
   meta_atrasada:   { icon: <Target className="h-4 w-4"/>,      color:"text-orange-600", bg:"bg-orange-50 border-orange-200",label:"Meta Atrasada"    },
   evento:          { icon: <CalendarDays className="h-4 w-4"/>, color:"text-red-600",    bg:"bg-red-50 border-red-200",     label:"Eventos"           },
+  promocao:        { icon: <PartyPopper className="h-4 w-4"/>, color:"text-emerald-600", bg:"bg-emerald-50 border-emerald-200", label:"Boas notícias"  },
 };
 
 // ── Buscar notificações ───────────────────────────────────────
@@ -127,6 +129,19 @@ async function fetchNotifications(): Promise<Notif[]> {
     }
   } catch { /* eventos são um extra — não derruba o resto das notificações se falhar */ }
 
+  // Promoções de lista de espera → confirmado (boa notícia, sempre em destaque)
+  try {
+    const promotions = await listMyPendingPromotions(supabase);
+    promotions.forEach((p) => notifs.push({
+      id: `promocao-${p.registration_id}`,
+      kind: "promocao",
+      title: `Você foi confirmado em "${p.event_name}"!`,
+      detail: "Havia lista de espera e uma vaga abriu — sua inscrição já está confirmada.",
+      urgency: "critico",
+      registrationId: p.registration_id,
+    }));
+  } catch { /* idem */ }
+
   // Ordenar: críticos primeiro, depois atenção, depois info
   return notifs.sort((a, b) => {
     const order = { critico: 0, atencao: 1, info: 2 };
@@ -216,7 +231,7 @@ export function NotificationsPanel() {
       </div>
 
       {/* Lista por categoria */}
-      {(["evento","aniversario","sem_relatorio","oracao_urgente","visita_pastoral","meta_atrasada"] as NotifKind[]).map(kind => {
+      {(["promocao","evento","aniversario","sem_relatorio","oracao_urgente","visita_pastoral","meta_atrasada"] as NotifKind[]).map(kind => {
         const group = visible.filter(n => n.kind === kind);
         if (group.length === 0) return null;
         const cfg = KIND_CONFIG[kind];
@@ -245,7 +260,10 @@ export function NotificationsPanel() {
                     <p className="text-xs text-muted-foreground mt-0.5">{n.detail}</p>
                   </div>
                   <button
-                    onClick={() => setDismissed(d => new Set([...d, n.id]))}
+                    onClick={() => {
+                      setDismissed(d => new Set([...d, n.id]));
+                      if (kind === "promocao" && n.registrationId) acknowledgeEventPromotion(supabase, n.registrationId).catch(() => {});
+                    }}
                     className="text-muted-foreground hover:text-gray-600 shrink-0 mt-0.5"
                     title="Dispensar"
                   >
