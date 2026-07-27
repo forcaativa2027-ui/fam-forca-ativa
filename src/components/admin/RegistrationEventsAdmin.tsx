@@ -18,14 +18,53 @@ import { exportToExcel } from "@/lib/export";
 import type { RegistrationEvent, RegistrationEventStatus } from "@/types/domain";
 
 const STATUS_LABELS: Record<RegistrationEventStatus, string> = {
-  rascunho: "Rascunho", publicado: "Publicado", encerrado: "Encerrado", cancelado: "Cancelado",
+  rascunho: "Rascunho",
+  em_revisao: "Em revisão",
+  agendado: "Agendado",
+  inscricoes_abertas: "Inscrições abertas",
+  inscricoes_encerradas: "Inscrições encerradas",
+  lotado: "Lotado",
+  em_andamento: "Em andamento",
+  finalizado: "Finalizado",
+  cancelado: "Cancelado",
+  arquivado: "Arquivado",
 };
 const STATUS_COLORS: Record<RegistrationEventStatus, string> = {
   rascunho: "bg-slate-100 text-slate-600",
-  publicado: "bg-emerald-100 text-emerald-700",
-  encerrado: "bg-amber-100 text-amber-700",
+  em_revisao: "bg-slate-100 text-slate-600",
+  agendado: "bg-sky-100 text-sky-700",
+  inscricoes_abertas: "bg-emerald-100 text-emerald-700",
+  inscricoes_encerradas: "bg-amber-100 text-amber-700",
+  lotado: "bg-orange-100 text-orange-700",
+  em_andamento: "bg-purple-100 text-purple-700",
+  finalizado: "bg-slate-200 text-slate-700",
   cancelado: "bg-red-100 text-red-700",
+  arquivado: "bg-slate-100 text-slate-500",
 };
+const CATEGORY_SUGGESTIONS = [
+  "Culto Especial", "Conferência", "Congresso", "Encontro", "Retiro", "Acampamento", "Curso",
+  "Treinamento", "Escola de Líderes", "Encontro com Deus", "Evento de Jovens", "Evento de Casais",
+  "Evento Infantil", "Evento Feminino", "Evento Masculino", "Ação Social", "Campanha Missionária",
+  "Reunião", "Celebração",
+];
+
+/** Status "efetivo" calculado a partir dos dados (não muda o status salvo no banco) —
+ *  evita que o admin precise ficar trocando manualmente quando a capacidade lota ou o evento já passou. */
+function computedBadge(e: RegistrationEvent): { label: string; className: string } | null {
+  const now = Date.now();
+  const start = new Date(e.start_at).getTime();
+  const end = e.end_at ? new Date(e.end_at).getTime() : start;
+  if (e.status === "inscricoes_abertas" && e.capacity != null) {
+    // (a contagem de confirmados vem do resumo, não temos aqui na listagem — indicamos por capacidade só quando fizer sentido no futuro)
+  }
+  if ((e.status === "inscricoes_abertas" || e.status === "inscricoes_encerradas") && now >= start && now <= end) {
+    return { label: "Em andamento", className: STATUS_COLORS.em_andamento };
+  }
+  if ((e.status === "inscricoes_abertas" || e.status === "inscricoes_encerradas") && now > end) {
+    return { label: "Finalizado", className: STATUS_COLORS.finalizado };
+  }
+  return null;
+}
 
 function slugify(s: string): string {
   return s.trim().toLowerCase()
@@ -83,6 +122,14 @@ export function RegistrationEventsAdmin() {
                       <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${STATUS_COLORS[e.status]}`}>
                         {STATUS_LABELS[e.status]}
                       </span>
+                      {computedBadge(e) && (
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${computedBadge(e)!.className}`} title="Calculado pela data — não muda o status salvo">
+                          {computedBadge(e)!.label}
+                        </span>
+                      )}
+                      {e.category && (
+                        <span className="rounded border px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">{e.category}</span>
+                      )}
                       {e.capacity != null && (
                         <span className="rounded border px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
                           Capacidade: {e.capacity}
@@ -120,6 +167,11 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
   const [slug, setSlug] = useState(event?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(!!event);
   const [description, setDescription] = useState(event?.description ?? "");
+  const [subtitle, setSubtitle] = useState(event?.subtitle ?? "");
+  const [category, setCategory] = useState(event?.category ?? "");
+  const [targetAudience, setTargetAudience] = useState(event?.target_audience ?? "");
+  const [highlightDashboard, setHighlightDashboard] = useState(event?.highlight_dashboard ?? false);
+  const [highlightPublic, setHighlightPublic] = useState(event?.highlight_public ?? false);
   const [bannerUrl, setBannerUrl] = useState(event?.banner_url ?? "");
   const [churchId, setChurchId] = useState(event?.church_id ?? "");
   const [location, setLocation] = useState(event?.location ?? "");
@@ -150,6 +202,11 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
         name: name.trim(),
         slug: slug.trim(),
         description: description || null,
+        subtitle: subtitle || null,
+        category: category || null,
+        target_audience: targetAudience || null,
+        highlight_dashboard: highlightDashboard,
+        highlight_public: highlightPublic,
         banner_url: bannerUrl || null,
         church_id: churchId || null,
         location: location || null,
@@ -187,6 +244,20 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
         </CardHeader>
         <CardContent className="space-y-3">
           <Field label="Nome"><Input value={name} onChange={(e) => handleNameChange(e.target.value)} placeholder="Ex: Congresso de Jovens 2026" /></Field>
+          <Field label="Subtítulo / slogan (opcional)">
+            <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="Ex: Uma nova geração se levanta" />
+          </Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Categoria">
+              <Input list="event-category-suggestions" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Ex: Congresso" />
+              <datalist id="event-category-suggestions">
+                {CATEGORY_SUGGESTIONS.map((c) => <option key={c} value={c} />)}
+              </datalist>
+            </Field>
+            <Field label="Público-alvo (opcional)">
+              <Input value={targetAudience} onChange={(e) => setTargetAudience(e.target.value)} placeholder="Ex: Jovens, Casais, Todos" />
+            </Field>
+          </div>
           <Field label="Slug (URL pública)">
             <Input value={slug} onChange={(e) => { setSlug(slugify(e.target.value)); setSlugTouched(true); }} placeholder="congresso-jovens-2026" />
           </Field>
@@ -235,8 +306,21 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
             </Field>
           </div>
           <p className="text-xs text-muted-foreground">
-            Só eventos com status <b>Publicado</b> ficam visíveis e abertos pra inscrição no site público.
+            <b>Inscrições abertas</b> é o único status que permite se inscrever e aparece resolvido como "aberto" pro público.
+            <b> Agendado</b>, <b>Inscrições encerradas</b>, <b>Lotado</b>, <b>Em andamento</b>, <b>Finalizado</b> e <b>Cancelado</b> ficam visíveis (sem inscrição).
+            <b> Rascunho</b>, <b>Em revisão</b> e <b>Arquivado</b> ficam escondidos do público.
           </p>
+
+          <div className="flex flex-wrap items-center gap-4 rounded-md border p-3">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={highlightDashboard} onChange={(e) => setHighlightDashboard(e.target.checked)} />
+              Destacar no dashboard
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={highlightPublic} onChange={(e) => setHighlightPublic(e.target.checked)} />
+              Destacar na página pública
+            </label>
+          </div>
 
           {err && <p className="text-sm text-destructive">{err}</p>}
           <Button onClick={save} disabled={busy} className="w-full">{busy ? "Salvando…" : "Salvar evento"}</Button>
