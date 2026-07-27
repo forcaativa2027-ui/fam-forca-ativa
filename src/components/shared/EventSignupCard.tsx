@@ -105,13 +105,15 @@ function CustomFieldsForm({
 }
 
 export function EventSignupCard({
-  event, compact = false, urgent = false, hideHeader = false, showDetailsLink = false, prefill = null, origin = null, onRegistered,
+  event, compact = false, urgent = false, highlighted = false, hideHeader = false, showDetailsLink = false, prefill = null, origin = null, onRegistered,
 }: {
   event: RegistrationEvent;
   /** versão compacta usada na aba Alertas */
   compact?: boolean;
   /** destaque vermelho — usado pra alertas de evento na aba Alertas */
   urgent?: boolean;
+  /** destaque dourado — evento marcado como "Destacar na página pública" pelo admin */
+  highlighted?: boolean;
   /** esconde nome/data/local — usado na página dedicada do evento, que já mostra isso no cabeçalho */
   hideHeader?: boolean;
   /** mostra link "Ver detalhes" pra página pública /eventos/[slug] */
@@ -234,10 +236,19 @@ export function EventSignupCard({
     );
   }
 
-  const wrapperClass = urgent ? "bg-red-50 border-red-300" : compact ? "bg-blue-50 border-blue-200" : "bg-card";
+  const wrapperClass = urgent
+    ? "bg-red-50 border-red-300"
+    : highlighted
+      ? "bg-gradient-to-br from-amber-50 to-card border-gold ring-1 ring-gold/40"
+      : compact ? "bg-blue-50 border-blue-200" : "bg-card";
 
   return (
-    <div className={`rounded-lg border p-3 ${wrapperClass}`}>
+    <div className={`relative rounded-lg border p-3 ${wrapperClass}`}>
+      {highlighted && (
+        <span className="absolute -top-2 left-3 rounded-full bg-gold px-2 py-0.5 text-[10px] font-bold uppercase text-navy shadow">
+          ★ Destaque
+        </span>
+      )}
       {!hideHeader && (
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
