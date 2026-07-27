@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Bell, BellRing, CalendarDays, ClipboardX, Heart, Target, Home, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { Bell, BellRing, CalendarDays, ClipboardX, Heart, Target, Home, CheckCircle2, Ticket } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
@@ -179,11 +180,19 @@ export function NotificationsPanel() {
       <CheckCircle2 className="h-12 w-12 text-green-500"/>
       <p className="font-semibold text-[#0E2A47]">Tudo em ordem!</p>
       <p className="text-sm text-muted-foreground">Nenhum alerta ativo no momento.</p>
+      <Link href="/painel/meus-eventos" className="inline-flex items-center gap-1.5 text-sm font-semibold text-navy underline">
+        <Ticket className="h-3.5 w-3.5" /> Ver meus eventos inscritos
+      </Link>
     </div>
   );
 
   return (
     <div className="space-y-4 p-1">
+      <div className="flex justify-end">
+        <Link href="/painel/meus-eventos" className="inline-flex items-center gap-1.5 text-xs font-semibold text-navy underline">
+          <Ticket className="h-3.5 w-3.5" /> Meus eventos inscritos
+        </Link>
+      </div>
       {/* Resumo */}
       <div className="grid grid-cols-3 gap-3">
         <Card className="border-l-4 border-l-red-500">
