@@ -654,6 +654,13 @@ export const useRecentEventCheckins = (eventId: string | null) =>
     refetchInterval: 8000,
   });
 
+export const useEventSpeakers = (eventId: string | null) =>
+  useQuery({
+    queryKey: ["event-speakers", eventId],
+    queryFn: () => Ev.listEventSpeakers(supabase, eventId as string),
+    enabled: !!eventId,
+  });
+
 export const useGlobalSearch = (query: string) =>
   useQuery({
     queryKey: ["global-search", query],
