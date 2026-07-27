@@ -4,6 +4,10 @@ import type {
   RegisterForEventResult, MyEventRegistration,
 } from "@/types/domain";
 
+const PUBLIC_VISIBLE_STATUSES = [
+  "agendado", "inscricoes_abertas", "inscricoes_encerradas", "lotado", "em_andamento", "finalizado", "cancelado",
+] as const;
+
 // ---------- Público ----------
 export async function listPublicRegistrationEvents(sb: SupabaseClient, churchId?: string | null): Promise<RegistrationEvent[]> {
   // Regra combinada:
@@ -15,7 +19,7 @@ export async function listPublicRegistrationEvents(sb: SupabaseClient, churchId?
   const visibleIds = new Set<string>(sedeIds);
   if (churchId) visibleIds.add(churchId);
 
-  let q = sb.from("registration_events").select("*").eq("status", "publicado").order("start_at", { ascending: true });
+  let q = sb.from("registration_events").select("*").in("status", PUBLIC_VISIBLE_STATUSES).order("start_at", { ascending: true });
   q = visibleIds.size > 0
     ? q.or(`church_id.is.null,church_id.in.(${Array.from(visibleIds).join(",")})`)
     : q.is("church_id", null);
