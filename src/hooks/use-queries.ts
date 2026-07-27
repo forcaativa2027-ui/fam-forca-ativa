@@ -646,6 +646,14 @@ export const useEventAnalyticsByOrigin = (eventId: string | null) =>
     enabled: !!eventId,
   });
 
+export const useRecentEventCheckins = (eventId: string | null) =>
+  useQuery({
+    queryKey: ["event-recent-checkins", eventId],
+    queryFn: () => Ev.listRecentEventCheckins(supabase, eventId as string),
+    enabled: !!eventId,
+    refetchInterval: 8000,
+  });
+
 export const useGlobalSearch = (query: string) =>
   useQuery({
     queryKey: ["global-search", query],
