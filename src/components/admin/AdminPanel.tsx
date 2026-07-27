@@ -55,6 +55,7 @@ import { GlobalSearchDialog } from "./GlobalSearchDialog";
 import { PendenciasAdmin } from "./PendenciasAdmin";
 import { AgendaAdmin } from "./AgendaAdmin";
 import { RegistrationEventsAdmin } from "./RegistrationEventsAdmin";
+import { EventCheckinAdmin } from "./EventCheckinAdmin";
 import { NotificacoesAdmin } from "./NotificacoesAdmin";
 import { FormacaoAdmin } from "./FormacaoAdmin";
 import { PainelUsuariosAdmin } from "./PainelUsuariosAdmin";
@@ -346,6 +347,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
     case "giving":               return <GivingAdmin />;
     case "events":              return <EventsAdmin />;
     case "registration-events": return <RegistrationEventsAdmin />;
+    case "event-checkin":       return <EventCheckinAdmin />;
     case "services":            return <ServiceTimesAdmin />;
     case "word":                return <DailyWordsAdmin />;
     case "finance":             return <FinanceAdmin />;
