@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   useRegistrationEventsAdmin, useEventRegistrations, useEventRegistrationSummary, useChurches,
+  useEventFunnel, useEventAnalyticsByOrigin,
 } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import {
@@ -334,6 +335,8 @@ function RegistrantsView({ event, onBack }: { event: RegistrationEvent; onBack: 
   const qc = useQueryClient();
   const { data: registrations = [] } = useEventRegistrations(event.id);
   const { data: summary } = useEventRegistrationSummary(event.id);
+  const { data: funnel } = useEventFunnel(event.id);
+  const { data: byOrigin = [] } = useEventAnalyticsByOrigin(event.id);
 
   async function cancel(regId: string, name: string) {
     if (!confirm(`Cancelar a inscrição de "${name}"? Se houver lista de espera, o próximo é promovido automaticamente.`)) return;
@@ -363,6 +366,44 @@ function RegistrantsView({ event, onBack }: { event: RegistrationEvent; onBack: 
   return (
     <div className="space-y-4">
       <Button onClick={onBack} variant="ghost" size="sm" className="gap-1.5"><ArrowLeft size={14} /> Voltar aos eventos</Button>
+
+      {funnel && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Indicadores</CardTitle>
+            <CardDescription>Funil: visualizações → cliques → inscrições. Visualizações contam cada vez que o card do evento aparece (Agenda, Alertas, pop-up ou página própria).</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { label: "Visualizações", value: funnel.views },
+                { label: "Visitantes únicos", value: funnel.unique_sessions },
+                { label: "Cliques em Inscrever-se", value: funnel.clicks },
+                { label: "Conversão", value: `${funnel.conversao_pct}%` },
+              ].map((s) => (
+                <div key={s.label} className="rounded-md border bg-card p-3 text-center">
+                  <p className="text-2xl font-bold text-navy">{s.value}</p>
+                  <p className="text-[11px] uppercase text-muted-foreground">{s.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {byOrigin.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Origem dos acessos</p>
+                <div className="space-y-1">
+                  {byOrigin.map((o) => (
+                    <div key={o.origin} className="flex items-center justify-between rounded border px-2.5 py-1.5 text-sm">
+                      <span className="capitalize">{o.origin.replace(/_/g, " ")}</span>
+                      <span className="text-muted-foreground">{o.views} visualizações · {o.clicks} cliques</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
