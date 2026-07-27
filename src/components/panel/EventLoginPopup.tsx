@@ -5,6 +5,7 @@ import { X, CalendarDays, MapPin, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
 import { listPublicRegistrationEvents, listMyEventRegistrations } from "@/services/events";
+import { logEventView, logEventClick } from "@/services/eventAnalytics";
 import type { Profile, RegistrationEvent } from "@/types/domain";
 
 const SEEN_KEY_PREFIX = "cec-event-popup-seen-";
@@ -30,7 +31,10 @@ export function EventLoginPopup({ profile }: { profile: Profile | null | undefin
           })
           .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
 
-        if (!cancelled && eligible.length > 0) setEvent(eligible[0]);
+        if (!cancelled && eligible.length > 0) {
+          setEvent(eligible[0]);
+          logEventView(supabase, eligible[0].id, "popup");
+        }
       } catch { /* pop-up é um extra — nunca deve travar o login */ }
     })();
 
@@ -82,7 +86,7 @@ export function EventLoginPopup({ profile }: { profile: Profile | null | undefin
 
           {event.description && <p className="line-clamp-3 text-sm text-muted-foreground">{event.description}</p>}
 
-          <Link href={`/eventos/${event.slug}`} onClick={dismiss}>
+          <Link href={`/eventos/${event.slug}?origem=popup`} onClick={() => { logEventClick(supabase, event.id, "popup"); dismiss(); }}>
             <Button className="w-full">Acessar Inscrição</Button>
           </Link>
         </div>
