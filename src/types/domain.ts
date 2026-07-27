@@ -1217,6 +1217,7 @@ export interface RegistrationEvent {
   requires_cpf: boolean;
   requires_image_consent: boolean;
   custom_fields: CustomFieldDefinition[];
+  popup_video_url: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
