@@ -4,7 +4,7 @@ import {
   FileText, Award, Calendar, Globe2, Split, CalendarClock, Ticket, GraduationCap,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useOrgKpis, useGrowthMonthly, useMyProfile, useChurches, useMinisteriosEventosStats, useMinisteriosRanking, useFormacaoStats } from "@/hooks/use-queries";
+import { useOrgKpis, useGrowthMonthly, useMyProfile, useChurches, useMinisteriosEventosStats, useMinisteriosRanking, useFormacaoStats, useHighlightedRegistrationEvents } from "@/hooks/use-queries";
 import { HierarchyExplorer } from "./HierarchyExplorer";
 import { IntelligenceInsights } from "./IntelligenceInsights";
 import { CommunityIdentity } from "@/components/shared/CommunityIdentity";
@@ -22,6 +22,7 @@ export function OrgDashboardAdmin({ onNavigate }: { onNavigate?: (tab: TabKey) =
   const { data: minEvStats } = useMinisteriosEventosStats(null);
   const { data: minRanking = [] } = useMinisteriosRanking(null);
   const { data: formacaoStats } = useFormacaoStats(null);
+  const { data: highlightedEvents = [] } = useHighlightedRegistrationEvents();
   const activeCommunity = churches.find(c => c.id === me?.church_id);
 
   if (isLoading) {
@@ -58,6 +59,28 @@ export function OrgDashboardAdmin({ onNavigate }: { onNavigate?: (tab: TabKey) =
           <CardDescription>Visão executiva consolidada da rede CEC Brasil</CardDescription>
         </CardHeader>
       </Card>
+
+      {highlightedEvents.length > 0 && (
+        <Card className="border-gold/50 bg-gold/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base"><Ticket className="h-4 w-4 text-gold" />Eventos em destaque</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {highlightedEvents.map((e) => (
+              <button
+                key={e.id}
+                onClick={() => onNavigate?.("registration-events")}
+                className="flex w-full items-center justify-between rounded-md border bg-card p-2.5 text-left text-sm hover:bg-muted/40"
+              >
+                <span className="font-medium text-navy">{e.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(e.start_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                </span>
+              </button>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <IntelligenceInsights />
 
