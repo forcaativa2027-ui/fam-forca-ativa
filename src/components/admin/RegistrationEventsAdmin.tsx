@@ -16,7 +16,7 @@ import {
 } from "@/services/events";
 import { logAudit } from "@/services/audit";
 import { exportToExcel } from "@/lib/export";
-import type { RegistrationEvent, RegistrationEventStatus } from "@/types/domain";
+import type { RegistrationEvent, RegistrationEventStatus, CustomFieldDefinition, CustomFieldType } from "@/types/domain";
 
 const STATUS_LABELS: Record<RegistrationEventStatus, string> = {
   rascunho: "Rascunho",
@@ -42,6 +42,11 @@ const STATUS_COLORS: Record<RegistrationEventStatus, string> = {
   cancelado: "bg-red-100 text-red-700",
   arquivado: "bg-slate-100 text-slate-500",
 };
+const CUSTOM_FIELD_TYPE_LABELS: Record<CustomFieldType, string> = {
+  texto_curto: "Texto curto", texto_longo: "Texto longo", selecao_unica: "Seleção única",
+  selecao_multipla: "Seleção múltipla", sim_nao: "Sim ou não", data: "Data",
+};
+
 const CATEGORY_SUGGESTIONS = [
   "Culto Especial", "Conferência", "Congresso", "Encontro", "Retiro", "Acampamento", "Curso",
   "Treinamento", "Escola de Líderes", "Encontro com Deus", "Evento de Jovens", "Evento de Casais",
@@ -173,6 +178,9 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
   const [targetAudience, setTargetAudience] = useState(event?.target_audience ?? "");
   const [highlightDashboard, setHighlightDashboard] = useState(event?.highlight_dashboard ?? false);
   const [highlightPublic, setHighlightPublic] = useState(event?.highlight_public ?? false);
+  const [requiresCpf, setRequiresCpf] = useState(event?.requires_cpf ?? false);
+  const [requiresImageConsent, setRequiresImageConsent] = useState(event?.requires_image_consent ?? false);
+  const [customFields, setCustomFields] = useState<CustomFieldDefinition[]>(event?.custom_fields ?? []);
   const [bannerUrl, setBannerUrl] = useState(event?.banner_url ?? "");
   const [churchId, setChurchId] = useState(event?.church_id ?? "");
   const [location, setLocation] = useState(event?.location ?? "");
@@ -190,6 +198,16 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
   function handleNameChange(v: string) {
     setName(v);
     if (!slugTouched) setSlug(slugify(v));
+  }
+
+  function addCustomField() {
+    setCustomFields((f) => [...f, { id: crypto.randomUUID(), label: "", type: "texto_curto", required: false, options: [] }]);
+  }
+  function updateCustomField(i: number, patch: Partial<CustomFieldDefinition>) {
+    setCustomFields((f) => f.map((field, idx) => (idx === i ? { ...field, ...patch } : field)));
+  }
+  function removeCustomField(i: number) {
+    setCustomFields((f) => f.filter((_, idx) => idx !== i));
   }
 
   async function save() {
@@ -219,6 +237,9 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
         registration_closes_at: regClosesAt ? new Date(regClosesAt).toISOString() : null,
         capacity: capacity ? Number(capacity) : null,
         status,
+        requires_cpf: requiresCpf,
+        requires_image_consent: requiresImageConsent,
+        custom_fields: customFields.filter((f) => f.label.trim() !== ""),
       };
       if (event) {
         await updateRegistrationEvent(supabase, event.id, payload);
@@ -321,6 +342,54 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
               <input type="checkbox" checked={highlightPublic} onChange={(e) => setHighlightPublic(e.target.checked)} />
               Destacar na página pública
             </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={requiresCpf} onChange={(e) => setRequiresCpf(e.target.checked)} />
+              Exigir CPF na inscrição
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={requiresImageConsent} onChange={(e) => setRequiresImageConsent(e.target.checked)} />
+              Pedir autorização de uso de imagem
+            </label>
+          </div>
+
+          <div className="rounded-md border p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Perguntas personalizadas (opcional)</p>
+              <Button type="button" size="sm" variant="outline" onClick={addCustomField} className="gap-1.5">
+                <Plus className="h-3.5 w-3.5" /> Adicionar pergunta
+              </Button>
+            </div>
+            {customFields.length === 0 && <p className="text-xs italic text-muted-foreground">Nenhuma pergunta extra — o inscrito só preenche nome/e-mail/telefone.</p>}
+            <div className="space-y-2">
+              {customFields.map((f, i) => (
+                <div key={f.id} className="space-y-2 rounded border p-2">
+                  <div className="flex items-center gap-2">
+                    <Input placeholder="Texto da pergunta" value={f.label} onChange={(e) => updateCustomField(i, { label: e.target.value })} />
+                    <select
+                      value={f.type}
+                      onChange={(e) => updateCustomField(i, { type: e.target.value as CustomFieldType })}
+                      className="h-10 shrink-0 rounded-md border bg-background px-2 text-sm"
+                    >
+                      {(Object.keys(CUSTOM_FIELD_TYPE_LABELS) as CustomFieldType[]).map((t) => (
+                        <option key={t} value={t}>{CUSTOM_FIELD_TYPE_LABELS[t]}</option>
+                      ))}
+                    </select>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => removeCustomField(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                  {(f.type === "selecao_unica" || f.type === "selecao_multipla") && (
+                    <Input
+                      placeholder="Opções separadas por vírgula (ex: P, M, G, GG)"
+                      value={(f.options ?? []).join(", ")}
+                      onChange={(e) => updateCustomField(i, { options: e.target.value.split(",").map((o) => o.trim()).filter(Boolean) })}
+                    />
+                  )}
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <input type="checkbox" checked={f.required ?? false} onChange={(e) => updateCustomField(i, { required: e.target.checked })} />
+                    Obrigatória
+                  </label>
+                </div>
+              ))}
+            </div>
           </div>
 
           {err && <p className="text-sm text-destructive">{err}</p>}
