@@ -281,6 +281,7 @@ export default function PublicHome() {
                 <EventSignupCard
                   key={ev.id}
                   event={ev}
+                  origin="agenda"
                   prefill={profile ? { full_name: profile.full_name, email: profile.email, phone: profile.phone } : null}
                 />
               ))}
