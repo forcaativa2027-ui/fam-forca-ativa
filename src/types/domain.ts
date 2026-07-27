@@ -1233,6 +1233,7 @@ export interface RegistrationEvent {
   popup_template: PopupTemplate;
   popup_repeat_mode: PopupRepeatMode;
   popup_repeat_interval_hours: number | null;
+  cancellation_reason: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -1289,6 +1290,19 @@ export interface PendingPromotion {
   event_name: string;
   event_slug: string;
   promoted_at: string;
+}
+
+export interface EventChange {
+  registration_id: string;
+  event_id: string;
+  event_name: string;
+  event_slug: string;
+  change_type: "cancelado" | "horario" | "local";
+  old_start_at: string;
+  new_start_at: string;
+  old_location: string | null;
+  new_location: string | null;
+  cancellation_reason: string | null;
 }
 
 export interface EventRegistrationSummary {
