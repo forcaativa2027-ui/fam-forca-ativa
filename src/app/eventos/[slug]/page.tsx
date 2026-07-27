@@ -4,6 +4,7 @@ import { ArrowLeft, CalendarDays, MapPin, Video } from "lucide-react";
 import { DarkBlueTheme } from "@/components/shared/DarkBlueTheme";
 import { Card, CardContent } from "@/components/ui/card";
 import { EventSignupCard } from "@/components/shared/EventSignupCard";
+import { EventShareButtons } from "@/components/shared/EventShareButtons";
 import { useRegistrationEventBySlug, useMyProfile } from "@/hooks/use-queries";
 
 export default function EventoPage({ params }: { params: { slug: string } }) {
@@ -41,6 +42,11 @@ export default function EventoPage({ params }: { params: { slug: string } }) {
                   </p>
                 </div>
                 {event.description && <p className="whitespace-pre-line text-sm text-muted-foreground">{event.description}</p>}
+
+                <div className="border-t pt-3">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Compartilhar este evento</p>
+                  <EventShareButtons event={event} />
+                </div>
 
                 <EventSignupCard
                   event={event}
