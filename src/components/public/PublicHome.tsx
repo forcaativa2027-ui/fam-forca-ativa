@@ -277,11 +277,12 @@ export default function PublicHome() {
           {registrationEvents.length > 0 && (
             <div className="mb-6 space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Eventos com inscrição</h3>
-              {registrationEvents.map((ev) => (
+              {[...registrationEvents].sort((a, b) => (b.highlight_public ? 1 : 0) - (a.highlight_public ? 1 : 0)).map((ev) => (
                 <EventSignupCard
                   key={ev.id}
                   event={ev}
                   origin="agenda"
+                  highlighted={ev.highlight_public}
                   prefill={profile ? { full_name: profile.full_name, email: profile.email, phone: profile.phone } : null}
                 />
               ))}
