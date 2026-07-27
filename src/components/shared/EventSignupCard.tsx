@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { CalendarDays, MapPin, Video, X, Check } from "lucide-react";
+import Link from "next/link";
+import { CalendarDays, MapPin, Video, X, Check, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase/client";
@@ -14,11 +15,17 @@ interface Prefill {
 }
 
 export function EventSignupCard({
-  event, compact = false, prefill = null, onRegistered,
+  event, compact = false, urgent = false, hideHeader = false, showDetailsLink = false, prefill = null, onRegistered,
 }: {
   event: RegistrationEvent;
   /** versão compacta usada na aba Alertas */
   compact?: boolean;
+  /** destaque vermelho — usado pra alertas de evento na aba Alertas */
+  urgent?: boolean;
+  /** esconde nome/data/local — usado na página dedicada do evento, que já mostra isso no cabeçalho */
+  hideHeader?: boolean;
+  /** mostra link "Ver detalhes" pra página pública /eventos/[slug] */
+  showDetailsLink?: boolean;
   /** dados do membro logado, pra pular o formulário */
   prefill?: Prefill | null;
   onRegistered?: () => void;
@@ -69,28 +76,47 @@ export function EventSignupCard({
     );
   }
 
+  const wrapperClass = urgent
+    ? "bg-red-50 border-red-300"
+    : compact
+      ? "bg-blue-50 border-blue-200"
+      : "bg-card";
+
   return (
-    <div className={`rounded-lg border p-3 ${compact ? "bg-blue-50 border-blue-200" : "bg-card"}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <b className="text-navy">{event.name}</b>
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {dateLabel}</span>
-            {event.is_online
-              ? <span className="inline-flex items-center gap-1"><Video className="h-3 w-3" /> Online</span>
-              : event.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {event.location}</span>}
-          </p>
-          {!compact && event.description && <p className="mt-1.5 text-sm text-muted-foreground">{event.description}</p>}
+    <div className={`rounded-lg border p-3 ${wrapperClass}`}>
+      {!hideHeader && (
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <b className={urgent ? "text-red-700" : "text-navy"}>{event.name}</b>
+            <p className={`mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs ${urgent ? "text-red-600" : "text-muted-foreground"}`}>
+              <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {dateLabel}</span>
+              {event.is_online
+                ? <span className="inline-flex items-center gap-1"><Video className="h-3 w-3" /> Online</span>
+                : event.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {event.location}</span>}
+            </p>
+            {!compact && event.description && <p className="mt-1.5 text-sm text-muted-foreground">{event.description}</p>}
+            {showDetailsLink && (
+              <Link href={`/eventos/${event.slug}`} className={`mt-1 inline-flex items-center gap-1 text-xs font-semibold underline ${urgent ? "text-red-700" : "text-navy"}`}>
+                Ver detalhes <ArrowRight className="h-3 w-3" />
+              </Link>
+            )}
+          </div>
+          {!showForm && (
+            <Button size="sm" disabled={busy} onClick={quickSubmit} className="shrink-0" variant={urgent ? "destructive" : "default"}>
+              {busy ? "Enviando…" : "Inscrever-se"}
+            </Button>
+          )}
         </div>
-        {!showForm && (
-          <Button size="sm" disabled={busy} onClick={quickSubmit} className="shrink-0">
-            {busy ? "Enviando…" : "Inscrever-se"}
-          </Button>
-        )}
-      </div>
+      )}
+
+      {hideHeader && !showForm && (
+        <Button disabled={busy} onClick={quickSubmit} className="w-full">
+          {busy ? "Enviando…" : "Inscrever-se"}
+        </Button>
+      )}
 
       {showForm && (
-        <div className="mt-3 space-y-2 border-t pt-3">
+        <div className={hideHeader ? "space-y-2" : "mt-3 space-y-2 border-t pt-3"}>
           <Input placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} />
           <div className="grid gap-2 sm:grid-cols-2">
             <Input placeholder="E-mail (opcional)" value={email ?? ""} onChange={(e) => setEmail(e.target.value)} />
