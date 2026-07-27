@@ -14,7 +14,9 @@ import { BottomNav, BottomNavSpacer, type BottomNavItem } from "@/components/sha
 import {
   usePublicSermons, usePublicEvents, useChurches, useCells, usePublicNews, useChurchGivingInfo,
   useServiceTimes, useTodaysWord, useActiveBanners, useActiveCommunity, useMyProfile,
+  usePublicRegistrationEvents,
 } from "@/hooks/use-queries";
+import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import { youtubeThumb } from "@/services/content";
 import { defaultServiceTimes, defaultWord } from "@/services/institutional";
 import { PublicNewsSection } from "./PublicNewsSection";
@@ -53,6 +55,7 @@ export default function PublicHome() {
   const { data: sermons = [] } = usePublicSermons(communityId);
   const { data: news = [] } = usePublicNews(undefined, communityId);
   const { data: events = [] } = usePublicEvents(communityId);
+  const { data: registrationEvents = [] } = usePublicRegistrationEvents(profile?.church_id ?? null);
   const { data: churches = [] } = useChurches();
   const { data: cells = [] } = useCells();
   const { data: banners = [] } = useActiveBanners(communityId);
@@ -271,6 +274,18 @@ export default function PublicHome() {
         {/* === AGENDA === */}
         <TabsContent value="agenda">
           <h2 className="mb-4 font-display text-2xl text-navy">Agenda</h2>
+          {registrationEvents.length > 0 && (
+            <div className="mb-6 space-y-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Eventos com inscrição</h3>
+              {registrationEvents.map((ev) => (
+                <EventSignupCard
+                  key={ev.id}
+                  event={ev}
+                  prefill={profile ? { full_name: profile.full_name, email: profile.email, phone: profile.phone } : null}
+                />
+              ))}
+            </div>
+          )}
           <AgendaList events={events} />
         </TabsContent>
 
