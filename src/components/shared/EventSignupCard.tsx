@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase/client";
 import { registerForEvent } from "@/services/events";
+import { registrationProtocol, googleCalendarUrl, icsDownloadUrl } from "@/lib/eventShare";
+import { EventShareButtons } from "@/components/shared/EventShareButtons";
+import { CalendarPlus } from "lucide-react";
 import type { RegistrationEvent } from "@/types/domain";
 
 interface Prefill {
@@ -36,6 +39,7 @@ export function EventSignupCard({
   const [phone, setPhone] = useState(prefill?.phone ?? "");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<"confirmada" | "lista_espera" | null>(null);
+  const [registrationId, setRegistrationId] = useState<string | null>(null);
   const [err, setErr] = useState("");
 
   const dateLabel = new Date(event.start_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
@@ -46,6 +50,7 @@ export function EventSignupCard({
     try {
       const res = await registerForEvent(supabase, event.id, name.trim(), email || null, phone || null);
       setResult(res.reg_status === "lista_espera" ? "lista_espera" : "confirmada");
+      setRegistrationId(res.registration_id);
       onRegistered?.();
     } catch (e) {
       setErr((e as { message?: string })?.message ?? "Não foi possível concluir a inscrição.");
@@ -59,6 +64,7 @@ export function EventSignupCard({
     try {
       const res = await registerForEvent(supabase, event.id, prefill.full_name, prefill.email ?? null, prefill.phone ?? null);
       setResult(res.reg_status === "lista_espera" ? "lista_espera" : "confirmada");
+      setRegistrationId(res.registration_id);
       onRegistered?.();
     } catch (e) {
       setErr((e as { message?: string })?.message ?? "Não foi possível concluir a inscrição.");
@@ -67,11 +73,33 @@ export function EventSignupCard({
 
   if (result) {
     return (
-      <div className={`flex items-center gap-2 rounded-lg border p-3 ${compact ? "text-sm" : ""} bg-emerald-50 border-emerald-200`}>
-        <Check className="h-4 w-4 shrink-0 text-emerald-600" />
-        <p className="text-emerald-700">
-          {result === "confirmada" ? "Inscrição confirmada!" : "Vaga esgotada — você entrou na lista de espera."}
-        </p>
+      <div className={`rounded-lg border p-3 ${compact ? "text-sm" : ""} bg-emerald-50 border-emerald-200 space-y-3`}>
+        <div className="flex items-center gap-2">
+          <Check className="h-4 w-4 shrink-0 text-emerald-600" />
+          <p className="text-emerald-700">
+            {result === "confirmada" ? "Inscrição confirmada!" : "Vaga esgotada — você entrou na lista de espera."}
+          </p>
+        </div>
+        {registrationId && (
+          <p className="text-xs text-emerald-700/80">
+            Protocolo: <b className="font-mono">{registrationProtocol(registrationId)}</b>
+          </p>
+        )}
+        {!compact && (
+          <div className="flex flex-wrap items-center gap-2 border-t border-emerald-200 pt-3">
+            <a href={googleCalendarUrl(event)} target="_blank" rel="noopener noreferrer">
+              <Button type="button" size="sm" variant="outline" className="gap-1.5">
+                <CalendarPlus className="h-3.5 w-3.5" /> Google Agenda
+              </Button>
+            </a>
+            <a href={icsDownloadUrl(event)} download={`${event.slug}.ics`}>
+              <Button type="button" size="sm" variant="outline" className="gap-1.5">
+                <CalendarPlus className="h-3.5 w-3.5" /> Apple/Outlook (.ics)
+              </Button>
+            </a>
+          </div>
+        )}
+        <EventShareButtons event={event} />
       </div>
     );
   }
