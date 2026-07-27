@@ -1,15 +1,16 @@
 "use client";
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, MapPin, Video } from "lucide-react";
+import { ArrowLeft, CalendarDays, MapPin, Video, Mic } from "lucide-react";
 import { DarkBlueTheme } from "@/components/shared/DarkBlueTheme";
 import { Card, CardContent } from "@/components/ui/card";
 import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import { EventShareButtons } from "@/components/shared/EventShareButtons";
-import { useRegistrationEventBySlug, useMyProfile } from "@/hooks/use-queries";
+import { useRegistrationEventBySlug, useMyProfile, useEventSpeakers } from "@/hooks/use-queries";
 
 export default function EventoPage({ params, searchParams }: { params: { slug: string }; searchParams: { origem?: string } }) {
   const { data: event, isLoading } = useRegistrationEventBySlug(params.slug);
   const { data: profile } = useMyProfile();
+  const { data: speakers = [] } = useEventSpeakers(event?.id ?? null);
   const origin = searchParams?.origem || "pagina_publica";
 
   return (
@@ -43,6 +44,27 @@ export default function EventoPage({ params, searchParams }: { params: { slug: s
                   </p>
                 </div>
                 {event.description && <p className="whitespace-pre-line text-sm text-muted-foreground">{event.description}</p>}
+
+                {speakers.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Palestrantes</p>
+                    <div className="flex flex-wrap gap-3">
+                      {speakers.map((sp) => (
+                        <div key={sp.id} className="flex items-center gap-2 rounded-lg border bg-card px-2.5 py-1.5">
+                          {sp.photo_url ? (
+                            <img src={sp.photo_url} alt={sp.name} className="h-9 w-9 rounded-full object-cover" />
+                          ) : (
+                            <div className="grid h-9 w-9 place-items-center rounded-full bg-navy/10"><Mic className="h-4 w-4 text-navy" /></div>
+                          )}
+                          <div>
+                            <p className="text-sm font-semibold text-navy">{sp.name}</p>
+                            {sp.topic && <p className="text-xs text-muted-foreground">{sp.topic}</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="border-t pt-3">
                   <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Compartilhar este evento</p>
