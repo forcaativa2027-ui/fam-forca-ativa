@@ -341,6 +341,21 @@ export interface ContentLibraryItem {
   created_at: string;
 }
 
+export type ContentWorkflowStatus = "rascunho" | "em_revisao" | "aprovado" | "agendado" | "publicado" | "arquivado";
+export interface ContentWorkflowState {
+  status: ContentWorkflowStatus;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;
+  reviewer_name: string | null;
+}
+export interface ContentPendingReview {
+  entity_type: string;
+  entity_id: string;
+  submitted_at: string;
+  submitted_by_name: string | null;
+}
+
 export interface ContentCategory {
   id: string;
   name: string;
