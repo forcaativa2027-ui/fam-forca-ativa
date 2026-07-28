@@ -176,21 +176,21 @@ function StepConta({ s, update, onNext }: { s: State; update: <K extends keyof S
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-display text-xl text-navy">Vamos começar</h2>
-        <p className="text-sm text-muted">Conta um pouco sobre você</p>
+        <h2 className="font-display text-2xl font-bold text-navy">Vamos começar</h2>
+        <p className="text-base text-muted">Conta um pouco sobre você</p>
       </div>
 
       <Field label="Nome completo" error={err.full_name}>
-        <Input value={s.full_name} onChange={(e) => update("full_name", e.target.value)} placeholder="Maria Silva" autoFocus />
+        <Input className="h-12 text-base" value={s.full_name} onChange={(e) => update("full_name", e.target.value)} placeholder="Maria Silva" autoFocus />
       </Field>
 
       <Field label="CPF (opcional)">
-        <Input value={s.cpf} onChange={(e) => update("cpf", maskCpf(e.target.value))} placeholder="000.000.000-00" inputMode="numeric" />
+        <Input className="h-12 text-base" value={s.cpf} onChange={(e) => update("cpf", maskCpf(e.target.value))} placeholder="000.000.000-00" inputMode="numeric" />
       </Field>
 
       <div className="relative">
         <Field label="E-mail" error={err.email}>
-          <Input
+          <Input className="h-12 text-base"
             value={s.email} type="text"
             onChange={(e) => { update("email", e.target.value); setShowDomains(e.target.value.includes("@")); }}
             onFocus={() => setShowDomains(s.email.includes("@"))}
@@ -212,11 +212,11 @@ function StepConta({ s, update, onNext }: { s: State; update: <K extends keyof S
       </div>
 
       <Field label="Telefone / WhatsApp" error={err.phone}>
-        <Input value={s.phone} onChange={(e) => update("phone", maskPhone(e.target.value))} placeholder="(00) 00000-0000" inputMode="tel" />
+        <Input className="h-12 text-base" value={s.phone} onChange={(e) => update("phone", maskPhone(e.target.value))} placeholder="(00) 00000-0000" inputMode="tel" />
       </Field>
 
       <div className="flex justify-end">
-        <Button onClick={next} className="gap-2">Continuar <ArrowRight className="h-4 w-4" /></Button>
+        <Button onClick={next} className="h-12 gap-2 rounded-xl text-base shadow-md transition hover:shadow-lg active:scale-95">Continuar <ArrowRight className="h-5 w-5" /></Button>
       </div>
     </div>
   );
@@ -234,8 +234,8 @@ function StepTipoCadastro({ s, onBack, onBasico, onCompleto }: {
       <div className="flex items-center gap-2">
         <PartyPopper className="h-5 w-5 text-gold" />
         <div>
-          <h2 className="font-display text-xl text-navy">Sua conta foi criada com sucesso!</h2>
-          <p className="text-sm text-muted">Como você quer continuar, {s.full_name.split(" ")[0] || "amigo(a)"}?</p>
+          <h2 className="font-display text-2xl font-bold text-navy">Sua conta foi criada com sucesso!</h2>
+          <p className="text-base text-muted">Como você quer continuar, {s.full_name.split(" ")[0] || "amigo(a)"}?</p>
         </div>
       </div>
 
@@ -258,7 +258,7 @@ function StepTipoCadastro({ s, onBack, onBasico, onCompleto }: {
             </p>
           </div>
         </div>
-        <Button type="button" onClick={onBasico} variant="outline" className="mt-3 w-full gap-2 py-6 text-base">
+        <Button type="button" onClick={onBasico} variant="outline" className="mt-3 h-14 w-full gap-2 rounded-xl text-base shadow-sm transition active:scale-95">
           Entrar na Home do Usuário <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
@@ -274,7 +274,7 @@ function StepTipoCadastro({ s, onBack, onBasico, onCompleto }: {
             <p className="mt-2 text-xs text-muted">Obrigatório para: membros efetivos, emissão da Carteira de Membro, Life Groups, discipulado e acompanhamento pastoral.</p>
           </div>
         </div>
-        <Button type="button" onClick={onCompleto} className="mt-3 w-full gap-2 py-6 text-base">
+        <Button type="button" onClick={onCompleto} className="mt-3 h-14 w-full gap-2 rounded-xl text-base shadow-md transition hover:shadow-lg active:scale-95">
           Continuar Cadastro <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
@@ -344,15 +344,15 @@ function StepFinalizacaoBasica({ s, onBack, onDone, setGlobalErr }: {
       <div className="flex items-center gap-2">
         <PartyPopper className="h-5 w-5 text-gold" />
         <div>
-          <h2 className="font-display text-xl text-navy">Falta só a senha!</h2>
-          <p className="text-sm text-muted">Crie uma senha para acessar sua conta</p>
+          <h2 className="font-display text-2xl font-bold text-navy">Falta só a senha!</h2>
+          <p className="text-base text-muted">Crie uma senha para acessar sua conta</p>
         </div>
       </div>
 
       <Field label="Senha" error={err.password}>
         <div className="relative">
           <Input type={showPassword ? "text" : "password"} value={password}
-            onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className="pr-10" />
+            onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" className="h-12 text-base pr-10" />
           <button type="button" onClick={() => setShowPassword((v) => !v)}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-navy" tabIndex={-1}>
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -360,9 +360,10 @@ function StepFinalizacaoBasica({ s, onBack, onDone, setGlobalErr }: {
         </div>
       </Field>
       <Field label="Confirmar senha" error={err.password_confirm}>
-        <Input type={showPassword ? "text" : "password"} value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} />
+        <Input className="h-12 text-base" type={showPassword ? "text" : "password"} value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} />
       </Field>
 
+      <SectionDivider label="Termos de Uso" />
       <TermsCheckbox checked={lgpdAccepted} onChange={setLgpdAccepted} error={err.lgpd} />
 
       {turnstileSiteKey && (
@@ -373,8 +374,8 @@ function StepFinalizacaoBasica({ s, onBack, onDone, setGlobalErr }: {
       )}
 
       <div className="flex justify-between gap-2">
-        <Button type="button" variant="outline" onClick={onBack} className="gap-2 py-6"><ArrowLeft className="h-4 w-4" /> Voltar</Button>
-        <Button type="button" onClick={finish} disabled={busy} className="gap-2 py-6 text-base">
+        <Button type="button" variant="outline" onClick={onBack} className="h-12 gap-2 rounded-xl text-base shadow-sm transition active:scale-95"><ArrowLeft className="h-5 w-5" /> Voltar</Button>
+        <Button type="button" onClick={finish} disabled={busy} className="h-12 gap-2 rounded-xl text-base shadow-md transition hover:shadow-lg active:scale-95">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
           {busy ? "Criando…" : "Entrar na plataforma"}
         </Button>
@@ -390,8 +391,8 @@ function StepVerificacao({ s, update, onBack, onNext }: { s: State; update: <K e
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-display text-xl text-navy">Como prefere validar seu número?</h2>
-        <p className="text-sm text-muted">Enviamos um código de confirmação pra {s.phone || "seu telefone"}</p>
+        <h2 className="font-display text-2xl font-bold text-navy">Como prefere validar seu número?</h2>
+        <p className="text-base text-muted">Enviamos um código de confirmação pra {s.phone || "seu telefone"}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -422,7 +423,11 @@ function StepVerificacao({ s, update, onBack, onNext }: { s: State; update: <K e
 // ============================================================
 function StepPessoal({ s, update, onBack, onNext }: { s: State; update: <K extends keyof State>(k: K, v: State[K]) => void; onBack: () => void; onNext: () => void }) {
   const [err, setErr] = useState("");
-  const MARITAL = ["Solteiro(a)", "Casado(a)", "Divorciado(a)", "Viúvo(a)", "União estável"];
+  const MARITAL = [
+    { label: "Solteiro(a)", icon: "🙂" }, { label: "Casado(a)", icon: "💍" },
+    { label: "Divorciado(a)", icon: "💔" }, { label: "Viúvo(a)", icon: "🕊️" },
+    { label: "União estável", icon: "❤️" },
+  ];
 
   const age = (() => {
     if (!s.birth_date) return null;
@@ -444,40 +449,50 @@ function StepPessoal({ s, update, onBack, onNext }: { s: State; update: <K exten
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-display text-xl text-navy">Um pouco mais sobre você</h2>
+        <h2 className="font-display text-2xl font-bold text-navy">Um pouco mais sobre você</h2>
       </div>
 
       <Field label="Estado civil">
         <div className="grid grid-cols-2 gap-2">
           {MARITAL.map((m) => (
-            <button key={m} type="button" onClick={() => update("marital_status", m)}
-              className={`rounded-lg border-2 p-2.5 text-left text-sm transition ${s.marital_status === m ? "border-gold bg-gold/5 text-navy font-bold" : "border-border bg-card text-ink hover:border-navy/30"}`}>
-              {m}
+            <button key={m.label} type="button" onClick={() => update("marital_status", m.label)}
+              className={`flex items-center gap-2.5 rounded-xl border-2 p-3.5 text-left text-base transition hover:scale-[1.01] hover:shadow-sm ${s.marital_status === m.label ? "border-gold bg-gold/10 font-bold text-navy shadow-md" : "border-border bg-card text-ink hover:border-navy/30"}`}>
+              <span className="text-xl">{m.icon}</span>{m.label}
             </button>
           ))}
         </div>
       </Field>
 
       <Field label="Data de nascimento">
-        <Input type="date" value={s.birth_date} onChange={(e) => update("birth_date", e.target.value)} />
-        {age !== null && <p className="mt-1 text-xs text-gold">Idade: {age} anos</p>}
+        <Input className="h-12 text-base" type="date" value={s.birth_date} onChange={(e) => update("birth_date", e.target.value)} />
+        {age !== null && <p className="mt-1 text-sm font-semibold text-gold">Idade: {age} anos</p>}
       </Field>
 
       <Field label="Sexo" error={err}>
         <div className="grid grid-cols-2 gap-3">
           <button type="button" onClick={() => update("gender", "masculino")}
-            className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition hover:scale-[1.02] ${s.gender === "masculino" ? "border-blue-500 bg-blue-500/10 shadow-md" : "border-border bg-card hover:border-blue-300"}`}>
-            <div className={`relative grid h-20 w-20 place-items-center overflow-hidden rounded-full transition ${s.gender === "masculino" ? "ring-4 ring-blue-500" : "ring-2 ring-blue-100"}`}>
+            className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition hover:scale-[1.02] hover:shadow-sm ${s.gender === "masculino" ? "border-blue-500 bg-blue-500/10 shadow-md" : "border-border bg-card hover:border-blue-300"}`}>
+            <div className={`relative grid aspect-square w-full max-w-[140px] place-items-center overflow-hidden rounded-2xl transition ${s.gender === "masculino" ? "ring-4 ring-blue-500" : "ring-2 ring-blue-100"}`}>
               <img src="/images/avatar-masculino.png" alt="Masculino" className="h-full w-full object-cover" />
+              {s.gender === "masculino" && (
+                <span className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-blue-500 text-white shadow">
+                  <Check className="h-4 w-4" strokeWidth={3} />
+                </span>
+              )}
             </div>
-            <b className="text-sm text-navy">Masculino</b>
+            <b className="text-base text-navy">Masculino</b>
           </button>
           <button type="button" onClick={() => update("gender", "feminino")}
-            className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition hover:scale-[1.02] ${s.gender === "feminino" ? "border-pink-500 bg-pink-500/10 shadow-md" : "border-border bg-card hover:border-pink-300"}`}>
-            <div className={`relative grid h-20 w-20 place-items-center overflow-hidden rounded-full transition ${s.gender === "feminino" ? "ring-4 ring-pink-500" : "ring-2 ring-pink-100"}`}>
+            className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition hover:scale-[1.02] hover:shadow-sm ${s.gender === "feminino" ? "border-pink-500 bg-pink-500/10 shadow-md" : "border-border bg-card hover:border-pink-300"}`}>
+            <div className={`relative grid aspect-square w-full max-w-[140px] place-items-center overflow-hidden rounded-2xl transition ${s.gender === "feminino" ? "ring-4 ring-pink-500" : "ring-2 ring-pink-100"}`}>
               <img src="/images/avatar-feminino.png" alt="Feminino" className="h-full w-full object-cover" />
+              {s.gender === "feminino" && (
+                <span className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-pink-500 text-white shadow">
+                  <Check className="h-4 w-4" strokeWidth={3} />
+                </span>
+              )}
             </div>
-            <b className="text-sm text-navy">Feminino</b>
+            <b className="text-base text-navy">Feminino</b>
           </button>
         </div>
       </Field>
@@ -509,19 +524,19 @@ function StepLocalizacao({ s, update, onBack, onNext }: { s: State; update: <K e
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-display text-xl text-navy">Onde você mora?</h2>
-        <p className="text-sm text-muted">Pra encontrarmos a igreja mais próxima de você</p>
+        <h2 className="font-display text-2xl font-bold text-navy">Onde você mora?</h2>
+        <p className="text-base text-muted">Pra encontrarmos a igreja mais próxima de você</p>
       </div>
 
       <Field label="País">
-        <Input value={s.country} onChange={(e) => update("country", e.target.value)} placeholder="Brasil" />
+        <Input className="h-12 text-base" value={s.country} onChange={(e) => update("country", e.target.value)} placeholder="Brasil" />
       </Field>
 
       <Field label="CEP">
         <div className="flex gap-2">
-          <Input value={s.cep} onChange={(e) => update("cep", maskCep(e.target.value))}
+          <Input className="h-12 text-base" value={s.cep} onChange={(e) => update("cep", maskCep(e.target.value))}
             placeholder="00000-000" inputMode="numeric" />
-          <Button type="button" onClick={searchCep} disabled={busy} variant="outline" className="whitespace-nowrap">
+          <Button type="button" onClick={searchCep} disabled={busy} variant="outline" className="h-12 whitespace-nowrap rounded-xl px-5 text-base shadow-sm transition active:scale-95">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
           </Button>
         </div>
@@ -529,23 +544,23 @@ function StepLocalizacao({ s, update, onBack, onNext }: { s: State; update: <K e
       </Field>
 
       <Field label="Endereço">
-        <Input value={s.address} onChange={(e) => update("address", e.target.value)} placeholder="Rua, avenida..." />
+        <Input className="h-12 text-base" value={s.address} onChange={(e) => update("address", e.target.value)} placeholder="Rua, avenida..." />
       </Field>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Número (opcional)">
-          <Input value={s.number} onChange={(e) => update("number", e.target.value)} placeholder="123" inputMode="numeric" />
+          <Input className="h-12 text-base" value={s.number} onChange={(e) => update("number", e.target.value)} placeholder="123" inputMode="numeric" />
         </Field>
         <Field label="Complemento (opcional)">
-          <Input value={s.complemento} onChange={(e) => update("complemento", e.target.value)} placeholder="Apto, bloco, casa..." />
+          <Input className="h-12 text-base" value={s.complemento} onChange={(e) => update("complemento", e.target.value)} placeholder="Apto, bloco, casa..." />
         </Field>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Bairro"><Input value={s.neighborhood} onChange={(e) => update("neighborhood", e.target.value)} /></Field>
-        <Field label="Cidade"><Input value={s.city} onChange={(e) => update("city", e.target.value)} placeholder="Manaus" /></Field>
+        <Field label="Bairro"><Input className="h-12 text-base" value={s.neighborhood} onChange={(e) => update("neighborhood", e.target.value)} /></Field>
+        <Field label="Cidade"><Input className="h-12 text-base" value={s.city} onChange={(e) => update("city", e.target.value)} placeholder="Manaus" /></Field>
       </div>
-      <Field label="Estado"><Input value={s.state} onChange={(e) => update("state", e.target.value.toUpperCase().slice(0,2))} placeholder="AM" /></Field>
+      <Field label="Estado"><Input className="h-12 text-base" value={s.state} onChange={(e) => update("state", e.target.value.toUpperCase().slice(0,2))} placeholder="AM" /></Field>
 
       <NavButtons onBack={onBack} onNext={onNext} />
     </div>
@@ -582,8 +597,8 @@ function StepComunidade({ s, update, churches, cells, onBack, onNext }: {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-display text-xl text-navy">Igreja mais próxima</h2>
-        <p className="text-sm text-muted">Onde você gostaria de ser acompanhado</p>
+        <h2 className="font-display text-2xl font-bold text-navy">Igreja mais próxima</h2>
+        <p className="text-base text-muted">Onde você gostaria de ser acompanhado</p>
       </div>
 
       <div className="space-y-2">
@@ -678,26 +693,26 @@ function StepFe({ s, update, onBack, onNext }: { s: State; update: <K extends ke
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-display text-xl text-navy">Sua história de fé</h2>
-        <p className="text-sm text-muted">Isso nos ajuda a te acompanhar melhor — seja você novo ou antigo na fé</p>
+        <h2 className="font-display text-2xl font-bold text-navy">Sua história de fé</h2>
+        <p className="text-base text-muted">Isso nos ajuda a te acompanhar melhor — seja você novo ou antigo na fé</p>
       </div>
 
       <Field label="Você já foi batizado(a) nas águas?">
         <YesNoIcon value={s.baptized} onChange={(v) => update("baptized", v)} icon={<Droplets className="h-7 w-7" />} />
       </Field>
       {s.baptized && (
-        <Field label="Data do batismo"><Input type="date" value={s.baptism_date} onChange={(e) => update("baptism_date", e.target.value)} /></Field>
+        <Field label="Data do batismo"><Input className="h-12 text-base" type="date" value={s.baptism_date} onChange={(e) => update("baptism_date", e.target.value)} /></Field>
       )}
 
       <Field label="Qual foi a última igreja que você frequentou? (opcional)">
-        <Input value={s.last_church} onChange={(e) => update("last_church", e.target.value)} placeholder="Nome da igreja" />
+        <Input className="h-12 text-base" value={s.last_church} onChange={(e) => update("last_church", e.target.value)} placeholder="Nome da igreja" />
       </Field>
 
       <Field label="Você já foi batizado(a) no Espírito Santo?">
         <YesNoIcon value={s.holy_spirit_baptized} onChange={(v) => update("holy_spirit_baptized", v)} icon={<Flame className="h-7 w-7" />} />
       </Field>
       {s.holy_spirit_baptized && (
-        <Field label="Data do batismo no Espírito Santo"><Input type="date" value={s.holy_spirit_baptism_date} onChange={(e) => update("holy_spirit_baptism_date", e.target.value)} /></Field>
+        <Field label="Data do batismo no Espírito Santo"><Input className="h-12 text-base" type="date" value={s.holy_spirit_baptism_date} onChange={(e) => update("holy_spirit_baptism_date", e.target.value)} /></Field>
       )}
 
       <NavButtons onBack={onBack} onNext={onNext} />
@@ -739,8 +754,8 @@ function StepJornada({ s, update, onBack, onNext }: { s: State; update: <K exten
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-display text-xl text-navy">Sua jornada</h2>
-        <p className="text-sm text-muted">Tudo aqui é opcional — pode deixar em branco e continuar</p>
+        <h2 className="font-display text-2xl font-bold text-navy">Sua jornada</h2>
+        <p className="text-base text-muted">Tudo aqui é opcional — pode deixar em branco e continuar</p>
       </div>
 
       <Field label="O que te fez procurar a igreja? (opcional)">
@@ -760,7 +775,7 @@ function StepJornada({ s, update, onBack, onNext }: { s: State; update: <K exten
         <YesNoIcon value={s.belongs_to_group} onChange={(v) => update("belongs_to_group", v)} icon={<UsersRound className="h-7 w-7" />} />
       </Field>
       {s.belongs_to_group && (
-        <Field label="Qual grupo?"><Input value={s.group_name} onChange={(e) => update("group_name", e.target.value)} placeholder="Nome do grupo/ministério" /></Field>
+        <Field label="Qual grupo?"><Input className="h-12 text-base" value={s.group_name} onChange={(e) => update("group_name", e.target.value)} placeholder="Nome do grupo/ministério" /></Field>
       )}
 
       <NavButtons onBack={onBack} onNext={onNext} />
@@ -777,8 +792,8 @@ function StepIntencao({ s, update, onBack, onNext }: { s: State; update: <K exte
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-display text-xl text-navy">Como podemos te servir?</h2>
-        <p className="text-sm text-muted">Escolha o que melhor descreve seu desejo agora</p>
+        <h2 className="font-display text-2xl font-bold text-navy">Como podemos te servir?</h2>
+        <p className="text-base text-muted">Escolha o que melhor descreve seu desejo agora</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -797,7 +812,7 @@ function StepIntencao({ s, update, onBack, onNext }: { s: State; update: <K exte
               <Ico className={`h-6 w-6 shrink-0 ${selected ? "text-gold" : "text-muted"}`} />
               <div>
                 <b className="text-base text-navy">{cfg.label}</b>
-                <p className="text-sm text-muted">{cfg.description}</p>
+                <p className="text-base text-muted">{cfg.description}</p>
               </div>
             </button>
           );
@@ -885,8 +900,8 @@ function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s: State
       <div className="flex items-center gap-2">
         <PartyPopper className="h-5 w-5 text-gold" />
         <div>
-          <h2 className="font-display text-xl text-navy">Quase lá, {s.full_name.split(" ")[0] || "amigo(a)"}!</h2>
-          <p className="text-sm text-muted">Crie uma senha para acessar sua conta</p>
+          <h2 className="font-display text-2xl font-bold text-navy">Quase lá, {s.full_name.split(" ")[0] || "amigo(a)"}!</h2>
+          <p className="text-base text-muted">Crie uma senha para acessar sua conta</p>
         </div>
       </div>
 
@@ -895,7 +910,7 @@ function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s: State
           <Input
             type={showPassword ? "text" : "password"} value={s.password}
             onChange={(e) => update("password", e.target.value)} placeholder="Mínimo 6 caracteres"
-            className="pr-10"
+            className="h-12 text-base pr-10"
           />
           <button
             type="button" onClick={() => setShowPassword((v) => !v)}
@@ -912,7 +927,7 @@ function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s: State
           <Input
             type={showPasswordConfirm ? "text" : "password"} value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}
-            className="pr-10"
+            className="h-12 text-base pr-10"
           />
           <button
             type="button" onClick={() => setShowPasswordConfirm((v) => !v)}
@@ -925,6 +940,7 @@ function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s: State
         </div>
       </Field>
 
+      <SectionDivider label="Termos de Uso" />
       <TermsCheckbox checked={lgpdAccepted} onChange={setLgpdAccepted} error={err.lgpd} />
 
       {turnstileSiteKey && (
@@ -935,8 +951,8 @@ function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s: State
       )}
 
       <div className="flex justify-between gap-2">
-        <Button type="button" variant="outline" onClick={onBack} className="gap-2 py-6"><ArrowLeft className="h-4 w-4" /> Voltar</Button>
-        <Button type="button" onClick={finish} disabled={busy} className="gap-2 py-6 text-base">
+        <Button type="button" variant="outline" onClick={onBack} className="h-12 gap-2 rounded-xl text-base shadow-sm transition active:scale-95"><ArrowLeft className="h-5 w-5" /> Voltar</Button>
+        <Button type="button" onClick={finish} disabled={busy} className="h-12 gap-2 rounded-xl text-base shadow-md transition hover:shadow-lg active:scale-95">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
           Concluir cadastro
         </Button>
@@ -978,8 +994,8 @@ function FinishedScreen({ hasLg }: { hasLg: boolean }) {
             </p>
           )}
           <div className="flex flex-col gap-2 pt-2">
-            <Button asChild><Link href="/entrar">Ir para o Portal</Link></Button>
-            <Button asChild variant="outline"><Link href="/">Voltar à página inicial</Link></Button>
+            <Button asChild className="h-12 rounded-xl text-base shadow-md"><Link href="/entrar">Ir para o Portal</Link></Button>
+            <Button asChild variant="outline" className="h-12 rounded-xl text-base shadow-sm"><Link href="/">Voltar à página inicial</Link></Button>
           </div>
         </CardContent>
       </Card>
@@ -993,16 +1009,26 @@ function FinishedScreen({ hasLg }: { hasLg: boolean }) {
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label>{label}</Label>{children}
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      <Label className="text-base font-bold text-navy">{label}</Label>{children}
+      {error && <p className="text-sm font-semibold text-destructive">{error}</p>}
     </div>
   );
 }
 function NavButtons({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
   return (
     <div className="flex justify-between gap-2">
-      <Button type="button" variant="outline" onClick={onBack} className="gap-2"><ArrowLeft className="h-4 w-4" /> Voltar</Button>
-      <Button type="button" onClick={onNext} className="gap-2">Continuar <ArrowRight className="h-4 w-4" /></Button>
+      <Button type="button" variant="outline" onClick={onBack} className="h-12 gap-2 rounded-xl text-base shadow-sm transition active:scale-95"><ArrowLeft className="h-5 w-5" /> Voltar</Button>
+      <Button type="button" onClick={onNext} className="h-12 gap-2 rounded-xl text-base shadow-md transition hover:shadow-lg active:scale-95">Continuar <ArrowRight className="h-5 w-5" /></Button>
+    </div>
+  );
+}
+
+/** Divisor discreto entre seções do formulário (§9.8). */
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-3 pt-2">
+      <span className="text-xs font-bold uppercase tracking-wider text-gold">{label}</span>
+      <div className="h-px flex-1 bg-border" />
     </div>
   );
 }
