@@ -288,6 +288,7 @@ export interface Member {
   consent_accepted_at?: string|null; photo_consent_accepted_at?: string|null;
   cec_id?: string|null; card_status?: CardStatus; card_approved_at?: string|null; card_issued_at?: string|null; qr_token?: string;
   member_since?: string|null;
+  baptized?: boolean|null; last_church?: string|null; holy_spirit_baptized?: boolean|null; holy_spirit_baptism_date?: string|null;
 }
 export interface Sermon { id:string; title:string; reference:string|null; speaker:string|null; youtube_url:string; thumbnail_url:string|null; category:string|null; published_at:string; is_featured:boolean; is_published:boolean; church_id:string|null; duration?:string|null; sort_order:number; description?:string|null; pdf_url?:string|null; }
 export interface EventItem { id:string; title:string; description:string|null; starts_at:string; ends_at:string|null; location:string|null; image_url:string|null; registration_url:string|null; status:EventStatus; event_type:EventTypeKind; is_published:boolean; church_id:string|null; }
