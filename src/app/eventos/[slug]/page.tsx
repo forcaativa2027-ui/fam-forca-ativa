@@ -1,16 +1,17 @@
 "use client";
 import Link from "next/link";
-import { ArrowLeft, CalendarDays, MapPin, Video, Mic } from "lucide-react";
+import { ArrowLeft, CalendarDays, MapPin, Video, Mic, Clock } from "lucide-react";
 import { DarkBlueTheme } from "@/components/shared/DarkBlueTheme";
 import { Card, CardContent } from "@/components/ui/card";
 import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import { EventShareButtons } from "@/components/shared/EventShareButtons";
-import { useRegistrationEventBySlug, useMyProfile, useEventSpeakers } from "@/hooks/use-queries";
+import { useRegistrationEventBySlug, useMyProfile, useEventSpeakers, useEventSchedule } from "@/hooks/use-queries";
 
 export default function EventoPage({ params, searchParams }: { params: { slug: string }; searchParams: { origem?: string } }) {
   const { data: event, isLoading } = useRegistrationEventBySlug(params.slug);
   const { data: profile } = useMyProfile();
   const { data: speakers = [] } = useEventSpeakers(event?.id ?? null);
+  const { data: schedule = [] } = useEventSchedule(event?.id ?? null);
   const origin = searchParams?.origem || "pagina_publica";
 
   return (
@@ -62,6 +63,32 @@ export default function EventoPage({ params, searchParams }: { params: { slug: s
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {schedule.length > 0 && (
+                  <div>
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Programação</p>
+                    <div className="space-y-2">
+                      {schedule.map((it) => {
+                        const speaker = speakers.find((s) => s.id === it.speaker_id);
+                        return (
+                          <div key={it.id} className="flex gap-3 rounded-lg border bg-card p-2.5">
+                            <div className="flex shrink-0 items-center gap-1 text-xs font-mono font-bold text-navy">
+                              <Clock className="h-3 w-3" />
+                              {new Date(it.start_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-navy">{it.title}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {[speaker?.name, it.location].filter(Boolean).join(" · ")}
+                              </p>
+                              {it.description && <p className="mt-0.5 text-xs text-muted-foreground">{it.description}</p>}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
