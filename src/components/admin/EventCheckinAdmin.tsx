@@ -38,7 +38,9 @@ export function EventCheckinAdmin() {
   return <CheckinScanner eventId={eventId} eventName={event?.name ?? ""} onChangeEvent={() => setEventId("")} />;
 }
 
-function CheckinScanner({ eventId, eventName, onChangeEvent }: { eventId: string; eventName: string; onChangeEvent: () => void }) {
+export function CheckinScanner({
+  eventId, eventName, onChangeEvent, embedded = false,
+}: { eventId: string; eventName: string; onChangeEvent: () => void; embedded?: boolean }) {
   const qc = useQueryClient();
   const [manualQuery, setManualQuery] = useState("");
   const [searchResults, setSearchResults] = useState<EventGroupMember[] | null>(null);
@@ -160,10 +162,12 @@ function CheckinScanner({ eventId, eventName, onChangeEvent }: { eventId: string
 
   return (
     <div className="mx-auto max-w-md space-y-4 py-4">
-      <div className="flex items-center justify-between rounded-md border bg-muted/30 p-2 text-sm">
-        <span className="font-semibold text-navy">{eventName}</span>
-        <Button variant="outline" size="sm" onClick={() => { stopScan(); onChangeEvent(); }}>Trocar evento</Button>
-      </div>
+      {!embedded && (
+        <div className="flex items-center justify-between rounded-md border bg-muted/30 p-2 text-sm">
+          <span className="font-semibold text-navy">{eventName}</span>
+          <Button variant="outline" size="sm" onClick={() => { stopScan(); onChangeEvent(); }}>Trocar evento</Button>
+        </div>
+      )}
 
       {!result && !notFound && !searchResults && (
         <>
