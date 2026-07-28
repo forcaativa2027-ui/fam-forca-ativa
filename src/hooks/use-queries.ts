@@ -661,6 +661,13 @@ export const useEventSpeakers = (eventId: string | null) =>
     enabled: !!eventId,
   });
 
+export const useEventSchedule = (eventId: string | null) =>
+  useQuery({
+    queryKey: ["event-schedule", eventId],
+    queryFn: () => Ev.listEventSchedule(supabase, eventId as string),
+    enabled: !!eventId,
+  });
+
 export const useHighlightedRegistrationEvents = () =>
   useQuery({
     queryKey: ["registration-events-highlighted"],
