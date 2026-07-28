@@ -37,6 +37,8 @@ export function InviteRegisterForm({ token, validation }: Props) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [cpf, setCpf] = useState("");
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -120,6 +122,11 @@ export function InviteRegisterForm({ token, validation }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr(""); setBusy(true);
+    if (!acceptedPrivacy) {
+      setErr("É necessário aceitar a política de privacidade para continuar.");
+      setBusy(false);
+      return;
+    }
     try {
       const { data: signData, error: signErr } = await supabase.auth.signUp({
         email, password,
@@ -131,7 +138,7 @@ export function InviteRegisterForm({ token, validation }: Props) {
       }
       // signUp() pode não retornar sessão ativa (projeto exige confirmação de e-mail) —
       // por isso passamos o id do usuário explicitamente, não dependemos de auth.uid() no banco.
-      await consumeInviteLink(supabase, token, phone, signData.user?.id);
+      await consumeInviteLink(supabase, token, phone, signData.user?.id, cpf, acceptedPrivacy);
       setHasSession(!!signData.session);
       setDone(true);
     } catch (e2) {
@@ -170,9 +177,18 @@ export function InviteRegisterForm({ token, validation }: Props) {
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div>
+              <Label>CPF</Label>
+              <Input value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" required />
+            </div>
+            <div>
               <Label>Senha</Label>
               <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
+            <label className="flex items-start gap-2 text-xs text-muted-foreground">
+              <input type="checkbox" checked={acceptedPrivacy} onChange={(e) => setAcceptedPrivacy(e.target.checked)} className="mt-0.5" required />
+              Li e aceito a <Link href="/privacidade" target="_blank" className="underline">política de privacidade</Link> e os{" "}
+              <Link href="/termos" target="_blank" className="underline">termos de uso</Link>. *
+            </label>
             {err && <p className="text-sm text-destructive">{err}</p>}
             <Button type="submit" disabled={busy} className="w-full gap-1.5">
               {busy ? <Loader2 size={16} className="animate-spin" /> : null}
