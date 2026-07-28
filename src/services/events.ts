@@ -224,3 +224,18 @@ export async function acknowledgeEventChange(sb: SupabaseClient, registrationId:
   const { error } = await sb.rpc("acknowledge_event_change", { p_registration_id: registrationId });
   if (error) throw error;
 }
+
+// ---------- Gestão de inscritos (EVT011) ----------
+export async function adminUpdateRegistration(
+  sb: SupabaseClient, registrationId: string, fullName: string, email: string | null, phone: string | null, cpf: string | null
+): Promise<void> {
+  const { error } = await sb.rpc("admin_update_registration", {
+    p_registration_id: registrationId, p_full_name: fullName, p_email: email, p_phone: phone, p_cpf: cpf,
+  });
+  if (error) throw error;
+}
+
+export async function adminMoveRegistrationStatus(sb: SupabaseClient, registrationId: string, newStatus: "confirmada" | "lista_espera"): Promise<void> {
+  const { error } = await sb.rpc("admin_move_registration_status", { p_registration_id: registrationId, p_new_status: newStatus });
+  if (error) throw error;
+}
