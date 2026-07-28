@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, XCircle, Loader2, LogIn, ChevronDown } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,6 +68,8 @@ export function InviteRegisterForm({ token, validation }: Props) {
   const [hasSession, setHasSession] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [err, setErr] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   const roleName = validation.kind ? KIND_LABELS[validation.kind] : null;
 
@@ -169,10 +172,15 @@ export function InviteRegisterForm({ token, validation }: Props) {
       setBusy(false);
       return;
     }
+    if (turnstileSiteKey && !captchaToken) {
+      setErr("Confirme que você não é um robô.");
+      setBusy(false);
+      return;
+    }
     try {
       const { data: signData, error: signErr } = await supabase.auth.signUp({
         email, password,
-        options: { data: { full_name: fullName } },
+        options: { data: { full_name: fullName }, captchaToken: captchaToken ?? undefined },
       });
       if (signErr) {
         setErr(signErr.message.includes("already") ? "Este e-mail já está cadastrado. Tente fazer login." : signErr.message);
@@ -317,6 +325,9 @@ export function InviteRegisterForm({ token, validation }: Props) {
               Li e aceito a <Link href="/privacidade" target="_blank" className="underline">política de privacidade</Link> e os{" "}
               <Link href="/termos" target="_blank" className="underline">termos de uso</Link>. *
             </label>
+            {turnstileSiteKey && (
+              <div><Turnstile siteKey={turnstileSiteKey} onSuccess={setCaptchaToken} /></div>
+            )}
             {err && <p className="text-sm text-destructive">{err}</p>}
             <Button type="submit" disabled={busy} className="w-full gap-1.5">
               {busy ? <Loader2 size={16} className="animate-spin" /> : null}

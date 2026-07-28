@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Sparkles, Mail, CheckCircle2 } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,13 +13,17 @@ export default function ForgotPasswordForm() {
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email || !/\S+@\S+\.\S+/.test(email)) { setErr("Informe um e-mail válido."); return; }
+    if (turnstileSiteKey && !captchaToken) { setErr("Confirme que você não é um robô."); return; }
     setBusy(true); setErr("");
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/nova-senha`,
+      captchaToken: captchaToken ?? undefined,
     });
     setBusy(false);
     if (error) { setErr(error.message); return; }
@@ -49,6 +54,9 @@ export default function ForgotPasswordForm() {
                 <Input id="email" type="email" className="pl-9" placeholder="seu@email.com" value={email} onChange={e=>setEmail(e.target.value)} autoFocus/>
               </div>
             </div>
+            {turnstileSiteKey && (
+              <div><Turnstile siteKey={turnstileSiteKey} onSuccess={setCaptchaToken} /></div>
+            )}
             {err&&<p className="rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{err}</p>}
             <Button type="submit" disabled={busy} className="w-full">{busy?"Enviando…":"Enviar link de recuperação"}</Button>
             <p className="text-center text-xs text-muted-foreground">Lembrou a senha? <Link href="/entrar" className="font-semibold text-[#0E2A47] hover:underline">Entrar</Link></p>

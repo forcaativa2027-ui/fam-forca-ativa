@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Sparkles } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +15,8 @@ import { logAudit } from "@/services/audit";
 export default function LoginForm() {
   const envOk = hasSupabaseEnv();
   const [err, setErr] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const { register, handleSubmit, formState: { errors, isSubmitting } } =
     useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
 
@@ -26,8 +29,12 @@ export default function LoginForm() {
 
   async function onSubmit(values: LoginInput) {
     if (!envOk) { setErr("Configure as variáveis de ambiente do Supabase."); return; }
+    if (turnstileSiteKey && !captchaToken) { setErr("Confirme que você não é um robô."); return; }
     setErr("");
-    const { error, data } = await supabase.auth.signInWithPassword(values);
+    const { error, data } = await supabase.auth.signInWithPassword({
+      ...values,
+      options: { captchaToken: captchaToken ?? undefined },
+    });
     if (error) { setErr(error.message); return; }
     if (data.user) await logAudit(supabase, "login", "auth", data.user.id);
     window.location.href = "/painel";
@@ -57,6 +64,11 @@ export default function LoginForm() {
             {errors.password && <p className="mt-1 text-xs text-destructive">{errors.password.message}</p>}
           </div>
         </div>
+        {turnstileSiteKey && (
+          <div className="mt-3">
+            <Turnstile siteKey={turnstileSiteKey} onSuccess={setCaptchaToken} />
+          </div>
+        )}
         {err && <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{err}</p>}
         <Button type="submit" disabled={isSubmitting} className="mt-5 w-full bg-[#0E2A47] text-white hover:bg-[#16345A] hover:text-white">
           {isSubmitting ? "Entrando…" : "Entrar"}
