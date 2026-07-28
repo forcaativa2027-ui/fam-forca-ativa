@@ -1,19 +1,19 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, X, Users, FileDown, ArrowLeft, Mic, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Users, FileDown, ArrowLeft, Mic, ArrowUpCircle, ArrowDownCircle, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   useRegistrationEventsAdmin, useEventRegistrations, useEventRegistrationSummary, useChurches,
-  useEventFunnel, useEventAnalyticsByOrigin, useEventSpeakers,
+  useEventFunnel, useEventAnalyticsByOrigin, useEventSpeakers, useEventFeedbackSummary,
 } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import {
   createRegistrationEvent, updateRegistrationEvent, deleteRegistrationEvent, cancelRegistration, saveEventSpeakers,
-  adminUpdateRegistration, adminMoveRegistrationStatus,
+  adminUpdateRegistration, adminMoveRegistrationStatus, finalizeEventAttendance,
 } from "@/services/events";
 import { logAudit } from "@/services/audit";
 import { CheckinScanner } from "./EventCheckinAdmin";
@@ -504,6 +504,21 @@ function RegistrantsView({ event, onBack }: { event: RegistrationEvent; onBack: 
   const { data: summary } = useEventRegistrationSummary(event.id);
   const { data: funnel } = useEventFunnel(event.id);
   const { data: byOrigin = [] } = useEventAnalyticsByOrigin(event.id);
+  const { data: feedback } = useEventFeedbackSummary(event.id);
+  const [finalizing, setFinalizing] = useState(false);
+
+  async function finalizeAttendance() {
+    if (!confirm("Encerrar presença deste evento? Todo mundo com inscrição confirmada que não fez check-in será marcado como ausente.")) return;
+    setFinalizing(true);
+    try {
+      const count = await finalizeEventAttendance(supabase, event.id);
+      await logAudit(supabase, "update", "registration_events", event.id, { action: "finalize_attendance", ausentes: count });
+      qc.invalidateQueries({ queryKey: ["event-registrations", event.id] });
+      qc.invalidateQueries({ queryKey: ["registration-events-admin"] });
+      alert(`Presença encerrada. ${count} pessoa(s) marcada(s) como ausente.`);
+    } catch (e) { alert((e as { message?: string })?.message ?? "Erro ao encerrar presença"); }
+    finally { setFinalizing(false); }
+  }
 
   const filtered = registrations.filter((r) => {
     if (statusFilter !== "todos" && r.status !== statusFilter) return false;
@@ -614,6 +629,31 @@ function RegistrantsView({ event, onBack }: { event: RegistrationEvent; onBack: 
         </Card>
       )}
 
+      {subTab === "indicadores" && feedback && feedback.total > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Pesquisa de satisfação</CardTitle>
+            <CardDescription>{feedback.total} resposta(s) · nota média {feedback.average}/5</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {feedback.comments.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Ninguém deixou comentário — só notas.</p>
+            ) : (
+              feedback.comments.map((c, i) => (
+                <div key={i} className="rounded-md border p-2.5">
+                  <div className="mb-1 flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <Star key={n} className={`h-3.5 w-3.5 ${n <= c.rating ? "fill-gold text-gold" : "text-muted-foreground"}`} />
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{c.comment}</p>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {subTab === "inscritos" && (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -633,6 +673,19 @@ function RegistrantsView({ event, onBack }: { event: RegistrationEvent; onBack: 
           </Button>
         </CardHeader>
         <CardContent>
+          {!event.attendance_closed_at && (
+            <div className="mb-3 flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 p-2.5">
+              <p className="text-xs text-amber-800">Ainda não encerrado — quem não fez check-in continua como "pendente".</p>
+              <Button size="sm" variant="outline" disabled={finalizing} onClick={finalizeAttendance}>
+                {finalizing ? "Encerrando…" : "Encerrar presença"}
+              </Button>
+            </div>
+          )}
+          {event.attendance_closed_at && (
+            <p className="mb-3 text-xs text-muted-foreground">
+              Presença encerrada em {new Date(event.attendance_closed_at).toLocaleString("pt-BR")}.
+            </p>
+          )}
           <div className="mb-3 flex flex-wrap gap-2">
             <Input placeholder="Buscar por nome, e-mail, telefone ou CPF…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)} className="h-10 rounded-md border bg-background px-2 text-sm">
@@ -667,6 +720,7 @@ function RegistrantsView({ event, onBack }: { event: RegistrationEvent; onBack: 
                         {r.status === "confirmada" ? "Confirmada" : r.status === "lista_espera" ? "Lista de espera" : "Cancelada"}
                       </span>
                       {r.checked_in_at && <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-sky-700">✓ Check-in</span>}
+                      {r.no_show && <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-red-600">Ausente</span>}
                     </div>
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {[r.email, r.phone, r.cpf].filter(Boolean).join(" · ") || "Sem contato informado"}
