@@ -69,6 +69,31 @@
 .dark-blue-theme [class*="bg-muted"] {
   background-color: rgba(255, 255, 255, 0.07) !important;
 }
+/* Essas caixas pastel quase sempre vêm com texto escuro pareado (ex: bg-amber-50 + text-amber-800)
+   pensado pra fundo claro. O fundo acima já virou translúcido/escuro — sem isso, o texto continua
+   escuro/avermelhado sobre fundo escuro (baixo contraste, o bug relatado na Etapa 2 do cadastro). */
+.dark-blue-theme [class*="text-blue-7"],
+.dark-blue-theme [class*="text-blue-8"],
+.dark-blue-theme [class*="text-red-7"],
+.dark-blue-theme [class*="text-red-8"],
+.dark-blue-theme [class*="text-green-7"],
+.dark-blue-theme [class*="text-green-8"],
+.dark-blue-theme [class*="text-emerald-7"],
+.dark-blue-theme [class*="text-emerald-8"],
+.dark-blue-theme [class*="text-amber-7"],
+.dark-blue-theme [class*="text-amber-8"],
+.dark-blue-theme [class*="text-yellow-7"],
+.dark-blue-theme [class*="text-yellow-8"],
+.dark-blue-theme [class*="text-purple-7"],
+.dark-blue-theme [class*="text-purple-8"],
+.dark-blue-theme [class*="text-sky-7"],
+.dark-blue-theme [class*="text-sky-8"],
+.dark-blue-theme [class*="text-orange-7"],
+.dark-blue-theme [class*="text-orange-8"],
+.dark-blue-theme [class*="text-gray-7"],
+.dark-blue-theme [class*="text-gray-8"] {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
 .dark-blue-theme [class*="border-blue-200"],
 .dark-blue-theme [class*="border-red-300"],
 .dark-blue-theme [class*="border-green-200"],
