@@ -18,6 +18,7 @@ import * as EvA from "@/services/eventAnalytics";
 import * as Gs from "@/services/globalSearch";
 import * as Sec from "@/services/security";
 import * as CL from "@/services/contentLibrary";
+import * as Tx from "@/services/taxonomy";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -691,6 +692,19 @@ export const useHasSubmittedEventFeedback = (eventId: string | null) =>
 
 export const useContentLibrary = () =>
   useQuery({ queryKey: ["content-library"], queryFn: () => CL.listContentLibrary(supabase) });
+
+export const useContentCategories = () =>
+  useQuery({ queryKey: ["content-categories"], queryFn: () => Tx.listContentCategories(supabase) });
+
+export const useContentTags = () =>
+  useQuery({ queryKey: ["content-tags"], queryFn: () => Tx.listContentTags(supabase) });
+
+export const useContentTaxonomy = (entityType: string, entityId: string | null) =>
+  useQuery({
+    queryKey: ["content-taxonomy", entityType, entityId],
+    queryFn: () => Tx.getContentTaxonomy(supabase, entityType, entityId as string),
+    enabled: !!entityId,
+  });
 
 export const useGlobalSearch = (query: string) =>
   useQuery({
