@@ -32,7 +32,7 @@ export async function createPipelineEntry(sb: SupabaseClient, input: PipelineCre
 
 export interface PipelineCreateFullInput extends PipelineCreateInput {
   cpf?: string; gender?: string; marital_status?: string; birth_date?: string;
-  country?: string; address?: string; neighborhood?: string;
+  country?: string; address?: string; complemento?: string; neighborhood?: string;
   baptized?: boolean; baptism_date?: string; last_church?: string;
   holy_spirit_baptized?: boolean; holy_spirit_baptism_date?: string;
   seeking_reason?: string; life_before_church?: string; testimony?: string;
@@ -47,7 +47,7 @@ export async function createPipelineEntryFull(sb: SupabaseClient, input: Pipelin
     p_cep: input.cep ?? null, p_life_group_id: input.life_group_id ?? null,
     p_cpf: input.cpf ?? null, p_gender: input.gender ?? null, p_marital_status: input.marital_status ?? null,
     p_birth_date: input.birth_date ?? null, p_country: input.country ?? null,
-    p_address: input.address ?? null, p_neighborhood: input.neighborhood ?? null,
+    p_address: input.address ?? null, p_complemento: input.complemento ?? null, p_neighborhood: input.neighborhood ?? null,
     p_baptized: input.baptized ?? null, p_baptism_date: input.baptism_date ?? null, p_last_church: input.last_church ?? null,
     p_holy_spirit_baptized: input.holy_spirit_baptized ?? null, p_holy_spirit_baptism_date: input.holy_spirit_baptism_date ?? null,
     p_seeking_reason: input.seeking_reason ?? null, p_life_before_church: input.life_before_church ?? null,
