@@ -1195,6 +1195,19 @@ export interface EventSpeaker {
   order_index: number;
   created_at: string;
 }
+
+export interface EventScheduleItem {
+  id: string;
+  event_id: string;
+  start_at: string;
+  end_at: string | null;
+  title: string;
+  description: string | null;
+  location: string | null;
+  speaker_id: string | null;
+  order_index: number;
+  created_at: string;
+}
 export type CustomFieldType = "texto_curto" | "texto_longo" | "selecao_unica" | "selecao_multipla" | "sim_nao" | "data";
 export interface CustomFieldDefinition {
   id: string;
