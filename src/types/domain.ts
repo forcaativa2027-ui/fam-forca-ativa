@@ -1234,6 +1234,7 @@ export interface RegistrationEvent {
   popup_repeat_mode: PopupRepeatMode;
   popup_repeat_interval_hours: number | null;
   cancellation_reason: string | null;
+  attendance_closed_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -1257,6 +1258,13 @@ export interface EventRegistration {
   cancelled_at: string | null;
   checked_in_at: string | null;
   checked_in_by: string | null;
+  no_show: boolean;
+}
+
+export interface EventFeedbackSummary {
+  total: number;
+  average: number | null;
+  comments: { rating: number; comment: string; created_at: string }[];
 }
 
 export interface EventCheckinLookup {
