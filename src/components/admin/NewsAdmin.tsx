@@ -13,6 +13,7 @@ import { useAllNews, useChurches, useMyProfile } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { createNews, updateNews, deleteNews, slugify, swapNewsOrder } from "@/services/news";
 import { logAudit } from "@/services/audit";
+import { EditorialWorkflowPanel } from "@/components/shared/EditorialWorkflowPanel";
 import type { News, NewsCategory } from "@/types/domain";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -197,6 +198,10 @@ export function NewsAdmin() {
               <Field label="Data programada de publicação (opcional — deixe em branco pra publicar agora)">
                 <Input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} />
               </Field>
+            )}
+
+            {editing && (
+              <EditorialWorkflowPanel entityType="news" entityId={editing.id} />
             )}
 
             {err && <p className="text-sm text-destructive">{err}</p>}

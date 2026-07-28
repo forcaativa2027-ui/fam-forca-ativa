@@ -1,10 +1,11 @@
 "use client";
 import {
-  LayoutDashboard, Megaphone, CalendarClock, Radio, Sparkles, BookOpen, Ticket, History,
+  LayoutDashboard, Megaphone, CalendarClock, Radio, Sparkles, BookOpen, Ticket, History, ClipboardCheck,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   useAllNews, useAllBanners, useSermons, useAllServiceTimes, useDailyWords, useRegistrationEventsAdmin,
+  useContentPendingReview,
 } from "@/hooks/use-queries";
 import type { TabKey } from "./AdminSidebar";
 
@@ -32,6 +33,7 @@ export function EditorialDashboardAdmin({ onNavigate }: { onNavigate?: (tab: Tab
   const { data: serviceTimes = [] } = useAllServiceTimes();
   const { data: dailyWords = [] } = useDailyWords();
   const { data: regEvents = [] } = useRegistrationEventsAdmin();
+  const { data: pendingReview = [] } = useContentPendingReview();
 
   const now = Date.now();
   const startOfToday = new Date(); startOfToday.setHours(0, 0, 0, 0);
@@ -72,6 +74,34 @@ export function EditorialDashboardAdmin({ onNavigate }: { onNavigate?: (tab: Tab
           <CardDescription>Visão consolidada de tudo que está publicado, agendado ou ativo na Central de Conteúdo</CardDescription>
         </CardHeader>
       </Card>
+
+      {pendingReview.length > 0 && (
+        <Card className="border-amber-300 bg-amber-50/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base"><ClipboardCheck className="h-4 w-4 text-amber-600" />Pendências de revisão</CardTitle>
+            <CardDescription>Conteúdo esperando aprovação de um pastor ou apóstolo.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-1.5">
+            {pendingReview.map((p) => {
+              const tabByType: Record<string, TabKey> = { news: "news", sermons: "sermons", banners: "banners" };
+              const labelByType: Record<string, string> = { news: "Notícia", sermons: "Pregação", banners: "Banner" };
+              return (
+                <button
+                  key={`${p.entity_type}-${p.entity_id}`}
+                  onClick={() => onNavigate?.(tabByType[p.entity_type] ?? "editorial-dashboard")}
+                  className="flex w-full items-center justify-between rounded-md border bg-card p-2 text-left text-sm hover:bg-muted/40"
+                >
+                  <span>
+                    <span className="rounded border px-1.5 py-0.5 text-[10px] font-bold uppercase text-muted-foreground">{labelByType[p.entity_type] ?? p.entity_type}</span>
+                    {" "}enviado por {p.submitted_by_name ?? "alguém"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{new Date(p.submitted_at).toLocaleDateString("pt-BR")}</span>
+                </button>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <KpiCard icon={<Megaphone size={18} />} label="Publicações hoje" value={publicadosHoje.length} onClick={() => onNavigate?.("news")} />
