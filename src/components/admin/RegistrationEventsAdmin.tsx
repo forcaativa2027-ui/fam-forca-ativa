@@ -1,26 +1,26 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, X, Users, FileDown, ArrowLeft, Mic, ArrowUpCircle, ArrowDownCircle, Star } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Users, FileDown, ArrowLeft, Mic, ArrowUpCircle, ArrowDownCircle, Star, ListOrdered } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   useRegistrationEventsAdmin, useEventRegistrations, useEventRegistrationSummary, useChurches,
-  useEventFunnel, useEventAnalyticsByOrigin, useEventSpeakers, useEventFeedbackSummary,
+  useEventFunnel, useEventAnalyticsByOrigin, useEventSpeakers, useEventFeedbackSummary, useEventSchedule,
 } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import {
   createRegistrationEvent, updateRegistrationEvent, deleteRegistrationEvent, cancelRegistration, saveEventSpeakers,
-  adminUpdateRegistration, adminMoveRegistrationStatus, finalizeEventAttendance,
+  adminUpdateRegistration, adminMoveRegistrationStatus, finalizeEventAttendance, saveEventSchedule,
 } from "@/services/events";
 import { logAudit } from "@/services/audit";
 import { CheckinScanner } from "./EventCheckinAdmin";
 import { exportToExcel } from "@/lib/export";
 import type {
   RegistrationEvent, RegistrationEventStatus, CustomFieldDefinition, CustomFieldType,
-  PopupTemplate, PopupRepeatMode, EventSpeaker, EventRegistration,
+  PopupTemplate, PopupRepeatMode, EventSpeaker, EventRegistration, EventScheduleItem,
 } from "@/types/domain";
 
 const STATUS_LABELS: Record<RegistrationEventStatus, string> = {
@@ -194,6 +194,9 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
   const { data: existingSpeakers = [] } = useEventSpeakers(event?.id ?? null);
   const [speakers, setSpeakers] = useState<EventSpeaker[]>([]);
   useEffect(() => { if (existingSpeakers.length > 0) setSpeakers(existingSpeakers); }, [existingSpeakers]);
+  const { data: existingSchedule = [] } = useEventSchedule(event?.id ?? null);
+  const [schedule, setSchedule] = useState<EventScheduleItem[]>([]);
+  useEffect(() => { if (existingSchedule.length > 0) setSchedule(existingSchedule); }, [existingSchedule]);
   const [churchId, setChurchId] = useState(event?.church_id ?? "");
   const [location, setLocation] = useState(event?.location ?? "");
   const [isOnline, setIsOnline] = useState(event?.is_online ?? false);
@@ -231,6 +234,19 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
   }
   function removeSpeaker(i: number) {
     setSpeakers((s) => s.filter((_, idx) => idx !== i));
+  }
+
+  function addScheduleItem() {
+    setSchedule((s) => [...s, {
+      id: crypto.randomUUID(), event_id: event?.id ?? "", start_at: startAt ? new Date(startAt).toISOString() : new Date().toISOString(),
+      end_at: null, title: "", description: null, location: null, speaker_id: null, order_index: s.length, created_at: "",
+    }]);
+  }
+  function updateScheduleItem(i: number, patch: Partial<EventScheduleItem>) {
+    setSchedule((s) => s.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+  }
+  function removeScheduleItem(i: number) {
+    setSchedule((s) => s.filter((_, idx) => idx !== i));
   }
 
   async function save() {
@@ -281,6 +297,7 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
       }
       if (eventId) {
         await saveEventSpeakers(supabase, eventId, speakers.filter((s) => s.name.trim() !== ""));
+        await saveEventSchedule(supabase, eventId, schedule.filter((s) => s.title.trim() !== ""));
       }
       qc.invalidateQueries({ queryKey: ["registration-events-admin"] });
       qc.invalidateQueries({ queryKey: ["registration-events-public"] });
@@ -368,6 +385,43 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
                   <Button type="button" size="sm" variant="ghost" onClick={() => removeSpeaker(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="rounded-md border p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Programação / cronograma (opcional)</p>
+              <Button type="button" size="sm" variant="outline" onClick={addScheduleItem} className="gap-1.5">
+                <Plus className="h-3.5 w-3.5" /> Adicionar item
+              </Button>
+            </div>
+            {schedule.length === 0 && <p className="text-xs italic text-muted-foreground">Nenhum item de programação cadastrado.</p>}
+            <div className="space-y-2">
+              {[...schedule].sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime()).map((it) => {
+                const i = schedule.indexOf(it);
+                return (
+                  <div key={it.id} className="space-y-2 rounded border p-2">
+                    <div className="flex items-center gap-2">
+                      <ListOrdered className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <Input placeholder="Título (ex: Abertura, Louvor, Palavra)" value={it.title} onChange={(e) => updateScheduleItem(i, { title: e.target.value })} />
+                      <Button type="button" size="sm" variant="ghost" onClick={() => removeScheduleItem(i)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      <Input type="datetime-local" value={it.start_at ? it.start_at.slice(0, 16) : ""} onChange={(e) => updateScheduleItem(i, { start_at: e.target.value ? new Date(e.target.value).toISOString() : it.start_at })} />
+                      <Input type="datetime-local" placeholder="Fim (opcional)" value={it.end_at ? it.end_at.slice(0, 16) : ""} onChange={(e) => updateScheduleItem(i, { end_at: e.target.value ? new Date(e.target.value).toISOString() : null })} />
+                      <select
+                        value={it.speaker_id ?? ""}
+                        onChange={(e) => updateScheduleItem(i, { speaker_id: e.target.value || null })}
+                        className="h-10 rounded-md border bg-background px-2 text-sm"
+                      >
+                        <option value="">Sem palestrante</option>
+                        {speakers.filter((s) => s.name.trim()).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      </select>
+                      <Input placeholder="Local/sala (opcional)" value={it.location ?? ""} onChange={(e) => updateScheduleItem(i, { location: e.target.value })} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
