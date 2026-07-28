@@ -341,6 +341,24 @@ export interface ContentLibraryItem {
   created_at: string;
 }
 
+export interface ContentCategory {
+  id: string;
+  name: string;
+  slug: string;
+  color: string | null;
+  order_index: number;
+  created_at: string;
+}
+export interface ContentTag {
+  id: string;
+  name: string;
+  created_at: string;
+}
+export interface ContentTaxonomy {
+  categories: Pick<ContentCategory, "id" | "name" | "slug" | "color">[];
+  tags: Pick<ContentTag, "id" | "name">[];
+}
+
 export interface ChurchInfo {
   id: string; church_id: string; weekday: Weekday; time: string;
   description: string | null; is_active: boolean; sort_order: number;
