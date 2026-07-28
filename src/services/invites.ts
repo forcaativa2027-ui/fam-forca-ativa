@@ -62,13 +62,18 @@ export async function validateInviteToken(
   return data?.[0] ?? null;
 }
 
-export async function consumeInviteLink(sb: SupabaseClient, token: string, phone?: string, userId?: string): Promise<void> {
+export async function consumeInviteLink(
+  sb: SupabaseClient, token: string, phone?: string, userId?: string,
+  cpf?: string | null, acceptedPrivacyPolicy?: boolean
+): Promise<void> {
   const { error } = await sb.rpc("consume_invite_link", {
     p_token: token,
     p_ip: null,          // capturado no futuro via header/edge function; ver seção 15 do caderno
     p_user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
     p_phone: phone ?? null,
     p_user_id: userId ?? null,
+    p_cpf: cpf ?? null,
+    p_accepted_privacy_policy: acceptedPrivacyPolicy ?? false,
   });
   if (error) { console.error("[invites] consumeInviteLink", error); throw error; }
 }
