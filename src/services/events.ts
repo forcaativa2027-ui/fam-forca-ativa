@@ -3,6 +3,7 @@ import type {
   RegistrationEvent, RegistrationEventInput, EventRegistration, EventRegistrationSummary,
   RegisterForEventResult, MyEventRegistration, GroupRegistrationResult,
   EventCheckinLookup, EventGroupMember, RecentEventCheckin, EventSpeaker, PendingPromotion, EventChange, EventFeedbackSummary,
+  EventScheduleItem,
 } from "@/types/domain";
 
 const PUBLIC_VISIBLE_STATUSES = [
@@ -262,4 +263,24 @@ export async function hasSubmittedEventFeedback(sb: SupabaseClient, eventId: str
   const { data, error } = await sb.rpc("has_submitted_event_feedback", { p_event_id: eventId });
   if (error) return false;
   return !!data;
+}
+
+// ---------- Programação do evento (EVT013) ----------
+export async function listEventSchedule(sb: SupabaseClient, eventId: string): Promise<EventScheduleItem[]> {
+  const { data, error } = await sb.from("event_schedule_items").select("*").eq("event_id", eventId).order("start_at");
+  if (error) return [];
+  return (data ?? []) as EventScheduleItem[];
+}
+
+export async function saveEventSchedule(sb: SupabaseClient, eventId: string, items: Omit<EventScheduleItem, "event_id" | "created_at">[]): Promise<void> {
+  const { error: delErr } = await sb.from("event_schedule_items").delete().eq("event_id", eventId);
+  if (delErr) throw delErr;
+  if (items.length === 0) return;
+  const { error } = await sb.from("event_schedule_items").insert(
+    items.map((it, i) => ({
+      id: it.id, event_id: eventId, start_at: it.start_at, end_at: it.end_at, title: it.title,
+      description: it.description, location: it.location, speaker_id: it.speaker_id, order_index: i,
+    }))
+  );
+  if (error) throw error;
 }
