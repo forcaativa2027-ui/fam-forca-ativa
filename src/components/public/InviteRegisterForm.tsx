@@ -1,17 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, XCircle, Loader2, LogIn, ChevronDown } from "lucide-react";
-import { Turnstile } from "@marsidev/react-turnstile";
+import { CheckCircle2, XCircle, Loader2, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/lib/supabase/client";
 import { consumeInviteLink } from "@/services/invites";
-import { lookupCep, maskCep } from "@/services/pipeline";
 import { CommunityIdentity } from "@/components/shared/CommunityIdentity";
 import { KIND_LABELS } from "@/components/admin/InviteLinksAdmin";
+import { Turnstile } from "@marsidev/react-turnstile";
 import type { InviteTokenValidation } from "@/types/domain";
 
 // Seção 9 do script de melhoria — mensagens específicas por motivo,
@@ -36,40 +35,16 @@ function reasonMessage(reason: string | null, churchName: string | null): string
 interface Props { token: string; validation: InviteTokenValidation; }
 
 export function InviteRegisterForm({ token, validation }: Props) {
-  const isVisitante = validation.kind === "visitante";
-
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [password, setPassword] = useState("");
-
-  // Endereço — obrigatório pra quem não é visitante (pré-requisito da carteirinha)
-  const [cep, setCep] = useState("");
-  const [address, setAddress] = useState("");
-  const [numero, setNumero] = useState("");
-  const [complemento, setComplemento] = useState("");
-  const [neighborhood, setNeighborhood] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [cepLoading, setCepLoading] = useState(false);
-
-  // História de fé — sempre opcional/complementar
-  const [showFaith, setShowFaith] = useState(false);
-  const [baptized, setBaptized] = useState<boolean | null>(null);
-  const [baptismDate, setBaptismDate] = useState("");
-  const [lastChurch, setLastChurch] = useState("");
-  const [holySpiritBaptized, setHolySpiritBaptized] = useState<boolean | null>(null);
-  const [holySpiritBaptismDate, setHolySpiritBaptismDate] = useState("");
-
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [hasSession, setHasSession] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [err, setErr] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   const roleName = validation.kind ? KIND_LABELS[validation.kind] : null;
 
@@ -82,21 +57,6 @@ export function InviteRegisterForm({ token, validation }: Props) {
     const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(t);
   }, [done, hasSession, countdown, email]);
-
-  async function handleCepBlur() {
-    const clean = cep.replace(/\D/g, "");
-    if (clean.length !== 8) return;
-    setCepLoading(true);
-    try {
-      const info = await lookupCep(clean);
-      if (info) {
-        setAddress(info.logradouro ?? "");
-        setNeighborhood(info.bairro ?? "");
-        setCity(info.localidade ?? "");
-        setState(info.uf ?? "");
-      }
-    } finally { setCepLoading(false); }
-  }
 
   if (!validation.valid) {
     return (
@@ -161,22 +121,8 @@ export function InviteRegisterForm({ token, validation }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !captchaToken) { setErr("Confirme que você não é um robô."); return; }
     setErr(""); setBusy(true);
-    if (!acceptedPrivacy) {
-      setErr("É necessário aceitar a política de privacidade para continuar.");
-      setBusy(false);
-      return;
-    }
-    if (!isVisitante && (!cep.trim() || !address.trim() || !city.trim() || !state.trim())) {
-      setErr("Endereço completo é obrigatório pra concluir este cadastro.");
-      setBusy(false);
-      return;
-    }
-    if (turnstileSiteKey && !captchaToken) {
-      setErr("Confirme que você não é um robô.");
-      setBusy(false);
-      return;
-    }
     try {
       const { data: signData, error: signErr } = await supabase.auth.signUp({
         email, password,
@@ -188,14 +134,7 @@ export function InviteRegisterForm({ token, validation }: Props) {
       }
       // signUp() pode não retornar sessão ativa (projeto exige confirmação de e-mail) —
       // por isso passamos o id do usuário explicitamente, não dependemos de auth.uid() no banco.
-      await consumeInviteLink(supabase, token, phone, signData.user?.id, {
-        cpf, acceptedPrivacyPolicy: acceptedPrivacy,
-        address: isVisitante ? null : { cep, address, numero, complemento, neighborhood, city, state },
-        faith: {
-          baptized, baptismDate: baptismDate || null, lastChurch,
-          holySpiritBaptized, holySpiritBaptismDate: holySpiritBaptismDate || null,
-        },
-      });
+      await consumeInviteLink(supabase, token, phone, signData.user?.id);
       setHasSession(!!signData.session);
       setDone(true);
     } catch (e2) {
@@ -234,101 +173,20 @@ export function InviteRegisterForm({ token, validation }: Props) {
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div>
-              <Label>CPF</Label>
-              <Input value={cpf} onChange={(e) => setCpf(e.target.value)} placeholder="000.000.000-00" required />
-            </div>
-            <div>
               <Label>Senha</Label>
               <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
-
-            {!isVisitante && (
-              <div className="space-y-2 rounded-md border p-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Endereço (obrigatório — necessário pra sua carteirinha de membro)
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    placeholder="CEP" value={cep}
-                    onChange={(e) => setCep(maskCep(e.target.value))}
-                    onBlur={handleCepBlur}
-                    required
-                  />
-                  <Input placeholder="Número" value={numero} onChange={(e) => setNumero(e.target.value)} required />
-                </div>
-                {cepLoading && <p className="text-[11px] text-muted-foreground">Buscando endereço…</p>}
-                <Input placeholder="Endereço (rua/avenida)" value={address} onChange={(e) => setAddress(e.target.value)} required />
-                <Input placeholder="Complemento (opcional)" value={complemento} onChange={(e) => setComplemento(e.target.value)} />
-                <div className="grid grid-cols-2 gap-2">
-                  <Input placeholder="Bairro" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} required />
-                  <Input placeholder="Cidade" value={city} onChange={(e) => setCity(e.target.value)} required />
-                </div>
-                <Input placeholder="Estado (UF)" value={state} onChange={(e) => setState(e.target.value)} maxLength={2} required />
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={() => setShowFaith((v) => !v)}
-              className="flex w-full items-center justify-between rounded-md border p-3 text-left text-xs font-bold uppercase tracking-wider text-muted-foreground"
-            >
-              História de fé (opcional — preencha se quiser)
-              <ChevronDown className={`h-4 w-4 transition-transform ${showFaith ? "rotate-180" : ""}`} />
-            </button>
-            {showFaith && (
-              <div className="space-y-2 rounded-md border p-3">
-                <div>
-                  <Label>Já foi batizado(a)?</Label>
-                  <select
-                    value={baptized === null ? "" : baptized ? "sim" : "nao"}
-                    onChange={(e) => setBaptized(e.target.value === "" ? null : e.target.value === "sim")}
-                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                  >
-                    <option value="">Prefiro não dizer</option>
-                    <option value="sim">Sim</option>
-                    <option value="nao">Ainda não</option>
-                  </select>
-                </div>
-                {baptized && (
-                  <div>
-                    <Label>Data do batismo (opcional)</Label>
-                    <Input type="date" value={baptismDate} onChange={(e) => setBaptismDate(e.target.value)} />
-                  </div>
-                )}
-                <div>
-                  <Label>Igreja anterior (opcional)</Label>
-                  <Input value={lastChurch} onChange={(e) => setLastChurch(e.target.value)} placeholder="Se já frequentou outra igreja" />
-                </div>
-                <div>
-                  <Label>Já recebeu o batismo no Espírito Santo?</Label>
-                  <select
-                    value={holySpiritBaptized === null ? "" : holySpiritBaptized ? "sim" : "nao"}
-                    onChange={(e) => setHolySpiritBaptized(e.target.value === "" ? null : e.target.value === "sim")}
-                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                  >
-                    <option value="">Prefiro não dizer</option>
-                    <option value="sim">Sim</option>
-                    <option value="nao">Ainda não</option>
-                  </select>
-                </div>
-                {holySpiritBaptized && (
-                  <div>
-                    <Label>Data (opcional)</Label>
-                    <Input type="date" value={holySpiritBaptismDate} onChange={(e) => setHolySpiritBaptismDate(e.target.value)} />
-                  </div>
-                )}
-              </div>
-            )}
-
-            <label className="flex items-start gap-2 text-xs text-muted-foreground">
-              <input type="checkbox" checked={acceptedPrivacy} onChange={(e) => setAcceptedPrivacy(e.target.checked)} className="mt-0.5" required />
-              Li e aceito a <Link href="/privacidade" target="_blank" className="underline">política de privacidade</Link> e os{" "}
-              <Link href="/termos" target="_blank" className="underline">termos de uso</Link>. *
-            </label>
-            {turnstileSiteKey && (
-              <div><Turnstile siteKey={turnstileSiteKey} onSuccess={setCaptchaToken} /></div>
-            )}
             {err && <p className="text-sm text-destructive">{err}</p>}
+            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+              <div className="flex justify-center">
+                <Turnstile
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                  onSuccess={(token) => setCaptchaToken(token)}
+                  onExpire={() => setCaptchaToken(null)}
+                  options={{ theme: "light", language: "pt-BR" }}
+                />
+              </div>
+            )}
             <Button type="submit" disabled={busy} className="w-full gap-1.5">
               {busy ? <Loader2 size={16} className="animate-spin" /> : null}
               Concluir cadastro
