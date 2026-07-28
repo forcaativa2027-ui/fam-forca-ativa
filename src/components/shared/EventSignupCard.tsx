@@ -9,6 +9,7 @@ import { registerForEvent, registerGroupForEvent, type GroupParticipantInput } f
 import { logEventView, logEventClick } from "@/services/eventAnalytics";
 import { registrationProtocol, googleCalendarUrl, icsDownloadUrl, eventCheckinQrUrl } from "@/lib/eventShare";
 import { EventShareButtons } from "@/components/shared/EventShareButtons";
+import { useEventRegistrationSummary } from "@/hooks/use-queries";
 import type { RegistrationEvent, CustomFieldDefinition } from "@/types/domain";
 
 interface Prefill {
@@ -125,6 +126,8 @@ export function EventSignupCard({
   onRegistered?: () => void;
 }) {
   const [showForm, setShowForm] = useState(false);
+  const { data: summary } = useEventRegistrationSummary(event.capacity != null ? event.id : null);
+  const vagasRestantes = event.capacity != null && summary ? Math.max(event.capacity - summary.confirmadas, 0) : null;
   const [name, setName] = useState(prefill?.full_name ?? "");
   const [email, setEmail] = useState(prefill?.email ?? "");
   const [phone, setPhone] = useState(prefill?.phone ?? "");
@@ -259,6 +262,11 @@ export function EventSignupCard({
                 ? <span className="inline-flex items-center gap-1"><Video className="h-3 w-3" /> Online</span>
                 : event.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" /> {event.location}</span>}
             </p>
+            {vagasRestantes !== null && (
+              <p className={`mt-0.5 text-xs font-semibold ${vagasRestantes === 0 ? "text-amber-600" : vagasRestantes <= 5 ? "text-orange-600" : "text-muted-foreground"}`}>
+                {vagasRestantes === 0 ? "Vagas esgotadas — entrar na lista de espera" : `${vagasRestantes} vaga(s) restante(s)`}
+              </p>
+            )}
             {!compact && event.description && <p className="mt-1.5 text-sm text-muted-foreground">{event.description}</p>}
             {showDetailsLink && (
               <Link href={`/eventos/${event.slug}${origin ? `?origem=${origin}` : ""}`} className={`mt-1 inline-flex items-center gap-1 text-xs font-semibold underline ${urgent ? "text-red-700" : "text-navy"}`}>
@@ -275,7 +283,14 @@ export function EventSignupCard({
       )}
 
       {hideHeader && !showForm && (
-        <Button disabled={busy} onClick={openForm} className="w-full">Inscrever-se</Button>
+        <>
+          {vagasRestantes !== null && (
+            <p className={`mb-2 text-xs font-semibold ${vagasRestantes === 0 ? "text-amber-600" : vagasRestantes <= 5 ? "text-orange-600" : "text-muted-foreground"}`}>
+              {vagasRestantes === 0 ? "Vagas esgotadas — entrar na lista de espera" : `${vagasRestantes} vaga(s) restante(s)`}
+            </p>
+          )}
+          <Button disabled={busy} onClick={openForm} className="w-full">Inscrever-se</Button>
+        </>
       )}
 
       {showForm && (
