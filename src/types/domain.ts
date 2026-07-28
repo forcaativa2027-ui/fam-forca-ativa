@@ -329,6 +329,18 @@ export interface DashboardStats {
 }
 
 /** Conteudo institucional (vindo das tabelas `church_info` e `daily_words`). */
+export type ContentLibraryType = "imagem" | "video_youtube" | "documento" | "logo" | "outro";
+export interface ContentLibraryItem {
+  id: string;
+  title: string;
+  type: ContentLibraryType;
+  url: string;
+  tags: string[];
+  church_id: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
 export interface ChurchInfo {
   id: string; church_id: string; weekday: Weekday; time: string;
   description: string | null; is_active: boolean; sort_order: number;
