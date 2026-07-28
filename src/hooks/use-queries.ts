@@ -667,6 +667,20 @@ export const useHighlightedRegistrationEvents = () =>
     queryFn: () => Ev.listHighlightedRegistrationEvents(supabase),
   });
 
+export const useEventFeedbackSummary = (eventId: string | null) =>
+  useQuery({
+    queryKey: ["event-feedback-summary", eventId],
+    queryFn: () => Ev.getEventFeedbackSummary(supabase, eventId as string),
+    enabled: !!eventId,
+  });
+
+export const useHasSubmittedEventFeedback = (eventId: string | null) =>
+  useQuery({
+    queryKey: ["event-feedback-submitted", eventId],
+    queryFn: () => Ev.hasSubmittedEventFeedback(supabase, eventId as string),
+    enabled: !!eventId,
+  });
+
 export const useGlobalSearch = (query: string) =>
   useQuery({
     queryKey: ["global-search", query],
