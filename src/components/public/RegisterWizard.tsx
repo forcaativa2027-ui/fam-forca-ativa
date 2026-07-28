@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
-  ArrowLeft, ArrowRight, Check, Heart, Users, MessageCircleHeart,
+  ArrowLeft, ArrowRight, Check, X, Heart, Users, MessageCircleHeart,
   Home as HomeIcon, Eye, EyeOff, HandHeart, Droplets, Hand, HelpCircle, Loader2,
   MessageCircle, Phone as PhoneIcon, User, Flame, Church as ChurchIcon,
   BookHeart, UsersRound, PartyPopper,
@@ -291,13 +291,17 @@ function StepPessoal({ s, update, onBack, onNext }: { s: State; update: <K exten
       <Field label="Sexo" error={err}>
         <div className="grid grid-cols-2 gap-3">
           <button type="button" onClick={() => update("gender", "masculino")}
-            className={`flex flex-col items-center gap-2 rounded-xl border-2 p-5 transition ${s.gender === "masculino" ? "border-gold bg-gold/5" : "border-border bg-card hover:border-navy/30"}`}>
-            <User className={`h-8 w-8 ${s.gender === "masculino" ? "text-navy" : "text-muted"}`} />
+            className={`flex flex-col items-center gap-2 rounded-xl border-2 p-5 transition hover:scale-[1.02] ${s.gender === "masculino" ? "border-blue-500 bg-blue-500/10 shadow-md" : "border-border bg-card hover:border-blue-300"}`}>
+            <div className={`grid h-16 w-16 place-items-center rounded-full transition ${s.gender === "masculino" ? "bg-gradient-to-br from-blue-500 to-blue-700" : "bg-blue-100"}`}>
+              <User className={`h-9 w-9 ${s.gender === "masculino" ? "text-white" : "text-blue-500"}`} />
+            </div>
             <b className="text-sm text-navy">Masculino</b>
           </button>
           <button type="button" onClick={() => update("gender", "feminino")}
-            className={`flex flex-col items-center gap-2 rounded-xl border-2 p-5 transition ${s.gender === "feminino" ? "border-gold bg-gold/5" : "border-border bg-card hover:border-navy/30"}`}>
-            <User className={`h-8 w-8 ${s.gender === "feminino" ? "text-pink-500" : "text-muted"}`} />
+            className={`flex flex-col items-center gap-2 rounded-xl border-2 p-5 transition hover:scale-[1.02] ${s.gender === "feminino" ? "border-pink-500 bg-pink-500/10 shadow-md" : "border-border bg-card hover:border-pink-300"}`}>
+            <div className={`grid h-16 w-16 place-items-center rounded-full transition ${s.gender === "feminino" ? "bg-gradient-to-br from-pink-500 to-rose-600" : "bg-pink-100"}`}>
+              <UsersRound className={`h-9 w-9 ${s.gender === "feminino" ? "text-white" : "text-pink-500"}`} />
+            </div>
             <b className="text-sm text-navy">Feminino</b>
           </button>
         </div>
@@ -338,6 +342,17 @@ function StepLocalizacao({ s, update, onBack, onNext }: { s: State; update: <K e
         <Input value={s.country} onChange={(e) => update("country", e.target.value)} placeholder="Brasil" />
       </Field>
 
+      <Field label="CEP">
+        <div className="flex gap-2">
+          <Input value={s.cep} onChange={(e) => update("cep", maskCep(e.target.value))}
+            placeholder="00000-000" inputMode="numeric" />
+          <Button type="button" onClick={searchCep} disabled={busy} variant="outline" className="whitespace-nowrap">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
+          </Button>
+        </div>
+        {info && <p className="mt-1 text-xs text-gold">{info}</p>}
+      </Field>
+
       <Field label="Endereço">
         <Input value={s.address} onChange={(e) => update("address", e.target.value)} placeholder="Rua, avenida..." />
       </Field>
@@ -351,17 +366,6 @@ function StepLocalizacao({ s, update, onBack, onNext }: { s: State; update: <K e
         <Field label="Cidade"><Input value={s.city} onChange={(e) => update("city", e.target.value)} placeholder="Manaus" /></Field>
       </div>
       <Field label="Estado"><Input value={s.state} onChange={(e) => update("state", e.target.value.toUpperCase().slice(0,2))} placeholder="AM" /></Field>
-
-      <Field label="CEP">
-        <div className="flex gap-2">
-          <Input value={s.cep} onChange={(e) => update("cep", maskCep(e.target.value))}
-            placeholder="00000-000" inputMode="numeric" />
-          <Button type="button" onClick={searchCep} disabled={busy} variant="outline" className="whitespace-nowrap">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
-          </Button>
-        </div>
-        {info && <p className="mt-1 text-xs text-gold">{info}</p>}
-      </Field>
 
       <NavButtons onBack={onBack} onNext={onNext} />
     </div>
@@ -525,14 +529,24 @@ function YesNoIcon({ value, onChange, icon }: { value: boolean | null; onChange:
   return (
     <div className="grid grid-cols-2 gap-3">
       <button type="button" onClick={() => onChange(true)}
-        className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition ${value === true ? "border-gold bg-gold/5" : "border-border bg-card hover:border-navy/30"}`}>
-        <span className={value === true ? "text-gold" : "text-muted"}>{icon}</span>
-        <b className="text-sm text-navy">Sim</b>
+        className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition hover:scale-[1.02] ${value === true ? "border-emerald-500 bg-emerald-500/10 shadow-md" : "border-border bg-card hover:border-emerald-300"}`}>
+        {value === true && (
+          <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-emerald-500 text-white">
+            <Check className="h-3 w-3" />
+          </span>
+        )}
+        <span className={value === true ? "text-emerald-600" : "text-muted"}>{icon}</span>
+        <b className={`text-sm ${value === true ? "text-emerald-700" : "text-navy"}`}>Sim</b>
       </button>
       <button type="button" onClick={() => onChange(false)}
-        className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition ${value === false ? "border-gold bg-gold/5" : "border-border bg-card hover:border-navy/30"}`}>
-        <span className={value === false ? "text-navy" : "text-muted"}>{icon}</span>
-        <b className="text-sm text-navy">Ainda não</b>
+        className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition hover:scale-[1.02] ${value === false ? "border-red-400 bg-red-500/10 shadow-md" : "border-border bg-card hover:border-red-300"}`}>
+        {value === false && (
+          <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-red-500 text-white">
+            <X className="h-3 w-3" />
+          </span>
+        )}
+        <span className={value === false ? "text-red-500" : "text-muted"}>{icon}</span>
+        <b className={`text-sm ${value === false ? "text-red-600" : "text-navy"}`}>Ainda não</b>
       </button>
     </div>
   );
@@ -594,7 +608,12 @@ function StepIntencao({ s, update, onBack, onNext }: { s: State; update: <K exte
           const selected = s.intent === k;
           return (
             <button key={k} type="button" onClick={() => update("intent", k)}
-              className={`flex items-start gap-3 rounded-xl border-2 p-3 text-left transition ${selected ? "border-gold bg-gold/5" : "border-border bg-card hover:border-navy/30"}`}>
+              className={`relative flex items-start gap-3 rounded-xl border-2 p-3 text-left transition hover:scale-[1.01] ${selected ? "border-gold bg-gold/10 shadow-md" : "border-border bg-card hover:border-gold/40"}`}>
+              {selected && (
+                <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full bg-gold text-navy">
+                  <Check className="h-3 w-3" />
+                </span>
+              )}
               <Ico className={`h-5 w-5 shrink-0 ${selected ? "text-gold" : "text-muted"}`} />
               <div>
                 <b className="text-sm text-navy">{cfg.label}</b>
