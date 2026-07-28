@@ -62,43 +62,13 @@ export async function validateInviteToken(
   return data?.[0] ?? null;
 }
 
-export interface ConsumeInviteExtra {
-  cpf?: string | null;
-  acceptedPrivacyPolicy: boolean;
-  address?: {
-    cep: string; address: string; numero: string; complemento?: string | null;
-    neighborhood: string; city: string; state: string;
-  } | null;
-  faith?: {
-    baptized?: boolean | null; baptismDate?: string | null; lastChurch?: string | null;
-    holySpiritBaptized?: boolean | null; holySpiritBaptismDate?: string | null;
-  } | null;
-}
-
-export async function consumeInviteLink(
-  sb: SupabaseClient, token: string, phone: string | undefined, userId: string | undefined,
-  extra: ConsumeInviteExtra
-): Promise<void> {
+export async function consumeInviteLink(sb: SupabaseClient, token: string, phone?: string, userId?: string): Promise<void> {
   const { error } = await sb.rpc("consume_invite_link", {
     p_token: token,
     p_ip: null,          // capturado no futuro via header/edge function; ver seção 15 do caderno
     p_user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
     p_phone: phone ?? null,
     p_user_id: userId ?? null,
-    p_cpf: extra.cpf ?? null,
-    p_accepted_privacy_policy: extra.acceptedPrivacyPolicy,
-    p_cep: extra.address?.cep ?? null,
-    p_address: extra.address?.address ?? null,
-    p_numero: extra.address?.numero ?? null,
-    p_complemento: extra.address?.complemento ?? null,
-    p_neighborhood: extra.address?.neighborhood ?? null,
-    p_city: extra.address?.city ?? null,
-    p_state: extra.address?.state ?? null,
-    p_baptized: extra.faith?.baptized ?? null,
-    p_baptism_date: extra.faith?.baptismDate || null,
-    p_last_church: extra.faith?.lastChurch ?? null,
-    p_holy_spirit_baptized: extra.faith?.holySpiritBaptized ?? null,
-    p_holy_spirit_baptism_date: extra.faith?.holySpiritBaptismDate || null,
   });
   if (error) { console.error("[invites] consumeInviteLink", error); throw error; }
 }
