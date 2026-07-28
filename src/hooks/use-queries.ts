@@ -19,6 +19,7 @@ import * as Gs from "@/services/globalSearch";
 import * as Sec from "@/services/security";
 import * as CL from "@/services/contentLibrary";
 import * as Tx from "@/services/taxonomy";
+import * as Wf from "@/services/editorialWorkflow";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -705,6 +706,16 @@ export const useContentTaxonomy = (entityType: string, entityId: string | null) 
     queryFn: () => Tx.getContentTaxonomy(supabase, entityType, entityId as string),
     enabled: !!entityId,
   });
+
+export const useContentWorkflowState = (entityType: string, entityId: string | null) =>
+  useQuery({
+    queryKey: ["content-workflow-state", entityType, entityId],
+    queryFn: () => Wf.getContentWorkflowState(supabase, entityType, entityId as string),
+    enabled: !!entityId,
+  });
+
+export const useContentPendingReview = () =>
+  useQuery({ queryKey: ["content-pending-review"], queryFn: () => Wf.listContentPendingReview(supabase) });
 
 export const useGlobalSearch = (query: string) =>
   useQuery({
