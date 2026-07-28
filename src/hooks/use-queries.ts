@@ -17,6 +17,7 @@ import * as Ev from "@/services/events";
 import * as EvA from "@/services/eventAnalytics";
 import * as Gs from "@/services/globalSearch";
 import * as Sec from "@/services/security";
+import * as CL from "@/services/contentLibrary";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -687,6 +688,9 @@ export const useHasSubmittedEventFeedback = (eventId: string | null) =>
     queryFn: () => Ev.hasSubmittedEventFeedback(supabase, eventId as string),
     enabled: !!eventId,
   });
+
+export const useContentLibrary = () =>
+  useQuery({ queryKey: ["content-library"], queryFn: () => CL.listContentLibrary(supabase) });
 
 export const useGlobalSearch = (query: string) =>
   useQuery({
