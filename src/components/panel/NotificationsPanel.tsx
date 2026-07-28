@@ -108,16 +108,22 @@ async function fetchNotifications(): Promise<Notif[]> {
     }));
   }
 
-  // Eventos com inscrição — Sede (rede toda) + eventos da própria igreja, excluindo os já inscritos
+  // Tudo relacionado a eventos (elegíveis, promoções, mudanças, lembretes) — consolidado
+  // num bloco só, com as consultas em paralelo, pra não buscar "minhas inscrições" 2x.
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       const { data: prof } = await supabase.from("profiles").select("full_name,email,phone,church_id").eq("id", user.id).maybeSingle();
       const prefill = prof ? { full_name: prof.full_name, email: prof.email, phone: prof.phone } : null;
-      const [visibleEvents, myRegs] = await Promise.all([
+
+      const [visibleEvents, myRegs, promotions, changes] = await Promise.all([
         listPublicRegistrationEvents(supabase, prof?.church_id ?? null),
         listMyEventRegistrations(supabase),
+        listMyPendingPromotions(supabase),
+        listMyEventChanges(supabase),
       ]);
+
+      // Eventos elegíveis (ainda não inscrito)
       const registeredIds = new Set(myRegs.filter((r) => r.status !== "cancelada").map((r) => r.event_id));
       visibleEvents.filter((e) => !registeredIds.has(e.id)).forEach((e) => notifs.push({
         id: `evento-${e.id}`,
@@ -128,67 +134,58 @@ async function fetchNotifications(): Promise<Notif[]> {
         eventObj: e,
         prefill,
       }));
+
+      // Promoções de lista de espera → confirmado
+      promotions.forEach((p) => notifs.push({
+        id: `promocao-${p.registration_id}`,
+        kind: "promocao",
+        title: `Você foi confirmado em "${p.event_name}"!`,
+        detail: "Havia lista de espera e uma vaga abriu — sua inscrição já está confirmada.",
+        urgency: "critico",
+        registrationId: p.registration_id,
+      }));
+
+      // Mudanças em evento (data/local/cancelamento)
+      changes.forEach((c) => {
+        let title = "";
+        let detail = "";
+        if (c.change_type === "cancelado") {
+          title = `Evento cancelado: "${c.event_name}"`;
+          detail = c.cancellation_reason ? `Motivo: ${c.cancellation_reason}` : "O organizador cancelou este evento.";
+        } else if (c.change_type === "horario") {
+          title = `Mudou o horário de "${c.event_name}"`;
+          detail = `De ${new Date(c.old_start_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })} para ${new Date(c.new_start_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}.`;
+        } else {
+          title = `Mudou o local de "${c.event_name}"`;
+          detail = `Novo local: ${c.new_location ?? "verificar na página do evento"}.`;
+        }
+        notifs.push({ id: `mudanca-${c.registration_id}`, kind: "mudanca_evento", title, detail, urgency: "atencao", registrationId: c.registration_id });
+      });
+
+      // Lembretes (evento nas próximas 48h) — reaproveita o myRegs já buscado acima
+      const now48h = Date.now() + 48 * 3_600_000;
+      myRegs
+        .filter((r) => r.status === "confirmada" && ["inscricoes_abertas", "em_andamento"].includes(r.event.status))
+        .filter((r) => {
+          const start = new Date(r.event.start_at).getTime();
+          return start > Date.now() && start <= now48h;
+        })
+        .forEach((r) => {
+          let seen = false;
+          try { seen = sessionStorage.getItem(`cec-event-reminder-${r.event_id}`) === "1"; } catch { /* sem storage — sempre mostra */ }
+          if (seen) return;
+          const hoursLeft = Math.round((new Date(r.event.start_at).getTime() - Date.now()) / 3_600_000);
+          notifs.push({
+            id: `lembrete-${r.event_id}`,
+            kind: "lembrete_evento",
+            title: `"${r.event.name}" é em breve!`,
+            detail: hoursLeft <= 1 ? "Começa daqui a pouco." : `Faltam cerca de ${hoursLeft} horas.` + (r.event.is_online && r.event.online_url ? ` Link: ${r.event.online_url}` : ""),
+            urgency: "atencao",
+            registrationId: r.event_id,
+          });
+        });
     }
   } catch { /* eventos são um extra — não derruba o resto das notificações se falhar */ }
-
-  // Promoções de lista de espera → confirmado (boa notícia, sempre em destaque)
-  try {
-    const promotions = await listMyPendingPromotions(supabase);
-    promotions.forEach((p) => notifs.push({
-      id: `promocao-${p.registration_id}`,
-      kind: "promocao",
-      title: `Você foi confirmado em "${p.event_name}"!`,
-      detail: "Havia lista de espera e uma vaga abriu — sua inscrição já está confirmada.",
-      urgency: "critico",
-      registrationId: p.registration_id,
-    }));
-  } catch { /* idem */ }
-
-  // Mudanças em evento (data/local/cancelamento) e lembretes — sem depender de e-mail/cron
-  try {
-    const [changes, myRegs] = await Promise.all([
-      listMyEventChanges(supabase),
-      listMyEventRegistrations(supabase),
-    ]);
-
-    changes.forEach((c) => {
-      let title = "";
-      let detail = "";
-      if (c.change_type === "cancelado") {
-        title = `Evento cancelado: "${c.event_name}"`;
-        detail = c.cancellation_reason ? `Motivo: ${c.cancellation_reason}` : "O organizador cancelou este evento.";
-      } else if (c.change_type === "horario") {
-        title = `Mudou o horário de "${c.event_name}"`;
-        detail = `De ${new Date(c.old_start_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })} para ${new Date(c.new_start_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}.`;
-      } else {
-        title = `Mudou o local de "${c.event_name}"`;
-        detail = `Novo local: ${c.new_location ?? "verificar na página do evento"}.`;
-      }
-      notifs.push({ id: `mudanca-${c.registration_id}`, kind: "mudanca_evento", title, detail, urgency: "atencao", registrationId: c.registration_id });
-    });
-
-    const now48h = Date.now() + 48 * 3_600_000;
-    myRegs
-      .filter((r) => r.status === "confirmada" && ["inscricoes_abertas", "em_andamento"].includes(r.event.status))
-      .filter((r) => {
-        const start = new Date(r.event.start_at).getTime();
-        return start > Date.now() && start <= now48h;
-      })
-      .forEach((r) => {
-        let seen = false;
-        try { seen = sessionStorage.getItem(`cec-event-reminder-${r.event_id}`) === "1"; } catch { /* sem storage — sempre mostra */ }
-        if (seen) return;
-        const hoursLeft = Math.round((new Date(r.event.start_at).getTime() - Date.now()) / 3_600_000);
-        notifs.push({
-          id: `lembrete-${r.event_id}`,
-          kind: "lembrete_evento",
-          title: `"${r.event.name}" é ${hoursLeft <= 24 ? "em breve" : "em breve"}!`,
-          detail: hoursLeft <= 1 ? "Começa daqui a pouco." : `Faltam cerca de ${hoursLeft} horas.` + (r.event.is_online && r.event.online_url ? ` Link: ${r.event.online_url}` : ""),
-          urgency: "atencao",
-          registrationId: r.event_id,
-        });
-      });
-  } catch { /* idem */ }
 
   // Ordenar: críticos primeiro, depois atenção, depois info
   return notifs.sort((a, b) => {
