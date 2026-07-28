@@ -10,7 +10,7 @@ import {
   Download, Search, Bell,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins, QrCode,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins, QrCode, Library,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ export type TabKey =
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
-  | "news" | "banners" | "sermons" | "events" | "registration-events" | "event-checkin" | "services" | "word" | "giving" | "editorial-dashboard"
+  | "news" | "banners" | "sermons" | "events" | "registration-events" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "invites" | "audit"
   | "export";
@@ -118,16 +118,16 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
     },
     {
       id: "conteudo",
-      label: "Conteúdo e Comunicação",
+      label: "Central de Conteúdo",
       icon: <Megaphone size={16} />,
       items: [
         { key: "editorial-dashboard", label: "Dashboard Editorial", icon: <LayoutDashboard size={15} /> },
+        { key: "content-library", label: "Biblioteca de Arquivos", icon: <Library size={15} /> },
         { key: "news",    label: "Notícias",     icon: <Megaphone size={15} /> },
         { key: "banners", label: "Banners",      icon: <Image size={15} /> },
         { key: "sermons", label: "Pregações",    icon: <Mic2 size={15} /> },
-        { key: "events",  label: "Agenda",       icon: <CalendarDays size={15} /> },
-        { key: "registration-events", label: "Eventos com Inscrição", icon: <ClipboardList size={15} /> },
-        { key: "event-checkin", label: "Check-in de Eventos", icon: <QrCode size={15} /> },
+        { key: "events",  label: "Agenda",       icon: <CalendarDays size={15} />, sectionLabel: "Programação" },
+        { key: "registration-events", label: "Eventos", icon: <ClipboardList size={15} /> },
         { key: "giving",  label: "Momento da Generosidade", icon: <HandCoins size={15} /> },
         { key: "services",label: "Cultos",       icon: <Radio size={15} /> },
         { key: "word",    label: "Palavra do dia",icon: <BookOpen size={15} /> },

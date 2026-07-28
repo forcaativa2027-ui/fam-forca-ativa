@@ -17,6 +17,7 @@ import {
 } from "@/services/events";
 import { logAudit } from "@/services/audit";
 import { CheckinScanner } from "./EventCheckinAdmin";
+import { MediaLibraryPicker } from "@/components/shared/MediaLibraryPicker";
 import { exportToExcel } from "@/lib/export";
 import type {
   RegistrationEvent, RegistrationEventStatus, CustomFieldDefinition, CustomFieldType,
@@ -338,7 +339,10 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full rounded-md border bg-background px-3 py-2 text-sm" />
           </Field>
           <Field label="Imagem de divulgação (URL — opcional, usada no pop-up e na página do evento)">
-            <Input value={bannerUrl} onChange={(e) => setBannerUrl(e.target.value)} placeholder="https://…" />
+            <div className="flex gap-2">
+              <Input value={bannerUrl} onChange={(e) => setBannerUrl(e.target.value)} placeholder="https://…" />
+              <MediaLibraryPicker onPick={setBannerUrl} onlyTypes={["imagem", "logo"]} />
+            </div>
           </Field>
           <Field label="Vídeo curto de divulgação (URL de um .mp4 direto — opcional, toca no pop-up de login)">
             <Input value={popupVideoUrl} onChange={(e) => setPopupVideoUrl(e.target.value)} placeholder="https://…/video.mp4" />
