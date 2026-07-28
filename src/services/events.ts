@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   RegistrationEvent, RegistrationEventInput, EventRegistration, EventRegistrationSummary,
   RegisterForEventResult, MyEventRegistration, GroupRegistrationResult,
-  EventCheckinLookup, EventGroupMember, RecentEventCheckin, EventSpeaker, PendingPromotion, EventChange,
+  EventCheckinLookup, EventGroupMember, RecentEventCheckin, EventSpeaker, PendingPromotion, EventChange, EventFeedbackSummary,
 } from "@/types/domain";
 
 const PUBLIC_VISIBLE_STATUSES = [
@@ -238,4 +238,28 @@ export async function adminUpdateRegistration(
 export async function adminMoveRegistrationStatus(sb: SupabaseClient, registrationId: string, newStatus: "confirmada" | "lista_espera"): Promise<void> {
   const { error } = await sb.rpc("admin_move_registration_status", { p_registration_id: registrationId, p_new_status: newStatus });
   if (error) throw error;
+}
+
+// ---------- Pós-evento (EVT012) ----------
+export async function finalizeEventAttendance(sb: SupabaseClient, eventId: string): Promise<number> {
+  const { data, error } = await sb.rpc("finalize_event_attendance", { p_event_id: eventId });
+  if (error) throw error;
+  return data as number;
+}
+
+export async function submitEventFeedback(sb: SupabaseClient, eventId: string, rating: number, comment: string | null): Promise<void> {
+  const { error } = await sb.rpc("submit_event_feedback", { p_event_id: eventId, p_rating: rating, p_comment: comment });
+  if (error) throw error;
+}
+
+export async function getEventFeedbackSummary(sb: SupabaseClient, eventId: string): Promise<EventFeedbackSummary | null> {
+  const { data, error } = await sb.rpc("get_event_feedback_summary", { p_event_id: eventId }).maybeSingle();
+  if (error) return null;
+  return data as EventFeedbackSummary | null;
+}
+
+export async function hasSubmittedEventFeedback(sb: SupabaseClient, eventId: string): Promise<boolean> {
+  const { data, error } = await sb.rpc("has_submitted_event_feedback", { p_event_id: eventId });
+  if (error) return false;
+  return !!data;
 }
