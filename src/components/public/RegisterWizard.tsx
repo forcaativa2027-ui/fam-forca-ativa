@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft, ArrowRight, Check, Heart, Users, MessageCircleHeart,
-  Home as HomeIcon, Eye, HandHeart, Droplets, Hand, HelpCircle, Loader2,
+  Home as HomeIcon, Eye, EyeOff, HandHeart, Droplets, Hand, HelpCircle, Loader2,
   MessageCircle, Phone as PhoneIcon, User, Flame, Church as ChurchIcon,
   BookHeart, UsersRound, PartyPopper,
 } from "lucide-react";
@@ -43,7 +43,7 @@ interface State {
   // Dados pessoais
   marital_status: string; birth_date: string; gender: string;
   // Localização
-  country: string; cep: string; state: string; city: string; address: string; neighborhood: string;
+  country: string; cep: string; state: string; city: string; address: string; complemento: string; neighborhood: string;
   // Comunidade
   community_id: string; life_group_id: string;
   // História de fé
@@ -59,7 +59,7 @@ const INITIAL_STATE: State = {
   step: 1,
   full_name: "", cpf: "", email: "", phone: "", verify_method: "whatsapp", password: "",
   marital_status: "", birth_date: "", gender: "",
-  country: "Brasil", cep: "", state: "", city: "", address: "", neighborhood: "",
+  country: "Brasil", cep: "", state: "", city: "", address: "", complemento: "", neighborhood: "",
   community_id: "", life_group_id: "",
   baptized: null, baptism_date: "", last_church: "",
   holy_spirit_baptized: null, holy_spirit_baptism_date: "",
@@ -338,6 +338,20 @@ function StepLocalizacao({ s, update, onBack, onNext }: { s: State; update: <K e
         <Input value={s.country} onChange={(e) => update("country", e.target.value)} placeholder="Brasil" />
       </Field>
 
+      <Field label="Endereço">
+        <Input value={s.address} onChange={(e) => update("address", e.target.value)} placeholder="Rua, avenida..." />
+      </Field>
+
+      <Field label="Complemento (opcional)">
+        <Input value={s.complemento} onChange={(e) => update("complemento", e.target.value)} placeholder="Apto, bloco, casa, referência..." />
+      </Field>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Bairro"><Input value={s.neighborhood} onChange={(e) => update("neighborhood", e.target.value)} /></Field>
+        <Field label="Cidade"><Input value={s.city} onChange={(e) => update("city", e.target.value)} placeholder="Manaus" /></Field>
+      </div>
+      <Field label="Estado"><Input value={s.state} onChange={(e) => update("state", e.target.value.toUpperCase().slice(0,2))} placeholder="AM" /></Field>
+
       <Field label="CEP">
         <div className="flex gap-2">
           <Input value={s.cep} onChange={(e) => update("cep", maskCep(e.target.value))}
@@ -348,16 +362,6 @@ function StepLocalizacao({ s, update, onBack, onNext }: { s: State; update: <K e
         </div>
         {info && <p className="mt-1 text-xs text-gold">{info}</p>}
       </Field>
-
-      <Field label="Endereço">
-        <Input value={s.address} onChange={(e) => update("address", e.target.value)} placeholder="Rua, avenida..." />
-      </Field>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field label="Bairro"><Input value={s.neighborhood} onChange={(e) => update("neighborhood", e.target.value)} /></Field>
-        <Field label="Cidade"><Input value={s.city} onChange={(e) => update("city", e.target.value)} placeholder="Manaus" /></Field>
-      </div>
-      <Field label="Estado"><Input value={s.state} onChange={(e) => update("state", e.target.value.toUpperCase().slice(0,2))} placeholder="AM" /></Field>
 
       <NavButtons onBack={onBack} onNext={onNext} />
     </div>
@@ -615,13 +619,16 @@ function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s: State
   const [busy, setBusy] = useState(false);
   const [lgpdAccepted, setLgpdAccepted] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   async function finish() {
     const errs: Record<string,string> = {};
     if (s.password.length < 6) errs.password = "Senha precisa ter ao menos 6 caracteres";
     if (s.password !== passwordConfirm) errs.password_confirm = "Senhas não conferem";
     if (!lgpdAccepted) errs.lgpd = "Você precisa aceitar os Termos e a Política de Privacidade para continuar.";
-    if (!captchaToken) errs.captcha = "Confirme que você não é um robô.";
+    if (turnstileSiteKey && !captchaToken) errs.captcha = "Confirme que você não é um robô.";
     setErr(errs);
     if (Object.keys(errs).length > 0) return;
 
@@ -652,6 +659,7 @@ function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s: State
         birth_date: s.birth_date || undefined,
         country: s.country || undefined,
         address: s.address || undefined,
+        complemento: s.complemento || undefined,
         neighborhood: s.neighborhood || undefined,
         baptized: s.baptized ?? undefined,
         baptism_date: s.baptism_date || undefined,
@@ -684,10 +692,38 @@ function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s: State
       </div>
 
       <Field label="Senha" error={err.password}>
-        <Input type="password" value={s.password} onChange={(e) => update("password", e.target.value)} placeholder="Mínimo 6 caracteres" />
+        <div className="relative">
+          <Input
+            type={showPassword ? "text" : "password"} value={s.password}
+            onChange={(e) => update("password", e.target.value)} placeholder="Mínimo 6 caracteres"
+            className="pr-10"
+          />
+          <button
+            type="button" onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-navy"
+            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
       </Field>
       <Field label="Confirmar senha" error={err.password_confirm}>
-        <Input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} />
+        <div className="relative">
+          <Input
+            type={showPasswordConfirm ? "text" : "password"} value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            className="pr-10"
+          />
+          <button
+            type="button" onClick={() => setShowPasswordConfirm((v) => !v)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-navy"
+            aria-label={showPasswordConfirm ? "Ocultar senha" : "Mostrar senha"}
+            tabIndex={-1}
+          >
+            {showPasswordConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
       </Field>
 
       <div className="rounded-lg border border-gold/30 bg-gold/5 p-3 space-y-1">
@@ -700,10 +736,12 @@ function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s: State
         {err.lgpd && <p className="text-xs text-destructive">{err.lgpd}</p>}
       </div>
 
-      <div>
-        <Turnstile siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""} onSuccess={setCaptchaToken} />
-        {err.captcha && <p className="mt-1 text-xs text-destructive">{err.captcha}</p>}
-      </div>
+      {turnstileSiteKey && (
+        <div>
+          <Turnstile siteKey={turnstileSiteKey} onSuccess={setCaptchaToken} />
+          {err.captcha && <p className="mt-1 text-xs text-destructive">{err.captcha}</p>}
+        </div>
+      )}
 
       <div className="flex justify-between gap-2">
         <Button type="button" variant="outline" onClick={onBack} className="gap-2"><ArrowLeft className="h-4 w-4" /> Voltar</Button>
