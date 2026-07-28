@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, X, Users, FileDown, ArrowLeft, Mic } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Users, FileDown, ArrowLeft, Mic, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,12 +13,14 @@ import {
 import { supabase } from "@/lib/supabase/client";
 import {
   createRegistrationEvent, updateRegistrationEvent, deleteRegistrationEvent, cancelRegistration, saveEventSpeakers,
+  adminUpdateRegistration, adminMoveRegistrationStatus,
 } from "@/services/events";
 import { logAudit } from "@/services/audit";
+import { CheckinScanner } from "./EventCheckinAdmin";
 import { exportToExcel } from "@/lib/export";
 import type {
   RegistrationEvent, RegistrationEventStatus, CustomFieldDefinition, CustomFieldType,
-  PopupTemplate, PopupRepeatMode, EventSpeaker,
+  PopupTemplate, PopupRepeatMode, EventSpeaker, EventRegistration,
 } from "@/types/domain";
 
 const STATUS_LABELS: Record<RegistrationEventStatus, string> = {
@@ -493,10 +495,35 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
 
 function RegistrantsView({ event, onBack }: { event: RegistrationEvent; onBack: () => void }) {
   const qc = useQueryClient();
+  const [subTab, setSubTab] = useState<"inscritos" | "checkin" | "indicadores">("inscritos");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"todos" | "confirmada" | "lista_espera" | "cancelada">("todos");
+  const [checkinFilter, setCheckinFilter] = useState<"todos" | "fez" | "nao_fez">("todos");
+  const [editing, setEditing] = useState<EventRegistration | null>(null);
   const { data: registrations = [] } = useEventRegistrations(event.id);
   const { data: summary } = useEventRegistrationSummary(event.id);
   const { data: funnel } = useEventFunnel(event.id);
   const { data: byOrigin = [] } = useEventAnalyticsByOrigin(event.id);
+
+  const filtered = registrations.filter((r) => {
+    if (statusFilter !== "todos" && r.status !== statusFilter) return false;
+    if (checkinFilter === "fez" && !r.checked_in_at) return false;
+    if (checkinFilter === "nao_fez" && r.checked_in_at) return false;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      if (!r.full_name.toLowerCase().includes(q) && !(r.email ?? "").toLowerCase().includes(q) && !(r.phone ?? "").includes(q) && !(r.cpf ?? "").includes(q)) return false;
+    }
+    return true;
+  });
+
+  async function moveStatus(reg: EventRegistration, newStatus: "confirmada" | "lista_espera") {
+    try {
+      await adminMoveRegistrationStatus(supabase, reg.id, newStatus);
+      await logAudit(supabase, "update", "event_registrations", reg.id, { action: "move_status", to: newStatus });
+      qc.invalidateQueries({ queryKey: ["event-registrations", event.id] });
+      qc.invalidateQueries({ queryKey: ["event-registration-summary", event.id] });
+    } catch (e) { alert((e as { message?: string })?.message ?? "Erro ao mover"); }
+  }
 
   async function cancel(regId: string, name: string) {
     if (!confirm(`Cancelar a inscrição de "${name}"? Se houver lista de espera, o próximo é promovido automaticamente.`)) return;
@@ -527,7 +554,29 @@ function RegistrantsView({ event, onBack }: { event: RegistrationEvent; onBack: 
     <div className="space-y-4">
       <Button onClick={onBack} variant="ghost" size="sm" className="gap-1.5"><ArrowLeft size={14} /> Voltar aos eventos</Button>
 
-      {funnel && (
+      <div className="flex gap-1.5 border-b">
+        {([
+          ["inscritos", "Inscritos"],
+          ["checkin", "Check-in"],
+          ["indicadores", "Indicadores"],
+        ] as const).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setSubTab(key)}
+            className={`border-b-2 px-3 py-2 text-sm font-semibold transition ${
+              subTab === key ? "border-gold text-navy" : "border-transparent text-muted-foreground hover:text-navy"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {subTab === "checkin" && (
+        <CheckinScanner eventId={event.id} eventName={event.name} embedded onChangeEvent={() => {}} />
+      )}
+
+      {subTab === "indicadores" && funnel && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Indicadores</CardTitle>
@@ -565,6 +614,7 @@ function RegistrantsView({ event, onBack }: { event: RegistrationEvent; onBack: 
         </Card>
       )}
 
+      {subTab === "inscritos" && (
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
@@ -583,11 +633,28 @@ function RegistrantsView({ event, onBack }: { event: RegistrationEvent; onBack: 
           </Button>
         </CardHeader>
         <CardContent>
-          {registrations.length === 0 ? (
-            <p className="py-6 text-center text-sm italic text-muted-foreground">Ninguém se inscreveu ainda.</p>
+          <div className="mb-3 flex flex-wrap gap-2">
+            <Input placeholder="Buscar por nome, e-mail, telefone ou CPF…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)} className="h-10 rounded-md border bg-background px-2 text-sm">
+              <option value="todos">Todos os status</option>
+              <option value="confirmada">Confirmada</option>
+              <option value="lista_espera">Lista de espera</option>
+              <option value="cancelada">Cancelada</option>
+            </select>
+            <select value={checkinFilter} onChange={(e) => setCheckinFilter(e.target.value as typeof checkinFilter)} className="h-10 rounded-md border bg-background px-2 text-sm">
+              <option value="todos">Check-in: todos</option>
+              <option value="fez">Já fez check-in</option>
+              <option value="nao_fez">Ainda não fez check-in</option>
+            </select>
+          </div>
+
+          {filtered.length === 0 ? (
+            <p className="py-6 text-center text-sm italic text-muted-foreground">
+              {registrations.length === 0 ? "Ninguém se inscreveu ainda." : "Nenhum inscrito bate com esse filtro."}
+            </p>
           ) : (
             <div className="space-y-2">
-              {registrations.map((r) => (
+              {filtered.map((r) => (
                 <div key={r.id} className="flex items-center justify-between rounded-md border bg-card p-3">
                   <div>
                     <div className="flex items-center gap-2">
@@ -599,21 +666,86 @@ function RegistrantsView({ event, onBack }: { event: RegistrationEvent; onBack: 
                       }`}>
                         {r.status === "confirmada" ? "Confirmada" : r.status === "lista_espera" ? "Lista de espera" : "Cancelada"}
                       </span>
+                      {r.checked_in_at && <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-sky-700">✓ Check-in</span>}
                     </div>
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {[r.email, r.phone].filter(Boolean).join(" · ") || "Sem contato informado"}
+                      {[r.email, r.phone, r.cpf].filter(Boolean).join(" · ") || "Sem contato informado"}
                       {" · "}{new Date(r.registered_at).toLocaleDateString("pt-BR")}
                     </p>
                   </div>
-                  {r.status !== "cancelada" && (
-                    <Button onClick={() => cancel(r.id, r.full_name)} variant="destructive" size="sm">
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  )}
+                  <div className="flex shrink-0 gap-1.5">
+                    {r.status !== "cancelada" && (
+                      <Button onClick={() => setEditing(r)} variant="outline" size="sm"><Pencil className="h-3.5 w-3.5" /></Button>
+                    )}
+                    {r.status === "lista_espera" && (
+                      <Button onClick={() => moveStatus(r, "confirmada")} variant="outline" size="sm" title="Mover pra confirmada">
+                        <ArrowUpCircle className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {r.status === "confirmada" && (
+                      <Button onClick={() => moveStatus(r, "lista_espera")} variant="outline" size="sm" title="Mover pra lista de espera">
+                        <ArrowDownCircle className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {r.status !== "cancelada" && (
+                      <Button onClick={() => cancel(r.id, r.full_name)} variant="destructive" size="sm">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+      )}
+
+      {editing && (
+        <EditRegistrantDialog
+          reg={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["event-registrations", event.id] }); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditRegistrantDialog({ reg, onClose, onSaved }: { reg: EventRegistration; onClose: () => void; onSaved: () => void }) {
+  const [name, setName] = useState(reg.full_name);
+  const [email, setEmail] = useState(reg.email ?? "");
+  const [phone, setPhone] = useState(reg.phone ?? "");
+  const [cpf, setCpf] = useState(reg.cpf ?? "");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function save() {
+    if (!name.trim()) { setErr("Nome é obrigatório."); return; }
+    setBusy(true); setErr("");
+    try {
+      await adminUpdateRegistration(supabase, reg.id, name.trim(), email || null, phone || null, cpf || null);
+      await logAudit(supabase, "update", "event_registrations", reg.id, { action: "edit" });
+      onSaved();
+    } catch (e) {
+      setErr((e as { message?: string })?.message ?? "Erro ao salvar");
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={onClose}>
+      <Card className="w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Editar inscrito</CardTitle>
+          <Button onClick={onClose} variant="ghost" size="sm"><X className="h-4 w-4" /></Button>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Input placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} />
+          <Input placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input placeholder="Telefone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <Input placeholder="CPF" value={cpf} onChange={(e) => setCpf(e.target.value)} />
+          {err && <p className="text-xs text-destructive">{err}</p>}
+          <Button onClick={save} disabled={busy} className="w-full">{busy ? "Salvando…" : "Salvar"}</Button>
         </CardContent>
       </Card>
     </div>
