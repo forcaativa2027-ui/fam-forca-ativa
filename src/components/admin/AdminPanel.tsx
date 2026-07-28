@@ -57,6 +57,7 @@ import { AgendaAdmin } from "./AgendaAdmin";
 import { RegistrationEventsAdmin } from "./RegistrationEventsAdmin";
 import { EditorialDashboardAdmin } from "./EditorialDashboardAdmin";
 import { ContentLibraryAdmin } from "./ContentLibraryAdmin";
+import { CategoriesTagsAdmin } from "./CategoriesTagsAdmin";
 import { NotificacoesAdmin } from "./NotificacoesAdmin";
 import { FormacaoAdmin } from "./FormacaoAdmin";
 import { PainelUsuariosAdmin } from "./PainelUsuariosAdmin";
@@ -350,6 +351,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
     case "registration-events": return <RegistrationEventsAdmin />;
     case "editorial-dashboard": return <EditorialDashboardAdmin onNavigate={onNavigate} />;
     case "content-library":     return <ContentLibraryAdmin />;
+    case "categories-tags":     return <CategoriesTagsAdmin />;
     case "services":            return <ServiceTimesAdmin />;
     case "word":                return <DailyWordsAdmin />;
     case "finance":             return <FinanceAdmin />;

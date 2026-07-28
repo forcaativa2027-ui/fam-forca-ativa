@@ -18,6 +18,7 @@ import {
 import { logAudit } from "@/services/audit";
 import { CheckinScanner } from "./EventCheckinAdmin";
 import { MediaLibraryPicker } from "@/components/shared/MediaLibraryPicker";
+import { TaxonomyPicker } from "@/components/shared/TaxonomyPicker";
 import { exportToExcel } from "@/lib/export";
 import type {
   RegistrationEvent, RegistrationEventStatus, CustomFieldDefinition, CustomFieldType,
@@ -331,6 +332,11 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
             <Field label="Público-alvo (opcional)">
               <Input value={targetAudience} onChange={(e) => setTargetAudience(e.target.value)} placeholder="Ex: Jovens, Casais, Todos" />
             </Field>
+          </div>
+
+          <div className="rounded-md border p-3">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Categoria/tags centralizadas (opcional — complementa a categoria acima)</p>
+            <TaxonomyPicker entityType="registration_events" entityId={event?.id ?? null} />
           </div>
           <Field label="Slug (URL pública)">
             <Input value={slug} onChange={(e) => { setSlug(slugify(e.target.value)); setSlugTouched(true); }} placeholder="congresso-jovens-2026" />
