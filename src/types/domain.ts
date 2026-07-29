@@ -1275,6 +1275,8 @@ export interface MemberRecommendation {
   rule_key: string; message: string; priority: "critico" | "atencao" | "info";
 }
 
+export type ContentLibraryType = "imagem" | "video_youtube" | "documento" | "logo" | "outro";
+
 // CT-017 — Central de Acessibilidade e Personalização (Fase 1)
 export type AccessibilityTheme = "claro" | "escuro" | "automatico";
 export type AccessibilityFontSize = "pequena" | "media" | "grande" | "extra_grande";
