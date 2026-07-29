@@ -455,6 +455,13 @@ export interface VisitorPipeline {
   suggestion_calculated_at: string | null;
   evangelism_group_id?: string | null;
   created_at: string;
+  // Cadastro completo (visitor_pipeline_create_v2)
+  cpf: string | null; gender: string | null; marital_status: string | null; birth_date: string | null;
+  address: string | null; neighborhood: string | null;
+  baptized: boolean | null; last_church: string | null;
+  holy_spirit_baptized: boolean | null; holy_spirit_baptism_date: string | null;
+  seeking_reason: string | null; life_before_church: string | null; testimony: string | null;
+  belongs_to_group: boolean | null; group_name: string | null;
 }
 
 export interface LgSuggestion {
@@ -1275,15 +1282,9 @@ export interface MemberRecommendation {
   rule_key: string; message: string; priority: "critico" | "atencao" | "info";
 }
 
-export type ContentLibraryType = "imagem" | "video_youtube" | "documento" | "logo" | "outro";
-
 // CT-017 — Central de Acessibilidade e Personalização (Fase 1)
 export type AccessibilityTheme = "claro" | "escuro" | "automatico";
 export type AccessibilityFontSize = "pequena" | "media" | "grande" | "extra_grande";
-export type AccessibilityContrast = "normal" | "alto" | "muito_alto";
-export type AccessibilitySpacing = "compacto" | "padrao" | "confortavel" | "ampliado";
-export type AccessibilityAnimations = "normal" | "reduzida" | "desativada";
-export type AccessibilityProfile = "padrao" | "idoso" | "baixa_visao" | "smartphone" | "tablet" | "desktop" | "simplificado";
 export interface UserPreferences {
   profile_id: string; theme: AccessibilityTheme; font_size: AccessibilityFontSize;
   extra: Record<string, unknown>; onboarded: boolean; updated_at: string;
@@ -1317,3 +1318,17 @@ export interface AdminUserDirectoryRow {
   state_id: string | null; state_name: string | null;
   delegacoes_ativas: number;
 }
+
+export type ContentLibraryType = "imagem" | "video_youtube" | "documento" | "logo" | "outro";
+export interface ContentLibraryItem {
+  id: string; title: string; type: ContentLibraryType; url: string;
+  tags: string[]; church_id: string | null; created_by: string | null; created_at: string;
+}
+
+// CT-017 Fase 3 — Perfis Inteligentes completos
+export type AccessibilityContrast = "normal" | "alto" | "muito_alto";
+export type AccessibilitySpacing = "compacto" | "padrao" | "confortavel" | "ampliado";
+export type AccessibilityAnimations = "normal" | "reduzida" | "desativada";
+export type AccessibilityButtonSize = "normal" | "grande" | "extra_grande";
+export type AccessibilityIconStyle = "coloridos" | "monocromaticos" | "minimalistas";
+export type AccessibilityProfile = "padrao" | "idoso" | "baixa_visao" | "smartphone" | "tablet" | "desktop" | "simplificado";
