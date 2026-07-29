@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
   Accessibility, Sun, Moon, MonitorSmartphone, Type, Volume2, VolumeX, Vibrate,
   Sparkles, User, Glasses, Smartphone, Tablet, Monitor, LayoutList, Contrast, MoveVertical, Zap,
+  MousePointerClick, Palette,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ export function AccessibilityButton() {
   const {
     theme, fontSize, setTheme, setFontSize,
     contrast, spacing, animations, setContrast, setSpacing, setAnimations,
+    buttonSize, iconStyle, setButtonSize, setIconStyle,
     activeProfile, applyProfile,
     soundEnabled, soundVolume, setSoundEnabled, setSoundVolume,
     hapticEnabled, hapticIntensity, setHapticEnabled, setHapticIntensity,
@@ -143,6 +145,30 @@ export function AccessibilityButton() {
                 {([["normal","Normais"],["reduzida","Reduzidas"],["desativada","Desativadas"]] as const).map(([v,l]) => (
                   <button key={v} onClick={() => setAnimations(v)}
                     className={`rounded-xl border-2 p-2.5 text-xs font-semibold transition ${animations === v ? "border-gold bg-gold/10 text-navy shadow-md" : "border-border text-muted hover:border-navy/30"}`}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-navy"><MousePointerClick className="h-4 w-4" />Tamanho dos Botões</p>
+              <div className="grid grid-cols-3 gap-2">
+                {([["normal","Normal"],["grande","Grande"],["extra_grande","Extra Grande"]] as const).map(([v,l]) => (
+                  <button key={v} onClick={() => setButtonSize(v)}
+                    className={`rounded-xl border-2 p-2.5 text-xs font-semibold transition ${buttonSize === v ? "border-gold bg-gold/10 text-navy shadow-md" : "border-border text-muted hover:border-navy/30"}`}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2 flex items-center gap-1.5 text-sm font-bold text-navy"><Palette className="h-4 w-4" />Estilo dos Ícones</p>
+              <div className="grid grid-cols-3 gap-2">
+                {([["coloridos","Coloridos"],["monocromaticos","Monocromáticos"],["minimalistas","Minimalistas"]] as const).map(([v,l]) => (
+                  <button key={v} onClick={() => setIconStyle(v)}
+                    className={`rounded-xl border-2 p-2.5 text-[11px] font-semibold transition ${iconStyle === v ? "border-gold bg-gold/10 text-navy shadow-md" : "border-border text-muted hover:border-navy/30"}`}>
                     {l}
                   </button>
                 ))}
