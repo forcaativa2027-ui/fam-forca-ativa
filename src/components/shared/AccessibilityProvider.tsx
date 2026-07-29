@@ -6,6 +6,7 @@ import { feedbackSettings, feedback } from "@/lib/feedback";
 import type {
   AccessibilityTheme, AccessibilityFontSize, AccessibilityContrast,
   AccessibilitySpacing, AccessibilityAnimations, AccessibilityProfile,
+  AccessibilityButtonSize, AccessibilityIconStyle,
 } from "@/types/domain";
 
 const LOCAL_KEY = "cec_accessibility_prefs";
@@ -16,6 +17,8 @@ interface AccessibilityState {
   contrast: AccessibilityContrast;
   spacing: AccessibilitySpacing;
   animations: AccessibilityAnimations;
+  buttonSize: AccessibilityButtonSize;
+  iconStyle: AccessibilityIconStyle;
   activeProfile: AccessibilityProfile;
   soundEnabled: boolean;
   soundVolume: number;
@@ -28,6 +31,8 @@ interface AccessibilityState {
   setContrast: (c: AccessibilityContrast) => void;
   setSpacing: (s: AccessibilitySpacing) => void;
   setAnimations: (a: AccessibilityAnimations) => void;
+  setButtonSize: (b: AccessibilityButtonSize) => void;
+  setIconStyle: (i: AccessibilityIconStyle) => void;
   setSoundEnabled: (v: boolean) => void;
   setSoundVolume: (v: number) => void;
   setHapticEnabled: (v: boolean) => void;
@@ -45,21 +50,23 @@ const FONT_SCALE: Record<AccessibilityFontSize, string> = {
 /** CT-017 §18 — cada perfil pronto aplica um conjunto de preferências de uma vez. */
 export const PROFILE_PRESETS: Record<AccessibilityProfile, {
   font_size: AccessibilityFontSize; contrast: AccessibilityContrast; spacing: AccessibilitySpacing;
-  animations: AccessibilityAnimations; sound_enabled: boolean; haptic_enabled: boolean; simplified: boolean;
+  animations: AccessibilityAnimations; button_size: AccessibilityButtonSize; icon_style: AccessibilityIconStyle;
+  sound_enabled: boolean; haptic_enabled: boolean; simplified: boolean;
 }> = {
-  padrao:       { font_size: "media",        contrast: "normal",     spacing: "padrao",       animations: "normal",    sound_enabled: false, haptic_enabled: false, simplified: false },
-  idoso:        { font_size: "grande",       contrast: "alto",       spacing: "confortavel",  animations: "reduzida",  sound_enabled: true,  haptic_enabled: true,  simplified: false },
-  baixa_visao:  { font_size: "extra_grande", contrast: "muito_alto", spacing: "ampliado",     animations: "reduzida",  sound_enabled: false, haptic_enabled: false, simplified: false },
-  smartphone:   { font_size: "media",        contrast: "normal",     spacing: "padrao",       animations: "normal",    sound_enabled: false, haptic_enabled: true,  simplified: false },
-  tablet:       { font_size: "media",        contrast: "normal",     spacing: "confortavel",  animations: "normal",    sound_enabled: false, haptic_enabled: false, simplified: false },
-  desktop:      { font_size: "media",        contrast: "normal",     spacing: "compacto",     animations: "normal",    sound_enabled: false, haptic_enabled: false, simplified: false },
-  simplificado: { font_size: "grande",       contrast: "normal",     spacing: "confortavel",  animations: "desativada",sound_enabled: false, haptic_enabled: false, simplified: true },
+  padrao:       { font_size: "media",        contrast: "normal",     spacing: "padrao",      animations: "normal",     button_size: "normal",       icon_style: "coloridos",      sound_enabled: false, haptic_enabled: false, simplified: false },
+  idoso:        { font_size: "grande",       contrast: "alto",       spacing: "confortavel", animations: "reduzida",   button_size: "grande",       icon_style: "coloridos",      sound_enabled: true,  haptic_enabled: true,  simplified: false },
+  baixa_visao:  { font_size: "extra_grande", contrast: "muito_alto", spacing: "ampliado",    animations: "reduzida",   button_size: "extra_grande", icon_style: "coloridos",      sound_enabled: false, haptic_enabled: false, simplified: false },
+  smartphone:   { font_size: "media",        contrast: "normal",     spacing: "padrao",      animations: "normal",     button_size: "normal",       icon_style: "coloridos",      sound_enabled: false, haptic_enabled: true,  simplified: false },
+  tablet:       { font_size: "media",        contrast: "normal",     spacing: "confortavel", animations: "normal",     button_size: "normal",       icon_style: "coloridos",      sound_enabled: false, haptic_enabled: false, simplified: false },
+  desktop:      { font_size: "media",        contrast: "normal",     spacing: "compacto",    animations: "normal",     button_size: "normal",       icon_style: "minimalistas",   sound_enabled: false, haptic_enabled: false, simplified: false },
+  simplificado: { font_size: "grande",       contrast: "normal",     spacing: "confortavel", animations: "desativada", button_size: "grande",       icon_style: "minimalistas",   sound_enabled: false, haptic_enabled: false, simplified: true },
 };
 
 function applyToDocument(
   theme: AccessibilityTheme, fontSize: AccessibilityFontSize,
   contrast: AccessibilityContrast = "normal", spacing: AccessibilitySpacing = "padrao",
   animations: AccessibilityAnimations = "normal", simplified = false,
+  buttonSize: AccessibilityButtonSize = "normal", iconStyle: AccessibilityIconStyle = "coloridos",
 ) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
@@ -71,6 +78,8 @@ function applyToDocument(
   root.setAttribute("data-spacing", spacing);
   root.setAttribute("data-animations", animations);
   root.setAttribute("data-simplified", String(simplified));
+  root.setAttribute("data-button-size", buttonSize);
+  root.setAttribute("data-icon-style", iconStyle);
 }
 
 export function AccessibilityProvider({ children }: { children: React.ReactNode }) {
@@ -79,6 +88,8 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   const [contrast, setContrastState] = useState<AccessibilityContrast>("normal");
   const [spacing, setSpacingState] = useState<AccessibilitySpacing>("padrao");
   const [animations, setAnimationsState] = useState<AccessibilityAnimations>("normal");
+  const [buttonSize, setButtonSizeState] = useState<AccessibilityButtonSize>("normal");
+  const [iconStyle, setIconStyleState] = useState<AccessibilityIconStyle>("coloridos");
   const [simplified, setSimplifiedState] = useState(false);
   const [activeProfile, setActiveProfile] = useState<AccessibilityProfile>("padrao");
   const [soundEnabled, setSoundEnabledState] = useState(false);
@@ -98,21 +109,18 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     setSoundVolumeState(feedbackSettings.soundVolume);
     setHapticEnabledState(feedbackSettings.hapticEnabled);
     setHapticIntensityState(feedbackSettings.hapticIntensity);
-    setContrastState((extra.contrast as AccessibilityContrast) ?? "normal");
-    setSpacingState((extra.spacing as AccessibilitySpacing) ?? "padrao");
-    setAnimationsState((extra.animations as AccessibilityAnimations) ?? "normal");
-    setSimplifiedState(!!extra.simplified);
+    const c = (extra.contrast as AccessibilityContrast) ?? "normal";
+    const s = (extra.spacing as AccessibilitySpacing) ?? "padrao";
+    const a = (extra.animations as AccessibilityAnimations) ?? "normal";
+    const bs = (extra.button_size as AccessibilityButtonSize) ?? "normal";
+    const is = (extra.icon_style as AccessibilityIconStyle) ?? "coloridos";
+    const simp = !!extra.simplified;
+    setContrastState(c); setSpacingState(s); setAnimationsState(a);
+    setButtonSizeState(bs); setIconStyleState(is); setSimplifiedState(simp);
     setActiveProfile((extra.active_profile as AccessibilityProfile) ?? "padrao");
-    return {
-      contrast: (extra.contrast as AccessibilityContrast) ?? "normal",
-      spacing: (extra.spacing as AccessibilitySpacing) ?? "padrao",
-      animations: (extra.animations as AccessibilityAnimations) ?? "normal",
-      simplified: !!extra.simplified,
-    };
+    return { contrast: c, spacing: s, animations: a, simplified: simp, buttonSize: bs, iconStyle: is };
   }
 
-  // Carrega: localStorage primeiro (aplica na hora, sem "flash"), depois
-  // Supabase se estiver logado (fonte de verdade — sincroniza entre dispositivos).
   useEffect(() => {
     let t = theme, f = fontSize;
     try {
@@ -122,7 +130,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         if (parsed.theme) { setThemeState(parsed.theme); t = parsed.theme; }
         if (parsed.font_size) { setFontSizeState(parsed.font_size); f = parsed.font_size; }
         const ex = parsed.extra ? syncExtra(parsed.extra) : undefined;
-        applyToDocument(t, f, ex?.contrast, ex?.spacing, ex?.animations, ex?.simplified);
+        applyToDocument(t, f, ex?.contrast, ex?.spacing, ex?.animations, ex?.simplified, ex?.buttonSize, ex?.iconStyle);
       }
     } catch { /* ignora localStorage inválido */ }
 
@@ -134,15 +142,14 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
         if (prefs) {
           setThemeState(prefs.theme); setFontSizeState(prefs.font_size); setOnboarded(prefs.onboarded);
           const ex = syncExtra(prefs.extra ?? {});
-          applyToDocument(prefs.theme, prefs.font_size, ex.contrast, ex.spacing, ex.animations, ex.simplified);
+          applyToDocument(prefs.theme, prefs.font_size, ex.contrast, ex.spacing, ex.animations, ex.simplified, ex.buttonSize, ex.iconStyle);
         }
       }
       setLoaded(true);
     });
 
-    // Reagir a mudança do tema do sistema operacional quando estiver em "automático"
     const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
-    const onChange = () => applyToDocument(theme, fontSize, contrast, spacing, animations, simplified);
+    const onChange = () => applyToDocument(theme, fontSize, contrast, spacing, animations, simplified, buttonSize, iconStyle);
     mq?.addEventListener?.("change", onChange);
     return () => mq?.removeEventListener?.("change", onChange);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -156,31 +163,37 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       localStorage.setItem(LOCAL_KEY, JSON.stringify(merged));
     } catch { /* noop */ }
     if (profileId) {
-      // Sempre envia o "extra" mesclado por completo, senão o upsert sobrescreveria
-      // o jsonb inteiro só com a chave que mudou agora, perdendo as demais.
       upsertUserPreferences(supabase, profileId, { ...patch, extra: patch.extra ? merged.extra : undefined }).catch(() => {});
     }
   }, [profileId]);
 
   const setTheme = useCallback((t: AccessibilityTheme) => {
-    setThemeState(t); applyToDocument(t, fontSize, contrast, spacing, animations, simplified); persist({ theme: t });
-  }, [fontSize, contrast, spacing, animations, simplified, persist]);
+    setThemeState(t); applyToDocument(t, fontSize, contrast, spacing, animations, simplified, buttonSize, iconStyle); persist({ theme: t });
+  }, [fontSize, contrast, spacing, animations, simplified, buttonSize, iconStyle, persist]);
 
   const setFontSize = useCallback((f: AccessibilityFontSize) => {
-    setFontSizeState(f); applyToDocument(theme, f, contrast, spacing, animations, simplified); persist({ font_size: f });
-  }, [theme, contrast, spacing, animations, simplified, persist]);
+    setFontSizeState(f); applyToDocument(theme, f, contrast, spacing, animations, simplified, buttonSize, iconStyle); persist({ font_size: f });
+  }, [theme, contrast, spacing, animations, simplified, buttonSize, iconStyle, persist]);
 
   const setContrast = useCallback((c: AccessibilityContrast) => {
-    setContrastState(c); applyToDocument(theme, fontSize, c, spacing, animations, simplified); persist({ extra: { contrast: c } });
-  }, [theme, fontSize, spacing, animations, simplified, persist]);
+    setContrastState(c); applyToDocument(theme, fontSize, c, spacing, animations, simplified, buttonSize, iconStyle); persist({ extra: { contrast: c } });
+  }, [theme, fontSize, spacing, animations, simplified, buttonSize, iconStyle, persist]);
 
   const setSpacing = useCallback((s: AccessibilitySpacing) => {
-    setSpacingState(s); applyToDocument(theme, fontSize, contrast, s, animations, simplified); persist({ extra: { spacing: s } });
-  }, [theme, fontSize, contrast, animations, simplified, persist]);
+    setSpacingState(s); applyToDocument(theme, fontSize, contrast, s, animations, simplified, buttonSize, iconStyle); persist({ extra: { spacing: s } });
+  }, [theme, fontSize, contrast, animations, simplified, buttonSize, iconStyle, persist]);
 
   const setAnimations = useCallback((a: AccessibilityAnimations) => {
-    setAnimationsState(a); applyToDocument(theme, fontSize, contrast, spacing, a, simplified); persist({ extra: { animations: a } });
-  }, [theme, fontSize, contrast, spacing, simplified, persist]);
+    setAnimationsState(a); applyToDocument(theme, fontSize, contrast, spacing, a, simplified, buttonSize, iconStyle); persist({ extra: { animations: a } });
+  }, [theme, fontSize, contrast, spacing, simplified, buttonSize, iconStyle, persist]);
+
+  const setButtonSize = useCallback((b: AccessibilityButtonSize) => {
+    setButtonSizeState(b); applyToDocument(theme, fontSize, contrast, spacing, animations, simplified, b, iconStyle); persist({ extra: { button_size: b } });
+  }, [theme, fontSize, contrast, spacing, animations, simplified, iconStyle, persist]);
+
+  const setIconStyle = useCallback((i: AccessibilityIconStyle) => {
+    setIconStyleState(i); applyToDocument(theme, fontSize, contrast, spacing, animations, simplified, buttonSize, i); persist({ extra: { icon_style: i } });
+  }, [theme, fontSize, contrast, spacing, animations, simplified, buttonSize, persist]);
 
   const setSoundEnabled = useCallback((v: boolean) => {
     feedbackSettings.soundEnabled = v; setSoundEnabledState(v);
@@ -213,18 +226,20 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     setContrastState(preset.contrast);
     setSpacingState(preset.spacing);
     setAnimationsState(preset.animations);
+    setButtonSizeState(preset.button_size);
+    setIconStyleState(preset.icon_style);
     setSimplifiedState(preset.simplified);
     feedbackSettings.soundEnabled = preset.sound_enabled;
     feedbackSettings.hapticEnabled = preset.haptic_enabled;
     setSoundEnabledState(preset.sound_enabled);
     setHapticEnabledState(preset.haptic_enabled);
-    applyToDocument(theme, preset.font_size, preset.contrast, preset.spacing, preset.animations, preset.simplified);
+    applyToDocument(theme, preset.font_size, preset.contrast, preset.spacing, preset.animations, preset.simplified, preset.button_size, preset.icon_style);
     persist({
       font_size: preset.font_size,
       extra: {
         contrast: preset.contrast, spacing: preset.spacing, animations: preset.animations,
         simplified: preset.simplified, sound_enabled: preset.sound_enabled, haptic_enabled: preset.haptic_enabled,
-        active_profile: p,
+        button_size: preset.button_size, icon_style: preset.icon_style, active_profile: p,
       },
     });
     feedback("success", "success");
@@ -236,9 +251,9 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
 
   return (
     <AccessibilityContext.Provider value={{
-      theme, fontSize, contrast, spacing, animations, activeProfile,
+      theme, fontSize, contrast, spacing, animations, buttonSize, iconStyle, activeProfile,
       soundEnabled, soundVolume, hapticEnabled, hapticIntensity, onboarded, loaded,
-      setTheme, setFontSize, setContrast, setSpacing, setAnimations,
+      setTheme, setFontSize, setContrast, setSpacing, setAnimations, setButtonSize, setIconStyle,
       setSoundEnabled, setSoundVolume, setHapticEnabled, setHapticIntensity, applyProfile, markOnboarded,
     }}>
       {children}
