@@ -3,28 +3,23 @@ import { Sparkles, User, Glasses, LayoutList } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useAccessibility } from "./AccessibilityProvider";
+import type { AccessibilityProfile } from "@/types/domain";
 
-/**
- * CT-017 §18 — Perfis Inteligentes, aplicados no primeiro acesso.
- * Nesta fase (1) só ajustam tema+fonte — as demais preferências
- * entram nas próximas fases, reaproveitando esse mesmo fluxo.
- */
-const PROFILES = [
-  { key: "padrao", label: "Padrão", icon: Sparkles, desc: "A experiência recomendada pela plataforma", font: "media" as const, extras: undefined },
-  { key: "idoso", label: "Perfil Idoso", icon: User, desc: "Fonte maior, som e vibração ao tocar", font: "grande" as const, extras: { sound: true, haptic: true } },
-  { key: "baixa_visao", label: "Baixa Visão", icon: Glasses, desc: "Fonte extra grande e alto contraste", font: "extra_grande" as const, extras: undefined },
-  { key: "simplificado", label: "Simplificado", icon: LayoutList, desc: "Menos elementos na tela, navegação mais direta", font: "grande" as const, extras: undefined },
+const PROFILES: { key: AccessibilityProfile; label: string; icon: typeof Sparkles; desc: string }[] = [
+  { key: "padrao", label: "Padrão", icon: Sparkles, desc: "A experiência recomendada pela plataforma" },
+  { key: "idoso", label: "Perfil Idoso", icon: User, desc: "Fonte maior, mais contraste, som e vibração ao tocar" },
+  { key: "baixa_visao", label: "Baixa Visão", icon: Glasses, desc: "Fonte extra grande e contraste muito alto" },
+  { key: "simplificado", label: "Simplificado", icon: LayoutList, desc: "Menos elementos na tela, navegação mais direta" },
 ];
 
+/** CT-017 §18 — Perfis Inteligentes, aplicados no primeiro acesso. */
 export function AccessibilityOnboarding() {
-  const { onboarded, loaded, setFontSize, setSoundEnabled, setHapticEnabled, markOnboarded } = useAccessibility();
+  const { onboarded, loaded, applyProfile, markOnboarded } = useAccessibility();
 
   if (!loaded || onboarded) return null;
 
-  function choose(font: "media" | "grande" | "extra_grande", extras?: { sound?: boolean; haptic?: boolean }) {
-    setFontSize(font);
-    if (extras?.sound) setSoundEnabled(true);
-    if (extras?.haptic) setHapticEnabled(true);
+  function choose(key: AccessibilityProfile) {
+    applyProfile(key);
     markOnboarded();
   }
 
@@ -41,7 +36,7 @@ export function AccessibilityOnboarding() {
             return (
               <button
                 key={p.key}
-                onClick={() => choose(p.font, p.extras)}
+                onClick={() => choose(p.key)}
                 className="flex w-full items-center gap-3 rounded-xl border-2 border-border p-3 text-left transition hover:border-gold/50 hover:bg-gold/5 hover:shadow-sm"
               >
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-navy/10 text-navy"><Ico className="h-5 w-5" /></span>
@@ -53,7 +48,7 @@ export function AccessibilityOnboarding() {
             );
           })}
         </div>
-        <Button variant="ghost" onClick={() => markOnboarded()} className="w-full text-muted-foreground">
+        <Button variant="ghost" onClick={() => choose("padrao")} className="w-full text-muted-foreground">
           Pular e usar o padrão
         </Button>
       </DialogContent>
