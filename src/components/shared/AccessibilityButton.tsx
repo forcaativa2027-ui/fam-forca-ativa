@@ -54,7 +54,7 @@ export function AccessibilityButton() {
       <button
         onClick={() => setOpen(true)}
         aria-label="Abrir Central de Acessibilidade"
-        className="fixed bottom-5 right-5 z-50 grid h-14 w-14 place-items-center rounded-full bg-navy text-gold shadow-lg transition hover:scale-105 hover:bg-navy-600 active:scale-95"
+        className="fixed bottom-24 right-5 z-[60] grid h-14 w-14 place-items-center rounded-full bg-navy text-gold shadow-lg transition hover:scale-105 hover:bg-navy-600 active:scale-95"
       >
         <Accessibility className="h-6 w-6" />
       </button>
