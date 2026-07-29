@@ -114,7 +114,6 @@ export interface Church {
   primary_color:string|null; secondary_color:string|null;
   short_description:string|null; site_url:string|null; whatsapp_phone:string|null;
   is_active?:boolean;
-  pix_key?: string | null; pix_key_type?: string | null;
   // Caderno C13b
   phone_primary?:string|null;
   phone_secondary?:string|null;
