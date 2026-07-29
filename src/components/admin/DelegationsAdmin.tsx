@@ -871,6 +871,57 @@ export function ActionModal({ action, delegation, onClose, onDone }: {
 // ══════════════════════════════════════════════════════════════
 // MASTER — DelegationsAdmin
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// GOV-002 §3 — Conta administrativa inicial fixa (suporte técnico)
+// ══════════════════════════════════════════════════════════════
+function SupportAccountBootstrap() {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [open, setOpen] = useState(false);
+
+  async function provision() {
+    setBusy(true); setResult(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin/bootstrap-support-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: session?.access_token }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Erro ao provisionar");
+      setResult({
+        ok: true,
+        msg: json.already_existed
+          ? "A conta já existia. Confirmado: uma delegação pendente aguarda aprovação na aba Pendentes."
+          : "Conta criada com sucesso. Um e-mail de definição de senha foi enviado. A delegação de acesso está pendente — aprove na aba Pendentes pra ativar.",
+      });
+    } catch (e: unknown) {
+      setResult({ ok: false, msg: (e as { message?: string })?.message ?? "Erro ao provisionar a conta." });
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <div className="rounded-lg border border-dashed border-gold/40 bg-gold/5 p-3">
+      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between text-left">
+        <span className="text-xs font-bold uppercase tracking-wide text-navy-600">⚙️ GOV-002 — Conta Administrativa Inicial Fixa</span>
+        <span className="text-xs text-muted-foreground">{open ? "Recolher" : "Expandir"}</span>
+      </button>
+      {open && (
+        <div className="mt-2 space-y-2 text-sm">
+          <p className="text-muted-foreground">
+            Provisiona a conta fixa de suporte técnico (<b>tecnologiaagilize@gmail.com</b>). Ela nasce sem
+            nenhum privilégio — só um pedido de delegação pendente de acesso nacional, que precisa da sua
+            aprovação explícita na aba <b>Pendentes</b> pra ser ativada.
+          </p>
+          <Button size="sm" onClick={provision} disabled={busy}>{busy ? "Provisionando…" : "Provisionar conta"}</Button>
+          {result && <p className={`text-xs ${result.ok ? "text-green-700" : "text-destructive"}`}>{result.msg}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function DelegationsAdmin() {
   const qc = useQueryClient();
   const { data: me } = useMyProfile();
@@ -907,6 +958,8 @@ export function DelegationsAdmin() {
           <p className="text-xs text-muted-foreground">Controle central de autorização de acessos</p>
         </div>
       </div>
+
+      {isApostolo && <SupportAccountBootstrap />}
 
       <Tabs defaultValue="pending">
         <TabsList className="flex-wrap h-auto gap-1">
