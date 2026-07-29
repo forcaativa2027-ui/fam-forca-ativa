@@ -114,6 +114,7 @@ export interface Church {
   primary_color:string|null; secondary_color:string|null;
   short_description:string|null; site_url:string|null; whatsapp_phone:string|null;
   is_active?:boolean;
+  pix_key?: string | null; pix_key_type?: string | null;
   // Caderno C13b
   phone_primary?:string|null;
   phone_secondary?:string|null;
@@ -125,10 +126,6 @@ export interface Church {
   founded_at?:string|null;
   status_admin?:ChurchStatus;
   observations?:string|null;
-  pix_key?: string | null;
-  pix_key_type?: "cpf" | "cnpj" | "email" | "telefone" | "aleatoria" | null;
-  bank_info?: string | null;
-  qr_code_url?: string | null;
 }
 export interface ChurchDependencies {
   children:number; life_groups:number; members:number; reports:number; total:number;
@@ -288,7 +285,6 @@ export interface Member {
   consent_accepted_at?: string|null; photo_consent_accepted_at?: string|null;
   cec_id?: string|null; card_status?: CardStatus; card_approved_at?: string|null; card_issued_at?: string|null; qr_token?: string;
   member_since?: string|null;
-  baptized?: boolean|null; last_church?: string|null; holy_spirit_baptized?: boolean|null; holy_spirit_baptism_date?: string|null;
 }
 export interface Sermon { id:string; title:string; reference:string|null; speaker:string|null; youtube_url:string; thumbnail_url:string|null; category:string|null; published_at:string; is_featured:boolean; is_published:boolean; church_id:string|null; duration?:string|null; sort_order:number; description?:string|null; pdf_url?:string|null; }
 export interface EventItem { id:string; title:string; description:string|null; starts_at:string; ends_at:string|null; location:string|null; image_url:string|null; registration_url:string|null; status:EventStatus; event_type:EventTypeKind; is_published:boolean; church_id:string|null; }
@@ -330,51 +326,6 @@ export interface DashboardStats {
 }
 
 /** Conteudo institucional (vindo das tabelas `church_info` e `daily_words`). */
-export type ContentLibraryType = "imagem" | "video_youtube" | "documento" | "logo" | "outro";
-export interface ContentLibraryItem {
-  id: string;
-  title: string;
-  type: ContentLibraryType;
-  url: string;
-  tags: string[];
-  church_id: string | null;
-  created_by: string | null;
-  created_at: string;
-}
-
-export type ContentWorkflowStatus = "rascunho" | "em_revisao" | "aprovado" | "agendado" | "publicado" | "arquivado";
-export interface ContentWorkflowState {
-  status: ContentWorkflowStatus;
-  submitted_at: string | null;
-  reviewed_at: string | null;
-  review_note: string | null;
-  reviewer_name: string | null;
-}
-export interface ContentPendingReview {
-  entity_type: string;
-  entity_id: string;
-  submitted_at: string;
-  submitted_by_name: string | null;
-}
-
-export interface ContentCategory {
-  id: string;
-  name: string;
-  slug: string;
-  color: string | null;
-  order_index: number;
-  created_at: string;
-}
-export interface ContentTag {
-  id: string;
-  name: string;
-  created_at: string;
-}
-export interface ContentTaxonomy {
-  categories: Pick<ContentCategory, "id" | "name" | "slug" | "color">[];
-  tags: Pick<ContentTag, "id" | "name">[];
-}
-
 export interface ChurchInfo {
   id: string; church_id: string; weekday: Weekday; time: string;
   description: string | null; is_active: boolean; sort_order: number;
@@ -504,13 +455,6 @@ export interface VisitorPipeline {
   suggestion_calculated_at: string | null;
   evangelism_group_id?: string | null;
   created_at: string;
-  // REG001 — história de fé (cadastro completo)
-  cpf?: string | null; gender?: string | null; marital_status?: string | null; birth_date?: string | null;
-  country?: string | null; address?: string | null; neighborhood?: string | null;
-  baptized?: boolean | null; last_church?: string | null;
-  holy_spirit_baptized?: boolean | null; holy_spirit_baptism_date?: string | null;
-  seeking_reason?: string | null; life_before_church?: string | null; testimony?: string | null;
-  belongs_to_group?: boolean | null; group_name?: string | null;
 }
 
 export interface LgSuggestion {
@@ -1224,44 +1168,8 @@ export interface RelmdaMonthlyComparisonRow {
 // Eventos com Inscrição (sem pagamento por enquanto)
 // Diferente de EventItem/EventStatus acima, que são da Agenda simples.
 // ============================================================
-export type RegistrationEventStatus =
-  | "rascunho" | "em_revisao" | "agendado" | "inscricoes_abertas" | "inscricoes_encerradas"
-  | "lotado" | "em_andamento" | "finalizado" | "cancelado" | "arquivado";
+export type RegistrationEventStatus = "rascunho" | "publicado" | "encerrado" | "cancelado";
 export type EventRegistrationStatus = "confirmada" | "lista_espera" | "cancelada";
-
-export type PopupTemplate = "classico" | "moderno" | "jovem";
-export type PopupRepeatMode = "sempre" | "uma_vez_por_sessao" | "intervalo_horas" | "uma_vez_so";
-
-export interface EventSpeaker {
-  id: string;
-  event_id: string;
-  name: string;
-  photo_url: string | null;
-  topic: string | null;
-  order_index: number;
-  created_at: string;
-}
-
-export interface EventScheduleItem {
-  id: string;
-  event_id: string;
-  start_at: string;
-  end_at: string | null;
-  title: string;
-  description: string | null;
-  location: string | null;
-  speaker_id: string | null;
-  order_index: number;
-  created_at: string;
-}
-export type CustomFieldType = "texto_curto" | "texto_longo" | "selecao_unica" | "selecao_multipla" | "sim_nao" | "data";
-export interface CustomFieldDefinition {
-  id: string;
-  label: string;
-  type: CustomFieldType;
-  options?: string[];
-  required?: boolean;
-}
 
 export interface RegistrationEvent {
   id: string;
@@ -1280,20 +1188,6 @@ export interface RegistrationEvent {
   capacity: number | null;
   is_free: boolean;
   status: RegistrationEventStatus;
-  category: string | null;
-  subtitle: string | null;
-  target_audience: string | null;
-  highlight_dashboard: boolean;
-  highlight_public: boolean;
-  requires_cpf: boolean;
-  requires_image_consent: boolean;
-  custom_fields: CustomFieldDefinition[];
-  popup_video_url: string | null;
-  popup_template: PopupTemplate;
-  popup_repeat_mode: PopupRepeatMode;
-  popup_repeat_interval_hours: number | null;
-  cancellation_reason: string | null;
-  attendance_closed_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -1307,69 +1201,9 @@ export interface EventRegistration {
   full_name: string;
   email: string | null;
   phone: string | null;
-  cpf: string | null;
-  accepted_privacy_policy: boolean;
-  accepted_image_use: boolean;
-  custom_answers: Record<string, unknown>;
-  group_id: string | null;
   status: EventRegistrationStatus;
   registered_at: string;
   cancelled_at: string | null;
-  checked_in_at: string | null;
-  checked_in_by: string | null;
-  no_show: boolean;
-}
-
-export interface EventFeedbackSummary {
-  total: number;
-  average: number | null;
-  comments: { rating: number; comment: string; created_at: string }[];
-}
-
-export interface EventCheckinLookup {
-  registration_id: string;
-  event_id: string;
-  full_name: string;
-  email: string | null;
-  phone: string | null;
-  status: string;
-  checked_in_at: string | null;
-  group_id: string | null;
-  event_name: string;
-}
-
-export interface EventGroupMember {
-  registration_id: string;
-  full_name: string;
-  status: string;
-  checked_in_at: string | null;
-}
-
-export interface RecentEventCheckin {
-  registration_id: string;
-  full_name: string;
-  checked_in_at: string;
-}
-
-export interface PendingPromotion {
-  registration_id: string;
-  event_id: string;
-  event_name: string;
-  event_slug: string;
-  promoted_at: string;
-}
-
-export interface EventChange {
-  registration_id: string;
-  event_id: string;
-  event_name: string;
-  event_slug: string;
-  change_type: "cancelado" | "horario" | "local";
-  old_start_at: string;
-  new_start_at: string;
-  old_location: string | null;
-  new_location: string | null;
-  cancellation_reason: string | null;
 }
 
 export interface EventRegistrationSummary {
@@ -1383,10 +1217,6 @@ export interface RegisterForEventResult {
   registration_id: string;
   reg_status: EventRegistrationStatus;
   queue_position: number | null;
-}
-
-export interface GroupRegistrationResult extends RegisterForEventResult {
-  full_name: string;
 }
 
 export interface MyEventRegistration extends EventRegistration {
@@ -1443,6 +1273,21 @@ export interface MemberRecommendation {
   rule_key: string; message: string; priority: "critico" | "atencao" | "info";
 }
 
+// CT-017 — Central de Acessibilidade e Personalização (Fase 1)
+export type AccessibilityTheme = "claro" | "escuro" | "automatico";
+export type AccessibilityFontSize = "pequena" | "media" | "grande" | "extra_grande";
+export interface UserPreferences {
+  profile_id: string; theme: AccessibilityTheme; font_size: AccessibilityFontSize;
+  extra: Record<string, unknown>; onboarded: boolean; updated_at: string;
+}
+
+// Dízimos e Ofertas (QR Code PIX por igreja)
+export interface ChurchGivingInfo {
+  id: string; church_id: string; qr_code_url: string | null;
+  cnpj: string | null; razao_social: string | null; banco: string | null;
+  pix_key: string | null; is_active: boolean; updated_at: string;
+}
+
 // Relatório Consolidado por Área (demanda adicional)
 export interface AreaConsolidadoRow {
   sector_id: string; sector_name: string;
@@ -1463,14 +1308,4 @@ export interface AdminUserDirectoryRow {
   church_id: string | null; church_name: string | null;
   state_id: string | null; state_name: string | null;
   delegacoes_ativas: number;
-}
-
-// Dízimos e Ofertas — "Momento da Generosidade"
-export interface ChurchGivingInfo {
-  church_id: string;
-  qr_code_url: string | null;
-  pix_key: string | null;
-  razao_social: string | null;
-  cnpj: string | null;
-  banco: string | null;
 }
