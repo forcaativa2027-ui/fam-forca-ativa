@@ -72,66 +72,6 @@ html.cec-dark .border-border {
   border-color: hsl(var(--border));
 }
 
-/* CT-017 Fase 3 — Contraste */
-html[data-contrast="alto"] {
-  --border: 220 20% 55%;
-  --input: 220 20% 55%;
-}
-html[data-contrast="alto"] .text-muted,
-html[data-contrast="alto"] .text-muted-foreground {
-  color: rgba(20, 30, 50, 0.85) !important;
-}
-html.cec-dark[data-contrast="alto"] .text-muted,
-html.cec-dark[data-contrast="alto"] .text-muted-foreground {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-html[data-contrast="muito_alto"] {
-  --border: 220 30% 35%;
-  --input: 220 30% 35%;
-  filter: contrast(1.12) saturate(1.05);
-}
-html[data-contrast="muito_alto"] .text-muted,
-html[data-contrast="muito_alto"] .text-muted-foreground {
-  color: rgba(10, 15, 30, 0.95) !important;
-}
-
-/* CT-017 Fase 3 — Espaçamento (aplica leve ajuste de altura de linha e padding conforme o nível escolhido) */
-html[data-spacing="confortavel"] main, html[data-spacing="confortavel"] .container {
-  letter-spacing: 0.01em;
-}
-html[data-spacing="confortavel"] button, html[data-spacing="confortavel"] input, html[data-spacing="confortavel"] a {
-  padding-top: 0.15rem; padding-bottom: 0.15rem;
-}
-html[data-spacing="ampliado"] main, html[data-spacing="ampliado"] .container {
-  letter-spacing: 0.015em;
-  line-height: 1.7;
-}
-html[data-spacing="ampliado"] button, html[data-spacing="ampliado"] input, html[data-spacing="ampliado"] a {
-  padding-top: 0.3rem; padding-bottom: 0.3rem;
-}
-html[data-spacing="compacto"] main, html[data-spacing="compacto"] .container {
-  line-height: 1.3;
-}
-
-/* CT-017 Fase 3 — Animações */
-html[data-animations="reduzida"] * {
-  transition-duration: 0.08s !important;
-  animation-duration: 0.08s !important;
-}
-html[data-animations="desativada"] *,
-html[data-animations="desativada"] *::before,
-html[data-animations="desativada"] *::after {
-  transition: none !important;
-  animation: none !important;
-  scroll-behavior: auto !important;
-}
-
-/* CT-017 Fase 3 — Navegação Simplificada: telas podem usar essa classe pra
-   ocultar recursos avançados quando o usuário ativa esse modo. */
-html[data-simplified="true"] .advanced-only {
-  display: none !important;
-}
-
 /*
   Overrides escopados do tema azul (público + painel do membro).
   Só afeta o que estiver DENTRO de um elemento com a classe
@@ -204,4 +144,84 @@ html[data-simplified="true"] .advanced-only {
 .dark-blue-theme [class*="shadow-red-100"],
 .dark-blue-theme [class*="shadow-blue-100"] {
   --tw-shadow-color: transparent !important;
+}
+/* CT-017 Fase 3 — Contraste */
+html[data-contrast="alto"] {
+  --border: 220 20% 55%;
+  --input: 220 20% 55%;
+}
+html[data-contrast="alto"] .text-muted,
+html[data-contrast="alto"] .text-muted-foreground {
+  color: rgba(20, 30, 50, 0.85) !important;
+}
+html.cec-dark[data-contrast="alto"] .text-muted,
+html.cec-dark[data-contrast="alto"] .text-muted-foreground {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+html[data-contrast="muito_alto"] {
+  --border: 220 30% 35%;
+  --input: 220 30% 35%;
+  filter: contrast(1.12) saturate(1.05);
+}
+html[data-contrast="muito_alto"] .text-muted,
+html[data-contrast="muito_alto"] .text-muted-foreground {
+  color: rgba(10, 15, 30, 0.95) !important;
+}
+
+/* CT-017 Fase 3 — Espaçamento (aplica leve ajuste de altura de linha e padding conforme o nível escolhido) */
+html[data-spacing="confortavel"] main, html[data-spacing="confortavel"] .container {
+  letter-spacing: 0.01em;
+}
+html[data-spacing="confortavel"] button, html[data-spacing="confortavel"] input, html[data-spacing="confortavel"] a {
+  padding-top: 0.15rem; padding-bottom: 0.15rem;
+}
+html[data-spacing="ampliado"] main, html[data-spacing="ampliado"] .container {
+  letter-spacing: 0.015em;
+  line-height: 1.7;
+}
+html[data-spacing="ampliado"] button, html[data-spacing="ampliado"] input, html[data-spacing="ampliado"] a {
+  padding-top: 0.3rem; padding-bottom: 0.3rem;
+}
+html[data-spacing="compacto"] main, html[data-spacing="compacto"] .container {
+  line-height: 1.3;
+}
+
+/* CT-017 Fase 3 — Animações */
+html[data-animations="reduzida"] * {
+  transition-duration: 0.08s !important;
+  animation-duration: 0.08s !important;
+}
+html[data-animations="desativada"] *,
+html[data-animations="desativada"] *::before,
+html[data-animations="desativada"] *::after {
+  transition: none !important;
+  animation: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* CT-017 Fase 3 — Navegação Simplificada: telas podem usar essa classe pra
+   ocultar recursos avançados quando o usuário ativa esse modo. */
+html[data-simplified="true"] .advanced-only {
+  display: none !important;
+}
+
+/* CT-017 Fase 4 — Tamanho dos Botões (áreas clicáveis maiores) */
+html[data-button-size="grande"] button:not(.cec-no-scale) {
+  min-height: 48px !important;
+  font-size: 1.05em;
+}
+html[data-button-size="extra_grande"] button:not(.cec-no-scale) {
+  min-height: 56px !important;
+  font-size: 1.15em;
+  padding-left: 1.15em !important;
+  padding-right: 1.15em !important;
+}
+
+/* CT-017 Fase 4 — Estilo dos Ícones */
+html[data-icon-style="monocromaticos"] svg {
+  filter: grayscale(1) !important;
+}
+html[data-icon-style="minimalistas"] svg {
+  opacity: 0.8;
+  filter: saturate(0.7);
 }
