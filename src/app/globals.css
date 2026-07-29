@@ -33,6 +33,46 @@
 }
 
 /*
+  CT-017 — Central de Acessibilidade e Personalização, Fase 1.
+  Tema escuro GLOBAL (diferente do .dark-blue-theme, que é escopado
+  só a telas públicas específicas): quando a classe "cec-dark" está
+  no <html>, sobrescreve as variáveis CSS do shadcn em toda a
+  plataforma (painel administrativo incluso), igual o CT-017 pede.
+*/
+html.cec-dark {
+  --background: 222 47% 8%;
+  --foreground: 0 0% 96%;
+  --card: 222 40% 13%;
+  --card-foreground: 0 0% 96%;
+  --popover: 222 40% 13%;
+  --popover-foreground: 0 0% 96%;
+  --primary: 213 67% 55%;
+  --primary-foreground: 222 47% 8%;
+  --accent: 222 30% 20%;
+  --accent-foreground: 0 0% 96%;
+  --destructive: 0 70% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 222 25% 22%;
+  --input: 222 25% 22%;
+  --ring: 45 74% 49%;
+}
+html.cec-dark .text-navy,
+html.cec-dark .text-navy-600,
+html.cec-dark .text-ink {
+  color: #f5f5f5;
+}
+html.cec-dark .text-muted,
+html.cec-dark .text-muted-foreground {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+html.cec-dark .bg-white {
+  background-color: hsl(var(--card));
+}
+html.cec-dark .border-border {
+  border-color: hsl(var(--border));
+}
+
+/*
   Overrides escopados do tema azul (público + painel do membro).
   Só afeta o que estiver DENTRO de um elemento com a classe
   .dark-blue-theme (aplicada pelo componente DarkBlueTheme) — o
