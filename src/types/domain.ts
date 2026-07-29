@@ -455,6 +455,13 @@ export interface VisitorPipeline {
   suggestion_calculated_at: string | null;
   evangelism_group_id?: string | null;
   created_at: string;
+  // Cadastro completo (CTI-001 — fluxo de 10 etapas)
+  cpf: string | null; gender: string | null; marital_status: string | null; birth_date: string | null;
+  country: string | null; address: string | null; complemento: string | null; neighborhood: string | null;
+  baptized: boolean | null; last_church: string | null;
+  holy_spirit_baptized: boolean | null; holy_spirit_baptism_date: string | null;
+  seeking_reason: string | null; life_before_church: string | null; testimony: string | null;
+  belongs_to_group: boolean | null; group_name: string | null;
 }
 
 export interface LgSuggestion {
@@ -1168,16 +1175,34 @@ export interface RelmdaMonthlyComparisonRow {
 // Eventos com Inscrição (sem pagamento por enquanto)
 // Diferente de EventItem/EventStatus acima, que são da Agenda simples.
 // ============================================================
-export type RegistrationEventStatus = "rascunho" | "publicado" | "encerrado" | "cancelado";
+export type RegistrationEventStatus = "rascunho" | "em_revisao" | "agendado" | "inscricoes_abertas" | "inscricoes_encerradas" | "lotado" | "em_andamento" | "finalizado" | "cancelado" | "arquivado";
 export type EventRegistrationStatus = "confirmada" | "lista_espera" | "cancelada";
+export type CustomFieldType = "texto_curto" | "texto_longo" | "selecao_unica" | "selecao_multipla" | "sim_nao" | "data";
+export interface CustomFieldDefinition {
+  id: string; label: string; type: CustomFieldType; options?: string[] | null; required?: boolean;
+}
+export type PopupTemplate = "classico" | "moderno" | "jovem";
+export type PopupRepeatMode = "uma_vez_por_sessao" | "sempre" | "intervalo_horas" | "uma_vez_so";
 
 export interface RegistrationEvent {
   id: string;
   church_id: string | null;
   slug: string;
   name: string;
+  subtitle: string | null;
   description: string | null;
+  category: string | null;
+  target_audience: string | null;
   banner_url: string | null;
+  popup_video_url: string | null;
+  popup_template: PopupTemplate;
+  popup_repeat_mode: PopupRepeatMode;
+  popup_repeat_interval_hours: number | null;
+  highlight_dashboard: boolean;
+  highlight_public: boolean;
+  requires_cpf: boolean;
+  requires_image_consent: boolean;
+  custom_fields: CustomFieldDefinition[];
   location: string | null;
   is_online: boolean;
   online_url: string | null;
@@ -1188,6 +1213,8 @@ export interface RegistrationEvent {
   capacity: number | null;
   is_free: boolean;
   status: RegistrationEventStatus;
+  cancellation_reason: string | null;
+  attendance_closed_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -1201,10 +1228,13 @@ export interface EventRegistration {
   full_name: string;
   email: string | null;
   phone: string | null;
+  cpf: string | null;
   status: EventRegistrationStatus;
   registered_at: string;
   cancelled_at: string | null;
   checked_in_at: string | null;
+  no_show: boolean;
+  group_id: string | null;
 }
 
 export interface EventRegistrationSummary {
@@ -1222,6 +1252,58 @@ export interface RegisterForEventResult {
 
 export interface MyEventRegistration extends EventRegistration {
   event: RegistrationEvent;
+}
+
+// ── Biblioteca de conteúdo: taxonomia (categorias/tags) ─────────
+export interface ContentCategory { id: string; name: string; slug: string; color: string | null; order_index: number; }
+export interface ContentTag { id: string; name: string; }
+export interface ContentTaxonomy { categories: ContentCategory[]; tags: ContentTag[]; }
+
+// ── Fluxo editorial (rascunho → revisão → aprovado → publicado) ─
+export type ContentWorkflowStatus = "rascunho" | "em_revisao" | "aprovado" | "agendado" | "publicado" | "arquivado";
+export interface ContentWorkflowState {
+  entity_type: string; entity_id: string; status: ContentWorkflowStatus;
+  submitted_by: string | null; submitted_by_name: string | null; submitted_at: string | null;
+  reviewed_by: string | null; reviewer_name: string | null; reviewed_at: string | null;
+  review_note: string | null;
+}
+export interface ContentPendingReview {
+  entity_type: string; entity_id: string; title: string | null;
+  submitted_by_name: string | null; submitted_at: string;
+}
+
+// ── Eventos — check-in, palestrantes, cronograma, feedback ──────
+export interface EventCheckinLookup {
+  registration_id: string; event_id: string; event_name: string; group_id: string | null;
+  full_name: string; email: string | null; phone: string | null;
+  status: EventRegistrationStatus; checked_in_at: string | null;
+}
+export interface EventGroupMember {
+  registration_id: string; full_name: string; checked_in_at: string | null; status: EventRegistrationStatus;
+}
+export interface RecentEventCheckin {
+  registration_id: string; full_name: string; checked_in_at: string;
+}
+export interface GroupRegistrationResult {
+  registration_id: string; full_name: string; reg_status: EventRegistrationStatus; group_id: string | null;
+}
+export interface EventSpeaker {
+  id: string; name: string; topic: string | null; photo_url: string | null;
+}
+export interface EventScheduleItem {
+  id: string; title: string; description: string | null; start_at: string; end_at: string | null;
+  speaker_id: string | null; location: string | null;
+}
+export interface EventFeedbackSummary {
+  total: number; average: number; comments: { rating: number; comment: string }[];
+}
+export type EventChangeType = "cancelado" | "horario" | "local";
+export interface EventChange {
+  registration_id: string; event_name: string; change_type: EventChangeType;
+  cancellation_reason: string | null; old_start_at: string; new_start_at: string; new_location: string | null;
+}
+export interface PendingPromotion {
+  registration_id: string; event_id: string; event_name: string;
 }
 
 // RELMDA Fase 5 — prazos configuráveis
@@ -1309,4 +1391,11 @@ export interface AdminUserDirectoryRow {
   church_id: string | null; church_name: string | null;
   state_id: string | null; state_name: string | null;
   delegacoes_ativas: number;
+}
+
+// Biblioteca de Arquivos (Content Library) — repositório de links reutilizáveis
+export type ContentLibraryType = "imagem" | "video_youtube" | "documento" | "logo" | "outro";
+export interface ContentLibraryItem {
+  id: string; title: string; type: ContentLibraryType; url: string;
+  tags: string[]; church_id: string | null; created_by: string | null; created_at: string;
 }
