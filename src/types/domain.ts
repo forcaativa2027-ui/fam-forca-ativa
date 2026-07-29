@@ -1175,7 +1175,7 @@ export interface RelmdaMonthlyComparisonRow {
 // Eventos com Inscrição (sem pagamento por enquanto)
 // Diferente de EventItem/EventStatus acima, que são da Agenda simples.
 // ============================================================
-export type RegistrationEventStatus = "rascunho" | "publicado" | "encerrado" | "cancelado";
+export type RegistrationEventStatus = "rascunho" | "em_revisao" | "agendado" | "inscricoes_abertas" | "inscricoes_encerradas" | "lotado" | "em_andamento" | "finalizado" | "cancelado" | "arquivado";
 export type EventRegistrationStatus = "confirmada" | "lista_espera" | "cancelada";
 
 export interface RegistrationEvent {
@@ -1198,8 +1198,29 @@ export interface RegistrationEvent {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  category: string | null;
+  highlight_dashboard: boolean;
+  highlight_public: boolean;
+  requires_cpf: boolean;
+  requires_image_consent: boolean;
+  custom_fields: CustomFieldDefinition[];
+  popup_template: PopupTemplate;
+  popup_repeat_mode: PopupRepeatMode;
+  popup_repeat_interval_hours: number | null;
+  popup_video_url: string | null;
+  subtitle: string | null;
+  target_audience: string | null;
+  cancellation_reason: string | null;
+  attendance_closed_at: string | null;
 }
 export type RegistrationEventInput = Partial<Omit<RegistrationEvent, "id" | "created_at" | "updated_at">>;
+
+export type CustomFieldType = "texto_curto" | "texto_longo" | "selecao_unica" | "selecao_multipla" | "sim_nao" | "data";
+export interface CustomFieldDefinition {
+  id: string; label: string; type: CustomFieldType; options?: string[]; required?: boolean;
+}
+export type PopupTemplate = "classico" | "moderno" | "jovem";
+export type PopupRepeatMode = "uma_vez_por_sessao" | "sempre" | "intervalo_horas" | "uma_vez_so";
 
 export interface EventRegistration {
   id: string;
@@ -1208,10 +1229,12 @@ export interface EventRegistration {
   full_name: string;
   email: string | null;
   phone: string | null;
+  cpf: string | null;
   status: EventRegistrationStatus;
   registered_at: string;
   cancelled_at: string | null;
   checked_in_at: string | null;
+  no_show: boolean;
   group_id: string | null;
 }
 
@@ -1320,6 +1343,68 @@ export interface AdminUserDirectoryRow {
 }
 
 export type ContentLibraryType = "imagem" | "video_youtube" | "documento" | "logo" | "outro";
+
+// Eventos — Check-in, Palestrantes, Promoção de fila, Mudanças, Feedback, Programação (EVT005-EVT013)
+// Confirmados por uso direto no código (EventCheckinAdmin.tsx, events.ts):
+export interface EventCheckinLookup {
+  registration_id: string; group_id: string | null; full_name: string;
+  email: string | null; phone: string | null; status: EventRegistrationStatus; checked_in_at: string | null;
+  event_id: string; event_name: string;
+}
+export interface EventGroupMember {
+  registration_id: string; full_name: string; status: EventRegistrationStatus; checked_in_at: string | null;
+}
+export interface EventSpeaker {
+  id: string; event_id: string; name: string; photo_url: string | null; topic: string | null;
+  order_index: number; created_at: string;
+}
+export interface EventScheduleItem {
+  id: string; event_id: string; start_at: string; end_at: string | null; title: string;
+  description: string | null; location: string | null; speaker_id: string | null;
+  order_index: number; created_at: string;
+}
+export interface GroupRegistrationResult {
+  registration_id: string; full_name: string; reg_status: EventRegistrationStatus; queue_position: number | null;
+}
+// Inferidos pelo nome da RPC/função (list_recent_event_checkins, list_my_pending_promotions,
+// list_my_event_changes, get_event_feedback_summary) — sem uso direto visível no código local
+// pra confirmar campo a campo. Ajuste se o formato real do banco for diferente.
+export interface RecentEventCheckin {
+  registration_id: string; full_name: string; checked_in_at: string;
+}
+export interface PendingPromotion {
+  registration_id: string; event_name: string;
+}
+export interface EventChange {
+  registration_id: string; event_name: string;
+  change_type: "cancelado" | "horario" | "local";
+  cancellation_reason: string | null;
+  old_start_at: string; new_start_at: string;
+  new_location: string | null;
+}
+export interface EventFeedbackSummary {
+  total: number; average: number; comments: { rating: number; comment: string }[];
+}
+
+// Fluxo Editorial (workflow de revisão de conteúdo — notícias/banners/pregações)
+export type ContentWorkflowStatus = "rascunho" | "em_revisao" | "aprovado" | "agendado" | "publicado" | "arquivado";
+export interface ContentWorkflowState {
+  status: ContentWorkflowStatus; review_note: string | null; reviewer_name: string | null;
+}
+export interface ContentPendingReview {
+  entity_type: string; entity_id: string; submitted_by_name: string | null; submitted_at: string;
+}
+
+// Taxonomia de Conteúdo (categorias e tags reutilizáveis por Notícias/Banners/Pregações/etc.)
+export interface ContentCategory {
+  id: string; name: string; slug: string; color: string | null; order_index: number;
+}
+export interface ContentTag {
+  id: string; name: string;
+}
+export interface ContentTaxonomy {
+  categories: ContentCategory[]; tags: ContentTag[];
+}
 export interface ContentLibraryItem {
   id: string; title: string; type: ContentLibraryType; url: string;
   tags: string[]; church_id: string | null; created_by: string | null; created_at: string;
