@@ -1204,6 +1204,7 @@ export interface EventRegistration {
   status: EventRegistrationStatus;
   registered_at: string;
   cancelled_at: string | null;
+  checked_in_at: string | null;
 }
 
 export interface EventRegistrationSummary {
