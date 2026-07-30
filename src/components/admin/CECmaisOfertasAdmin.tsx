@@ -10,7 +10,7 @@ import { useCecmaisOfertasAdmin } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { createOferta, updateOferta, deleteOferta, OFERTA_TIPO_LABELS } from "@/services/cecmaisOfertas";
 import { CECMAIS_CATEGORIAS } from "@/lib/cecmais-categorias";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import type { CECmaisOferta, CECmaisOfertaTipo, CECmaisCategoriaSlug } from "@/types/domain";
 
 const TIPOS: CECmaisOfertaTipo[] = ["produto", "conteudo_digital", "curso", "assinatura", "servico_plano"];
@@ -28,7 +28,7 @@ export function CECmaisOfertasAdmin() {
   async function toggleActive(o: CECmaisOferta) {
     try {
       await updateOferta(supabase, o.id, { is_active: !o.is_active });
-      await logAudit(supabase, "update", "cecmais_ofertas", o.id, { is_active: !o.is_active });
+      await logAudit(supabase, "update", "cecmais_ofertas", o.id, {}, { before: { is_active: o.is_active }, after: { is_active: !o.is_active } });
       qc.invalidateQueries({ queryKey: ["cecmais-ofertas-admin"] });
       qc.invalidateQueries({ queryKey: ["cecmais-ofertas"] });
     } catch (e) { alert((e as { message?: string })?.message ?? "Erro"); }
@@ -37,7 +37,7 @@ export function CECmaisOfertasAdmin() {
     if (!confirm(`Remover "${o.nome}"?`)) return;
     try {
       await deleteOferta(supabase, o.id);
-      await logAudit(supabase, "delete", "cecmais_ofertas", o.id, { nome: o.nome });
+      await logAudit(supabase, "delete", "cecmais_ofertas", o.id, {}, { before: o as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["cecmais-ofertas-admin"] });
       qc.invalidateQueries({ queryKey: ["cecmais-ofertas"] });
     } catch (e) { alert((e as { message?: string })?.message ?? "Erro ao remover"); }
@@ -129,10 +129,11 @@ function OfertaForm({ oferta, onClose }: { oferta: CECmaisOferta | null; onClose
       };
       if (oferta) {
         await updateOferta(supabase, oferta.id, payload);
-        await logAudit(supabase, "update", "cecmais_ofertas", oferta.id, { nome });
+        const diff = diffFields(oferta as unknown as Record<string, unknown>, payload as unknown as Record<string, unknown>);
+        await logAudit(supabase, "update", "cecmais_ofertas", oferta.id, {}, diff ?? undefined);
       } else {
         const created = await createOferta(supabase, payload);
-        await logAudit(supabase, "insert", "cecmais_ofertas", created.id, { nome });
+        await logAudit(supabase, "insert", "cecmais_ofertas", created.id, {}, { after: created as unknown as Record<string, unknown> });
       }
       qc.invalidateQueries({ queryKey: ["cecmais-ofertas-admin"] });
       qc.invalidateQueries({ queryKey: ["cecmais-ofertas"] });

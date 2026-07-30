@@ -14,7 +14,7 @@ import { supabase } from "@/lib/supabase/client";
 import {
   createBanner, updateBanner, deleteBanner, swapBannerOrder,
 } from "@/services/banners";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import type { Banner } from "@/types/domain";
 
 function toIsoOrNull(local: string | undefined | null): string | null {
@@ -76,11 +76,12 @@ export function BannersAdmin() {
       };
       if (editing) {
         await updateBanner(supabase, editing.id, payload);
-        await logAudit(supabase, "update", "banners", editing.id, { title: v.title });
+        const diff = diffFields(editing as unknown as Record<string, unknown>, payload as unknown as Record<string, unknown>);
+        await logAudit(supabase, "update", "banners", editing.id, {}, diff ?? undefined);
       } else {
         payload.sort_order = next_order;
         const created = await createBanner(supabase, payload);
-        await logAudit(supabase, "insert", "banners", created.id, { title: v.title });
+        await logAudit(supabase, "insert", "banners", created.id, {}, { after: created as unknown as Record<string, unknown> });
       }
       cancelEdit();
       qc.invalidateQueries({ queryKey: ["all-banners"] });
@@ -92,7 +93,7 @@ export function BannersAdmin() {
   async function toggleActive(b: Banner) {
     try {
       await updateBanner(supabase, b.id, { is_active: !b.is_active });
-      await logAudit(supabase, "update", "banners", b.id, { action: !b.is_active ? "activate" : "deactivate" });
+      await logAudit(supabase, "update", "banners", b.id, {}, { before: { is_active: b.is_active }, after: { is_active: !b.is_active } });
       qc.invalidateQueries({ queryKey: ["all-banners"] });
       qc.invalidateQueries({ queryKey: ["active-banners"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }
@@ -101,7 +102,7 @@ export function BannersAdmin() {
     if (!confirm(`Apagar banner "${b.title}"?`)) return;
     try {
       await deleteBanner(supabase, b.id);
-      await logAudit(supabase, "delete", "banners", b.id, { title: b.title });
+      await logAudit(supabase, "delete", "banners", b.id, {}, { before: b as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["all-banners"] });
       qc.invalidateQueries({ queryKey: ["active-banners"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }

@@ -6,13 +6,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, Pencil, X, Megaphone, Search, UserPlus, ChevronDown, ChevronRight, Sparkles, Link2, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/shared/DatePicker";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { evangelismGroupSchema, type EvangelismGroupInput } from "@/schemas";
 import { useEvangelismGroups, useCells, useAllMembers, useEvangelismParticipants } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import * as Eg from "@/services/evangelismGroups";
 import * as Pp from "@/services/pipeline";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import type { EvangelismGroup, EvangelismGroupStatus } from "@/types/domain";
 import { STAGE_LABELS, STAGE_COLORS } from "./CrmPipelineAdmin";
 
@@ -63,7 +64,7 @@ export function EvangelismGroupsAdmin() {
   const [editing, setEditing] = useState<EvangelismGroup | null>(null);
   const [selectedLeaders, setSelectedLeaders] = useState<string[]>([]);
   const [err, setErr] = useState("");
-  const { register, handleSubmit, watch, reset, formState: { errors, isSubmitting } } =
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } =
     useForm<EvangelismGroupInput>({ resolver: zodResolver(evangelismGroupSchema) });
 
   const cellIdWatch = watch("cell_id");
@@ -96,10 +97,11 @@ export function EvangelismGroupsAdmin() {
       const payload = { ...v, started_at: v.started_at || null, expected_end_at: v.expected_end_at || null };
       if (editing) {
         await Eg.updateEvangelismGroup(supabase, editing.id, payload, selectedLeaders);
-        await logAudit(supabase, "update", "evangelism_groups", editing.id, { name: v.name });
+        const diff = diffFields(editing as unknown as Record<string, unknown>, payload);
+        await logAudit(supabase, "update", "evangelism_groups", editing.id, {}, diff ?? undefined);
       } else {
         const created = await Eg.createEvangelismGroup(supabase, payload, selectedLeaders);
-        await logAudit(supabase, "insert", "evangelism_groups", created.id, { name: v.name });
+        await logAudit(supabase, "insert", "evangelism_groups", created.id, {}, { after: created as unknown as Record<string, unknown> });
       }
       cancelEdit();
       qc.invalidateQueries({ queryKey: ["evangelism-groups"] });
@@ -109,7 +111,7 @@ export function EvangelismGroupsAdmin() {
     if (!confirm(`Remover o grupo de evangelismo "${g.name}"?`)) return;
     try {
       await Eg.deleteEvangelismGroup(supabase, g.id);
-      await logAudit(supabase, "delete", "evangelism_groups", g.id, { name: g.name });
+      await logAudit(supabase, "delete", "evangelism_groups", g.id, {}, { before: g as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["evangelism-groups"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro ao remover"); }
   }
@@ -158,10 +160,10 @@ export function EvangelismGroupsAdmin() {
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Data de início (ciclo de vida)" error={errors.started_at?.message}>
-                  <Input type="date" {...register("started_at")} />
+                  <DatePicker value={watch("started_at") ?? ""} onChange={(v) => setValue("started_at", v)} />
                 </Field>
                 <Field label="Previsão de encerramento" error={errors.expected_end_at?.message}>
-                  <Input type="date" {...register("expected_end_at")} />
+                  <DatePicker value={watch("expected_end_at") ?? ""} onChange={(v) => setValue("expected_end_at", v)} />
                 </Field>
               </div>
               <p className="text-xs text-muted-foreground -mt-1">Recomendação (ARQ-004): 4 a 8 semanas de duração.</p>
@@ -257,7 +259,7 @@ function GroupCard({ g, churchId, onEdit, onDelete }: { g: EvangelismGroup; chur
     setBusy(true);
     try {
       await Eg.updateEvangelismGroupStatus(supabase, g.id, newStatus);
-      await logAudit(supabase, "update", "evangelism_groups", g.id, { status: newStatus });
+      await logAudit(supabase, "update", "evangelism_groups", g.id, {}, { before: { status: g.status }, after: { status: newStatus } });
       qc.invalidateQueries({ queryKey: ["evangelism-groups"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro ao mudar etapa"); }
     finally { setBusy(false); }
@@ -268,7 +270,7 @@ function GroupCard({ g, churchId, onEdit, onDelete }: { g: EvangelismGroup; chur
     setBusy(true);
     try {
       await Eg.transformIntoLifeGroup(supabase, g.id, newLgName.trim(), g.cell_id);
-      await logAudit(supabase, "update", "evangelism_groups", g.id, { status: "encerrado_novo_lg", new_lg: newLgName });
+      await logAudit(supabase, "update", "evangelism_groups", g.id, { novo_lg_nome: newLgName }, { before: { status: g.status }, after: { status: "encerrado_novo_lg" } });
       qc.invalidateQueries({ queryKey: ["evangelism-groups"] });
       qc.invalidateQueries({ queryKey: ["cells"] });
       setShowEndOptions(null); setNewLgName("");
@@ -281,7 +283,7 @@ function GroupCard({ g, churchId, onEdit, onDelete }: { g: EvangelismGroup; chur
     setBusy(true);
     try {
       await Eg.updateEvangelismGroupStatus(supabase, g.id, "encerrado_integrado", integrateLgId);
-      await logAudit(supabase, "update", "evangelism_groups", g.id, { status: "encerrado_integrado", resulting_lg_id: integrateLgId });
+      await logAudit(supabase, "update", "evangelism_groups", g.id, { lg_destino_id: integrateLgId }, { before: { status: g.status }, after: { status: "encerrado_integrado" } });
       qc.invalidateQueries({ queryKey: ["evangelism-groups"] });
       setShowEndOptions(null); setIntegrateLgId("");
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro ao integrar"); }

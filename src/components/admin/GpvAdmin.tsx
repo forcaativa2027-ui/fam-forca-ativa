@@ -11,10 +11,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/shared/DatePicker";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase/client";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import { useChurches } from "@/hooks/use-queries";
 
 // ─── Tipos ────────────────────────────────────────────────────
@@ -179,7 +180,7 @@ function PessoasTab({ churches }: { churches: { id: string; name: string }[] }) 
   async function remove(p: GpvPessoa) {
     if (!confirm(`Desativar ${p.full_name}?`)) return;
     await supabase.from("gpv_pessoas").update({ is_active: false }).eq("id", p.id);
-    await logAudit(supabase, "update", "gpv_pessoas", p.id, { action: "desativar" });
+    await logAudit(supabase, "update", "gpv_pessoas", p.id, {}, { before: { is_active: true }, after: { is_active: false } });
     load();
   }
 
@@ -290,11 +291,12 @@ function PessoaForm({ churches, editing, onClose, onSaved }: {
       if (editing) {
         const { error } = await supabase.from("gpv_pessoas").update(payload).eq("id", editing.id);
         if (error) throw error;
-        await logAudit(supabase, "update", "gpv_pessoas", editing.id, { name: f.full_name });
+        const diff = diffFields(editing as unknown as Record<string, unknown>, payload as unknown as Record<string, unknown>);
+        await logAudit(supabase, "update", "gpv_pessoas", editing.id, {}, diff ?? undefined);
       } else {
         const { data, error } = await supabase.from("gpv_pessoas").insert(payload).select().single();
         if (error) throw error;
-        await logAudit(supabase, "insert", "gpv_pessoas", (data as GpvPessoa).id, { name: f.full_name });
+        await logAudit(supabase, "insert", "gpv_pessoas", (data as GpvPessoa).id, {}, { after: data as unknown as Record<string, unknown> });
       }
       onSaved(); onClose();
     } catch (e: unknown) {
@@ -332,7 +334,7 @@ function PessoaForm({ churches, editing, onClose, onSaved }: {
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="CPF"><Input {...SI("cpf")} placeholder="000.000.000-00" /></Field>
           <Field label="RG"><Input {...SI("rg")} /></Field>
-          <Field label="Data de nascimento"><Input type="date" {...SI("data_nascimento")} /></Field>
+          <Field label="Data de nascimento"><DatePicker value={f.data_nascimento as string} onChange={(v) => set("data_nascimento", v)} disableFuture /></Field>
         </div>
 
         {/* Contato */}
@@ -628,7 +630,7 @@ function VinculoForm({ pessoas, tipos, formas, churches, onClose, onSaved }: {
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Cargo / Função"><Input value={f.cargo} onChange={(e) => set("cargo", e.target.value)} /></Field>
           <Field label="Departamento"><Input value={f.departamento} onChange={(e) => set("departamento", e.target.value)} /></Field>
-          <Field label="Data de início *"><Input type="date" value={f.data_inicio} onChange={(e) => set("data_inicio", e.target.value)} /></Field>
+          <Field label="Data de início *"><DatePicker value={f.data_inicio} onChange={(v) => set("data_inicio", v)} /></Field>
         </div>
 
         <Field label="Observações">
@@ -965,10 +967,10 @@ function PagamentoForm({ vinculos, formas, onClose, onSaved }: {
 
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Data de vencimento">
-            <Input type="date" value={f.data_vencimento} onChange={(e) => set("data_vencimento", e.target.value)} />
+            <DatePicker value={f.data_vencimento} onChange={(v) => set("data_vencimento", v)} />
           </Field>
           <Field label="Data de pagamento">
-            <Input type="date" value={f.data_pagamento} onChange={(e) => set("data_pagamento", e.target.value)} />
+            <DatePicker value={f.data_pagamento} onChange={(v) => set("data_pagamento", v)} />
           </Field>
           <Field label="Status">
             <select value={f.status} onChange={(e) => set("status", e.target.value as StatusPagamento)}
@@ -1066,8 +1068,7 @@ function HistoricoTab() {
                 </select>
               </Field>
               <Field label="Data do evento">
-                <Input type="date" value={fEvento.data_evento}
-                  onChange={(e) => setFEvento((prev) => ({ ...prev, data_evento: e.target.value }))} />
+                <DatePicker value={fEvento.data_evento} onChange={(v) => setFEvento((prev) => ({ ...prev, data_evento: v }))} />
               </Field>
             </div>
             <Field label="Descrição *">

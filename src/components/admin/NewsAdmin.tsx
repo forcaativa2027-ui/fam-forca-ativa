@@ -12,7 +12,7 @@ import { newsSchema, type NewsInput } from "@/schemas";
 import { useAllNews, useChurches, useMyProfile } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { createNews, updateNews, deleteNews, slugify, swapNewsOrder } from "@/services/news";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import { EditorialWorkflowPanel } from "@/components/shared/EditorialWorkflowPanel";
 import type { News, NewsCategory } from "@/types/domain";
 
@@ -81,11 +81,12 @@ export function NewsAdmin() {
       };
       if (editing) {
         await updateNews(supabase, editing.id, payload);
-        await logAudit(supabase, "update", "news", editing.id, { title: v.title });
+        const diff = diffFields(editing as unknown as Record<string, unknown>, payload);
+        await logAudit(supabase, "update", "news", editing.id, {}, diff ?? undefined);
       } else {
         const next_order = news.length > 0 ? Math.max(...news.map((n) => n.sort_order)) + 1 : 0;
         const created = await createNews(supabase, { ...payload, sort_order: next_order });
-        await logAudit(supabase, "insert", "news", created.id, { title: v.title });
+        await logAudit(supabase, "insert", "news", created.id, {}, { after: created as unknown as Record<string, unknown> });
       }
       cancelEdit();
       qc.invalidateQueries({ queryKey: ["all-news"] });
@@ -102,7 +103,7 @@ export function NewsAdmin() {
         is_published: !n.is_published,
         published_at: !n.is_published ? new Date().toISOString() : null,
       });
-      await logAudit(supabase, "update", "news", n.id, { action: !n.is_published ? "publish" : "unpublish" });
+      await logAudit(supabase, "update", "news", n.id, {}, { before: { is_published: n.is_published }, after: { is_published: !n.is_published } });
       qc.invalidateQueries({ queryKey: ["all-news"] });
       qc.invalidateQueries({ queryKey: ["public-news"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }
@@ -121,7 +122,7 @@ export function NewsAdmin() {
     if (!confirm(`Apagar notícia "${n.title}"?`)) return;
     try {
       await deleteNews(supabase, n.id);
-      await logAudit(supabase, "delete", "news", n.id, { title: n.title });
+      await logAudit(supabase, "delete", "news", n.id, {}, { before: n as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["all-news"] });
       qc.invalidateQueries({ queryKey: ["public-news"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }

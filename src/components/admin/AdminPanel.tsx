@@ -28,7 +28,7 @@ import {
 import { DELEGATION_TAB_MAP, DELEGATION_MODULE_LABELS } from "@/services/delegations";
 import { supabase } from "@/lib/supabase/client";
 import { youtubeThumb } from "@/services/content";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import { MembersAdmin } from "./MembersAdmin";
 import { DiscipleshipAdmin } from "./DiscipleshipAdmin";
 import { WeeklyReportsAdmin } from "./WeeklyReportsAdmin";
@@ -412,24 +412,25 @@ function SermonsAdmin() {
     if (editing) {
       const { error } = await supabase.from("sermons").update(payload).eq("id", editing.id);
       if (error) { setErr(error.message); return; }
-      await logAudit(supabase, "update", "sermons", editing.id, { title: v.title });
+      const diff = diffFields(editing as unknown as Record<string, unknown>, payload);
+      await logAudit(supabase, "update", "sermons", editing.id, {}, diff ?? undefined);
       setEditing(null);
     } else {
       const next_order = sermons.length > 0 ? Math.max(...sermons.map((s) => s.sort_order)) + 1 : 0;
       const { data, error } = await supabase.from("sermons").insert({ ...payload, sort_order: next_order }).select().single();
       if (error) { setErr(error.message); return; }
-      await logAudit(supabase, "insert", "sermons", data.id, { title: v.title });
+      await logAudit(supabase, "insert", "sermons", data.id, {}, { after: data as unknown as Record<string, unknown> });
     }
     reset({ is_featured: false, published_at: new Date().toISOString().slice(0, 10) });
     setChurchId("");
     qc.invalidateQueries({ queryKey: ["sermons"] });
     qc.invalidateQueries({ queryKey: ["public-sermons"] });
   }
-  async function remove(id: string, title: string) {
+  async function remove(s: Sermon) {
     if (!confirm("Remover esta pregação?")) return;
-    const { error } = await supabase.from("sermons").delete().eq("id", id);
+    const { error } = await supabase.from("sermons").delete().eq("id", s.id);
     if (!error) {
-      await logAudit(supabase, "delete", "sermons", id, { title });
+      await logAudit(supabase, "delete", "sermons", s.id, {}, { before: s as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["sermons"] });
       qc.invalidateQueries({ queryKey: ["public-sermons"] });
     }
@@ -506,7 +507,7 @@ function SermonsAdmin() {
               <Button asChild variant="outline" size="sm" title="Baixar PDF da palavra"><a href={s.pdf_url} target="_blank" rel="noreferrer"><FileDown className="h-3.5 w-3.5" /></a></Button>
             )}
             <Button onClick={() => startEdit(s)} variant="outline" size="sm"><Pencil className="h-3.5 w-3.5" /></Button>
-            <Button onClick={() => remove(s.id, s.title)} variant="destructive" size="sm"><Trash2 className="h-3.5 w-3.5" /></Button>
+            <Button onClick={() => remove(s)} variant="destructive" size="sm"><Trash2 className="h-3.5 w-3.5" /></Button>
           </div>
         ))}
       </div>

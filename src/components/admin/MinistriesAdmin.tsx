@@ -23,7 +23,7 @@ import {
   addMinistryMember, updateMinistryMemberRole, removeMinistryMember,
   createMinistryPost, deleteMinistryPost,
 } from "@/services/ministries";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import type { Ministry, MinistryRole } from "@/types/domain";
 
 const ICONS: Record<string, React.ComponentType<{className?:string}>> = {
@@ -164,7 +164,7 @@ function CreateMinistryForm({ churchFilter, churches, onCreated }: {
         icon: v.icon || "sparkles",
         is_active: true,
       });
-      await logAudit(supabase, "insert", "ministries", created.id, { name: v.name });
+      await logAudit(supabase, "insert", "ministries", created.id, {}, { after: created as unknown as Record<string, unknown> });
       reset({ color: "#C9A227", icon: "sparkles" });
       setOpen(false);
       onCreated();
@@ -247,7 +247,7 @@ function MinistryDetail({ ministry: ms, church, onClose }: { ministry: Ministry;
     if (!confirm(`Apagar ministério "${ms.name}"?\n\nIsso remove vinculações e posts deste ministério.`)) return;
     try {
       await deleteMinistry(supabase, ms.id);
-      await logAudit(supabase, "delete", "ministries", ms.id, { name: ms.name });
+      await logAudit(supabase, "delete", "ministries", ms.id, {}, { before: ms as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["ministries"] });
       onClose();
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }
@@ -388,13 +388,15 @@ function EditMinistryForm({ ministry: ms, onSaved }: { ministry: Ministry; onSav
 
   async function onSubmit(v: MinistryInput) {
     try {
-      await updateMinistry(supabase, ms.id, {
+      const payload = {
         name: v.name,
         description: v.description || null,
         color: v.color || "#C9A227",
         icon: v.icon || "sparkles",
-      });
-      await logAudit(supabase, "update", "ministries", ms.id, { name: v.name });
+      };
+      await updateMinistry(supabase, ms.id, payload);
+      const diff = diffFields(ms as unknown as Record<string, unknown>, payload);
+      await logAudit(supabase, "update", "ministries", ms.id, {}, diff ?? undefined);
       onSaved();
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }
   }
