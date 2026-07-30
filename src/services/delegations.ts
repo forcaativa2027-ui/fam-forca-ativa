@@ -5,6 +5,7 @@ import type {
   EmergencyAccess, ComplianceDashboard, ModuleDelegationRanking,
   CouncilMember, DelegationModule, DelegationScope, CouncilVote, Permission, AdminUserDirectoryRow,
 } from "@/types/domain";
+import { logAudit } from "@/services/audit";
 
 // ── Conselho Diretor ──────────────────────────────────────────
 export async function listCouncilMembers(sb: SupabaseClient): Promise<(CouncilMember & { full_name: string; email: string })[]> {
@@ -64,6 +65,7 @@ export async function approveDelegation(sb: SupabaseClient, id: string, opts: {
   trust_level: number; scope: DelegationScope; scope_name: string;
   review_notes?: string; expires_at?: string|null;
 }): Promise<void> {
+  const { data: before } = await sb.from("module_delegations").select("status, trust_level, scope, scope_name, expires_at").eq("id", id).maybeSingle();
   const { error } = await sb.from("module_delegations").update({
     status: "ativo",
     trust_level: opts.trust_level,
@@ -74,20 +76,32 @@ export async function approveDelegation(sb: SupabaseClient, id: string, opts: {
     reviewed_at: new Date().toISOString(),
   }).eq("id", id);
   if (error) throw error;
+  await logAudit(sb, "update", "module_delegations", id, { acao: "aprovacao" }, {
+    before: before ?? undefined,
+    after: { status: "ativo", trust_level: opts.trust_level, scope: opts.scope, scope_name: opts.scope_name, expires_at: opts.expires_at ?? null },
+  });
 }
 
 export async function rejectDelegation(sb: SupabaseClient, id: string, review_notes: string): Promise<void> {
+  const { data: before } = await sb.from("module_delegations").select("status").eq("id", id).maybeSingle();
   const { error } = await sb.from("module_delegations")
     .update({ status: "rejeitado", review_notes, reviewed_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw error;
+  await logAudit(sb, "update", "module_delegations", id, { acao: "rejeicao", motivo: review_notes }, {
+    before: before ?? undefined, after: { status: "rejeitado" },
+  });
 }
 
 export async function revokeDelegation(sb: SupabaseClient, id: string, revoke_reason: string): Promise<void> {
+  const { data: before } = await sb.from("module_delegations").select("status").eq("id", id).maybeSingle();
   const { error } = await sb.from("module_delegations")
     .update({ status: "revogado", revoke_reason, revoked_at: new Date().toISOString() })
     .eq("id", id);
   if (error) throw error;
+  await logAudit(sb, "update", "module_delegations", id, { acao: "revogacao", motivo: revoke_reason }, {
+    before: before ?? undefined, after: { status: "revogado" },
+  });
 }
 
 export async function suspendDelegation(sb: SupabaseClient, id: string, reason?: string): Promise<void> {

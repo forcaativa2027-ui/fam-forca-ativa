@@ -62,3 +62,27 @@ export async function listAuditLogs(sb: SupabaseClient, limit = 300): Promise<Au
   if (error) return [];
   return (data ?? []) as AuditLog[];
 }
+
+/**
+ * Compara o estado original com o que foi submetido e devolve só os
+ * campos que realmente mudaram — pra alimentar `before`/`after` do
+ * `logAudit` sem precisar montar isso manualmente em cada formulário.
+ * Ignora undefined/objetos idênticos; trata "" e null como equivalentes.
+ */
+export function diffFields(
+  original: Record<string, unknown>, updated: Record<string, unknown>,
+): { before: Record<string, unknown>; after: Record<string, unknown> } | null {
+  const before: Record<string, unknown> = {};
+  const after: Record<string, unknown> = {};
+  const norm = (v: unknown) => (v === "" || v === undefined ? null : v);
+
+  for (const key of Object.keys(updated)) {
+    const a = norm((original as Record<string, unknown>)[key]);
+    const b = norm(updated[key]);
+    if (JSON.stringify(a) !== JSON.stringify(b)) {
+      before[key] = a;
+      after[key] = b;
+    }
+  }
+  return Object.keys(after).length > 0 ? { before, after } : null;
+}
