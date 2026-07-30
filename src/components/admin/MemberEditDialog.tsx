@@ -18,7 +18,7 @@ import { updateMember } from "@/services/members";
 import { relocateMember } from "@/services/relocations";
 import { assignLeadership, encerrarLideranca } from "@/services/leadership";
 import { approveMemberCard, setCardStatusManual, CARD_STATUS_LABELS, CARD_STATUS_COLORS } from "@/services/cecId";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import type { Member, RelocationReason, LeadershipFunction, ScopeLevel, CardStatus } from "@/types/domain";
 
 const RELOCATION_REASONS: [RelocationReason, string][] = [
@@ -103,7 +103,8 @@ function PersonalDataTab({ member }: { member: Member }) {
     try {
       const payload = Object.fromEntries(Object.entries(v).map(([k, val]) => [k, val || null]));
       await updateMember(supabase, member.id, payload);
-      await logAudit(supabase, "update", "members", member.id, { section: "dados_pessoais" });
+      const diff = diffFields(member as unknown as Record<string, unknown>, v);
+      await logAudit(supabase, "update", "members", member.id, { section: "dados_pessoais" }, diff ?? undefined);
       qc.invalidateQueries({ queryKey: ["all-members"] });
       setSaved(true); setTimeout(() => setSaved(false), 2000);
     } catch (e) { setErr((e as { message?: string })?.message ?? "Erro ao salvar"); }
@@ -196,7 +197,11 @@ function ClassificationTab({ member }: { member: Member }) {
     setBusy(true); setErr("");
     try {
       await updateMember(supabase, member.id, { journey_stage: journeyStage, status });
-      await logAudit(supabase, "update", "members", member.id, { section: "classificacao", journey_stage: journeyStage, status });
+      const diff = diffFields(
+        { journey_stage: member.journey_stage, status: member.status },
+        { journey_stage: journeyStage, status },
+      );
+      await logAudit(supabase, "update", "members", member.id, { section: "classificacao" }, diff ?? undefined);
       qc.invalidateQueries({ queryKey: ["all-members"] });
     } catch (e) { setErr((e as { message?: string })?.message ?? "Erro ao salvar"); }
     finally { setBusy(false); }
