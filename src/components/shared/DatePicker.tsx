@@ -131,14 +131,14 @@ export function DatePicker({ value, onChange, placeholder = "Selecione uma data"
                   {MONTHS[month]} <ChevronDown className="h-3 w-3" />
                 </button>
                 {monthPickerOpen && (
-                  <div className="absolute left-1/2 top-full z-10 mt-1 max-h-56 w-40 -translate-x-1/2 overflow-y-auto rounded-lg border bg-white p-1 shadow-xl">
+                  <div className="absolute bottom-full left-1/2 z-10 mb-1 max-h-56 w-40 -translate-x-1/2 overflow-y-auto rounded-lg border border-white/10 bg-navy-900 p-1 shadow-2xl">
                     {MONTHS.map((m, i) => (
                       <button
                         key={m}
                         type="button"
                         onClick={() => pickMonth(i)}
                         className={`block w-full rounded-md px-3 py-2 text-left text-sm font-semibold transition ${
-                          i === month ? "bg-gold text-navy" : "text-navy hover:bg-navy/10"
+                          i === month ? "bg-gold text-navy" : "text-white hover:bg-white/15"
                         }`}
                       >
                         {m}
@@ -158,7 +158,7 @@ export function DatePicker({ value, onChange, placeholder = "Selecione uma data"
                   {year} <ChevronDown className="h-3 w-3" />
                 </button>
                 {yearPickerOpen && (
-                  <div ref={yearListRef} className="absolute left-1/2 top-full z-10 mt-1 max-h-56 w-28 -translate-x-1/2 overflow-y-auto rounded-lg border bg-white p-1 shadow-xl">
+                  <div ref={yearListRef} className="absolute bottom-full left-1/2 z-10 mb-1 max-h-56 w-28 -translate-x-1/2 overflow-y-auto rounded-lg border border-white/10 bg-navy-900 p-1 shadow-2xl">
                     {yearRange.map((y) => (
                       <button
                         key={y}
@@ -166,7 +166,7 @@ export function DatePicker({ value, onChange, placeholder = "Selecione uma data"
                         type="button"
                         onClick={() => pickYear(y)}
                         className={`block w-full rounded-md px-3 py-2 text-center text-sm font-semibold transition ${
-                          y === year ? "bg-gold text-navy" : "text-navy hover:bg-navy/10"
+                          y === year ? "bg-gold text-navy" : "text-white hover:bg-white/15"
                         }`}
                       >
                         {y}
