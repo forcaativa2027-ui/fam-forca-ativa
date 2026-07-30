@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Search, Plus, Trash2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/shared/DatePicker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -206,7 +207,7 @@ function StepEncontro({ form, patch }: { form: FormState; patch: (p: Partial<For
         <>
           <div>
             <Label>Data do encontro</Label>
-            <Input type="date" value={form.reference_date ?? ""} onChange={(e) => patch({ reference_date: e.target.value })} />
+            <DatePicker value={form.reference_date ?? ""} onChange={(v) => patch({ reference_date: v })} placeholder="Data do encontro" disableFuture />
           </div>
           <div>
             <Label>Tema da Palavra</Label>
