@@ -12,7 +12,7 @@ import { stateSchema, nucleoSchema, type StateInput, type NucleoInput } from "@/
 import { useStates, useNucleos, useAllMembers } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import * as Ch from "@/services/churches";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import type { State, Nucleo } from "@/types/domain";
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
@@ -54,10 +54,11 @@ export function StatesSection() {
     try {
       if (editing) {
         await Ch.updateState(supabase, editing.id, v);
-        await logAudit(supabase, "update", "states", editing.id, { name: v.name });
+        const diff = diffFields(editing as unknown as Record<string, unknown>, v);
+        await logAudit(supabase, "update", "states", editing.id, {}, diff ?? undefined);
       } else {
         const created = await Ch.createState(supabase, v);
-        await logAudit(supabase, "insert", "states", created.id, { name: v.name });
+        await logAudit(supabase, "insert", "states", created.id, {}, { after: created as unknown as Record<string, unknown> });
       }
       cancelEdit();
       qc.invalidateQueries({ queryKey: ["states"] });
@@ -69,7 +70,7 @@ export function StatesSection() {
     if (!confirm(`Remover o estado "${s.name}"?`)) return;
     try {
       await Ch.deleteState(supabase, s.id);
-      await logAudit(supabase, "delete", "states", s.id, { name: s.name });
+      await logAudit(supabase, "delete", "states", s.id, {}, { before: s as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["states"] });
     } catch (e: unknown) { setErr(e instanceof Error ? e.message : "Erro ao remover"); }
   }
@@ -142,10 +143,11 @@ export function NucleosSection() {
       const payload = { name: v.name, state_id: v.state_id, leader_id: v.leader_id || null };
       if (editing) {
         await Ch.updateNucleo(supabase, editing.id, payload);
-        await logAudit(supabase, "update", "nucleos", editing.id, { name: v.name });
+        const diff = diffFields(editing as unknown as Record<string, unknown>, payload);
+        await logAudit(supabase, "update", "nucleos", editing.id, {}, diff ?? undefined);
       } else {
         const created = await Ch.createNucleo(supabase, payload);
-        await logAudit(supabase, "insert", "nucleos", created.id, { name: v.name });
+        await logAudit(supabase, "insert", "nucleos", created.id, {}, { after: created as unknown as Record<string, unknown> });
       }
       cancelEdit();
       qc.invalidateQueries({ queryKey: ["nucleos"] });
@@ -155,7 +157,7 @@ export function NucleosSection() {
     if (!confirm(`Remover o núcleo "${n.name}"?\n\nDistritos vinculados a ele podem ficar órfãos.`)) return;
     try {
       await Ch.deleteNucleo(supabase, n.id);
-      await logAudit(supabase, "delete", "nucleos", n.id, { name: n.name });
+      await logAudit(supabase, "delete", "nucleos", n.id, {}, { before: n as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["nucleos"] });
     } catch (e: unknown) { setErr(e instanceof Error ? e.message : "Erro ao remover"); }
   }

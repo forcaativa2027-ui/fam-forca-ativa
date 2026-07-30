@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useChurches, useSectors, useNucleos, useDistricts } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import type { Church } from "@/types/domain";
 
 const communitySchema = z.object({
@@ -137,7 +137,8 @@ export function CommunitiesAdmin() {
           console.error("[CommunitiesAdmin] UPDATE error:", { code: error.code, message: error.message, details: error.details, hint: error.hint });
           throw error;
         }
-        await logAudit(supabase, "update", "churches", editing.id, { name: v.name });
+        const diff = diffFields(editing as unknown as Record<string, unknown>, payload as unknown as Record<string, unknown>);
+        await logAudit(supabase, "update", "churches", editing.id, {}, diff ?? undefined);
       } else {
         const { data, error } = await supabase.from("churches").insert(payload).select().single();
         if (error) {
@@ -145,7 +146,7 @@ export function CommunitiesAdmin() {
           throw error;
         }
         console.log("[CommunitiesAdmin] Created:", data?.id);
-        await logAudit(supabase, "insert", "churches", data.id, { name: v.name });
+        await logAudit(supabase, "insert", "churches", data.id, {}, { after: data as unknown as Record<string, unknown> });
       }
       cancelEdit();
       qc.invalidateQueries({ queryKey: ["churches"] });
@@ -164,7 +165,7 @@ export function CommunitiesAdmin() {
         console.error("[CommunitiesAdmin] DELETE error:", { code: error.code, message: error.message, details: error.details, hint: error.hint });
         throw error;
       }
-      await logAudit(supabase, "delete", "churches", c.id, { name: c.name });
+      await logAudit(supabase, "delete", "churches", c.id, {}, { before: c as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["churches"] });
     } catch (e: unknown) {
       console.error("[CommunitiesAdmin] Erro ao apagar:", e);

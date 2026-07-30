@@ -60,7 +60,10 @@ export function PermissionsAdmin() {
     setBusy(p.id); setSaved(null);
     try {
       await setPastorScopeLevel(supabase, p.id, (level || null) as ScopeLevel | null, id);
-      await logAudit(supabase, "update", "profiles", p.id, { scope_level: level, scope_id: id });
+      await logAudit(supabase, "update", "profiles", p.id, { acao: "mudanca_escopo_permissao" }, {
+        before: { scope_level: p.scope_level ?? null, scope_id: p.scope_id ?? p.church_id ?? null },
+        after: { scope_level: level || null, scope_id: id },
+      });
       setSaved(p.id);
       setTimeout(() => setSaved(null), 2500);
       qc.invalidateQueries({ queryKey: ["pastors"] });

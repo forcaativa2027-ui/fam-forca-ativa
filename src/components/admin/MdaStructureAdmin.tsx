@@ -15,7 +15,7 @@ import {
 import { useDistricts, useAreas, useSectors, useNucleos, useStates, useAllMembers } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import * as Ch from "@/services/churches";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import type { District, Area, Sector } from "@/types/domain";
 import { MdaStructure } from "./MdaStructure";
 import { StatesSection, NucleosSection } from "./StatesNucleosAdmin";
@@ -82,10 +82,11 @@ function DistrictsSection() {
       const payload = { name: v.name, parent_level: v.parent_level, parent_id: v.parent_id, mother_id: v.mother_id || null, leader_id: v.leader_id || null };
       if (editing) {
         await Ch.updateDistrict(supabase, editing.id, payload);
-        await logAudit(supabase, "update", "districts", editing.id, { name: v.name });
+        const diff = diffFields(editing as unknown as Record<string, unknown>, payload);
+        await logAudit(supabase, "update", "districts", editing.id, {}, diff ?? undefined);
       } else {
         const created = await Ch.createDistrict(supabase, payload);
-        await logAudit(supabase, "insert", "districts", created.id, { name: v.name });
+        await logAudit(supabase, "insert", "districts", created.id, {}, { after: created as unknown as Record<string, unknown> });
       }
       cancelEdit();
       qc.invalidateQueries({ queryKey: ["districts"] });
@@ -95,7 +96,7 @@ function DistrictsSection() {
     if (!confirm(`Remover o distrito "${d.name}"?\n\nSetores vinculados a ele podem ficar órfãos.`)) return;
     try {
       await Ch.deleteDistrict(supabase, d.id);
-      await logAudit(supabase, "delete", "districts", d.id, { name: d.name });
+      await logAudit(supabase, "delete", "districts", d.id, {}, { before: d as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["districts"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro ao remover"); }
   }
@@ -204,10 +205,11 @@ function AreasSection() {
       const payload = { name: v.name, district_id: v.district_id, mother_id: v.mother_id || null, leader_id: v.leader_id || null };
       if (editing) {
         await Ch.updateArea(supabase, editing.id, payload);
-        await logAudit(supabase, "update", "areas", editing.id, { name: v.name });
+        const diffA = diffFields(editing as unknown as Record<string, unknown>, payload);
+        await logAudit(supabase, "update", "areas", editing.id, {}, diffA ?? undefined);
       } else {
         const created = await Ch.createArea(supabase, payload);
-        await logAudit(supabase, "insert", "areas", created.id, { name: v.name });
+        await logAudit(supabase, "insert", "areas", created.id, {}, { after: created as unknown as Record<string, unknown> });
       }
       cancelEdit();
       qc.invalidateQueries({ queryKey: ["areas"] });
@@ -217,7 +219,7 @@ function AreasSection() {
     if (!confirm(`Remover a área "${a.name}"?\n\nSetores vinculados a ela podem ficar órfãos.`)) return;
     try {
       await Ch.deleteArea(supabase, a.id);
-      await logAudit(supabase, "delete", "areas", a.id, { name: a.name });
+      await logAudit(supabase, "delete", "areas", a.id, {}, { before: a as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["areas"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro ao remover"); }
   }
@@ -315,10 +317,11 @@ function SectorsSection() {
       const payload = { name: v.name, parent_level: v.parent_level, parent_id: v.parent_id, area_id: v.area_id || null, mother_id: v.mother_id || null, leader_id: v.leader_id || null };
       if (editing) {
         await Ch.updateSector(supabase, editing.id, payload);
-        await logAudit(supabase, "update", "sectors", editing.id, { name: v.name });
+        const diffS = diffFields(editing as unknown as Record<string, unknown>, payload);
+        await logAudit(supabase, "update", "sectors", editing.id, {}, diffS ?? undefined);
       } else {
         const created = await Ch.createSector(supabase, payload);
-        await logAudit(supabase, "insert", "sectors", created.id, { name: v.name });
+        await logAudit(supabase, "insert", "sectors", created.id, {}, { after: created as unknown as Record<string, unknown> });
       }
       cancelEdit();
       qc.invalidateQueries({ queryKey: ["sectors"] });
@@ -328,7 +331,7 @@ function SectorsSection() {
     if (!confirm(`Remover o setor "${s.name}"?\n\nIgrejas Locais vinculadas a ele podem ficar órfãs.`)) return;
     try {
       await Ch.deleteSector(supabase, s.id);
-      await logAudit(supabase, "delete", "sectors", s.id, { name: s.name });
+      await logAudit(supabase, "delete", "sectors", s.id, {}, { before: s as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["sectors"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro ao remover"); }
   }
