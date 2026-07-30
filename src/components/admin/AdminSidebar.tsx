@@ -18,7 +18,7 @@ import { useMyProfile, useMyActiveModules } from "@/hooks/use-queries";
 import { DELEGATION_TAB_MAP } from "@/services/delegations";
 
 export type TabKey =
-  | "supervision" | "org-dashboard" | "pendencias" | "agenda" | "notificacoes" | "usuarios-painel"
+  | "supervision" | "org-dashboard" | "pendencias" | "agenda" | "notificacoes" | "usuarios-painel" | "pesquisa-avancada"
   | "control-tower" | "intelligence" | "ministerial-reports" | "metas"
   | "members" | "leadership" | "score" | "birthdays" | "discipleship"
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
@@ -195,6 +195,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
       icon: <Download size={16} />,
       items: [
         { key: "export", label: "Exportar Dados", icon: <Download size={15} /> },
+        { key: "pesquisa-avancada", label: "Pesquisa Avançada", icon: <Search size={15} /> },
       ],
     },
   ];
