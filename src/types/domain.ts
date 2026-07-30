@@ -1335,9 +1335,12 @@ export interface AccessibleArea { area_id: string; area_name: string; sector_id:
 export interface AdminUserDirectoryRow {
   profile_id: string; member_id: string | null;
   full_name: string; email: string | null; phone: string | null; cec_id: string | null; photo_url: string | null;
-  role: string; journey_stage: string | null; member_status: string | null;
+  role: string; journey_stage: string | null; member_status: string | null; joined_at: string | null;
   church_id: string | null; church_name: string | null;
+  life_group_id: string | null; life_group_name: string | null;
   state_id: string | null; state_name: string | null;
+  district_id: string | null; district_name: string | null;
+  sector_id: string | null; sector_name: string | null;
   delegacoes_ativas: number;
 }
 
