@@ -205,17 +205,26 @@ export async function listMyActiveModules(sb: SupabaseClient): Promise<Delegatio
 
 /** Quais abas (TabKey do AdminSidebar) cada módulo de delegação libera. */
 // ── Central de Delegações: busca de usuários (GOV-002 §9) ────────
+// Também serve de base pra Pesquisa Corporativa Avançada (UX-003 Cap. 4 §8).
 export async function searchUsersDirectory(sb: SupabaseClient, opts: {
-  query?: string; stateId?: string; churchId?: string; role?: string;
+  query?: string; stateId?: string; districtId?: string; sectorId?: string; churchId?: string;
+  role?: string; journeyStage?: string; memberStatus?: string;
+  joinedFrom?: string; joinedTo?: string;
 }): Promise<AdminUserDirectoryRow[]> {
-  let q = sb.from("admin_users_directory").select("*").order("full_name").limit(100);
+  let q = sb.from("admin_users_directory").select("*").order("full_name").limit(200);
   if (opts.query && opts.query.trim().length >= 2) {
     const term = opts.query.trim();
     q = q.or(`full_name.ilike.%${term}%,email.ilike.%${term}%,phone.ilike.%${term}%,cec_id.ilike.%${term}%`);
   }
   if (opts.stateId) q = q.eq("state_id", opts.stateId);
+  if (opts.districtId) q = q.eq("district_id", opts.districtId);
+  if (opts.sectorId) q = q.eq("sector_id", opts.sectorId);
   if (opts.churchId) q = q.eq("church_id", opts.churchId);
   if (opts.role) q = q.eq("role", opts.role);
+  if (opts.journeyStage) q = q.eq("journey_stage", opts.journeyStage);
+  if (opts.memberStatus) q = q.eq("member_status", opts.memberStatus);
+  if (opts.joinedFrom) q = q.gte("joined_at", opts.joinedFrom);
+  if (opts.joinedTo) q = q.lte("joined_at", opts.joinedTo);
   const { data, error } = await q;
   if (error) { console.error("[delegations] searchUsersDirectory", error); return []; }
   return (data ?? []) as AdminUserDirectoryRow[];
@@ -234,7 +243,7 @@ export const DELEGATION_TAB_MAP: Record<DelegationModule, string[]> = {
     "org-dashboard", "pendencias", "agenda", "notificacoes", "metas",
     "communities", "structure", "life-groups", "expansion-map", "genealogy", "formacao",
     "evangelism-groups",
-    "mda", "mda-health", "saude", "ministerios", "ministerial-reports", "export", "gpv",
+    "mda", "mda-health", "saude", "ministerios", "ministerial-reports", "export", "pesquisa-avancada", "gpv",
   ],
   usuarios: [
     "usuarios-painel", "members", "leadership", "invites", "permissions", "delegations",
