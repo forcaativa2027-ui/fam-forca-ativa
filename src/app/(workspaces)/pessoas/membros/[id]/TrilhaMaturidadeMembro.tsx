@@ -5,6 +5,7 @@ import { CheckCircle2, Circle, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/shared/DatePicker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -100,7 +101,7 @@ function RegisterMilestoneDialog({ memberId, milestone, onClose }: {
         <DialogHeader><DialogTitle>Registrar: {milestone.label}</DialogTitle></DialogHeader>
         <div className="space-y-3">
           <div><Label className="text-xs">Data</Label>
-            <Input type="date" value={eventDate} onChange={e => setEventDate(e.target.value)} />
+            <DatePicker value={eventDate} onChange={setEventDate} placeholder="Data" disableFuture />
           </div>
           <div><Label className="text-xs">Observação (opcional)</Label>
             <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} placeholder="Ex: Turma de março/2026" />
