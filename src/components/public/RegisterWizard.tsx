@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/shared/DatePicker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -464,7 +465,7 @@ function StepPessoal({ s, update, onBack, onNext }: { s: State; update: <K exten
       </Field>
 
       <Field label="Data de nascimento">
-        <Input className="h-12 text-base" type="date" value={s.birth_date} onChange={(e) => update("birth_date", e.target.value)} />
+        <DatePicker value={s.birth_date} onChange={(v) => update("birth_date", v)} placeholder="Data de nascimento" disableFuture />
         {age !== null && <p className="mt-1 text-sm font-semibold text-gold">Idade: {age} anos</p>}
       </Field>
 
@@ -701,7 +702,7 @@ function StepFe({ s, update, onBack, onNext }: { s: State; update: <K extends ke
         <YesNoIcon value={s.baptized} onChange={(v) => update("baptized", v)} icon={<Droplets className="h-7 w-7" />} />
       </Field>
       {s.baptized && (
-        <Field label="Data do batismo"><Input className="h-12 text-base" type="date" value={s.baptism_date} onChange={(e) => update("baptism_date", e.target.value)} /></Field>
+        <Field label="Data do batismo"><DatePicker value={s.baptism_date} onChange={(v) => update("baptism_date", v)} placeholder="Data do batismo" disableFuture /></Field>
       )}
 
       <Field label="Qual foi a última igreja que você frequentou? (opcional)">
@@ -712,7 +713,7 @@ function StepFe({ s, update, onBack, onNext }: { s: State; update: <K extends ke
         <YesNoIcon value={s.holy_spirit_baptized} onChange={(v) => update("holy_spirit_baptized", v)} icon={<Flame className="h-7 w-7" />} />
       </Field>
       {s.holy_spirit_baptized && (
-        <Field label="Data do batismo no Espírito Santo"><Input className="h-12 text-base" type="date" value={s.holy_spirit_baptism_date} onChange={(e) => update("holy_spirit_baptism_date", e.target.value)} /></Field>
+        <Field label="Data do batismo no Espírito Santo"><DatePicker value={s.holy_spirit_baptism_date} onChange={(v) => update("holy_spirit_baptism_date", v)} placeholder="Data do batismo no Espírito Santo" disableFuture /></Field>
       )}
 
       <NavButtons onBack={onBack} onNext={onNext} />
