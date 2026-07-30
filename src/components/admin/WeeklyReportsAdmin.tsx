@@ -7,6 +7,7 @@ import { Plus, Trash2, ClipboardList, Eye, Filter } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/shared/DatePicker";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { weeklyReportSchema, type WeeklyReportFormInput } from "@/schemas";
@@ -194,7 +195,7 @@ export function WeeklyReportsAdmin() {
   const [attendance, setAttendance] = useState<AttendanceRow[]>([]);
   const [visits, setVisits] = useState<VisitRow[]>([]);
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } =
     useForm<WeeklyReportFormInput>({
       resolver: zodResolver(weeklyReportSchema),
       defaultValues: { meeting_date: new Date().toISOString().slice(0,10), flowed: "null", decisions_count: 0 },
@@ -316,7 +317,7 @@ export function WeeklyReportsAdmin() {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Data do encontro" error={errors.meeting_date?.message}>
-                  <Input type="date" {...register("meeting_date")} />
+                  <DatePicker value={watch("meeting_date") ?? ""} onChange={(v) => setValue("meeting_date", v)} placeholder="Data do encontro" disableFuture />
                 </Field>
                 <Field label="Tema do compartilhamento">
                   <Input {...register("share_theme")} placeholder="Tema da palavra" />

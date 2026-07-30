@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Plus, Trash2, Pencil, X, Globe, MessageCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/shared/DatePicker";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useChurches, useSectors, useNucleos, useDistricts } from "@/hooks/use-queries";
@@ -56,7 +57,7 @@ export function CommunitiesAdmin() {
   const [editing, setEditing] = useState<Church | null>(null);
   const [err, setErr] = useState("");
 
-  const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } =
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } =
     useForm<CommunityInput>({
       resolver: zodResolver(communitySchema),
       defaultValues: { type: "sede", primary_color: "#0E2A47", secondary_color: "#C9A227", parent_territorial_level: "setor" },
@@ -300,7 +301,7 @@ export function CommunitiesAdmin() {
               <Label className="block font-bold uppercase tracking-wider text-navy-600 text-xs">Informações administrativas</Label>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Data de fundação" error={errors.founded_at?.message}>
-                  <Input type="date" {...register("founded_at")} />
+                  <DatePicker value={watch("founded_at") ?? ""} onChange={(v) => setValue("founded_at", v)} placeholder="Data de fundação" disableFuture />
                 </Field>
                 <Field label="Situação">
                   <select {...register("status_admin")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">

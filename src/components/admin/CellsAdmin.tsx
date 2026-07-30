@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
-import { useForm, type UseFormRegister, type FieldErrors } from "react-hook-form";
+import { useForm, type UseFormRegister, type UseFormWatch, type UseFormSetValue, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, Pencil, X, Clock, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/shared/DatePicker";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -72,7 +73,7 @@ export function CellsAdmin() {
         </CardHeader>
         <CardContent>
           <form onSubmit={createForm.handleSubmit(onCreate)} className="space-y-3">
-            <CellFormFields register={createForm.register} errors={createForm.formState.errors} sectors={sectors} churches={churches} members={members} />
+            <CellFormFields register={createForm.register} errors={createForm.formState.errors} watch={createForm.watch} setValue={createForm.setValue} sectors={sectors} churches={churches} members={members} />
             {createErr && <p className="text-sm text-destructive">{createErr}</p>}
             <Button type="submit" disabled={createForm.formState.isSubmitting} className="gap-2">
               <Plus className="h-4 w-4" />Cadastrar Life Group
@@ -147,7 +148,7 @@ function EditCellDialog({ cell, sectors, churches, members, onClose }: {
 }) {
   const qc = useQueryClient();
   const [err, setErr] = useState("");
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<CellInput>({
+  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<CellInput>({
     resolver: zodResolver(cellSchema),
     defaultValues: {
       name: cell.name,
@@ -190,7 +191,7 @@ function EditCellDialog({ cell, sectors, churches, members, onClose }: {
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader><DialogTitle>Editar Life Group — {cell.name}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-          <CellFormFields register={register} errors={errors} sectors={sectors} churches={churches} members={members} />
+          <CellFormFields register={register} errors={errors} watch={watch} setValue={setValue} sectors={sectors} churches={churches} members={members} />
           {err && <p className="text-sm text-destructive">{err}</p>}
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1 gap-1"><X className="h-4 w-4" />Cancelar</Button>
@@ -205,9 +206,10 @@ function EditCellDialog({ cell, sectors, churches, members, onClose }: {
 }
 
 // ── Campos compartilhados entre Cadastrar e Editar ────────────────────────
-function CellFormFields({ register, errors, sectors, churches, members }: {
+function CellFormFields({ register, errors, watch, setValue, sectors, churches, members }: {
   register: UseFormRegister<CellInput>;
   errors: FieldErrors<CellInput>;
+  watch: UseFormWatch<CellInput>; setValue: UseFormSetValue<CellInput>;
   sectors: Sector[]; churches: Church[];
   members: { id: string; profile_id: string | null; full_name: string }[];
 }) {
@@ -273,7 +275,7 @@ function CellFormFields({ register, errors, sectors, churches, members }: {
       </Field>
 
       <Field label="Data de fundação" error={errors.founded_at?.message}>
-        <Input type="date" {...register("founded_at")} />
+        <DatePicker value={watch("founded_at") ?? ""} onChange={(v) => setValue("founded_at", v)} placeholder="Data de fundação" disableFuture />
       </Field>
 
       <div className="rounded-xl border bg-navy-50/30 p-3 space-y-3">
