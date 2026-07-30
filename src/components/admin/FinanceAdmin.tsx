@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/shared/DatePicker";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -152,7 +153,7 @@ function LancamentosTab({ churchId, year, month }: { churchId:string; year:numbe
                   <Input type="number" step="0.01" min="0" {...register("amount")} placeholder="0,00"/>
                 </Field>
                 <Field label="Data" error={errors.occurred_on?.message}>
-                  <Input type="date" {...register("occurred_on")}/>
+                  <DatePicker value={watch("occurred_on") ?? ""} onChange={(v) => setValue("occurred_on", v)} placeholder="Data" />
                 </Field>
               </div>
               {direction==="entrada"&&<Field label="Ofertante (opcional)"><Input {...register("payer_name")} placeholder="Nome"/></Field>}

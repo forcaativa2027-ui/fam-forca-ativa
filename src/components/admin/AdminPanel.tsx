@@ -14,6 +14,7 @@ import { ArrowLeft, Trash2, Plus, Menu, ChevronUp, ChevronDown, X, Pencil, FileD
 import type { Sermon } from "@/types/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/shared/DatePicker";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { sermonSchema, eventSchema, serviceTimeSchema, dailyWordSchema,
@@ -66,6 +67,7 @@ import { GenealogyAdmin } from "./GenealogyAdmin";
 import { ExpansionMapAdmin } from "./ExpansionMapAdmin";
 import { PatrimonyAdmin } from "./PatrimonyAdmin";
 import { ExportAdmin } from "./ExportAdmin";
+import { AdvancedSearchAdmin } from "./AdvancedSearchAdmin";
 import { GpvAdmin } from "./GpvAdmin";
 import { CellsAdmin } from "./CellsAdmin";
 import { GlobalSearch } from "./GlobalSearch";
@@ -358,6 +360,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
     case "patrimony":           return <PatrimonyAdmin />;
     case "gpv":                 return <GpvAdmin />;
     case "export":              return <ExportAdmin />;
+    case "pesquisa-avancada":   return <AdvancedSearchAdmin />;
     default:                    return null;
   }
 }
@@ -379,7 +382,7 @@ function SermonsAdmin() {
   const [err, setErr] = useState("");
   const [editing, setEditing] = useState<Sermon | null>(null);
   const [churchId, setChurchId] = useState<string>("");
-  const { register, handleSubmit, watch, reset, formState: { errors, isSubmitting } } =
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } =
     useForm<SermonInput>({ resolver: zodResolver(sermonSchema), defaultValues: { is_featured: false, published_at: new Date().toISOString().slice(0, 10) } });
   const urlWatch = watch("youtube_url");
 
@@ -466,7 +469,7 @@ function SermonsAdmin() {
               <Field label="Duração"><Input {...register("duration")} placeholder="Ex: 42:15" /></Field>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Data da pregação"><Input type="date" {...register("published_at")} /></Field>
+              <Field label="Data da pregação"><DatePicker value={watch("published_at") ?? ""} onChange={(v) => setValue("published_at", v)} placeholder="Data da pregação" /></Field>
               <Field label="Igreja">
                 <select value={churchId} onChange={(e) => setChurchId(e.target.value)} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
                   <option value="">— Todas / Nacional —</option>
@@ -714,7 +717,7 @@ function DailyWordsAdmin() {
   const [err, setErr] = useState("");
   const [churchId, setChurchId] = useState<string>("");
   const today = new Date().toISOString().slice(0,10);
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } =
     useForm<DailyWordInput>({
       resolver: zodResolver(dailyWordSchema),
       defaultValues: { date: today, title: "Palavra do dia" },
@@ -763,7 +766,7 @@ function DailyWordsAdmin() {
               </select>
             </Field>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Data" error={errors.date?.message}><Input type="date" {...register("date")} /></Field>
+              <Field label="Data" error={errors.date?.message}><DatePicker value={watch("date") ?? ""} onChange={(v) => setValue("date", v)} placeholder="Data" /></Field>
               <Field label="Título" error={errors.title?.message}><Input {...register("title")} placeholder="Palavra do dia" /></Field>
             </div>
             <Field label="Referência bíblica" error={errors.verse_ref?.message}>
