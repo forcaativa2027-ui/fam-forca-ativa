@@ -23,7 +23,7 @@ import {
   createFinance, deleteFinance, updateFinance,
   getNationalMonthly, upsertBudget, deleteBudget,
 } from "@/services/finance";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import type { Finance, FinanceBudgetVsActual } from "@/types/domain";
 
 const MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
@@ -73,12 +73,14 @@ function LancamentosTab({ churchId, year, month }: { churchId:string; year:numbe
     setErr("");
     try {
       if (editing) {
-        await updateFinance(supabase, editing.id, { kind:v.kind, direction:v.direction, amount:v.amount, description:v.description, occurred_on:v.occurred_on, payer_name:v.payer_name });
-        await logAudit(supabase,"update","finances",editing.id,{amount:v.amount});
+        const payload = { kind:v.kind, direction:v.direction, amount:v.amount, description:v.description, occurred_on:v.occurred_on, payer_name:v.payer_name };
+        await updateFinance(supabase, editing.id, payload);
+        const diff = diffFields(editing as unknown as Record<string, unknown>, payload);
+        await logAudit(supabase,"update","finances",editing.id,{},diff ?? undefined);
         setEditing(null);
       } else {
         const c = await createFinance(supabase,{church_id:v.church_id||churchId,kind:v.kind,direction:v.direction,amount:v.amount,description:v.description,occurred_on:v.occurred_on,payer_name:v.payer_name});
-        await logAudit(supabase,"insert","finances",c.id,{kind:v.kind,amount:v.amount});
+        await logAudit(supabase,"insert","finances",c.id,{},{ after: c as unknown as Record<string, unknown> });
       }
       reset({direction:"entrada",kind:"dizimo",occurred_on:today.toISOString().slice(0,10),church_id:churchId});
       qc.invalidateQueries({queryKey:["finances"]});
@@ -97,10 +99,10 @@ function LancamentosTab({ churchId, year, month }: { churchId:string; year:numbe
     setValue("payer_name",item.payer_name??"");
   }
 
-  async function remove(id: string) {
+  async function remove(item: Finance) {
     if(!confirm("Apagar este lançamento?"))return;
-    await deleteFinance(supabase,id);
-    await logAudit(supabase,"delete","finances",id);
+    await deleteFinance(supabase,item.id);
+    await logAudit(supabase,"delete","finances",item.id,{}, { before: item as unknown as Record<string, unknown> });
     qc.invalidateQueries({queryKey:["finances"]});
     qc.invalidateQueries({queryKey:["finance-flow"]});
     qc.invalidateQueries({queryKey:["finance-categories"]});
@@ -188,7 +190,7 @@ function LancamentosTab({ churchId, year, month }: { churchId:string; year:numbe
                   {canWrite && (
                     <div className="flex gap-1 shrink-0">
                       <Button onClick={()=>startEdit(i)} variant="ghost" size="sm"><Pencil className="h-3.5 w-3.5"/></Button>
-                      <Button onClick={()=>remove(i.id)} variant="ghost" size="sm" className="text-red-500"><Trash2 className="h-3.5 w-3.5"/></Button>
+                      <Button onClick={()=>remove(i)} variant="ghost" size="sm" className="text-red-500"><Trash2 className="h-3.5 w-3.5"/></Button>
                     </div>
                   )}
                 </div>

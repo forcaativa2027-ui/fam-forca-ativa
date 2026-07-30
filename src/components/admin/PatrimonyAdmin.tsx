@@ -30,7 +30,7 @@ import {
   createPropertyDoc, createPropertyDocVersion, deletePropertyDoc,
   createAssetDoc, deleteAssetDoc,
 } from "@/services/patrimony";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import { propertySchema, type PropertyInput, assetSchema, type AssetInput } from "@/schemas";
 import type {
   Property, Asset, OccupationType, AssetCategory, AssetCondition, AssetOrigin,
@@ -170,7 +170,7 @@ function PropertiesSection({ churches, initialChurchId = "" }: { churches: { id:
     if (!confirm(`Remover imóvel "${p.name}"? Isso o desativa (não apaga o histórico).`)) return;
     try {
       await deleteProperty(supabase, p.id);
-      await logAudit(supabase, "delete", "properties", p.id, { name: p.name });
+      await logAudit(supabase, "delete", "properties", p.id, {}, { before: p as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["properties"] });
       qc.invalidateQueries({ queryKey: ["patrimony-summary"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }
@@ -294,10 +294,11 @@ function PropertyForm({ churches, editing, defaultChurchId, onClose }: {
       };
       if (editing) {
         await updateProperty(supabase, editing.id, payload);
-        await logAudit(supabase, "update", "properties", editing.id, { name: v.name });
+        const diff = diffFields(editing as unknown as Record<string, unknown>, payload);
+        await logAudit(supabase, "update", "properties", editing.id, {}, diff ?? undefined);
       } else {
         const created = await createProperty(supabase, payload);
-        await logAudit(supabase, "insert", "properties", created.id, { name: v.name });
+        await logAudit(supabase, "insert", "properties", created.id, {}, { after: created as unknown as Record<string, unknown> });
       }
       qc.invalidateQueries({ queryKey: ["properties"] });
       qc.invalidateQueries({ queryKey: ["patrimony-summary"] });
@@ -677,7 +678,7 @@ function AssetsSection({ churches, initialChurchId = "" }: { churches: { id: str
     if (!confirm(`Remover bem "${a.name}"? Isso o desativa.`)) return;
     try {
       await deleteAsset(supabase, a.id);
-      await logAudit(supabase, "delete", "assets", a.id, { name: a.name });
+      await logAudit(supabase, "delete", "assets", a.id, {}, { before: a as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["assets"] });
       qc.invalidateQueries({ queryKey: ["patrimony-summary"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }
@@ -811,10 +812,11 @@ function AssetForm({ churches, properties, editing, defaultChurchId, onClose }: 
       };
       if (editing) {
         await updateAsset(supabase, editing.id, payload);
-        await logAudit(supabase, "update", "assets", editing.id, { name: v.name });
+        const diff = diffFields(editing as unknown as Record<string, unknown>, payload);
+        await logAudit(supabase, "update", "assets", editing.id, {}, diff ?? undefined);
       } else {
         const created = await createAsset(supabase, payload);
-        await logAudit(supabase, "insert", "assets", created.id, { name: v.name });
+        await logAudit(supabase, "insert", "assets", created.id, {}, { after: created as unknown as Record<string, unknown> });
       }
       qc.invalidateQueries({ queryKey: ["assets"] });
       qc.invalidateQueries({ queryKey: ["patrimony-summary"] });
