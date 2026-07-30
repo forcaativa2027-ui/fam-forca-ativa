@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ChevronDown } from "lucide-react";
 
 const MONTHS = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const WEEKDAYS = ["D","S","T","Q","Q","S","S"];
@@ -30,17 +30,28 @@ export interface DatePickerProps {
  * Seletor de data customizado, com a identidade visual da CEC Family
  * (navy/dourado) — substitui o calendário nativo do navegador, que
  * varia de aparência entre Chrome/Safari/Firefox e não dá pra estilizar.
+ *
+ * O mês e o ano usam listas customizadas (não <select> nativo) —
+ * um <select> nativo abre sua lista suspensa com as cores do
+ * sistema operacional, não da nossa marca, o que já causou um
+ * problema real de contraste (texto claro sobre fundo branco).
  */
 export function DatePicker({ value, onChange, placeholder = "Selecione uma data", disableFuture, disablePast, className = "" }: DatePickerProps) {
   const [open, setOpen] = useState(false);
+  const [yearPickerOpen, setYearPickerOpen] = useState(false);
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const selected = fromISO(value);
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const [viewDate, setViewDate] = useState(selected ?? today);
   const rootRef = useRef<HTMLDivElement>(null);
+  const yearListRef = useRef<HTMLDivElement>(null);
+  const activeYearRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false); setYearPickerOpen(false); setMonthPickerOpen(false);
+      }
     }
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
@@ -48,10 +59,17 @@ export function DatePicker({ value, onChange, placeholder = "Selecione uma data"
 
   useEffect(() => { if (selected) setViewDate(selected); }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (yearPickerOpen && activeYearRef.current) {
+      activeYearRef.current.scrollIntoView({ block: "center" });
+    }
+  }, [yearPickerOpen]);
+
   const year = viewDate.getFullYear();
   const month = viewDate.getMonth();
   const firstDayOfMonth = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const yearRange = Array.from({ length: 120 }, (_, i) => today.getFullYear() + 5 - i);
 
   function isDisabled(d: Date) {
     if (disableFuture && d > today) return true;
@@ -64,6 +82,15 @@ export function DatePicker({ value, onChange, placeholder = "Selecione uma data"
     if (isDisabled(d)) return;
     onChange(toISO(d));
     setOpen(false);
+  }
+
+  function pickYear(y: number) {
+    setViewDate(new Date(y, month, 1));
+    setYearPickerOpen(false);
+  }
+  function pickMonth(m: number) {
+    setViewDate(new Date(year, m, 1));
+    setMonthPickerOpen(false);
   }
 
   const cells: (number | null)[] = [
@@ -88,27 +115,69 @@ export function DatePicker({ value, onChange, placeholder = "Selecione uma data"
 
       {open && (
         <div className="absolute z-50 mt-1 w-72 rounded-xl border bg-card p-3 shadow-lg">
-          <div className="mb-2 flex items-center justify-between">
-            <button type="button" onClick={() => setViewDate(new Date(year, month - 1, 1))} className="grid h-8 w-8 place-items-center rounded-md text-navy hover:bg-muted">
+          <div className="relative mb-2 flex items-center justify-between">
+            <button type="button" onClick={() => setViewDate(new Date(year, month - 1, 1))} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-navy hover:bg-muted">
               <ChevronLeft className="h-4 w-4" />
             </button>
+
             <div className="flex items-center gap-1.5">
-              <select
-                value={month}
-                onChange={(e) => setViewDate(new Date(year, Number(e.target.value), 1))}
-                className="rounded-md border-none bg-transparent text-sm font-bold text-navy focus-visible:outline-none"
-              >
-                {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
-              </select>
-              <select
-                value={year}
-                onChange={(e) => setViewDate(new Date(Number(e.target.value), month, 1))}
-                className="rounded-md border-none bg-transparent text-sm font-bold text-navy focus-visible:outline-none"
-              >
-                {Array.from({ length: 110 }, (_, i) => today.getFullYear() - i).map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
+              {/* Mês — lista customizada, não <select> nativo */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => { setMonthPickerOpen((v) => !v); setYearPickerOpen(false); }}
+                  className="flex items-center gap-0.5 rounded-md px-1.5 py-1 text-sm font-bold text-navy hover:bg-navy/10"
+                >
+                  {MONTHS[month]} <ChevronDown className="h-3 w-3" />
+                </button>
+                {monthPickerOpen && (
+                  <div className="absolute left-1/2 top-full z-10 mt-1 max-h-56 w-40 -translate-x-1/2 overflow-y-auto rounded-lg border bg-white p-1 shadow-xl">
+                    {MONTHS.map((m, i) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => pickMonth(i)}
+                        className={`block w-full rounded-md px-3 py-2 text-left text-sm font-semibold transition ${
+                          i === month ? "bg-gold text-navy" : "text-navy hover:bg-navy/10"
+                        }`}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Ano — lista customizada, com bom contraste e rolagem até o ano atual */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => { setYearPickerOpen((v) => !v); setMonthPickerOpen(false); }}
+                  className="flex items-center gap-0.5 rounded-md px-1.5 py-1 text-sm font-bold text-navy hover:bg-navy/10"
+                >
+                  {year} <ChevronDown className="h-3 w-3" />
+                </button>
+                {yearPickerOpen && (
+                  <div ref={yearListRef} className="absolute left-1/2 top-full z-10 mt-1 max-h-56 w-28 -translate-x-1/2 overflow-y-auto rounded-lg border bg-white p-1 shadow-xl">
+                    {yearRange.map((y) => (
+                      <button
+                        key={y}
+                        ref={y === year ? activeYearRef : undefined}
+                        type="button"
+                        onClick={() => pickYear(y)}
+                        className={`block w-full rounded-md px-3 py-2 text-center text-sm font-semibold transition ${
+                          y === year ? "bg-gold text-navy" : "text-navy hover:bg-navy/10"
+                        }`}
+                      >
+                        {y}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <button type="button" onClick={() => setViewDate(new Date(year, month + 1, 1))} className="grid h-8 w-8 place-items-center rounded-md text-navy hover:bg-muted">
+
+            <button type="button" onClick={() => setViewDate(new Date(year, month + 1, 1))} className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-navy hover:bg-muted">
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
