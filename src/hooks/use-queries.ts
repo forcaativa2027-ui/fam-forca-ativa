@@ -440,7 +440,10 @@ import * as Del from "@/services/delegations";
 import type { DelegationModule } from "@/types/domain";
 export const useCouncilMembers = () =>
   useQuery({ queryKey: ["council-members"], queryFn: () => Del.listCouncilMembers(supabase) });
-export const useUsersDirectorySearch = (opts: { query?: string; stateId?: string; churchId?: string; role?: string }) =>
+export const useUsersDirectorySearch = (opts: {
+  query?: string; stateId?: string; districtId?: string; sectorId?: string; churchId?: string;
+  role?: string; journeyStage?: string; memberStatus?: string; joinedFrom?: string; joinedTo?: string;
+}) =>
   useQuery({ queryKey: ["users-directory-search", opts], queryFn: () => Del.searchUsersDirectory(supabase, opts) });
 export const useDelegations = (opts?: { status?: string; module?: DelegationModule; profile_id?: string }) =>
   useQuery({ queryKey: ["delegations", opts], queryFn: () => Del.listDelegations(supabase, opts) });
