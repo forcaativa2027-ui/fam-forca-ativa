@@ -14,7 +14,7 @@ import { cellSchema, type CellInput } from "@/schemas";
 import { useCells, useSectors, useAllMembers, useChurches } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { createCell, updateCell, deleteCell } from "@/services/cells";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import type { Cell, Church, Sector } from "@/types/domain";
 import { LgEngagementCard } from "./LgEngagementCard";
 
@@ -38,7 +38,7 @@ export function CellsAdmin() {
     setCreateErr("");
     try {
       const created = await createCell(supabase, buildPayload(v));
-      await logAudit(supabase, "insert", "life_groups", created.id, { name: v.name });
+      await logAudit(supabase, "insert", "life_groups", created.id, {}, { after: created as unknown as Record<string, unknown> });
       createForm.reset();
       qc.invalidateQueries({ queryKey: ["cells"] });
     } catch (e: unknown) {
@@ -50,7 +50,7 @@ export function CellsAdmin() {
     if (!confirm(`Remover Life Group "${c.name}"?\n\nMembros vinculados ficarão sem Life Group.`)) return;
     try {
       await deleteCell(supabase, c.id);
-      await logAudit(supabase, "delete", "life_groups", c.id, { name: c.name });
+      await logAudit(supabase, "delete", "life_groups", c.id, {}, { before: c as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["cells"] });
     } catch (e: unknown) {
       alert((e as { message?: string })?.message ?? "Erro ao remover");
@@ -177,8 +177,10 @@ function EditCellDialog({ cell, sectors, churches, members, onClose }: {
   async function onSubmit(v: CellInput) {
     setErr("");
     try {
-      await updateCell(supabase, cell.id, buildPayload(v));
-      await logAudit(supabase, "update", "life_groups", cell.id, { name: v.name });
+      const payload = buildPayload(v);
+      await updateCell(supabase, cell.id, payload);
+      const diff = diffFields(cell as unknown as Record<string, unknown>, payload as unknown as Record<string, unknown>);
+      await logAudit(supabase, "update", "life_groups", cell.id, {}, diff ?? undefined);
       qc.invalidateQueries({ queryKey: ["cells"] });
       onClose();
     } catch (e: unknown) {

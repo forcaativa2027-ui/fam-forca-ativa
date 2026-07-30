@@ -34,8 +34,9 @@ export function PublicPrayerRequestsAdmin() {
 
   async function setStatus(id: string, status: ContactStatus) {
     try {
+      const prev = items.find((i) => i.id === id);
       await updatePrayerStatus(supabase, id, status);
-      await logAudit(supabase, "update", "public_prayer_requests", id, { status });
+      await logAudit(supabase, "update", "public_prayer_requests", id, {}, { before: { status: prev?.status }, after: { status } });
       qc.invalidateQueries({ queryKey: ["prayer-requests"] });
       qc.invalidateQueries({ queryKey: ["pending-counts"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }
@@ -117,8 +118,9 @@ export function VisitRequestsAdmin() {
 
   async function setStatus(id: string, status: ContactStatus) {
     try {
+      const prev = items.find((i) => i.id === id);
       await updateVisitStatus(supabase, id, status);
-      await logAudit(supabase, "update", "visit_requests", id, { status });
+      await logAudit(supabase, "update", "visit_requests", id, {}, { before: { status: prev?.status }, after: { status } });
       qc.invalidateQueries({ queryKey: ["visit-requests"] });
       qc.invalidateQueries({ queryKey: ["pending-counts"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }

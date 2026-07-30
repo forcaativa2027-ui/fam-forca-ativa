@@ -41,7 +41,7 @@ export function DiscipleshipAdmin() {
         current_module: v.current_module || undefined,
         notes: v.notes || undefined,
       });
-      await logAudit(supabase, "insert", "discipleship", created.id);
+      await logAudit(supabase, "insert", "discipleship", created.id, {}, { after: created as unknown as Record<string, unknown> });
       reset();
       qc.invalidateQueries({ queryKey: ["all-discipleships"] });
     } catch (e: unknown) {
@@ -52,8 +52,9 @@ export function DiscipleshipAdmin() {
   }
   async function end(id: string, status: "concluido" | "pausado" | "desistente") {
     try {
+      const prev = discs.find((d) => d.id === id);
       await endDiscipleship(supabase, id, status);
-      await logAudit(supabase, "update", "discipleship", id, { status });
+      await logAudit(supabase, "update", "discipleship", id, {}, { before: { status: prev?.status }, after: { status } });
       qc.invalidateQueries({ queryKey: ["all-discipleships"] });
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : "Erro");
@@ -62,8 +63,9 @@ export function DiscipleshipAdmin() {
   async function remove(id: string) {
     if (!confirm("Remover este par de discipulado?")) return;
     try {
+      const prev = discs.find((d) => d.id === id);
       await deleteDiscipleship(supabase, id);
-      await logAudit(supabase, "delete", "discipleship", id);
+      await logAudit(supabase, "delete", "discipleship", id, {}, { before: prev as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["all-discipleships"] });
     } catch (e: unknown) {
       alert(e instanceof Error ? e.message : "Erro");

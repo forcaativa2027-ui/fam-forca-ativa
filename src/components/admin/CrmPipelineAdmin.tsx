@@ -150,7 +150,7 @@ export function PipelineCard({ item: it, church }: { item: VisitorPipeline; chur
     setBusy(true);
     try {
       await updatePipelineStage(supabase, it.id, stage, notes !== (it.internal_notes ?? "") ? notes : undefined);
-      await logAudit(supabase, "update", "visitor_pipeline", it.id, { stage });
+      await logAudit(supabase, "update", "visitor_pipeline", it.id, {}, { before: { stage: it.stage }, after: { stage } });
       qc.invalidateQueries({ queryKey: ["pipeline"] });
       qc.invalidateQueries({ queryKey: ["acolhimento"] });
       qc.invalidateQueries({ queryKey: ["pending-counts"] });
@@ -161,7 +161,7 @@ export function PipelineCard({ item: it, church }: { item: VisitorPipeline; chur
     if (!confirm("Apagar esta entrada do pipeline? O usuário continua existindo, mas perde o rastro de relacionamento.")) return;
     try {
       await deletePipeline(supabase, it.id);
-      await logAudit(supabase, "delete", "visitor_pipeline", it.id);
+      await logAudit(supabase, "delete", "visitor_pipeline", it.id, {}, { before: it as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["pipeline"] });
       qc.invalidateQueries({ queryKey: ["acolhimento"] });
     } catch (e: unknown) { alert(e instanceof Error ? e.message : "Erro"); }
@@ -386,8 +386,9 @@ function PipelineKanban({ items, stages, stageLabels, stageColors, churchMap }: 
 
   async function moveTo(id: string, stage: PipelineStage) {
     try {
+      const prev = items.find((i) => i.id === id);
       await updatePipelineStage(supabase, id, stage);
-      await logAudit(supabase, "update", "visitor_pipeline", id, { stage });
+      await logAudit(supabase, "update", "visitor_pipeline", id, {}, { before: { stage: prev?.stage }, after: { stage } });
       qc.invalidateQueries({ queryKey: ["pipeline"] });
       qc.invalidateQueries({ queryKey: ["acolhimento"] });
       qc.invalidateQueries({ queryKey: ["pending-counts"] });

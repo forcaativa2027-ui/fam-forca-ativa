@@ -15,7 +15,7 @@ import {
   createRegistrationEvent, updateRegistrationEvent, deleteRegistrationEvent, cancelRegistration, saveEventSpeakers,
   adminUpdateRegistration, adminMoveRegistrationStatus, finalizeEventAttendance, saveEventSchedule,
 } from "@/services/events";
-import { logAudit } from "@/services/audit";
+import { logAudit, diffFields } from "@/services/audit";
 import { CheckinScanner } from "./EventCheckinAdmin";
 import { MediaLibraryPicker } from "@/components/shared/MediaLibraryPicker";
 import { TaxonomyPicker } from "@/components/shared/TaxonomyPicker";
@@ -100,7 +100,7 @@ export function RegistrationEventsAdmin() {
     if (!confirm(`Excluir o evento "${e.name}"? As inscrições vinculadas também serão apagadas.`)) return;
     try {
       await deleteRegistrationEvent(supabase, e.id);
-      await logAudit(supabase, "delete", "registration_events", e.id, { name: e.name });
+      await logAudit(supabase, "delete", "registration_events", e.id, {}, { before: e as unknown as Record<string, unknown> });
       qc.invalidateQueries({ queryKey: ["registration-events-admin"] });
     } catch (err) { alert((err as { message?: string })?.message ?? "Erro ao excluir"); }
   }
@@ -291,11 +291,12 @@ function EventForm({ event, onClose }: { event: RegistrationEvent | null; onClos
       let eventId = event?.id;
       if (event) {
         await updateRegistrationEvent(supabase, event.id, payload);
-        await logAudit(supabase, "update", "registration_events", event.id, { name });
+        const diff = diffFields(event as unknown as Record<string, unknown>, payload as unknown as Record<string, unknown>);
+        await logAudit(supabase, "update", "registration_events", event.id, {}, diff ?? undefined);
       } else {
         const created = await createRegistrationEvent(supabase, payload);
         eventId = created.id;
-        await logAudit(supabase, "insert", "registration_events", created.id, { name });
+        await logAudit(supabase, "insert", "registration_events", created.id, {}, { after: created as unknown as Record<string, unknown> });
       }
       if (eventId) {
         await saveEventSpeakers(supabase, eventId, speakers.filter((s) => s.name.trim() !== ""));
@@ -598,7 +599,7 @@ function RegistrantsView({ event, onBack }: { event: RegistrationEvent; onBack: 
   async function moveStatus(reg: EventRegistration, newStatus: "confirmada" | "lista_espera") {
     try {
       await adminMoveRegistrationStatus(supabase, reg.id, newStatus);
-      await logAudit(supabase, "update", "event_registrations", reg.id, { action: "move_status", to: newStatus });
+      await logAudit(supabase, "update", "event_registrations", reg.id, {}, { before: { status: reg.status }, after: { status: newStatus } });
       qc.invalidateQueries({ queryKey: ["event-registrations", event.id] });
       qc.invalidateQueries({ queryKey: ["event-registration-summary", event.id] });
     } catch (e) { alert((e as { message?: string })?.message ?? "Erro ao mover"); }
