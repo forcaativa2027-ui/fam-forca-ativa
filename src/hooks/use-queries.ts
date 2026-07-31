@@ -21,6 +21,7 @@ import * as CL from "@/services/contentLibrary";
 import * as Tx from "@/services/taxonomy";
 import * as Wf from "@/services/editorialWorkflow";
 import * as Lgr from "@/services/lgMeetingRoles";
+import * as Tk from "@/services/ministerialTasks";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -99,6 +100,20 @@ export const useLgMeetingRoles = (lifeGroupId: string|null, meetingDate: string|
     queryKey: ["lg-meeting-roles", lifeGroupId ?? "none", meetingDate ?? "none"],
     queryFn: () => (lifeGroupId && meetingDate) ? Lgr.listMeetingRoles(supabase, lifeGroupId, meetingDate) : Promise.resolve([]),
     enabled: !!lifeGroupId && !!meetingDate,
+  });
+/** CT-020 §14 — tarefas ministeriais de um Life Group (visão Líder/Colíder). */
+export const useLgTasks = (lifeGroupId: string|null) =>
+  useQuery({
+    queryKey: ["lg-tasks", lifeGroupId ?? "none"],
+    queryFn: () => lifeGroupId ? Tk.listLgTasks(supabase, lifeGroupId) : Promise.resolve([]),
+    enabled: !!lifeGroupId,
+  });
+/** CT-020 §14 — minhas tarefas, onde sou o responsável, em qualquer escopo. */
+export const useMyTasks = (profileId: string|null) =>
+  useQuery({
+    queryKey: ["my-tasks", profileId ?? "none"],
+    queryFn: () => profileId ? Tk.listMyTasks(supabase, profileId) : Promise.resolve([]),
+    enabled: !!profileId,
   });
 export const useMyActiveDiscipleship = (myMemberId: string|null) =>
   useQuery({
