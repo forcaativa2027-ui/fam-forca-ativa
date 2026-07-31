@@ -47,6 +47,7 @@ export function AccessibilityButton() {
     activeProfile, applyProfile,
     soundEnabled, soundVolume, setSoundEnabled, setSoundVolume,
     hapticEnabled, hapticIntensity, setHapticEnabled, setHapticIntensity,
+    openOnboarding,
   } = useAccessibility();
 
   return (
@@ -230,6 +231,14 @@ export function AccessibilityButton() {
             <p className="text-xs text-muted-foreground">
               Suas preferências ficam salvas na sua conta e valem em qualquer aparelho que você usar pra acessar a plataforma.
             </p>
+
+            <Button
+              variant="outline"
+              onClick={() => { setOpen(false); openOnboarding(); }}
+              className="w-full gap-2"
+            >
+              <Sparkles className="h-4 w-4" /> Reabrir Assistente de Personalização
+            </Button>
 
             <Button onClick={() => setOpen(false)} className="w-full">Concluído</Button>
           </div>

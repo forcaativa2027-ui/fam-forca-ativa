@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, PartyPopper, Sparkles } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, Check, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAccessibility, PROFILE_PRESETS } from "./AccessibilityProvider";
 import { WELCOME_PROFILE_STYLE } from "./onboarding/ProfileIcons";
+import { feedback } from "@/lib/feedback";
 import type { AccessibilityProfile } from "@/types/domain";
 
-/** CT-018 — os quatro perfis oferecidos nesta versão do assistente. */
+/** CT-018 §5 — os quatro perfis oferecidos no assistente de boas-vindas. */
 const WELCOME_PROFILES: {
   key: AccessibilityProfile;
   name: string;
@@ -43,20 +45,34 @@ const WELCOME_PROFILES: {
 
 type Step = "boas_vindas" | "escolha" | "aplicando" | "confirmacao";
 
+/** Botão principal — azul institucional (CT-018 §8), específico deste assistente. */
+function PrimaryButton(props: React.ComponentProps<typeof Button>) {
+  const { className = "", ...rest } = props;
+  return (
+    <Button
+      {...rest}
+      className={`h-12 bg-[#2563EB] text-white hover:bg-[#1D4ED8] focus-visible:ring-[#2563EB] ${className}`}
+    />
+  );
+}
+
 /**
- * CT-018 — Assistente de Boas-vindas e Personalização da Experiência.
- * Substitui o antigo diálogo simples de Perfis Inteligentes (CT-017 §18)
- * por uma experiência acolhedora em página dedicada de tela cheia, com
- * quatro telas: boas-vindas, escolha do perfil (com prévia em tempo
- * real), aplicação e confirmação.
+ * CT-018 (v1.1 consolidada) — Assistente de Boas-vindas e Personalização
+ * da Experiência. Página dedicada de tela cheia com quatro telas:
+ * boas-vindas (com logo oficial) → escolha do perfil (com checkbox
+ * "Não mostrar novamente") → aplicação → confirmação.
  */
 export function AccessibilityOnboarding() {
   const { onboarded, loaded, onboardingForceOpen, applyProfile, markOnboarded, closeOnboarding } = useAccessibility();
   const [step, setStep] = useState<Step>("boas_vindas");
   const [selected, setSelected] = useState<AccessibilityProfile | null>(null);
+  const [dontShowAgain, setDontShowAgain] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
+  // Primeiro acesso já concluído nesta aba, mas ainda não persistido (checkbox desmarcado) —
+  // fecha o overlay desta vez sem impedir que ele volte a abrir sozinho no próximo login.
+  const [sessionDismissed, setSessionDismissed] = useState(false);
 
-  const isFirstAccess = !onboarded;
+  const isFirstAccess = !onboarded && !sessionDismissed;
   const visible = loaded && (isFirstAccess || onboardingForceOpen);
 
   useEffect(() => {
@@ -66,7 +82,7 @@ export function AccessibilityOnboarding() {
 
   // Sempre que o assistente é (re)aberto, volta pra primeira tela.
   useEffect(() => {
-    if (visible) { setStep("boas_vindas"); setSelected(null); }
+    if (visible) { setStep("boas_vindas"); setSelected(null); setDontShowAgain(true); }
   }, [visible]);
 
   if (!visible) return null;
@@ -76,7 +92,11 @@ export function AccessibilityOnboarding() {
     const delay = reducedMotion ? 0 : 900;
     window.setTimeout(() => {
       applyProfile(profile);
-      markOnboarded();
+      // CT-018 §7 — "Não mostrar novamente" e perfil de experiência são independentes:
+      // só persiste onboarded=true (suprime a tela nos próximos acessos) se marcado.
+      if (dontShowAgain) markOnboarded();
+      setSessionDismissed(true);
+      feedback("success", "success");
       setStep("confirmacao");
     }, delay);
   }
@@ -108,8 +128,9 @@ export function AccessibilityOnboarding() {
         {step === "escolha" && (
           <ChooseProfileScreen
             selected={selected}
-            onSelect={setSelected}
-            onBack={() => setStep("boas_vindas")}
+            onSelect={(p) => { setSelected(p); feedback("select", "select"); }}
+            dontShowAgain={dontShowAgain}
+            onToggleDontShowAgain={setDontShowAgain}
             onContinue={() => selected && finish(selected)}
             onUseDefault={() => finish("padrao")}
           />
@@ -126,25 +147,33 @@ export function AccessibilityOnboarding() {
 function WelcomeScreen({ onStart, onUseDefault }: { onStart: () => void; onUseDefault: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
-      <div className="grid h-24 w-24 place-items-center rounded-full bg-navy/10">
-        <Sparkles className="h-11 w-11 text-navy" />
-      </div>
-      <div className="max-w-lg space-y-3">
+      <Image
+        src="/images/cec-family-logo.png"
+        alt="CEC FAMILY"
+        width={96}
+        height={96}
+        priority
+        className="h-24 w-24 object-contain"
+      />
+      <div className="max-w-lg space-y-4">
         <h1 className="text-[26px] font-bold leading-tight text-[#0F172A]">
-          Seja muito bem-vindo(a) ao CEC FAMILY!
+          Seja muito bem-vindo(a)!
         </h1>
         <p className="text-base leading-relaxed text-[#475569]">
-          Estamos felizes em receber você. Antes de começar, vamos preparar a plataforma para
-          oferecer uma experiência mais confortável, simples e adequada às suas preferências.
+          É uma alegria ter você conosco.
         </p>
         <p className="text-base leading-relaxed text-[#475569]">
-          Essa configuração leva poucos segundos e poderá ser alterada quando desejar.
+          Que esta plataforma seja uma ferramenta para fortalecer sua caminhada, sua comunhão e seu crescimento.
+        </p>
+        <p className="text-base leading-relaxed text-[#475569]">
+          Vamos preparar sua experiência para oferecer uma navegação mais confortável, simples e personalizada.
+          Você poderá alterar essas configurações quando desejar.
         </p>
       </div>
       <div className="flex w-full max-w-sm flex-col gap-3">
-        <Button size="lg" onClick={onStart} className="h-12 w-full gap-2 text-base">
-          Vamos começar <ArrowRight className="h-4 w-4" />
-        </Button>
+        <PrimaryButton size="lg" onClick={onStart} className="w-full gap-2 text-base">
+          Continuar <ArrowRight className="h-4 w-4" />
+        </PrimaryButton>
         <Button variant="ghost" onClick={onUseDefault} className="h-11 w-full min-h-[44px] text-[#475569]">
           Usar configuração padrão
         </Button>
@@ -154,11 +183,12 @@ function WelcomeScreen({ onStart, onUseDefault }: { onStart: () => void; onUseDe
 }
 
 function ChooseProfileScreen({
-  selected, onSelect, onBack, onContinue, onUseDefault,
+  selected, onSelect, dontShowAgain, onToggleDontShowAgain, onContinue, onUseDefault,
 }: {
   selected: AccessibilityProfile | null;
   onSelect: (p: AccessibilityProfile) => void;
-  onBack: () => void;
+  dontShowAgain: boolean;
+  onToggleDontShowAgain: (v: boolean) => void;
   onContinue: () => void;
   onUseDefault: () => void;
 }) {
@@ -167,10 +197,8 @@ function ChooseProfileScreen({
   return (
     <div className="flex flex-1 flex-col gap-6 py-2">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-[#0F172A]">Escolha a melhor experiência para você</h1>
-        <p className="mt-2 text-base text-[#475569]">
-          Selecione uma opção abaixo. Você poderá personalizar ou alterar esta escolha posteriormente.
-        </p>
+        <h1 className="text-2xl font-bold text-[#0F172A]">Vamos personalizar sua experiência</h1>
+        <p className="mt-2 text-base text-[#475569]">Escolha a opção que oferece mais conforto para você.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -189,7 +217,7 @@ function ChooseProfileScreen({
                 borderColor: isSelected ? style.solid : style.border,
                 borderWidth: isSelected ? 3 : 1,
               }}
-              className="relative flex flex-col gap-3 rounded-2xl p-4 text-left shadow-sm transition hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              className="relative flex flex-col gap-3 rounded-2xl p-4 text-left shadow-sm transition-all duration-150 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             >
               {isSelected && (
                 <span
@@ -241,23 +269,29 @@ function ChooseProfileScreen({
         </div>
       )}
 
-      <div className="mt-auto flex flex-col-reverse items-stretch justify-between gap-3 pt-4 sm:flex-row sm:items-center">
-        <Button variant="ghost" onClick={onBack} className="h-11 min-h-[44px] gap-2 text-[#475569]">
-          <ArrowLeft className="h-4 w-4" /> Voltar
+      {/* CT-018 §7 — "Não mostrar novamente" (independente do perfil escolhido). */}
+      <label className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-base text-[#0F172A] focus-within:ring-2 focus-within:ring-[#2563EB]">
+        <input
+          type="checkbox"
+          checked={!dontShowAgain}
+          onChange={(e) => onToggleDontShowAgain(!e.target.checked)}
+          className="h-5 w-5 shrink-0 rounded border-2 border-[#94A3B8] accent-[#2563EB]"
+        />
+        Não mostrar esta tela novamente
+      </label>
+
+      <div className="mt-auto flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
+        <Button variant="ghost" onClick={onUseDefault} className="h-11 min-h-[44px] text-[#475569]">
+          Usar configuração padrão
         </Button>
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
-          <Button variant="ghost" onClick={onUseDefault} className="h-11 min-h-[44px] text-[#475569]">
-            Usar configuração padrão
-          </Button>
-          <Button
-            size="lg"
-            disabled={!selected}
-            onClick={onContinue}
-            className="h-12 w-full gap-2 text-base sm:w-auto"
-          >
-            Continuar <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <PrimaryButton
+          size="lg"
+          disabled={!selected}
+          onClick={onContinue}
+          className="w-full gap-2 text-base sm:w-auto"
+        >
+          Continuar <ArrowRight className="h-4 w-4" />
+        </PrimaryButton>
       </div>
     </div>
   );
@@ -266,7 +300,7 @@ function ChooseProfileScreen({
 function ApplyingScreen() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-      <div className="h-12 w-12 animate-spin rounded-full border-4 border-navy/20 border-t-navy" />
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#2563EB]/20 border-t-[#2563EB]" />
       <div>
         <h2 className="text-xl font-semibold text-[#0F172A]">Preparando sua experiência...</h2>
         <ul className="mt-3 space-y-1 text-sm text-[#475569]">
@@ -290,12 +324,12 @@ function ConfirmationScreen({ onEnter }: { onEnter: () => void }) {
         <p className="text-base text-[#475569]">Sua experiência foi personalizada com sucesso.</p>
         <p className="text-sm text-[#475569]">
           Você poderá alterar essas configurações a qualquer momento em{" "}
-          <b>Configurações → Acessibilidade e Personalização</b>.
+          <b>Meu Painel → Perfil → Acessibilidade e Personalização</b>.
         </p>
       </div>
-      <Button size="lg" onClick={onEnter} className="h-12 w-full max-w-sm text-base">
+      <PrimaryButton size="lg" onClick={onEnter} className="w-full max-w-sm text-base">
         Entrar no CEC FAMILY
-      </Button>
+      </PrimaryButton>
     </div>
   );
 }
