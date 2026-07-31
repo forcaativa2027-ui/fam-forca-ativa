@@ -7,8 +7,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   LogOut, Sparkles, AlertTriangle, BarChart3, Users, Heart, Map,
   Clock, MessageSquareHeart, User, Check, Plus, Calendar as Cal,
-  Award, ClipboardList,
+  Award, ClipboardList, Wand2, ChevronRight,
 } from "lucide-react";
+import { useAccessibility } from "@/components/shared/AccessibilityProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -470,6 +471,7 @@ function PrayerTab({ member }: { member: Member | null }) {
 function ProfileTab() {
   const { data: profile } = useMyProfile();
   const { data: member } = useMyMember();
+  const { openOnboarding } = useAccessibility();
   const qc = useQueryClient();
   const [ok, setOk] = useState(false);
   const [err, setErr] = useState("");
@@ -496,6 +498,19 @@ function ProfileTab() {
   return (
     <div className="space-y-4">
       <CompleteProfileCard member={member} />
+      <button
+        onClick={openOnboarding}
+        className="flex w-full items-center gap-3 rounded-xl border-2 border-gold/30 bg-gradient-to-br from-gold/10 to-card p-4 text-left transition hover:border-gold/60 hover:shadow-sm"
+      >
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gold/15 text-gold">
+          <Wand2 className="h-5 w-5" />
+        </span>
+        <span className="flex-1">
+          <b className="block text-navy">Acessibilidade e Personalização</b>
+          <span className="text-xs text-muted">Ajuste fonte, contraste, som e o perfil de experiência quando quiser</span>
+        </span>
+        <ChevronRight className="h-5 w-5 shrink-0 text-muted" />
+      </button>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><User className="h-5 w-5 text-gold"/>Meu Perfil/Atualizar</CardTitle>
