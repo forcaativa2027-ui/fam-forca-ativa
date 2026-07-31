@@ -1018,6 +1018,34 @@ export type LgMeetingMomentKey =
   | "oracao_inicial" | "louvor" | "dinamica" | "palavra"
   | "oferta" | "caixinha_oracao" | "avisos_cec_news";
 
+// ============================================================
+// CT-020 §14 — Tarefas Ministeriais
+// ============================================================
+export type MinisterialTaskOrigin = "manual" | "relatorio_visitante" | "relatorio_ausencia" | "pedido_oracao";
+export type MinisterialTaskPriority = "baixa" | "media" | "alta" | "urgente";
+export type MinisterialTaskStatus = "pendente" | "em_andamento" | "aguardando_retorno" | "concluida" | "cancelada";
+
+export interface MinisterialTask {
+  id: string;
+  title: string;
+  origin: MinisterialTaskOrigin;
+  life_group_id: string | null;
+  related_member_id: string | null;
+  responsible_id: string | null;
+  due_date: string | null;
+  priority: MinisterialTaskPriority;
+  status: MinisterialTaskStatus;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+}
+
+export type MinisterialTaskInput = Partial<Pick<MinisterialTask,
+  "title" | "origin" | "life_group_id" | "related_member_id" | "responsible_id" |
+  "due_date" | "priority" | "status" | "notes">>;
+
 export interface LgMeetingRole {
   id: string;
   life_group_id: string;
