@@ -167,7 +167,7 @@ export function LifeGroupDashboard({
       </Card>
 
       {/* §4.2/§4.3 — Programação e Escala da reunião: visível a todos, edição só Líder/Colíder. */}
-      <LgMeetingSchedule cell={myCell} members={allMembers} canManage={canManage} />
+      <LgMeetingSchedule cell={myCell} members={allMembers} canManage={canManage} myMemberId={member.id} />
 
       {/* §5/§6 — Palavra do Life Group e CEC News, reaproveitando Preguações/Notícias. */}
       <LgWordOfWeek churchId={myCell.church_id} />
