@@ -6,6 +6,8 @@ import { Users, Clock, ClipboardList, Crown, Shield, Heart } from "lucide-react"
 import { useCells, useCellMembers } from "@/hooks/use-queries";
 import type { Cell, Member, UserRole } from "@/types/domain";
 import { LgMeetingSchedule } from "./LgMeetingSchedule";
+import { LgWordOfWeek } from "./LgWordOfWeek";
+import { LgCecNews } from "./LgCecNews";
 
 const WEEKDAYS: Record<string, string> = {
   domingo: "Domingo", segunda: "Segunda", terca: "Terça",
@@ -167,13 +169,9 @@ export function LifeGroupDashboard({
       {/* §4.2/§4.3 — Programação e Escala da reunião: visível a todos, edição só Líder/Colíder. */}
       <LgMeetingSchedule cell={myCell} members={allMembers} canManage={canManage} />
 
-      {/* Placeholder das próximas fases, já sinalizando o que vem por aí. */}
-      <Card className="border-dashed">
-        <CardContent className="flex items-center gap-3 py-5 text-sm text-muted-foreground">
-          <Heart className="h-5 w-5 shrink-0 text-gold/70" />
-          Palavra do Life Group e CEC News segmentado chegam nas próximas atualizações deste painel.
-        </CardContent>
-      </Card>
+      {/* §5/§6 — Palavra do Life Group e CEC News, reaproveitando Preguações/Notícias. */}
+      <LgWordOfWeek churchId={myCell.church_id} />
+      <LgCecNews churchId={myCell.church_id} />
     </div>
   );
 }
