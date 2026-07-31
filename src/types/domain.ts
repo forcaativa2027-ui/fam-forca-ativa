@@ -1044,7 +1044,7 @@ export interface MinisterialTask {
 
 export type MinisterialTaskInput = Partial<Pick<MinisterialTask,
   "title" | "origin" | "life_group_id" | "related_member_id" | "responsible_id" |
-  "due_date" | "priority" | "status" | "notes">>;
+  "due_date" | "priority" | "status" | "notes" | "created_by">>;
 
 export interface LgMeetingRole {
   id: string;
