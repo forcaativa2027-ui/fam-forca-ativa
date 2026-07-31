@@ -1,16 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Bell, BellRing, CalendarDays, ClipboardX, Heart, Target, Home, CheckCircle2, Ticket, PartyPopper, AlertTriangle, Clock3 } from "lucide-react";
+import { Bell, BellRing, CalendarDays, ClipboardX, Heart, Target, Home, CheckCircle2, Ticket, PartyPopper, AlertTriangle, Clock3, Mic2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
 import { listPublicRegistrationEvents, listMyEventRegistrations, listMyPendingPromotions, acknowledgeEventPromotion, listMyEventChanges, acknowledgeEventChange } from "@/services/events";
+import { MEETING_MOMENTS, setMeetingRoleConfirmed } from "@/services/lgMeetingRoles";
 import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import type { RegistrationEvent } from "@/types/domain";
 
 // ── Tipos ─────────────────────────────────────────────────────
-type NotifKind = "aniversario" | "sem_relatorio" | "oracao_urgente" | "visita_pastoral" | "meta_atrasada" | "evento" | "promocao" | "mudanca_evento" | "lembrete_evento";
+type NotifKind = "aniversario" | "sem_relatorio" | "oracao_urgente" | "visita_pastoral" | "meta_atrasada" | "evento" | "promocao" | "mudanca_evento" | "lembrete_evento" | "minha_funcao_lg";
 
 interface Notif {
   id: string;
@@ -21,6 +22,7 @@ interface Notif {
   eventObj?: RegistrationEvent;
   prefill?: { full_name: string; email: string | null; phone: string | null } | null;
   registrationId?: string;
+  roleId?: string;
 }
 
 const KIND_CONFIG: Record<NotifKind, { icon: React.ReactNode; color: string; bg: string; label: string }> = {
@@ -33,6 +35,7 @@ const KIND_CONFIG: Record<NotifKind, { icon: React.ReactNode; color: string; bg:
   promocao:        { icon: <PartyPopper className="h-4 w-4"/>, color:"text-emerald-600", bg:"bg-emerald-50 border-emerald-200", label:"Boas notícias"  },
   mudanca_evento:  { icon: <AlertTriangle className="h-4 w-4"/>, color:"text-orange-700", bg:"bg-orange-50 border-orange-300", label:"Mudança em evento" },
   lembrete_evento: { icon: <Clock3 className="h-4 w-4"/>,      color:"text-sky-700",     bg:"bg-sky-50 border-sky-200",     label:"Lembrete"          },
+  minha_funcao_lg: { icon: <Mic2 className="h-4 w-4"/>,        color:"text-violet-700",  bg:"bg-violet-50 border-violet-200", label:"Minha Função no LG" },
 };
 
 // ── Buscar notificações ───────────────────────────────────────
@@ -122,6 +125,35 @@ async function fetchNotifications(): Promise<Notif[]> {
         listMyPendingPromotions(supabase),
         listMyEventChanges(supabase),
       ]);
+
+      // Minha função na próxima reunião do Life Group, se ainda não confirmada.
+      // (Aviso dentro do app — envio por push/WhatsApp/e-mail fica pra uma fase futura.)
+      try {
+        const { data: myMember } = await supabase.from("members").select("id").eq("profile_id", user.id).maybeSingle();
+        if (myMember) {
+          const todayIso = new Date().toISOString().slice(0, 10);
+          const in7Iso = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+          const { data: myRoles } = await supabase
+            .from("lg_meeting_roles")
+            .select("id, moment_key, meeting_date")
+            .eq("responsible_member_id", myMember.id)
+            .eq("confirmed", false)
+            .gte("meeting_date", todayIso)
+            .lte("meeting_date", in7Iso);
+          (myRoles ?? []).forEach((r) => {
+            const momentLabel = MEETING_MOMENTS.find((m) => m.key === r.moment_key)?.label ?? r.moment_key;
+            const dateLabel = new Date(`${r.meeting_date}T00:00:00`).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+            notifs.push({
+              id: `funcao-${r.id}`,
+              kind: "minha_funcao_lg",
+              title: `Você é responsável: ${momentLabel}`,
+              detail: `Reunião do seu Life Group — ${dateLabel}. Confirme sua participação.`,
+              urgency: "atencao",
+              roleId: r.id,
+            });
+          });
+        }
+      } catch { /* função no LG é um extra — não derruba o resto das notificações */ }
 
       // Eventos elegíveis (ainda não inscrito)
       const registeredIds = new Set(myRegs.filter((r) => r.status !== "cancelada").map((r) => r.event_id));
@@ -276,7 +308,7 @@ export function NotificationsPanel() {
       </div>
 
       {/* Lista por categoria */}
-      {(["promocao","mudanca_evento","evento","lembrete_evento","aniversario","sem_relatorio","oracao_urgente","visita_pastoral","meta_atrasada"] as NotifKind[]).map(kind => {
+      {(["promocao","mudanca_evento","minha_funcao_lg","evento","lembrete_evento","aniversario","sem_relatorio","oracao_urgente","visita_pastoral","meta_atrasada"] as NotifKind[]).map(kind => {
         const group = visible.filter(n => n.kind === kind);
         if (group.length === 0) return null;
         const cfg = KIND_CONFIG[kind];
@@ -309,12 +341,13 @@ export function NotificationsPanel() {
                       setDismissed(d => new Set([...d, n.id]));
                       if (kind === "promocao" && n.registrationId) acknowledgeEventPromotion(supabase, n.registrationId).catch(() => {});
                       if (kind === "mudanca_evento" && n.registrationId) acknowledgeEventChange(supabase, n.registrationId).catch(() => {});
+                      if (kind === "minha_funcao_lg" && n.roleId) setMeetingRoleConfirmed(supabase, n.roleId, true).catch(() => {});
                       if (kind === "lembrete_evento" && n.registrationId) {
                         try { sessionStorage.setItem(`cec-event-reminder-${n.registrationId}`, "1"); } catch { /* sem storage — sem problema */ }
                       }
                     }}
                     className="text-muted-foreground hover:text-gray-600 shrink-0 mt-0.5"
-                    title="Dispensar"
+                    title={kind === "minha_funcao_lg" ? "Confirmar participação" : "Dispensar"}
                   >
                     <CheckCircle2 className="h-4 w-4"/>
                   </button>
