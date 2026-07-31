@@ -26,6 +26,11 @@ interface AccessibilityState {
   hapticIntensity: "leve" | "medio" | "forte";
   onboarded: boolean;
   loaded: boolean;
+  /** true quando o assistente de boas-vindas foi reaberto manualmente (CT-018 §4). */
+  onboardingForceOpen: boolean;
+  /** Reabre o Assistente de Boas-vindas e Personalização a qualquer momento. */
+  openOnboarding: () => void;
+  closeOnboarding: () => void;
   setTheme: (t: AccessibilityTheme) => void;
   setFontSize: (f: AccessibilityFontSize) => void;
   setContrast: (c: AccessibilityContrast) => void;
@@ -97,6 +102,7 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   const [hapticEnabled, setHapticEnabledState] = useState(false);
   const [hapticIntensity, setHapticIntensityState] = useState<"leve" | "medio" | "forte">("medio");
   const [onboarded, setOnboarded] = useState(false);
+  const [onboardingForceOpen, setOnboardingForceOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
 
@@ -246,13 +252,23 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
   }, [theme, persist]);
 
   const markOnboarded = useCallback(() => {
-    setOnboarded(true); persist({ onboarded: true });
+    setOnboarded(true); setOnboardingForceOpen(false); persist({ onboarded: true });
   }, [persist]);
+
+  /** Reabre o assistente de boas-vindas mesmo já tendo sido concluído antes (CT-018 §4). */
+  const openOnboarding = useCallback(() => {
+    setOnboardingForceOpen(true);
+  }, []);
+
+  const closeOnboarding = useCallback(() => {
+    setOnboardingForceOpen(false);
+  }, []);
 
   return (
     <AccessibilityContext.Provider value={{
       theme, fontSize, contrast, spacing, animations, buttonSize, iconStyle, activeProfile,
       soundEnabled, soundVolume, hapticEnabled, hapticIntensity, onboarded, loaded,
+      onboardingForceOpen, openOnboarding, closeOnboarding,
       setTheme, setFontSize, setContrast, setSpacing, setAnimations, setButtonSize, setIconStyle,
       setSoundEnabled, setSoundVolume, setHapticEnabled, setHapticIntensity, applyProfile, markOnboarded,
     }}>

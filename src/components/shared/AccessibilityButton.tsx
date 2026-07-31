@@ -26,7 +26,7 @@ const FONT_OPTIONS: { value: AccessibilityFontSize; label: string; sample: strin
 
 const PROFILE_OPTIONS: { value: AccessibilityProfile; label: string; icon: React.ReactNode }[] = [
   { value: "padrao", label: "Padrão", icon: <Sparkles className="h-4 w-4" /> },
-  { value: "idoso", label: "Idoso", icon: <User className="h-4 w-4" /> },
+  { value: "idoso", label: "Perfil Confortável", icon: <User className="h-4 w-4" /> },
   { value: "baixa_visao", label: "Baixa Visão", icon: <Glasses className="h-4 w-4" /> },
   { value: "simplificado", label: "Simplificado", icon: <LayoutList className="h-4 w-4" /> },
   { value: "smartphone", label: "Smartphone", icon: <Smartphone className="h-4 w-4" /> },
