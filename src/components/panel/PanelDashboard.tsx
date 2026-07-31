@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   LogOut, Sparkles, AlertTriangle, BarChart3, Users, Heart, Map,
-  Clock, MessageSquareHeart, User, Check, Plus, Calendar as Cal,
+  MessageSquareHeart, User, Check, Plus, Calendar as Cal,
   Award, ClipboardList, Wand2, ChevronRight,
 } from "lucide-react";
 import { useAccessibility } from "@/components/shared/AccessibilityProvider";
@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { BottomNav, BottomNavSpacer, type BottomNavItem } from "@/components/shared/BottomNav";
 import { MyMinistriesPanel } from "./MyMinistriesPanel";
+import { LifeGroupDashboard } from "./LifeGroupDashboard";
 import { CompleteProfileCard } from "./CompleteProfileCard";
 import { MyCredentialCard } from "./MyCredentialCard";
 import { MemberHeader } from "./MemberHeader";
@@ -26,21 +27,21 @@ import { supabase } from "@/lib/supabase/client";
 import { touchCurrentSession } from "@/services/security";
 import {
   useMyProfile, useDashboard, useChurches, useMdaAlerts,
-  useMyMember, useCells, useCellMembers, useMemberCard,
+  useMyMember, useMemberCard,
   useMyActiveDiscipleship, useMyDisciples,
   useMyTimeline, useCellPrayers,
 } from "@/hooks/use-queries";
 import { logAudit } from "@/services/audit";
 import { addPrayer, markPrayerAnswered } from "@/services/prayer";
 import { profileEditSchema, newPrayerSchema, type ProfileEditInput, type NewPrayerInput } from "@/schemas";
-import type { Cell, Member, PastoralTimeline } from "@/types/domain";
+import type { Member, PastoralTimeline } from "@/types/domain";
 
 const ROLE_LABELS: Record<string, string> = {
   apostolo:"Apóstolo", pastor:"Pastor", supervisor:"Supervisor",
   lider:"Líder", anfitriao:"Anfitrião", discipulador:"Discipulador",
   membro:"Membro", visitante:"Visitante",
 };
-const WEEKDAYS: Record<string, string> = {
+export const WEEKDAYS: Record<string, string> = {
   domingo:"Domingo", segunda:"Segunda", terca:"Terça",
   quarta:"Quarta", quinta:"Quinta", sexta:"Sexta", sabado:"Sábado",
 };
@@ -49,7 +50,7 @@ const TIMELINE_LABELS: Record<string, string> = {
   discipulado:"Discipulado", curso:"Curso", ministerio:"Ministério",
   encontro:"Encontro", mudanca_etapa:"Mudança de etapa", observacao:"Observação",
 };
-const STAGE_LABELS: Record<string, string> = {
+export const STAGE_LABELS: Record<string, string> = {
   visitante:"Visitante", novo_convertido:"Novo convertido", consolidacao:"Consolidação",
   discipulado:"Discipulado", batismo:"Batismo", membro_ativo:"Membro ativo",
   servo:"Servo", lider_formacao:"Líder em formação", lider:"Líder",
@@ -107,7 +108,15 @@ export default function PanelDashboard() {
 
           {isAdmin && <TabsContent value="geral"><GeneralView /></TabsContent>}
           <TabsContent value="alertas"><NotificationsPanel /></TabsContent>
-          <TabsContent value="celula"><MyCellTab member={member ?? null} profileId={profile?.id ?? null} /></TabsContent>
+          <TabsContent value="celula">
+            <LifeGroupDashboard
+              member={member ?? null}
+              profileId={profile?.id ?? null}
+              profileRole={profile?.role}
+              isElevated={isAdmin}
+              churchName={myChurchName}
+            />
+          </TabsContent>
           <TabsContent value="discipulado"><DiscipleshipTab member={member ?? null} /></TabsContent>
           <TabsContent value="jornada"><JourneyTab member={member ?? null} /></TabsContent>
           <TabsContent value="oracao"><PrayerTab member={member ?? null} /></TabsContent>
@@ -219,78 +228,6 @@ function JourneyBars({ byStage }: { byStage: Record<string, number> }) {
 // ============================================================
 // MINHA CÉLULA
 // ============================================================
-function MyCellTab({ member, profileId }: { member: Member | null; profileId: string | null }) {
-  const { data: cells = [] } = useCells();
-  const myCell: Cell | null = member?.life_group_id ? (cells.find((c)=>c.id === member.life_group_id) ?? null) : null;
-  const { data: companions = [] } = useCellMembers(myCell?.id ?? null, member?.id ?? null);
-
-  if (!member) return <NotLinkedMessage subject="a uma célula"/>;
-  if (!myCell)  return <AwaitingLgMessage/>;
-
-  const isResponsible = !!profileId && (myCell.leader_id === profileId || myCell.coleader_id === profileId || myCell.supervisor_id === profileId);
-  const mapsUrl = myCell.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(myCell.address)}` : null;
-
-  return (
-    <div className="space-y-4">
-      {isResponsible && (
-        <Card className="border-l-4 border-l-gold bg-gold/5">
-          <CardContent className="flex items-center justify-between gap-3 py-4">
-            <div className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5 text-gold" />
-              <div>
-                <p className="text-sm font-semibold text-navy">Relatório Semanal do Life Group</p>
-                <p className="text-xs text-muted-foreground">Preencha o relatório desta semana pelo celular.</p>
-              </div>
-            </div>
-            <Button asChild size="sm"><Link href="/painel/relatorio-lg">Preencher</Link></Button>
-          </CardContent>
-        </Card>
-      )}
-      <Card className="border-l-4 border-l-gold">
-        <CardHeader>
-          <CardTitle>{myCell.name}</CardTitle>
-          {myCell.meeting_weekday && myCell.meeting_time && (
-            <CardDescription className="flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5"/>{WEEKDAYS[myCell.meeting_weekday]} às {myCell.meeting_time.slice(0,5)}
-            </CardDescription>
-          )}
-        </CardHeader>
-        <CardContent>
-          {myCell.address ? (
-            <p className="text-sm text-ink">{myCell.address}</p>
-          ) : (
-            <p className="text-sm italic text-muted">Endereço não informado</p>
-          )}
-          {mapsUrl && <Button asChild variant="link" size="sm" className="mt-2 h-auto p-0 text-xs"><a href={mapsUrl} target="_blank" rel="noreferrer">Como chegar →</a></Button>}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5 text-gold"/>Companheiros de célula</CardTitle>
-          <CardDescription>{companions.length} pessoa(s) além de você</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {companions.length === 0 ? (
-            <p className="text-sm italic text-muted">Ainda não há outros membros cadastrados nesta célula.</p>
-          ) : (
-            <ul className="divide-y">
-              {companions.map((c)=>(
-                <li key={c.id} className="flex items-center justify-between py-3">
-                  <div>
-                    <b className="text-navy">{c.full_name}</b>
-                    <p className="text-xs text-muted">{STAGE_LABELS[c.journey_stage] ?? c.journey_stage}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
 // ============================================================
 // DISCIPULADO
 // ============================================================
