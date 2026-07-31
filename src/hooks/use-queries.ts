@@ -20,6 +20,7 @@ import * as Sec from "@/services/security";
 import * as CL from "@/services/contentLibrary";
 import * as Tx from "@/services/taxonomy";
 import * as Wf from "@/services/editorialWorkflow";
+import * as Lgr from "@/services/lgMeetingRoles";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -91,6 +92,13 @@ export const useCellMembers       = (cellId: string|null, excludeId?: string|nul
     queryKey: ["cell-members", cellId ?? "none", excludeId ?? "none"],
     queryFn: (): Promise<import("@/types/domain").Member[]> => cellId ? Me.listCellMembers(supabase, cellId, excludeId ?? undefined) : Promise.resolve([]),
     enabled: !!cellId,
+  });
+/** CT-019 Fase 2 — escala dos 7 momentos de uma reunião específica do Life Group. */
+export const useLgMeetingRoles = (lifeGroupId: string|null, meetingDate: string|null) =>
+  useQuery({
+    queryKey: ["lg-meeting-roles", lifeGroupId ?? "none", meetingDate ?? "none"],
+    queryFn: () => (lifeGroupId && meetingDate) ? Lgr.listMeetingRoles(supabase, lifeGroupId, meetingDate) : Promise.resolve([]),
+    enabled: !!lifeGroupId && !!meetingDate,
   });
 export const useMyActiveDiscipleship = (myMemberId: string|null) =>
   useQuery({
