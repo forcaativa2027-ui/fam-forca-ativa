@@ -1011,6 +1011,35 @@ export type RelmdaVisitorFollowup = "sem_contato" | "contatado" | "em_acompanham
 export type RelmdaNoMeetingReason =
   | "feriado" | "evento_igreja" | "enfermidade" | "ausencia_lideranca" | "reorganizacao" | "outro";
 
+// ============================================================
+// CT-019 Fase 2 — Escala da Reunião do Life Group
+// ============================================================
+export type LgMeetingMomentKey =
+  | "oracao_inicial" | "louvor" | "dinamica" | "palavra"
+  | "oferta" | "caixinha_oracao" | "avisos_cec_news";
+
+export interface LgMeetingRole {
+  id: string;
+  life_group_id: string;
+  meeting_date: string;
+  moment_key: LgMeetingMomentKey;
+  moment_order: number;
+  responsible_member_id: string | null;
+  confirmed: boolean;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LgMeetingRoleWithMember extends LgMeetingRole {
+  responsible: { id: string; full_name: string } | null;
+}
+
+export type LgMeetingRoleInput = Pick<LgMeetingRole,
+  "life_group_id" | "meeting_date" | "moment_key" | "moment_order"> &
+  Partial<Pick<LgMeetingRole, "responsible_member_id" | "confirmed" | "notes">>;
+
 export interface RelmdaWeeklyReport {
   id: string;
   life_group_id: string;
