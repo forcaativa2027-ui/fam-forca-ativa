@@ -8,6 +8,7 @@ import type { Cell, Member, UserRole } from "@/types/domain";
 import { LgMeetingSchedule } from "./LgMeetingSchedule";
 import { LgWordOfWeek } from "./LgWordOfWeek";
 import { LgCecNews } from "./LgCecNews";
+import { LgMinisterialTasks } from "./LgMinisterialTasks";
 
 const WEEKDAYS: Record<string, string> = {
   domingo: "Domingo", segunda: "Segunda", terca: "Terça",
@@ -168,6 +169,9 @@ export function LifeGroupDashboard({
 
       {/* §4.2/§4.3 — Programação e Escala da reunião: visível a todos, edição só Líder/Colíder. */}
       <LgMeetingSchedule cell={myCell} members={allMembers} canManage={canManage} myMemberId={member.id} />
+
+      {/* CT-020 §14 — Tarefas Ministeriais: exclusivo Líder/Colíder. */}
+      {canManage && <LgMinisterialTasks lifeGroupId={myCell.id} profileId={profileId} />}
 
       {/* §5/§6 — Palavra do Life Group e CEC News, reaproveitando Preguações/Notícias. */}
       <LgWordOfWeek churchId={myCell.church_id} />
