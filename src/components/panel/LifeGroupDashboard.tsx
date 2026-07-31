@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Users, Clock, ClipboardList, Crown, Shield, Heart } from "lucide-react";
 import { useCells, useCellMembers } from "@/hooks/use-queries";
 import type { Cell, Member, UserRole } from "@/types/domain";
+import { LgMeetingSchedule } from "./LgMeetingSchedule";
 
 const WEEKDAYS: Record<string, string> = {
   domingo: "Domingo", segunda: "Segunda", terca: "Terça",
@@ -163,11 +164,14 @@ export function LifeGroupDashboard({
         </CardContent>
       </Card>
 
-      {/* Placeholder das próximas fases (§4-§13), já sinalizando o que vem por aí. */}
+      {/* §4.2/§4.3 — Programação e Escala da reunião: visível a todos, edição só Líder/Colíder. */}
+      <LgMeetingSchedule cell={myCell} members={allMembers} canManage={canManage} />
+
+      {/* Placeholder das próximas fases, já sinalizando o que vem por aí. */}
       <Card className="border-dashed">
         <CardContent className="flex items-center gap-3 py-5 text-sm text-muted-foreground">
           <Heart className="h-5 w-5 shrink-0 text-gold/70" />
-          Programação da reunião, Palavra do Life Group, escala e CEC News chegam nas próximas atualizações deste painel.
+          Palavra do Life Group e CEC News segmentado chegam nas próximas atualizações deste painel.
         </CardContent>
       </Card>
     </div>
