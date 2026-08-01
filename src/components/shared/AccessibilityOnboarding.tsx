@@ -103,42 +103,49 @@ export function AccessibilityOnboarding() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] overflow-y-auto bg-[#F8FAFC]"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/35 p-4 backdrop-blur-sm animate-in fade-in duration-300"
       role="dialog"
       aria-modal="true"
       aria-label="Assistente de boas-vindas e personalização"
     >
-      {/* Reaberto manualmente (não é o primeiro acesso): permite fechar sem concluir. */}
-      {!isFirstAccess && step !== "aplicando" && step !== "confirmacao" && (
-        <button
-          onClick={closeOnboarding}
-          aria-label="Fechar personalização"
-          className="fixed right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full bg-white text-[#475569] shadow-md hover:bg-[#F1F5F9]"
-        >
-          ✕
-        </button>
-      )}
-      <div className="mx-auto flex min-h-full max-w-[1100px] flex-col px-4 py-8 sm:px-8">
-        {step === "boas_vindas" && (
-          <WelcomeScreen
-            onStart={() => setStep("escolha")}
-            onUseDefault={() => finish("padrao")}
-          />
+      {/* DS-002 §6 — Welcome Overlay: cartão centralizado, ~70% da altura da tela,
+          Home visível (desfocada) ao fundo através do backdrop-blur acima. */}
+      <div
+        className="relative flex w-full max-w-[960px] flex-col overflow-hidden rounded-3xl bg-[#F8FAFC] shadow-2xl animate-in zoom-in-95 duration-300"
+        style={{ height: "min(720px, 78vh)" }}
+      >
+        {/* Reaberto manualmente (não é o primeiro acesso): permite fechar sem concluir. */}
+        {!isFirstAccess && step !== "aplicando" && step !== "confirmacao" && (
+          <button
+            onClick={closeOnboarding}
+            aria-label="Fechar personalização"
+            className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-white text-[#475569] shadow-md hover:bg-[#F1F5F9]"
+          >
+            ✕
+          </button>
         )}
-        {step === "escolha" && (
-          <ChooseProfileScreen
-            selected={selected}
-            onSelect={(p) => { setSelected(p); feedback("select", "select"); }}
-            dontShowAgain={dontShowAgain}
-            onToggleDontShowAgain={setDontShowAgain}
-            onContinue={() => selected && finish(selected)}
-            onUseDefault={() => finish("padrao")}
-          />
-        )}
-        {step === "aplicando" && <ApplyingScreen />}
-        {step === "confirmacao" && (
-          <ConfirmationScreen onEnter={closeOnboarding} />
-        )}
+        <div className="mx-auto flex w-full max-w-[880px] flex-1 flex-col overflow-y-auto px-5 py-6 sm:px-8 sm:py-8">
+          {step === "boas_vindas" && (
+            <WelcomeScreen
+              onStart={() => setStep("escolha")}
+              onUseDefault={() => finish("padrao")}
+            />
+          )}
+          {step === "escolha" && (
+            <ChooseProfileScreen
+              selected={selected}
+              onSelect={(p) => { setSelected(p); feedback("select", "select"); }}
+              dontShowAgain={dontShowAgain}
+              onToggleDontShowAgain={setDontShowAgain}
+              onContinue={() => selected && finish(selected)}
+              onUseDefault={() => finish("padrao")}
+            />
+          )}
+          {step === "aplicando" && <ApplyingScreen />}
+          {step === "confirmacao" && (
+            <ConfirmationScreen onEnter={closeOnboarding} />
+          )}
+        </div>
       </div>
     </div>
   );
