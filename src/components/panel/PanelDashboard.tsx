@@ -8,6 +8,8 @@ import {
   LogOut, Sparkles, AlertTriangle, BarChart3, Users, Heart, Map,
   MessageSquareHeart, User, Check, Plus, Calendar as Cal,
   Award, ClipboardList, Wand2, ChevronRight,
+  Newspaper, Video, Church as ChurchIcon, CalendarDays, MapPin,
+  MessageCircle, HeartHandshake, UserPlus, Play,
 } from "lucide-react";
 import { useAccessibility } from "@/components/shared/AccessibilityProvider";
 import { Button } from "@/components/ui/button";
@@ -29,8 +31,9 @@ import {
   useMyProfile, useDashboard, useChurches, useMdaAlerts,
   useMyMember, useMemberCard,
   useMyActiveDiscipleship, useMyDisciples,
-  useMyTimeline, useCellPrayers,
+  useMyTimeline, useCellPrayers, usePublicSermons,
 } from "@/hooks/use-queries";
+import { youtubeThumb } from "@/services/content";
 import { logAudit } from "@/services/audit";
 import { addPrayer, markPrayerAnswered } from "@/services/prayer";
 import { profileEditSchema, newPrayerSchema, type ProfileEditInput, type NewPrayerInput } from "@/schemas";
@@ -404,6 +407,7 @@ function ProfileTab({ setTab }: { setTab: (t: string) => void }) {
   const { data: profile } = useMyProfile();
   const { data: member } = useMyMember();
   const { openOnboarding } = useAccessibility();
+  const { data: sermons = [] } = usePublicSermons(profile?.church_id ?? null);
   const qc = useQueryClient();
   const [ok, setOk] = useState(false);
   const [err, setErr] = useState("");
@@ -431,7 +435,33 @@ function ProfileTab({ setTab }: { setTab: (t: string) => void }) {
     <div className="space-y-4">
       <CompleteProfileCard member={member} />
 
-      {/* Itens que saíram do rodapé pra caber menos abas na navegação principal. */}
+      {/* Prévia das últimas pregações — o conteúdo completo continua em "Vídeos" abaixo. */}
+      {sermons.length > 0 && (
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted">Últimas pregações</p>
+            <button onClick={() => { window.location.href = "/?tab=videos"; }} className="text-xs font-semibold text-gold hover:underline">Ver todas</button>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {sermons.slice(0, 3).map((s) => (
+              <a
+                key={s.id}
+                href={s.youtube_url}
+                target="_blank"
+                rel="noreferrer"
+                className="group relative block overflow-hidden rounded-lg border border-border"
+              >
+                <img src={s.thumbnail_url || youtubeThumb(s.youtube_url) || ""} alt={s.title} className="aspect-video w-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
+                  <Play className="h-6 w-6 text-white" />
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Itens que saíram do rodapé + funcionalidades públicas, pra caber menos abas na navegação principal. */}
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted">Mais</p>
         <div className="grid grid-cols-3 gap-2">
@@ -440,6 +470,14 @@ function ProfileTab({ setTab }: { setTab: (t: string) => void }) {
             { key: "jornada", label: "Jornada", icon: <Map className="h-5 w-5" />, onClick: () => setTab("jornada") },
             { key: "ministerio", label: "Ministério", icon: <Award className="h-5 w-5" />, onClick: () => setTab("ministerio") },
             { key: "carteira", label: "Carteira", icon: <ClipboardList className="h-5 w-5" />, onClick: () => { window.location.href = "/painel/carteira"; } },
+            { key: "noticias", label: "Notícias", icon: <Newspaper className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=noticias"; } },
+            { key: "videos", label: "Vídeos", icon: <Video className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=videos"; } },
+            { key: "cultos", label: "Cultos", icon: <ChurchIcon className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=cultos"; } },
+            { key: "agenda", label: "Agenda", icon: <CalendarDays className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=agenda"; } },
+            { key: "igrejas", label: "Igrejas", icon: <MapPin className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=igrejas"; } },
+            { key: "participar", label: "Convidar", icon: <UserPlus className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=participar"; } },
+            { key: "contato", label: "Falar com alguém", icon: <MessageCircle className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=contato"; } },
+            { key: "ofertar", label: "Doação", icon: <HeartHandshake className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=ofertar"; } },
             { key: "site", label: "Site", icon: <Sparkles className="h-5 w-5" />, onClick: () => { window.location.href = "/"; } },
           ].map((item) => (
             <button
