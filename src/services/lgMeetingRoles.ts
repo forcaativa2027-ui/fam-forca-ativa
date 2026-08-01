@@ -45,6 +45,20 @@ export async function setMeetingRoleConfirmed(sb: SupabaseClient, id: string, co
 }
 
 /**
+ * O próprio membro confirma participação ou sinaliza indisponibilidade
+ * no momento que lhe foi atribuído (CT-019 §4.3). Via função de banco
+ * restrita — não dá acesso de edição geral à escala.
+ */
+export async function confirmOwnMeetingRole(
+  sb: SupabaseClient, roleId: string, confirmed: boolean, note?: string,
+): Promise<void> {
+  const { error } = await sb.rpc("lg_meeting_roles_confirm_own", {
+    p_role_id: roleId, p_confirmed: confirmed, p_note: note ?? null,
+  });
+  if (error) throw error;
+}
+
+/**
  * Sugestão de rodízio automático (CT-019 §4.3): distribui os 7 momentos
  * entre os membros informados, evitando repetir o mesmo responsável
  * enquanto houver gente suficiente. Se faltar membro, repete de forma
