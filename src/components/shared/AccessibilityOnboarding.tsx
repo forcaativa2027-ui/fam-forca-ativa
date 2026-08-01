@@ -111,7 +111,7 @@ export function AccessibilityOnboarding() {
       {/* DS-003 §7 — Welcome Overlay: 460-520px de largura no desktop, calc(100%-32px)
           no smartphone (dado pelo padding do wrapper), altura máxima 75vh/78vh. */}
       <div
-        className="relative flex w-full max-h-[78vh] flex-col overflow-hidden rounded-3xl bg-[#F8FAFC] shadow-2xl animate-in zoom-in-95 duration-300 sm:w-[500px] sm:max-h-[75vh]"
+        className="relative flex w-full max-h-[85vh] flex-col overflow-hidden rounded-3xl bg-[#F8FAFC] shadow-2xl animate-in zoom-in-95 duration-300 sm:w-[600px] sm:max-h-[80vh]"
       >
         {/* Reaberto manualmente (não é o primeiro acesso): permite fechar sem concluir. */}
         {!isFirstAccess && step !== "aplicando" && step !== "confirmacao" && (
@@ -153,7 +153,7 @@ export function AccessibilityOnboarding() {
 function WelcomeScreen({ onStart, onUseDefault }: { onStart: () => void; onUseDefault: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-      <LivingLogo size={88} animated />
+      <LivingLogo size={120} animated />
       <div className="max-w-sm space-y-3">
         <h1 className="text-[22px] font-bold leading-tight text-[#0F172A]">
           Seja muito bem-vindo(a)!
@@ -195,12 +195,12 @@ function ChooseProfileScreen({
   return (
     <div className="flex flex-1 flex-col gap-5 py-1">
       <div className="text-center">
-        <LivingLogo size={44} animated compact />
+        <LivingLogo size={64} animated compact />
         <h1 className="mt-3 text-xl font-bold text-[#0F172A]">Vamos personalizar sua experiência</h1>
         <p className="mt-1 text-sm text-[#475569]">Escolha a opção que oferece mais conforto para você.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {WELCOME_PROFILES.map((p) => {
           const style = WELCOME_PROFILE_STYLE[p.key];
           const isSelected = selected === p.key;
@@ -216,28 +216,28 @@ function ChooseProfileScreen({
                 borderColor: isSelected ? style.solid : style.border,
                 borderWidth: isSelected ? 3 : 1,
               }}
-              className="relative flex items-start gap-3 rounded-2xl p-3 text-left shadow-sm transition-all duration-150 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              className="relative flex flex-col items-start gap-2 rounded-2xl p-3 text-left shadow-sm transition-all duration-150 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             >
               {isSelected && (
                 <span
-                  className="absolute right-3 top-3 grid h-6 w-6 place-items-center rounded-full text-white"
+                  className="absolute right-2.5 top-2.5 grid h-5 w-5 place-items-center rounded-full text-white"
                   style={{ background: style.solid }}
                 >
-                  <Check className="h-4 w-4" />
+                  <Check className="h-3.5 w-3.5" />
                 </span>
               )}
-              <Icon size={48} />
-              <div className="min-w-0 flex-1">
-                {p.badge && (
-                  <span
-                    className="mb-1 inline-block w-fit rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide text-white"
-                    style={{ background: style.solid }}
-                  >
-                    {p.badge}
-                  </span>
-                )}
-                <b style={{ color: style.text }} className="block text-base">{p.name}</b>
-                <p className="mt-0.5 text-xs text-[#475569]">{p.desc}</p>
+              {p.badge && (
+                <span
+                  className="w-fit rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide text-white"
+                  style={{ background: style.solid }}
+                >
+                  {p.badge}
+                </span>
+              )}
+              <Icon size={44} />
+              <div className="min-w-0">
+                <b style={{ color: style.text }} className="block text-sm leading-tight">{p.name}</b>
+                <p className="mt-0.5 text-xs leading-snug text-[#475569]">{p.desc}</p>
                 {isSelected && (
                   <span style={{ color: style.solid }} className="mt-1 block text-xs font-bold">Selecionado</span>
                 )}
