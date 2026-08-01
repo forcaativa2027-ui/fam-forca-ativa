@@ -35,7 +35,7 @@ const KIND_CONFIG: Record<NotifKind, { icon: React.ReactNode; color: string; bg:
   promocao:        { icon: <PartyPopper className="h-4 w-4"/>, color:"text-emerald-600", bg:"bg-emerald-50 border-emerald-200", label:"Boas notícias"  },
   mudanca_evento:  { icon: <AlertTriangle className="h-4 w-4"/>, color:"text-orange-700", bg:"bg-orange-50 border-orange-300", label:"Mudança em evento" },
   lembrete_evento: { icon: <Clock3 className="h-4 w-4"/>,      color:"text-sky-700",     bg:"bg-sky-50 border-sky-200",     label:"Lembrete"          },
-  minha_funcao_lg: { icon: <Mic2 className="h-4 w-4"/>,        color:"text-violet-700",  bg:"bg-violet-50 border-violet-200", label:"Minha Função no LG" },
+  minha_funcao_lg: { icon: <Mic2 className="h-4 w-4"/>,        color:"text-violet-700",  bg:"bg-violet-50 border-violet-200", label:"Minha Função no Life Group" },
 };
 
 // ── Buscar notificações ───────────────────────────────────────

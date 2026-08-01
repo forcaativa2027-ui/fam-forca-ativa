@@ -80,14 +80,9 @@ export default function PanelDashboard() {
   const panelNavItems: BottomNavItem[] = [
     ...(isAdmin ? [{ key: "geral", label: "Visão Geral", icon: <BarChart3 size={18} />, onClick: () => setTab("geral") }] : []),
     { key: "alertas", label: "Alertas", icon: <NotificationBadge count={notifCount} />, onClick: () => setTab("alertas") },
-    { key: "celula", label: "Meu LG", icon: <Users size={18} />, onClick: () => setTab("celula") },
-    { key: "discipulado", label: "Discipulado", icon: <Heart size={18} />, onClick: () => setTab("discipulado") },
-    { key: "jornada", label: "Jornada", icon: <Map size={18} />, onClick: () => setTab("jornada") },
+    { key: "celula", label: "Life Group", icon: <Users size={18} />, onClick: () => setTab("celula") },
     { key: "oracao", label: "Oração", icon: <MessageSquareHeart size={18} />, onClick: () => setTab("oracao") },
-    { key: "ministerio", label: "Ministério", icon: <Award size={18} />, onClick: () => setTab("ministerio") },
-    { key: "carteira", label: "Carteira", icon: <ClipboardList size={18} />, onClick: () => { window.location.href = "/painel/carteira"; } },
     { key: "perfil", label: "Perfil", icon: <User size={18} />, onClick: () => setTab("perfil") },
-    { key: "site", label: "Site", icon: <Sparkles size={18} />, onClick: () => { window.location.href = "/"; } },
   ];
 
   return (
@@ -121,7 +116,7 @@ export default function PanelDashboard() {
           <TabsContent value="jornada"><JourneyTab member={member ?? null} /></TabsContent>
           <TabsContent value="oracao"><PrayerTab member={member ?? null} /></TabsContent>
           <TabsContent value="ministerio"><MyMinistriesPanel /></TabsContent>
-          <TabsContent value="perfil"><ProfileTab /></TabsContent>
+          <TabsContent value="perfil"><ProfileTab setTab={setTab} /></TabsContent>
         </main>
         <BottomNavSpacer />
       </Tabs>
@@ -178,7 +173,7 @@ function GeneralView() {
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Kpi label="Membros"    value={stats?.total_members ?? 0} hero href="/admin?tab=members"/>
         <Kpi label="Visitantes" value={stats?.total_visitors ?? 0} href="/admin?tab=crm"/>
-        <Kpi label="Células"    value={stats?.total_groups ?? 0} href="/admin?tab=life-groups"/>
+        <Kpi label="Life Groups" value={stats?.total_groups ?? 0} href="/admin?tab=life-groups"/>
         <Kpi label="Relatórios" value={stats?.total_reports ?? 0} href="/admin?tab=weekly"/>
         <Kpi label="Batismos"   value={stats?.baptisms ?? 0} href="/admin?tab=members"/>
       </section>
@@ -246,7 +241,7 @@ function DiscipleshipTab({ member }: { member: Member | null }) {
         </CardHeader>
         <CardContent>
           {!active ? (
-            <p className="text-sm italic text-muted">Você ainda não foi vinculado a um discipulador. Fale com a liderança da sua célula.</p>
+            <p className="text-sm italic text-muted">Você ainda não foi vinculado a um discipulador. Fale com a liderança do seu Life Group.</p>
           ) : (
             <div className="space-y-2">
               <p className="font-display text-lg text-navy">{active.discipler?.full_name ?? "—"}</p>
@@ -361,7 +356,7 @@ function PrayerTab({ member }: { member: Member | null }) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><MessageSquareHeart className="h-5 w-5 text-gold"/>Novo pedido</CardTitle>
-          <CardDescription>Compartilhe com sua célula um motivo de oração</CardDescription>
+          <CardDescription>Compartilhe com seu Life Group um motivo de oração</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
@@ -377,11 +372,11 @@ function PrayerTab({ member }: { member: Member | null }) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Pedidos da minha célula ({prayers.length})</CardTitle>
+          <CardTitle>Pedidos do meu Life Group ({prayers.length})</CardTitle>
           <CardDescription>Pedidos compartilhados pelos companheiros</CardDescription>
         </CardHeader>
         <CardContent>
-          {!cellId && <p className="text-sm italic text-muted">Você ainda não está vinculado a uma célula.</p>}
+          {!cellId && <p className="text-sm italic text-muted">Você ainda não está vinculado a um Life Group.</p>}
           {cellId && prayers.length === 0 && <p className="text-sm italic text-muted">Nenhum pedido cadastrado ainda.</p>}
           <ul className="divide-y">
             {prayers.map((p)=>(
@@ -405,7 +400,7 @@ function PrayerTab({ member }: { member: Member | null }) {
 // ============================================================
 // MEU PERFIL
 // ============================================================
-function ProfileTab() {
+function ProfileTab({ setTab }: { setTab: (t: string) => void }) {
   const { data: profile } = useMyProfile();
   const { data: member } = useMyMember();
   const { openOnboarding } = useAccessibility();
@@ -435,6 +430,30 @@ function ProfileTab() {
   return (
     <div className="space-y-4">
       <CompleteProfileCard member={member} />
+
+      {/* Itens que saíram do rodapé pra caber menos abas na navegação principal. */}
+      <div>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted">Mais</p>
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { key: "discipulado", label: "Discipulado", icon: <Heart className="h-5 w-5" />, onClick: () => setTab("discipulado") },
+            { key: "jornada", label: "Jornada", icon: <Map className="h-5 w-5" />, onClick: () => setTab("jornada") },
+            { key: "ministerio", label: "Ministério", icon: <Award className="h-5 w-5" />, onClick: () => setTab("ministerio") },
+            { key: "carteira", label: "Carteira", icon: <ClipboardList className="h-5 w-5" />, onClick: () => { window.location.href = "/painel/carteira"; } },
+            { key: "site", label: "Site", icon: <Sparkles className="h-5 w-5" />, onClick: () => { window.location.href = "/"; } },
+          ].map((item) => (
+            <button
+              key={item.key}
+              onClick={item.onClick}
+              className="flex flex-col items-center gap-1.5 rounded-xl border-2 border-border bg-card p-3 text-center transition hover:border-gold/50 hover:bg-gold/5"
+            >
+              <span className="text-gold">{item.icon}</span>
+              <span className="text-xs font-medium text-navy">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <button
         onClick={openOnboarding}
         className="flex w-full items-center gap-3 rounded-xl border-2 border-gold/30 bg-gradient-to-br from-gold/10 to-card p-4 text-left transition hover:border-gold/60 hover:shadow-sm"
@@ -483,7 +502,7 @@ function NotLinkedMessage({ subject }: { subject: string }) {
     <Card>
       <CardContent className="pt-8 pb-8 text-center">
         <p className="text-sm text-muted">Você ainda não está vinculado {subject}.</p>
-        <p className="mt-1 text-xs text-muted">Fale com a liderança da sua célula para ser cadastrado.</p>
+        <p className="mt-1 text-xs text-muted">Fale com a liderança do seu Life Group para ser cadastrado.</p>
       </CardContent>
     </Card>
   );

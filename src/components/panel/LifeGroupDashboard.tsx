@@ -143,7 +143,7 @@ export function LifeGroupDashboard({
         </CardHeader>
         <CardContent>
           {others.length === 0 ? (
-            <p className="text-sm italic text-muted">Ainda não há outros membros cadastrados nesta célula.</p>
+            <p className="text-sm italic text-muted">Ainda não há outros membros cadastrados neste Life Group.</p>
           ) : (
             <ul className="divide-y">
               {others.map((c) => {
@@ -185,7 +185,7 @@ function NotLinkedMessage({ subject }: { subject: string }) {
     <Card>
       <CardContent className="pt-8 pb-8 text-center">
         <p className="text-sm text-muted">Você ainda não está vinculado {subject}.</p>
-        <p className="mt-1 text-xs text-muted">Fale com a liderança da sua célula para ser cadastrado.</p>
+        <p className="mt-1 text-xs text-muted">Fale com a liderança do seu Life Group para ser cadastrado.</p>
       </CardContent>
     </Card>
   );
