@@ -225,3 +225,19 @@ html[data-icon-style="minimalistas"] svg {
   opacity: 0.8;
   filter: saturate(0.7);
 }
+
+/* DS-003 §4 — Living Logo: respiração suave e brilho sutil.
+   Só transform/opacity (§13 — sem GIF/vídeo, leve). */
+@keyframes living-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.025); }
+}
+@keyframes living-glow {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 0.45; }
+}
+.animate-living-breathe { animation: living-breathe 4.5s ease-in-out infinite; }
+.animate-living-glow    { animation: living-glow 5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-living-breathe, .animate-living-glow { animation: none !important; }
+}
