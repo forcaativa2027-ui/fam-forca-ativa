@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { ArrowRight, Check, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAccessibility, PROFILE_PRESETS } from "./AccessibilityProvider";
 import { WELCOME_PROFILE_STYLE } from "./onboarding/ProfileIcons";
+import { LivingLogo } from "./LivingLogo";
 import { feedback } from "@/lib/feedback";
 import type { AccessibilityProfile } from "@/types/domain";
 
@@ -108,11 +108,10 @@ export function AccessibilityOnboarding() {
       aria-modal="true"
       aria-label="Assistente de boas-vindas e personalização"
     >
-      {/* DS-002 §6 — Welcome Overlay: cartão centralizado, ~70% da altura da tela,
-          Home visível (desfocada) ao fundo através do backdrop-blur acima. */}
+      {/* DS-003 §7 — Welcome Overlay: 460-520px de largura no desktop, calc(100%-32px)
+          no smartphone (dado pelo padding do wrapper), altura máxima 75vh/78vh. */}
       <div
-        className="relative flex w-full max-w-[960px] flex-col overflow-hidden rounded-3xl bg-[#F8FAFC] shadow-2xl animate-in zoom-in-95 duration-300"
-        style={{ height: "min(720px, 78vh)" }}
+        className="relative flex w-full max-h-[78vh] flex-col overflow-hidden rounded-3xl bg-[#F8FAFC] shadow-2xl animate-in zoom-in-95 duration-300 sm:w-[500px] sm:max-h-[75vh]"
       >
         {/* Reaberto manualmente (não é o primeiro acesso): permite fechar sem concluir. */}
         {!isFirstAccess && step !== "aplicando" && step !== "confirmacao" && (
@@ -124,7 +123,7 @@ export function AccessibilityOnboarding() {
             ✕
           </button>
         )}
-        <div className="mx-auto flex w-full max-w-[880px] flex-1 flex-col overflow-y-auto px-5 py-6 sm:px-8 sm:py-8">
+        <div className="flex w-full flex-1 flex-col overflow-y-auto px-5 py-6 sm:px-7 sm:py-7">
           {step === "boas_vindas" && (
             <WelcomeScreen
               onStart={() => setStep("escolha")}
@@ -153,31 +152,23 @@ export function AccessibilityOnboarding() {
 
 function WelcomeScreen({ onStart, onUseDefault }: { onStart: () => void; onUseDefault: () => void }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-8 text-center">
-      <Image
-        src="/images/cec-family-logo.png"
-        alt="CEC FAMILY"
-        width={96}
-        height={96}
-        priority
-        className="h-24 w-24 object-contain"
-      />
-      <div className="max-w-lg space-y-4">
-        <h1 className="text-[26px] font-bold leading-tight text-[#0F172A]">
+    <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
+      <LivingLogo size={88} animated />
+      <div className="max-w-sm space-y-3">
+        <h1 className="text-[22px] font-bold leading-tight text-[#0F172A]">
           Seja muito bem-vindo(a)!
         </h1>
-        <p className="text-base leading-relaxed text-[#475569]">
+        <p className="text-sm leading-relaxed text-[#475569]">
           É uma alegria ter você conosco.
         </p>
-        <p className="text-base leading-relaxed text-[#475569]">
+        <p className="text-sm leading-relaxed text-[#475569]">
           Que esta plataforma seja uma ferramenta para fortalecer sua caminhada, sua comunhão e seu crescimento.
         </p>
-        <p className="text-base leading-relaxed text-[#475569]">
+        <p className="text-sm leading-relaxed text-[#475569]">
           Vamos preparar sua experiência para oferecer uma navegação mais confortável, simples e personalizada.
-          Você poderá alterar essas configurações quando desejar.
         </p>
       </div>
-      <div className="flex w-full max-w-sm flex-col gap-3">
+      <div className="flex w-full flex-col gap-3">
         <PrimaryButton size="lg" onClick={onStart} className="w-full gap-2 text-base">
           Continuar <ArrowRight className="h-4 w-4" />
         </PrimaryButton>
@@ -202,13 +193,14 @@ function ChooseProfileScreen({
   const preview = selected ? PROFILE_PRESETS[selected] : null;
 
   return (
-    <div className="flex flex-1 flex-col gap-6 py-2">
+    <div className="flex flex-1 flex-col gap-5 py-1">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-[#0F172A]">Vamos personalizar sua experiência</h1>
-        <p className="mt-2 text-base text-[#475569]">Escolha a opção que oferece mais conforto para você.</p>
+        <LivingLogo size={44} animated compact />
+        <h1 className="mt-3 text-xl font-bold text-[#0F172A]">Vamos personalizar sua experiência</h1>
+        <p className="mt-1 text-sm text-[#475569]">Escolha a opção que oferece mais conforto para você.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3">
         {WELCOME_PROFILES.map((p) => {
           const style = WELCOME_PROFILE_STYLE[p.key];
           const isSelected = selected === p.key;
@@ -224,7 +216,7 @@ function ChooseProfileScreen({
                 borderColor: isSelected ? style.solid : style.border,
                 borderWidth: isSelected ? 3 : 1,
               }}
-              className="relative flex flex-col gap-3 rounded-2xl p-4 text-left shadow-sm transition-all duration-150 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+              className="relative flex items-start gap-3 rounded-2xl p-3 text-left shadow-sm transition-all duration-150 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             >
               {isSelected && (
                 <span
@@ -234,40 +226,29 @@ function ChooseProfileScreen({
                   <Check className="h-4 w-4" />
                 </span>
               )}
-              {p.badge && (
-                <span
-                  className="w-fit rounded-full px-2 py-0.5 text-[11px] font-bold tracking-wide text-white"
-                  style={{ background: style.solid }}
-                >
-                  {p.badge}
-                </span>
-              )}
-              <Icon size={64} />
-              <div>
-                <b style={{ color: style.text }} className="block text-lg">{p.name}</b>
-                <p className="mt-1 text-sm text-[#475569]">{p.desc}</p>
-              </div>
-              <ul className="mt-1 flex flex-wrap gap-1.5">
-                {p.traits.map((t) => (
-                  <li
-                    key={t}
-                    style={{ color: style.text, background: "rgba(255,255,255,.6)" }}
-                    className="rounded-full px-2 py-0.5 text-xs font-medium"
+              <Icon size={48} />
+              <div className="min-w-0 flex-1">
+                {p.badge && (
+                  <span
+                    className="mb-1 inline-block w-fit rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide text-white"
+                    style={{ background: style.solid }}
                   >
-                    {t}
-                  </li>
-                ))}
-              </ul>
-              {isSelected && (
-                <span style={{ color: style.solid }} className="text-xs font-bold">Selecionado</span>
-              )}
+                    {p.badge}
+                  </span>
+                )}
+                <b style={{ color: style.text }} className="block text-base">{p.name}</b>
+                <p className="mt-0.5 text-xs text-[#475569]">{p.desc}</p>
+                {isSelected && (
+                  <span style={{ color: style.solid }} className="mt-1 block text-xs font-bold">Selecionado</span>
+                )}
+              </div>
             </button>
           );
         })}
       </div>
 
       {preview && (
-        <div className="rounded-xl border border-dashed border-[#CBD5E1] bg-white p-4 text-sm text-[#475569]">
+        <div className="rounded-xl border border-dashed border-[#CBD5E1] bg-white p-3 text-xs text-[#475569]">
           <b className="text-[#0F172A]">Prévia: </b>
           fonte {preview.font_size.replace("_", " ")}, contraste {preview.contrast.replace("_", " ")},
           espaçamento {preview.spacing}
@@ -277,7 +258,7 @@ function ChooseProfileScreen({
       )}
 
       {/* CT-018 §7 — "Não mostrar novamente" (independente do perfil escolhido). */}
-      <label className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-base text-[#0F172A] focus-within:ring-2 focus-within:ring-[#2563EB]">
+      <label className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm text-[#0F172A] focus-within:ring-2 focus-within:ring-[#2563EB]">
         <input
           type="checkbox"
           checked={!dontShowAgain}
@@ -287,18 +268,18 @@ function ChooseProfileScreen({
         Não mostrar esta tela novamente
       </label>
 
-      <div className="mt-auto flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
-        <Button variant="ghost" onClick={onUseDefault} className="h-11 min-h-[44px] text-[#475569]">
-          Usar configuração padrão
-        </Button>
+      <div className="mt-auto flex flex-col gap-3 pt-1">
         <PrimaryButton
           size="lg"
           disabled={!selected}
           onClick={onContinue}
-          className="w-full gap-2 text-base sm:w-auto"
+          className="w-full gap-2 text-base"
         >
           Continuar <ArrowRight className="h-4 w-4" />
         </PrimaryButton>
+        <Button variant="ghost" onClick={onUseDefault} className="h-11 min-h-[44px] w-full text-[#475569]">
+          Usar configuração padrão
+        </Button>
       </div>
     </div>
   );
