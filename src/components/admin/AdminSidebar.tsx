@@ -7,7 +7,7 @@ import {
   FileBarChart, CalendarRange, CalendarDays,
   Megaphone, Image, Radio, BookOpen,
   DollarSign, Landmark, UserCog,
-  Download, Search, Bell,
+  Download, Search, Bell, Video,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
   BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins, QrCode, Library, FolderTree,
@@ -25,7 +25,7 @@ export type TabKey =
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
-  | "news" | "banners" | "sermons" | "events" | "registration-events" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
+  | "news" | "banners" | "sermons" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "invites" | "audit"
   | "export";
@@ -129,6 +129,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "sermons", label: "Pregações",    icon: <Mic2 size={15} /> },
         { key: "events",  label: "Agenda",       icon: <CalendarDays size={15} />, sectionLabel: "Programação" },
         { key: "registration-events", label: "Eventos", icon: <ClipboardList size={15} /> },
+        { key: "news-videos", label: "CEC News Vídeos", icon: <Video size={15} /> },
         { key: "giving",  label: "Momento da Generosidade", icon: <HandCoins size={15} /> },
         { key: "services",label: "Cultos",       icon: <Radio size={15} /> },
         { key: "word",    label: "Palavra do dia",icon: <BookOpen size={15} /> },
