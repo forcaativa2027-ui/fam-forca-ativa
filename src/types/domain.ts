@@ -1408,6 +1408,32 @@ export interface ContentTaxonomy {
   categories: ContentCategory[]; tags: ContentTag[];
 }
 
+// CT-019 — Escala de Papéis da Reunião do Life Group
+export type LgMeetingMomentKey = "oracao_inicial" | "louvor" | "dinamica" | "palavra" | "oferta" | "caixinha_oracao" | "avisos_cec_news";
+export interface LgMeetingRoleInput {
+  life_group_id: string; meeting_date: string; moment_key: LgMeetingMomentKey;
+  moment_order: number; responsible_member_id: string | null; confirmed: boolean; notes?: string | null;
+}
+export interface LgMeetingRoleWithMember {
+  id: string; life_group_id: string; meeting_date: string; moment_key: LgMeetingMomentKey;
+  moment_order: number; responsible_member_id: string | null; confirmed: boolean; notes: string | null;
+  responsible: { id: string; full_name: string } | null;
+}
+
+// CT-020 §14 — Tarefas Ministeriais do Life Group
+export type MinisterialTaskStatus = "pendente" | "em_andamento" | "aguardando_retorno" | "concluida" | "cancelada";
+export type MinisterialTaskPriority = "baixa" | "media" | "alta" | "urgente";
+export interface MinisterialTask {
+  id: string; title: string; origin: string; life_group_id: string; priority: MinisterialTaskPriority;
+  responsible_id: string | null; created_by: string | null; status: MinisterialTaskStatus;
+  due_date: string | null; notes: string | null; created_at: string;
+}
+export interface MinisterialTaskInput {
+  title: string; origin: string; life_group_id: string; priority: MinisterialTaskPriority;
+  responsible_id: string | null; created_by: string | null; status?: MinisterialTaskStatus;
+  due_date?: string | null; notes?: string | null;
+}
+
 // CEC News Vídeos — subaba da Central de Conteúdos
 export type NewsVideoScope = "nacional" | "sede" | "nucleo" | "distrito" | "setor" | "igreja";
 export type NewsVideoStatus = "rascunho" | "em_revisao" | "agendado" | "publicado" | "encerrado" | "arquivado" | "rejeitado" | "cancelado";
