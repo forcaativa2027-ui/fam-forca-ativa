@@ -785,3 +785,27 @@ export const useAreaConsolidado = (areaId: string | null, month: number, year: n
     queryFn: () => AreaRep.getAreaConsolidado(supabase, areaId as string, month, year),
     enabled: !!areaId,
   });
+
+// ── CT-019 — Escala de Papéis da Reunião do Life Group ──────────
+import * as LgRoles from "@/services/lgMeetingRoles";
+export const useLgMeetingRoles = (lifeGroupId: string | null, meetingDate: string | null) =>
+  useQuery({
+    queryKey: ["lg-meeting-roles", lifeGroupId, meetingDate],
+    queryFn: () => LgRoles.listMeetingRoles(supabase, lifeGroupId as string, meetingDate as string),
+    enabled: !!lifeGroupId && !!meetingDate,
+  });
+
+// ── CT-020 §14 — Tarefas Ministeriais do Life Group ─────────────
+import * as MinTasks from "@/services/ministerialTasks";
+export const useLgTasks = (lifeGroupId: string | null) =>
+  useQuery({
+    queryKey: ["lg-tasks", lifeGroupId],
+    queryFn: () => MinTasks.listLgTasks(supabase, lifeGroupId as string),
+    enabled: !!lifeGroupId,
+  });
+export const useMyMinisterialTasks = (profileId: string | null) =>
+  useQuery({
+    queryKey: ["my-ministerial-tasks", profileId],
+    queryFn: () => MinTasks.listMyTasks(supabase, profileId as string),
+    enabled: !!profileId,
+  });
