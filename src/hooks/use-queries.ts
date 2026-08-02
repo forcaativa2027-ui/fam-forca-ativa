@@ -20,8 +20,6 @@ import * as Sec from "@/services/security";
 import * as CL from "@/services/contentLibrary";
 import * as Tx from "@/services/taxonomy";
 import * as Wf from "@/services/editorialWorkflow";
-import * as Lgr from "@/services/lgMeetingRoles";
-import * as Tk from "@/services/ministerialTasks";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -93,27 +91,6 @@ export const useCellMembers       = (cellId: string|null, excludeId?: string|nul
     queryKey: ["cell-members", cellId ?? "none", excludeId ?? "none"],
     queryFn: (): Promise<import("@/types/domain").Member[]> => cellId ? Me.listCellMembers(supabase, cellId, excludeId ?? undefined) : Promise.resolve([]),
     enabled: !!cellId,
-  });
-/** CT-019 Fase 2 — escala dos 7 momentos de uma reunião específica do Life Group. */
-export const useLgMeetingRoles = (lifeGroupId: string|null, meetingDate: string|null) =>
-  useQuery({
-    queryKey: ["lg-meeting-roles", lifeGroupId ?? "none", meetingDate ?? "none"],
-    queryFn: () => (lifeGroupId && meetingDate) ? Lgr.listMeetingRoles(supabase, lifeGroupId, meetingDate) : Promise.resolve([]),
-    enabled: !!lifeGroupId && !!meetingDate,
-  });
-/** CT-020 §14 — tarefas ministeriais de um Life Group (visão Líder/Colíder). */
-export const useLgTasks = (lifeGroupId: string|null) =>
-  useQuery({
-    queryKey: ["lg-tasks", lifeGroupId ?? "none"],
-    queryFn: () => lifeGroupId ? Tk.listLgTasks(supabase, lifeGroupId) : Promise.resolve([]),
-    enabled: !!lifeGroupId,
-  });
-/** CT-020 §14 — minhas tarefas, onde sou o responsável, em qualquer escopo. */
-export const useMyTasks = (profileId: string|null) =>
-  useQuery({
-    queryKey: ["my-tasks", profileId ?? "none"],
-    queryFn: () => profileId ? Tk.listMyTasks(supabase, profileId) : Promise.resolve([]),
-    enabled: !!profileId,
   });
 export const useMyActiveDiscipleship = (myMemberId: string|null) =>
   useQuery({
@@ -639,6 +616,13 @@ export const useMyEventRegistrations = () =>
 
 export const useRegistrationEventsAdmin = () =>
   useQuery({ queryKey: ["registration-events-admin"], queryFn: () => Ev.listRegistrationEventsAdmin(supabase) });
+
+// ── CEC News Vídeos ──────────────────────────────
+import * as NewsVideos from "@/services/newsVideos";
+export const useNewsVideosAdmin = () =>
+  useQuery({ queryKey: ["news-videos-admin"], queryFn: () => NewsVideos.listNewsVideosAdmin(supabase) });
+export const useVisibleNewsVideos = (profileId: string | null) =>
+  useQuery({ queryKey: ["visible-news-videos", profileId], queryFn: () => NewsVideos.listVisibleNewsVideos(supabase, profileId) });
 
 export const useRegistrationEventAdmin = (id: string | null) =>
   useQuery({
