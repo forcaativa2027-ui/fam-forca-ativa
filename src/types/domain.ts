@@ -1011,63 +1011,6 @@ export type RelmdaVisitorFollowup = "sem_contato" | "contatado" | "em_acompanham
 export type RelmdaNoMeetingReason =
   | "feriado" | "evento_igreja" | "enfermidade" | "ausencia_lideranca" | "reorganizacao" | "outro";
 
-// ============================================================
-// CT-019 Fase 2 — Escala da Reunião do Life Group
-// ============================================================
-export type LgMeetingMomentKey =
-  | "oracao_inicial" | "louvor" | "dinamica" | "palavra"
-  | "oferta" | "caixinha_oracao" | "avisos_cec_news";
-
-// ============================================================
-// CT-020 §14 — Tarefas Ministeriais
-// ============================================================
-export type MinisterialTaskOrigin = "manual" | "relatorio_visitante" | "relatorio_ausencia" | "pedido_oracao";
-export type MinisterialTaskPriority = "baixa" | "media" | "alta" | "urgente";
-export type MinisterialTaskStatus = "pendente" | "em_andamento" | "aguardando_retorno" | "concluida" | "cancelada";
-
-export interface MinisterialTask {
-  id: string;
-  title: string;
-  origin: MinisterialTaskOrigin;
-  life_group_id: string | null;
-  related_member_id: string | null;
-  responsible_id: string | null;
-  due_date: string | null;
-  priority: MinisterialTaskPriority;
-  status: MinisterialTaskStatus;
-  notes: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-  completed_at: string | null;
-}
-
-export type MinisterialTaskInput = Partial<Pick<MinisterialTask,
-  "title" | "origin" | "life_group_id" | "related_member_id" | "responsible_id" |
-  "due_date" | "priority" | "status" | "notes" | "created_by">>;
-
-export interface LgMeetingRole {
-  id: string;
-  life_group_id: string;
-  meeting_date: string;
-  moment_key: LgMeetingMomentKey;
-  moment_order: number;
-  responsible_member_id: string | null;
-  confirmed: boolean;
-  notes: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface LgMeetingRoleWithMember extends LgMeetingRole {
-  responsible: { id: string; full_name: string } | null;
-}
-
-export type LgMeetingRoleInput = Pick<LgMeetingRole,
-  "life_group_id" | "meeting_date" | "moment_key" | "moment_order"> &
-  Partial<Pick<LgMeetingRole, "responsible_member_id" | "confirmed" | "notes">>;
-
 export interface RelmdaWeeklyReport {
   id: string;
   life_group_id: string;
@@ -1463,6 +1406,27 @@ export interface ContentTag {
 }
 export interface ContentTaxonomy {
   categories: ContentCategory[]; tags: ContentTag[];
+}
+
+// CEC News Vídeos — subaba da Central de Conteúdos
+export type NewsVideoScope = "nacional" | "sede" | "nucleo" | "distrito" | "setor" | "igreja";
+export type NewsVideoStatus = "rascunho" | "em_revisao" | "agendado" | "publicado" | "encerrado" | "arquivado" | "rejeitado" | "cancelado";
+export interface CecNewsVideoAdmin {
+  id: string; title: string; description: string | null; video_url: string; cover_image_url: string | null;
+  event_id: string | null; event_name: string | null;
+  scope: NewsVideoScope; scope_ref_id: string | null; scope_ref_name: string | null;
+  published_at: string | null; display_start_at: string; display_end_at: string | null;
+  is_featured: boolean; is_pinned: boolean; allow_autoplay: boolean;
+  show_signup_button: boolean; show_event_button: boolean; show_share_button: boolean;
+  sort_order: number; status: NewsVideoStatus; responsible_id: string | null; responsible_name: string | null;
+  created_at: string;
+}
+export interface VisibleNewsVideo {
+  id: string; title: string; description: string | null; video_url: string; cover_image_url: string | null;
+  event_id: string | null; event_name: string | null; event_start_at: string | null; event_slug: string | null;
+  scope: NewsVideoScope; is_featured: boolean; is_pinned: boolean; allow_autoplay: boolean;
+  show_signup_button: boolean; show_event_button: boolean; show_share_button: boolean;
+  published_at: string | null;
 }
 export interface ContentLibraryItem {
   id: string; title: string; type: ContentLibraryType; url: string;
