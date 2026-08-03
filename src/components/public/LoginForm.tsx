@@ -11,6 +11,7 @@ import { supabase, hasSupabaseEnv } from "@/lib/supabase/client";
 import { loginSchema, type LoginInput } from "@/schemas";
 import { logAudit } from "@/services/audit";
 import { Turnstile } from "@marsidev/react-turnstile";
+import { getAssuranceLevel } from "@/services/mfa";
 
 export default function LoginForm() {
   const envOk = hasSupabaseEnv();
@@ -21,8 +22,13 @@ export default function LoginForm() {
 
   useEffect(() => {
     if (!envOk) return;
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) window.location.href = "/painel";
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) return;
+      try {
+        const { current, next } = await getAssuranceLevel(supabase);
+        if (next === "aal2" && current !== "aal2") { window.location.href = "/verificacao-2fa"; return; }
+      } catch { /* segue pro painel normalmente */ }
+      window.location.href = "/painel";
     });
   }, [envOk]);
 
@@ -31,8 +37,27 @@ export default function LoginForm() {
     if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !captchaToken) { setErr("Confirme que você não é um robô."); return; }
     setErr("");
     const { error, data } = await supabase.auth.signInWithPassword({ ...values, options: { captchaToken: captchaToken ?? undefined } });
-    if (error) { setErr(error.message); return; }
+    if (error) {
+      if (error.message.toLowerCase().includes("captcha")) {
+        setErr("A verificação de segurança expirou. Role até o quadro de verificação, espere aparecer \"Sucesso\" de novo, e toque em \"Entrar\" mais uma vez.");
+        setCaptchaToken(null);
+      } else {
+        setErr(error.message);
+      }
+      return;
+    }
     if (data.user) await logAudit(supabase, "login", "auth", data.user.id);
+
+    // Se a conta tem 2FA ativo, o próximo nível de segurança (aal2) ainda não
+    // foi alcançado só com a senha — manda pra tela de verificação do código.
+    try {
+      const { current, next } = await getAssuranceLevel(supabase);
+      if (next === "aal2" && current !== "aal2") {
+        window.location.href = "/verificacao-2fa";
+        return;
+      }
+    } catch { /* se a checagem falhar, segue o fluxo normal */ }
+
     window.location.href = "/painel";
   }
 
@@ -65,7 +90,7 @@ export default function LoginForm() {
           <div className="mt-4 flex justify-center">
             <Turnstile
               siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-              onSuccess={(token) => setCaptchaToken(token)}
+              onSuccess={(token) => { setCaptchaToken(token); setErr(""); }}
               onExpire={() => setCaptchaToken(null)}
               options={{ theme: "light", language: "pt-BR" }}
             />
