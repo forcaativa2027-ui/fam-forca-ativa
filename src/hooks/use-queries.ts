@@ -809,3 +809,17 @@ export const useMyMinisterialTasks = (profileId: string | null) =>
     queryFn: () => MinTasks.listMyTasks(supabase, profileId as string),
     enabled: !!profileId,
   });
+
+// ── UX-004 — MFA (autenticação multifator) ──────────────────────
+import * as Mfa from "@/services/mfa";
+export const useMfaFactors = () => useQuery({ queryKey: ["mfa-factors"], queryFn: () => Mfa.listFactors(supabase) });
+export const useMfaRequired = (profileId: string | null) =>
+  useQuery({
+    queryKey: ["mfa-required", profileId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("profile_requires_mfa", { p_profile_id: profileId });
+      if (error) return false;
+      return !!data;
+    },
+    enabled: !!profileId,
+  });
