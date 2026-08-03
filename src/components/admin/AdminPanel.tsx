@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Trash2, Plus, Menu, ChevronUp, ChevronDown, X, Pencil, FileDown } from "lucide-react";
+import { ArrowLeft, Trash2, Plus, Menu, ChevronUp, ChevronDown, X, Pencil, FileDown, ShieldAlert } from "lucide-react";
 import type { Sermon } from "@/types/domain";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { sermonSchema, eventSchema, serviceTimeSchema, dailyWordSchema,
   type SermonInput, type EventInput, type ServiceTimeInput, type DailyWordInput } from "@/schemas";
 import {
-  useMyProfile, useSermons, useEvents,
+  useMyProfile, useSermons, useEvents, useMfaRequired, useMfaFactors,
   useDistricts, useAreas, useSectors, useCells,
   useChurches, useAllServiceTimes, useDailyWords,
   usePendingCounts, useMyActiveModules, useDelegations,
@@ -89,6 +89,9 @@ export default function AdminPanel() {
   const { data: counts } = usePendingCounts();
   const { data: myModules = [] } = useMyActiveModules();
   const isAdmin = me && (me.role === "apostolo" || myModules.length > 0);
+  const { data: mfaRequired } = useMfaRequired(me?.id ?? null);
+  const { data: mfaFactorsList = [] } = useMfaFactors();
+  const mfaVerified = mfaFactorsList.some((f) => f.status === "verified");
 
   const searchParams = useSearchParams();
   const urlTab = searchParams.get("tab") as TabKey | null;
@@ -133,6 +136,26 @@ export default function AdminPanel() {
             </p>
             <Button asChild variant="link" className="mt-4">
               <Link href="/painel">← Voltar ao painel</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (mfaRequired && !mfaVerified) {
+    return (
+      <div className="min-h-screen bg-background grid place-items-center p-5">
+        <Card className="mx-auto max-w-md text-center">
+          <CardContent className="pt-8 pb-8">
+            <ShieldAlert className="mx-auto h-10 w-10 text-amber-500" />
+            <h2 className="mt-2 font-display text-xl text-navy">Ative a autenticação de dois fatores</h2>
+            <p className="mt-2 text-sm text-muted">
+              Sua conta tem acesso administrativo — por segurança (UX-004), é obrigatório ativar
+              o 2FA antes de continuar. Leva menos de 2 minutos.
+            </p>
+            <Button asChild className="mt-4">
+              <Link href="/painel/seguranca">Ativar agora</Link>
             </Button>
           </CardContent>
         </Card>
