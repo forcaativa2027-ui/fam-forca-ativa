@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase/client";
 import { useMyProfile, useMySessions } from "@/hooks/use-queries";
 import { changeMyPassword, signOutEverywhere, endSession, getCurrentSessionToken } from "@/services/security";
 import { MemberHeader } from "@/components/panel/MemberHeader";
+import { MfaSettings } from "@/components/shared/MfaSettings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +73,8 @@ export default function SegurancaPage() {
             <Button onClick={handleChangePassword} disabled={busy}>{busy ? "Salvando…" : "Salvar nova senha"}</Button>
           </CardContent>
         </Card>
+
+        <MfaSettings profileId={profile?.id ?? null} />
 
         <Card>
           <CardHeader>
