@@ -55,3 +55,17 @@ export async function unenroll(sb: SupabaseClient, factorId: string): Promise<vo
   const { error } = await sb.auth.mfa.unenroll({ factorId });
   if (error) throw error;
 }
+
+// ── Configurações Globais de Segurança (só Apóstolo) ────────────
+export async function getMfaEnforcement(sb: SupabaseClient): Promise<boolean> {
+  const { data, error } = await sb.from("platform_security_settings").select("value").eq("key", "mfa_enforcement_enabled").maybeSingle();
+  if (error || !data) return true;
+  return data.value as boolean;
+}
+
+export async function setMfaEnforcement(sb: SupabaseClient, enabled: boolean, updatedBy: string): Promise<void> {
+  const { error } = await sb.from("platform_security_settings")
+    .update({ value: enabled, updated_by: updatedBy, updated_at: new Date().toISOString() })
+    .eq("key", "mfa_enforcement_enabled");
+  if (error) throw error;
+}
