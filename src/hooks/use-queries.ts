@@ -823,3 +823,4 @@ export const useMfaRequired = (profileId: string | null) =>
     },
     enabled: !!profileId,
   });
+export const useMfaEnforcement = () => useQuery({ queryKey: ["mfa-enforcement"], queryFn: () => Mfa.getMfaEnforcement(supabase) });
