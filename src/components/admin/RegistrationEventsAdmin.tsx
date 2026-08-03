@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, X, Users, FileDown, ArrowLeft, Mic, ArrowUpCircle, ArrowDownCircle, Star, ListOrdered } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Users, FileDown, ArrowLeft, Mic, ArrowUpCircle, ArrowDownCircle, Star, ListOrdered, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -157,6 +157,9 @@ export function RegistrationEventsAdmin() {
                   <div className="flex gap-2">
                     <Button onClick={() => setViewingRegistrants(e)} variant="outline" size="sm" className="gap-1.5">
                       <Users size={14} /> Inscritos
+                    </Button>
+                    <Button asChild variant="outline" size="sm" className="gap-1.5" title="Criar vídeo de divulgação">
+                      <a href={`/admin?tab=news-videos&prefillEvent=${e.id}`}><Video size={14} /> Vídeo</a>
                     </Button>
                     <Button onClick={() => { setEditing(e); setOpen(true); }} variant="outline" size="sm"><Pencil className="h-3.5 w-3.5" /></Button>
                     <Button onClick={() => remove(e)} variant="destructive" size="sm"><Trash2 className="h-3.5 w-3.5" /></Button>

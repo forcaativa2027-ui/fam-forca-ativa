@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Video, Plus, Pencil, Trash2, Star, Pin, Link2, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,9 +36,9 @@ const STATUS_CONFIG: Record<NewsVideoStatus, { label: string; color: string }> =
  * (aproveitando nome/data/local/imagem automaticamente) e alcance
  * por escopo territorial.
  */
-export function CecNewsVideosAdmin() {
+export function CecNewsVideosAdmin({ prefillEventId }: { prefillEventId?: string | null } = {}) {
   const { data: videos = [], refetch } = useNewsVideosAdmin();
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(!!prefillEventId);
   const [editing, setEditing] = useState<CecNewsVideoAdmin | null>(null);
 
   async function remove(v: CecNewsVideoAdmin) {
@@ -91,6 +91,7 @@ export function CecNewsVideosAdmin() {
       {showForm && (
         <VideoFormDialog
           editing={editing}
+          prefillEventId={prefillEventId}
           onClose={() => setShowForm(false)}
           onDone={() => { setShowForm(false); refetch(); }}
         />
@@ -99,8 +100,9 @@ export function CecNewsVideosAdmin() {
   );
 }
 
-function VideoFormDialog({ editing, onClose, onDone }: { editing: CecNewsVideoAdmin | null; onClose: () => void; onDone: () => void }) {
+function VideoFormDialog({ editing, prefillEventId, onClose, onDone }: { editing: CecNewsVideoAdmin | null; prefillEventId?: string | null; onClose: () => void; onDone: () => void }) {
   const { data: me } = useMyProfile();
+  const { data: allVideos = [] } = useNewsVideosAdmin();
   const { data: events = [] } = useRegistrationEventsAdmin();
   const { data: states = [] } = useStates();
   const { data: nucleos = [] } = useNucleos();
@@ -140,11 +142,35 @@ function VideoFormDialog({ editing, onClose, onDone }: { editing: CecNewsVideoAd
     setShowSignup(true);
   }
 
+  useEffect(() => {
+    if (prefillEventId && !editing && events.length > 0 && !eventId) {
+      applyEvent(prefillEventId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillEventId, events]);
+
   const scopeOptions = scope === "sede" ? states : scope === "nucleo" ? nucleos : scope === "distrito" ? districts : scope === "setor" ? sectors : scope === "igreja" ? churches : [];
 
   async function save() {
     if (!title.trim() || !videoUrl.trim()) { setErr("Preencha ao menos o título e o link do vídeo."); return; }
     if (scope !== "nacional" && !scopeRefId) { setErr("Selecione a referência do alcance escolhido."); return; }
+
+    // Regra: só um vídeo em destaque por vez, no mesmo nível de alcance.
+    if (isFeatured) {
+      const conflicting = allVideos.find((v) =>
+        v.id !== editing?.id && v.is_featured && v.status === "publicado" &&
+        v.scope === scope && (scope === "nacional" || v.scope_ref_id === scopeRefId)
+      );
+      if (conflicting) {
+        const ok = confirm(
+          `Já existe um vídeo em destaque nesse nível ("${conflicting.title}"). ` +
+          `Deseja substituir — tirando o destaque dele e colocando neste?`
+        );
+        if (!ok) return;
+        await NewsVideos.updateNewsVideo(supabase, conflicting.id, { is_featured: false });
+      }
+    }
+
     setBusy(true); setErr("");
     try {
       const payload = {

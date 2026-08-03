@@ -92,6 +92,7 @@ export default function AdminPanel() {
 
   const searchParams = useSearchParams();
   const urlTab = searchParams.get("tab") as TabKey | null;
+  const prefillEventId = searchParams.get("prefillEvent");
   const [activeTab, setActiveTab] = useState<TabKey>(urlTab ?? "org-dashboard");
   const [previousTab, setPreviousTab] = useState<TabKey | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -209,7 +210,7 @@ export default function AdminPanel() {
                 <ArrowLeft className="h-3.5 w-3.5" /> Voltar ao Dashboard
               </Button>
             )}
-            <TabContent activeTab={activeTab} onNavigate={handleNavigate} />
+            <TabContent activeTab={activeTab} onNavigate={handleNavigate} prefillEventId={prefillEventId} />
           </div>
         </main>
       </div>
@@ -288,7 +289,7 @@ function MeuPainel({ profile, allowedTabKeys, counts, onNavigate }: {
   );
 }
 
-function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: (tab: TabKey) => void }) {
+function TabContent({ activeTab, onNavigate, prefillEventId }: { activeTab: TabKey; onNavigate: (tab: TabKey) => void; prefillEventId?: string | null }) {
   const { data: profile } = useMyProfile();
   const { data: activeModules = [] } = useMyActiveModules();
   const { data: counts } = usePendingCounts();
@@ -350,7 +351,7 @@ function TabContent({ activeTab, onNavigate }: { activeTab: TabKey; onNavigate: 
     case "banners":             return <BannersAdmin />;
     case "sermons":             return <SermonsAdmin />;
     case "giving":               return <GivingAdmin />;
-    case "news-videos":          return <CecNewsVideosAdmin />;
+    case "news-videos":          return <CecNewsVideosAdmin prefillEventId={prefillEventId} />;
     case "events":              return <EventsAdmin />;
     case "registration-events": return <RegistrationEventsAdmin />;
     case "editorial-dashboard": return <EditorialDashboardAdmin onNavigate={onNavigate} />;
