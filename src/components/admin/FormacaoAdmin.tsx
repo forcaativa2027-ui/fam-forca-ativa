@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase/client";
-import { useCourses, useCourseClasses, useEnrollments, useAllMembers, useCourseModules, useModuleLessons } from "@/hooks/use-queries";
+import { useCourses, useCourseClasses, useEnrollments, useAllMembers, useCourseModules, useModuleLessons, useEscolas, useJornadas, useProgramas } from "@/hooks/use-queries";
 import * as Fo from "@/services/formacao";
 import * as Ac from "@/services/academyContent";
 import { CLASS_STATUS_LABELS, ENROLLMENT_STATUS_LABELS } from "@/services/formacao";
-import type { Course, CourseClass, EnrollmentStatus, CourseModule } from "@/types/domain";
+import type { Course, CourseClass, EnrollmentStatus, CourseModule, JornadaFormacao } from "@/types/domain";
 
 /**
  * CEC Academy — Escolas (estrutura organizacional dos cursos).
@@ -72,6 +72,8 @@ export function FormacaoAdmin() {
       </div>
 
       {showNewCourse && <NewCourseForm onClose={() => setShowNewCourse(false)} />}
+
+      <EscolaStructureManager />
 
       {groups.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Nenhum curso cadastrado ainda.</p>}
 
@@ -442,6 +444,129 @@ function LessonsManager({ module: mod }: { module: CourseModule }) {
           <Button size="sm" onClick={save} disabled={busy || !title.trim()}>{busy ? "Salvando…" : "Salvar lição"}</Button>
         </div>
       )}
+    </div>
+  );
+}
+
+/** CEC Academy — gestão da hierarquia Escola → Jornada de Formação → Programa (opcional, avançado). */
+function EscolaStructureManager() {
+  const { data: escolas = [] } = useEscolas();
+  const [open, setOpen] = useState(false);
+  const [openEscola, setOpenEscola] = useState<string | null>(null);
+
+  return (
+    <Card>
+      <button onClick={() => setOpen((v) => !v)} className="flex w-full items-center justify-between p-3">
+        <span className="font-display text-base text-navy">Estrutura avançada — Jornadas e Programas</span>
+        {open ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+      </button>
+      {open && (
+        <CardContent className="space-y-2 border-t pt-3">
+          <p className="text-xs text-muted-foreground">Opcional — organize os cursos de uma Escola em Jornadas de Formação (ex: "Formação Bíblica Fundamental") e Programas (ex: "Novo Testamento") antes de criar os cursos. Cursos sem essa organização continuam funcionando normalmente, soltos direto na Escola.</p>
+          {escolas.map((e) => (
+            <div key={e.id} className="rounded-lg border">
+              <button onClick={() => setOpenEscola(openEscola === e.id ? null : e.id)} className="flex w-full items-center gap-1.5 p-2.5 text-left text-sm font-semibold text-navy">
+                {openEscola === e.id ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                {e.name}
+              </button>
+              {openEscola === e.id && <JornadasManager escolaId={e.id} />}
+            </div>
+          ))}
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
+function JornadasManager({ escolaId }: { escolaId: string }) {
+  const qc = useQueryClient();
+  const { data: jornadas = [] } = useJornadas(escolaId);
+  const [name, setName] = useState("");
+  const [openJornada, setOpenJornada] = useState<string | null>(null);
+
+  async function add() {
+    if (!name.trim()) return;
+    await Ac.createJornada(supabase, { escola_id: escolaId, name, order_index: jornadas.length });
+    setName("");
+    qc.invalidateQueries({ queryKey: ["jornadas", escolaId] });
+  }
+  async function remove(id: string) {
+    if (!confirm("Remover esta Jornada e todos os Programas dela?")) return;
+    await Ac.deleteJornada(supabase, id);
+    qc.invalidateQueries({ queryKey: ["jornadas", escolaId] });
+  }
+
+  return (
+    <div className="space-y-2 border-t bg-muted/10 p-2.5">
+      <div className="flex gap-2">
+        <Input value={name} onChange={(ev) => setName(ev.target.value)} placeholder="Nova Jornada de Formação…" onKeyDown={(ev) => ev.key === "Enter" && add()} />
+        <Button size="sm" onClick={add} disabled={!name.trim()} className="shrink-0">Adicionar</Button>
+      </div>
+      {jornadas.map((j) => (
+        <div key={j.id} className="rounded-md border bg-card">
+          <div className="flex items-center justify-between p-2">
+            <button onClick={() => setOpenJornada(openJornada === j.id ? null : j.id)} className="flex flex-1 items-center gap-1.5 text-left text-sm text-ink">
+              {openJornada === j.id ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}{j.name}
+            </button>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-500" onClick={() => remove(j.id)}><Trash2 className="h-3 w-3" /></Button>
+          </div>
+          {openJornada === j.id && <ProgramasManager jornada={j} />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProgramasManager({ jornada }: { jornada: JornadaFormacao }) {
+  const qc = useQueryClient();
+  const { data: programas = [] } = useProgramas(jornada.id);
+  const { data: allCourses = [] } = useCourses();
+  const [name, setName] = useState("");
+
+  async function add() {
+    if (!name.trim()) return;
+    await Ac.createPrograma(supabase, { jornada_id: jornada.id, name, order_index: programas.length });
+    setName("");
+    qc.invalidateQueries({ queryKey: ["programas", jornada.id] });
+  }
+  async function remove(id: string) {
+    if (!confirm("Remover este Programa?")) return;
+    await Ac.deletePrograma(supabase, id);
+    qc.invalidateQueries({ queryKey: ["programas", jornada.id] });
+  }
+  async function linkCourse(programaId: string, courseId: string) {
+    if (!courseId) return;
+    await Ac.linkCourseToPrograma(supabase, courseId, programaId);
+    qc.invalidateQueries({ queryKey: ["courses"] });
+  }
+
+  return (
+    <div className="space-y-2 border-t bg-muted/20 p-2">
+      <div className="flex gap-2">
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Novo Programa…" onKeyDown={(e) => e.key === "Enter" && add()} className="h-8 text-xs" />
+        <Button size="sm" onClick={add} disabled={!name.trim()} className="h-8 shrink-0 text-xs">Adicionar</Button>
+      </div>
+      {programas.map((p) => (
+        <div key={p.id} className="rounded border bg-card p-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-navy">{p.name}</span>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-500" onClick={() => remove(p.id)}><Trash2 className="h-3 w-3" /></Button>
+          </div>
+          <select
+            defaultValue=""
+            onChange={(e) => linkCourse(p.id, e.target.value)}
+            className="mt-1.5 h-7 w-full rounded border bg-background px-1.5 text-[11px]"
+          >
+            <option value="" disabled>+ Vincular curso existente…</option>
+            {allCourses.filter((c) => c.programa_id !== p.id).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <ul className="mt-1 space-y-0.5">
+            {allCourses.filter((c) => c.programa_id === p.id).map((c) => (
+              <li key={c.id} className="text-[11px] text-muted-foreground">• {c.name}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
   );
 }
