@@ -1,18 +1,18 @@
 "use client";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { GraduationCap, Plus, Users, Award, Trash2, BookOpen, Landmark, Briefcase, Heart, Globe2, Sparkles, ChevronDown, ChevronRight, Layers, FileText, X } from "lucide-react";
+import { GraduationCap, Plus, Users, Award, Trash2, BookOpen, Landmark, Briefcase, Heart, Globe2, Sparkles, ChevronDown, ChevronRight, Layers, FileText, X, UserCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase/client";
-import { useCourses, useCourseClasses, useEnrollments, useAllMembers, useCourseModules, useModuleLessons, useEscolas, useJornadas, useProgramas } from "@/hooks/use-queries";
+import { useCourses, useCourseClasses, useEnrollments, useAllMembers, useCourseModules, useModuleLessons, useEscolas, useJornadas, useProgramas, useLessonAssessments } from "@/hooks/use-queries";
 import * as Fo from "@/services/formacao";
 import * as Ac from "@/services/academyContent";
 import { CLASS_STATUS_LABELS, ENROLLMENT_STATUS_LABELS } from "@/services/formacao";
-import type { Course, CourseClass, EnrollmentStatus, CourseModule, JornadaFormacao } from "@/types/domain";
+import type { Course, CourseClass, EnrollmentStatus, CourseModule, JornadaFormacao, CourseLesson } from "@/types/domain";
 
 /**
  * CEC Academy — Escolas (estrutura organizacional dos cursos).
@@ -176,6 +176,7 @@ function CourseDetail({ course, onBack, onOpenClass }: { course: Course; onBack:
       </div>
 
       <CourseContentEditor course={course} />
+      <CourseTutorPicker course={course} />
       <ModulesLessonsManager courseId={course.id} />
 
       {showNewClass && (
@@ -325,7 +326,37 @@ function CourseContentEditor({ course }: { course: Course }) {
   );
 }
 
-/** CEC Academy Bloco 1 — gestão de Módulos e Lições dentro de um curso. */
+/** CEC Academy Bloco 7 — Tutor do curso (acompanha dúvidas e progresso, diferente do Discipulador geral). */
+function CourseTutorPicker({ course }: { course: Course }) {
+  const qc = useQueryClient();
+  const { data: members = [] } = useAllMembers();
+  const [tutorId, setTutorId] = useState(course.tutor_id ?? "");
+  const [busy, setBusy] = useState(false);
+  const withProfile = members.filter((m) => m.profile_id);
+
+  async function save(id: string) {
+    setTutorId(id); setBusy(true);
+    try {
+      await Ac.setCourseTutor(supabase, course.id, id || null);
+      qc.invalidateQueries({ queryKey: ["courses"] });
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-3 pt-4">
+        <UserCheck className="h-4 w-4 shrink-0 text-gold" />
+        <div className="flex-1">
+          <Label className="text-xs">Tutor do curso <span className="font-normal text-muted-foreground">(acompanha dúvidas e progresso — diferente do discipulador geral)</span></Label>
+          <select value={tutorId} onChange={(e) => save(e.target.value)} disabled={busy} className="mt-1 h-9 w-full rounded-md border bg-background px-2 text-sm">
+            <option value="">Nenhum tutor atribuído</option>
+            {withProfile.map((m) => <option key={m.profile_id!} value={m.profile_id!}>{m.full_name}</option>)}
+          </select>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 function ModulesLessonsManager({ courseId }: { courseId: string }) {
   const qc = useQueryClient();
   const { data: modules = [] } = useCourseModules(courseId);
@@ -417,12 +448,7 @@ function LessonsManager({ module: mod }: { module: CourseModule }) {
 
   return (
     <div className="space-y-2 border-t bg-muted/10 p-2.5">
-      {lessons.map((l) => (
-        <div key={l.id} className="flex items-center justify-between rounded-md border bg-card px-2.5 py-1.5">
-          <span className="flex items-center gap-1.5 text-sm text-ink"><FileText className="h-3.5 w-3.5 text-muted-foreground" />{l.title}</span>
-          <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-500" onClick={() => removeLesson(l.id)}><Trash2 className="h-3 w-3" /></Button>
-        </div>
-      ))}
+      {lessons.map((l) => <LessonRow key={l.id} lesson={l} onRemove={() => removeLesson(l.id)} />)}
 
       {!showForm ? (
         <Button size="sm" variant="outline" onClick={() => setShowForm(true)} className="gap-1.5"><Plus className="h-3.5 w-3.5" />Nova lição</Button>
@@ -567,6 +593,65 @@ function ProgramasManager({ jornada }: { jornada: JornadaFormacao }) {
           </ul>
         </div>
       ))}
+    </div>
+  );
+}
+
+/** CEC Academy Bloco 7 — linha de uma lição, com gestão de Avaliação (pergunta de múltipla escolha) expansível. */
+function LessonRow({ lesson, onRemove }: { lesson: CourseLesson; onRemove: () => void }) {
+  const qc = useQueryClient();
+  const { data: assessments = [] } = useLessonAssessments(lesson.id);
+  const [open, setOpen] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState(["", "", ""]);
+  const [correctIndex, setCorrectIndex] = useState(0);
+  const [busy, setBusy] = useState(false);
+
+  async function addQuestion() {
+    const cleaned = options.map((o) => o.trim()).filter(Boolean);
+    if (!question.trim() || cleaned.length < 2) return;
+    setBusy(true);
+    try {
+      await Ac.createAssessment(supabase, { lesson_id: lesson.id, question, options: cleaned, correct_index: correctIndex, order_index: assessments.length });
+      setQuestion(""); setOptions(["", "", ""]); setCorrectIndex(0);
+      qc.invalidateQueries({ queryKey: ["lesson-assessments", lesson.id] });
+    } finally { setBusy(false); }
+  }
+  async function removeQuestion(id: string) {
+    await Ac.deleteAssessment(supabase, id);
+    qc.invalidateQueries({ queryKey: ["lesson-assessments", lesson.id] });
+  }
+
+  return (
+    <div className="rounded-md border bg-card">
+      <div className="flex items-center justify-between px-2.5 py-1.5">
+        <button onClick={() => setOpen((v) => !v)} className="flex flex-1 items-center gap-1.5 text-left text-sm text-ink">
+          <FileText className="h-3.5 w-3.5 text-muted-foreground" />{lesson.title}
+          {assessments.length > 0 && <span className="rounded-full bg-gold/20 px-1.5 py-0.5 text-[10px] font-bold text-navy">{assessments.length} pergunta(s)</span>}
+        </button>
+        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-500" onClick={onRemove}><Trash2 className="h-3 w-3" /></Button>
+      </div>
+      {open && (
+        <div className="space-y-2 border-t bg-muted/20 p-2.5">
+          {assessments.map((a) => (
+            <div key={a.id} className="flex items-center justify-between rounded border bg-background p-2 text-xs">
+              <span>{a.question}</span>
+              <button onClick={() => removeQuestion(a.id)}><Trash2 className="h-3 w-3 text-red-400" /></button>
+            </div>
+          ))}
+          <div className="space-y-1.5 rounded border p-2">
+            <p className="text-[11px] font-bold uppercase text-gold">Nova pergunta de avaliação</p>
+            <Input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Pergunta…" className="h-8 text-xs" />
+            {options.map((o, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                <input type="radio" checked={correctIndex === i} onChange={() => setCorrectIndex(i)} title="Marcar como resposta certa" />
+                <Input value={o} onChange={(e) => { const next = [...options]; next[i] = e.target.value; setOptions(next); }} placeholder={`Opção ${i + 1}`} className="h-8 text-xs" />
+              </div>
+            ))}
+            <Button size="sm" onClick={addQuestion} disabled={busy} className="h-7 text-xs">Adicionar pergunta</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
