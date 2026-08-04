@@ -1273,6 +1273,7 @@ export interface Course {
   church_id: string | null; is_active: boolean; created_at: string;
   escola_id: string | null;
   programa_id: string | null;
+  tutor_id: string | null;
   // CEC Academy — Metodologia de 5 dimensões
   content_conhecer: string | null; content_refletir: string | null; content_orar: string | null;
   content_praticar: string | null; content_compartilhar: string | null;
@@ -1340,6 +1341,20 @@ export interface CourseContentItem {
   module_id: string; module_name: string; module_order: number;
   lesson_id: string; lesson_title: string; lesson_order: number;
   status: LessonProgressStatus; completed_at: string | null;
+}
+
+// CEC Academy Bloco 7 — Tutor, Avaliações, Certificações
+export interface LessonAssessment {
+  id: string; lesson_id: string; question: string; options: string[]; correct_index: number; order_index: number; created_at: string;
+}
+export interface AssessmentAttempt {
+  id: string; profile_id: string; assessment_id: string; selected_index: number; is_correct: boolean; created_at: string;
+}
+export interface CourseCertificate {
+  id: string; profile_id: string; course_id: string; certificate_code: string; issued_at: string; issued_by: string | null;
+}
+export interface TutoringCourse {
+  course_id: string; course_name: string; total_alunos: number; alunos_concluidos: number;
 }
 
 // Família (UX-003 §6.29/6.53)
