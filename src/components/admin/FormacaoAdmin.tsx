@@ -1,16 +1,18 @@
 "use client";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { GraduationCap, Plus, Users, Award, Trash2, BookOpen, Landmark, Briefcase, Heart, Globe2, Sparkles, ChevronDown, ChevronRight } from "lucide-react";
+import { GraduationCap, Plus, Users, Award, Trash2, BookOpen, Landmark, Briefcase, Heart, Globe2, Sparkles, ChevronDown, ChevronRight, Layers, FileText, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase/client";
-import { useCourses, useCourseClasses, useEnrollments, useAllMembers } from "@/hooks/use-queries";
+import { useCourses, useCourseClasses, useEnrollments, useAllMembers, useCourseModules, useModuleLessons } from "@/hooks/use-queries";
 import * as Fo from "@/services/formacao";
+import * as Ac from "@/services/academyContent";
 import { CLASS_STATUS_LABELS, ENROLLMENT_STATUS_LABELS } from "@/services/formacao";
-import type { Course, CourseClass, EnrollmentStatus } from "@/types/domain";
+import type { Course, CourseClass, EnrollmentStatus, CourseModule } from "@/types/domain";
 
 /**
  * CEC Academy — Escolas (estrutura organizacional dos cursos).
@@ -172,6 +174,7 @@ function CourseDetail({ course, onBack, onOpenClass }: { course: Course; onBack:
       </div>
 
       <CourseContentEditor course={course} />
+      <ModulesLessonsManager courseId={course.id} />
 
       {showNewClass && (
         <Card><CardContent className="space-y-3 pt-4">
@@ -319,6 +322,130 @@ function CourseContentEditor({ course }: { course: Course }) {
     </Card>
   );
 }
+
+/** CEC Academy Bloco 1 — gestão de Módulos e Lições dentro de um curso. */
+function ModulesLessonsManager({ courseId }: { courseId: string }) {
+  const qc = useQueryClient();
+  const { data: modules = [] } = useCourseModules(courseId);
+  const [newModuleName, setNewModuleName] = useState("");
+  const [openModule, setOpenModule] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function addModule() {
+    if (!newModuleName.trim()) return;
+    setBusy(true);
+    try {
+      await Ac.createModule(supabase, { course_id: courseId, name: newModuleName, order_index: modules.length });
+      setNewModuleName("");
+      qc.invalidateQueries({ queryKey: ["course-modules", courseId] });
+    } finally { setBusy(false); }
+  }
+
+  async function removeModule(id: string) {
+    if (!confirm("Remover este módulo e todas as lições dele?")) return;
+    await Ac.deleteModule(supabase, id);
+    qc.invalidateQueries({ queryKey: ["course-modules", courseId] });
+  }
+
+  return (
+    <Card>
+      <CardContent className="space-y-3 pt-4">
+        <p className="flex items-center gap-2 font-display text-base text-navy"><Layers className="h-4 w-4 text-gold" />Módulos e Lições</p>
+
+        <div className="flex gap-2">
+          <Input value={newModuleName} onChange={(e) => setNewModuleName(e.target.value)} placeholder="Nome do novo módulo…" onKeyDown={(e) => e.key === "Enter" && addModule()} />
+          <Button size="sm" onClick={addModule} disabled={busy || !newModuleName.trim()} className="shrink-0 gap-1.5"><Plus className="h-4 w-4" />Módulo</Button>
+        </div>
+
+        <div className="space-y-2">
+          {modules.map((m) => (
+            <div key={m.id} className="rounded-lg border">
+              <div className="flex items-center justify-between p-2.5">
+                <button onClick={() => setOpenModule(openModule === m.id ? null : m.id)} className="flex flex-1 items-center gap-1.5 text-left text-sm font-semibold text-navy">
+                  {openModule === m.id ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                  {m.name}
+                </button>
+                <Button size="sm" variant="ghost" className="text-red-500" onClick={() => removeModule(m.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+              </div>
+              {openModule === m.id && <LessonsManager module={m} />}
+            </div>
+          ))}
+          {modules.length === 0 && <p className="py-4 text-center text-sm italic text-muted-foreground">Nenhum módulo ainda — crie o primeiro acima.</p>}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LessonsManager({ module: mod }: { module: CourseModule }) {
+  const qc = useQueryClient();
+  const { data: lessons = [] } = useModuleLessons(mod.id);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState("");
+  const [objective, setObjective] = useState("");
+  const [contentMain, setContentMain] = useState("");
+  const [bibleRef, setBibleRef] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [reflexao, setReflexao] = useState("");
+  const [oracao, setOracao] = useState("");
+  const [pratica, setPratica] = useState("");
+  const [compartilhar, setCompartilhar] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function save() {
+    if (!title.trim()) return;
+    setBusy(true);
+    try {
+      await Ac.createLesson(supabase, {
+        module_id: mod.id, title, objective, content_main: contentMain, bible_reference: bibleRef,
+        video_url: videoUrl, content_reflexao: reflexao, content_oracao: oracao,
+        content_pratica: pratica, content_compartilhar: compartilhar, order_index: lessons.length,
+      });
+      setTitle(""); setObjective(""); setContentMain(""); setBibleRef(""); setVideoUrl("");
+      setReflexao(""); setOracao(""); setPratica(""); setCompartilhar(""); setShowForm(false);
+      qc.invalidateQueries({ queryKey: ["module-lessons", mod.id] });
+    } finally { setBusy(false); }
+  }
+
+  async function removeLesson(id: string) {
+    if (!confirm("Remover esta lição?")) return;
+    await Ac.deleteLesson(supabase, id);
+    qc.invalidateQueries({ queryKey: ["module-lessons", mod.id] });
+  }
+
+  return (
+    <div className="space-y-2 border-t bg-muted/10 p-2.5">
+      {lessons.map((l) => (
+        <div key={l.id} className="flex items-center justify-between rounded-md border bg-card px-2.5 py-1.5">
+          <span className="flex items-center gap-1.5 text-sm text-ink"><FileText className="h-3.5 w-3.5 text-muted-foreground" />{l.title}</span>
+          <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-red-500" onClick={() => removeLesson(l.id)}><Trash2 className="h-3 w-3" /></Button>
+        </div>
+      ))}
+
+      {!showForm ? (
+        <Button size="sm" variant="outline" onClick={() => setShowForm(true)} className="gap-1.5"><Plus className="h-3.5 w-3.5" />Nova lição</Button>
+      ) : (
+        <div className="space-y-2 rounded-lg border bg-card p-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wide text-gold">Nova lição</p>
+            <button onClick={() => setShowForm(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
+          </div>
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Título da lição" />
+          <Input value={objective} onChange={(e) => setObjective(e.target.value)} placeholder="🎯 Objetivo" />
+          <Textarea value={contentMain} onChange={(e) => setContentMain(e.target.value)} placeholder="📖 Conteúdo principal" rows={3} />
+          <Input value={bibleRef} onChange={(e) => setBibleRef(e.target.value)} placeholder="Texto bíblico-base (ex: João 3:16)" />
+          <Input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="Link de vídeo (opcional)" />
+          <Input value={reflexao} onChange={(e) => setReflexao(e.target.value)} placeholder="💭 Refletir — pergunta aberta" />
+          <Input value={oracao} onChange={(e) => setOracao(e.target.value)} placeholder="🙏 Orar" />
+          <Input value={pratica} onChange={(e) => setPratica(e.target.value)} placeholder="🙌 Praticar — missão da semana" />
+          <Input value={compartilhar} onChange={(e) => setCompartilhar(e.target.value)} placeholder="🤝 Compartilhar" />
+          <Button size="sm" onClick={save} disabled={busy || !title.trim()}>{busy ? "Salvando…" : "Salvar lição"}</Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GrowthDots({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
     <span className="flex items-center gap-1">
