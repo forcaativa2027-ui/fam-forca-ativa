@@ -1,6 +1,6 @@
 "use client";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Escola, CourseModule, CourseLesson, CourseContentItem, JornadaFormacao, ProgramaFormacao, EscolaTreeItem } from "@/types/domain";
+import type { Escola, CourseModule, CourseLesson, CourseContentItem, JornadaFormacao, ProgramaFormacao, EscolaTreeItem, LessonAssessment, CourseCertificate, TutoringCourse } from "@/types/domain";
 
 // ---------- Escolas ----------
 export async function listEscolas(sb: SupabaseClient): Promise<Escola[]> {
@@ -122,4 +122,58 @@ export async function getEscolaTree(sb: SupabaseClient, escolaId: string): Promi
 export async function linkCourseToPrograma(sb: SupabaseClient, courseId: string, programaId: string | null): Promise<void> {
   const { error } = await sb.from("courses").update({ programa_id: programaId }).eq("id", courseId);
   if (error) throw error;
+}
+
+// ---------- Bloco 7 — Tutor ----------
+export async function setCourseTutor(sb: SupabaseClient, courseId: string, tutorId: string | null): Promise<void> {
+  const { error } = await sb.from("courses").update({ tutor_id: tutorId }).eq("id", courseId);
+  if (error) throw error;
+}
+export async function listMyTutoringCourses(sb: SupabaseClient, profileId: string): Promise<TutoringCourse[]> {
+  const { data, error } = await sb.rpc("list_my_tutoring_courses", { p_profile_id: profileId });
+  if (error) { console.error("[academy] listMyTutoringCourses", error); return []; }
+  return (data ?? []) as TutoringCourse[];
+}
+
+// ---------- Bloco 7 — Avaliações ----------
+export async function listLessonAssessments(sb: SupabaseClient, lessonId: string): Promise<LessonAssessment[]> {
+  const { data, error } = await sb.from("lesson_assessments").select("*").eq("lesson_id", lessonId).order("order_index");
+  if (error) { console.error("[academy] listLessonAssessments", error); return []; }
+  return (data ?? []) as LessonAssessment[];
+}
+export async function createAssessment(sb: SupabaseClient, input: { lesson_id: string; question: string; options: string[]; correct_index: number; order_index?: number }): Promise<void> {
+  const { error } = await sb.from("lesson_assessments").insert(input);
+  if (error) throw error;
+}
+export async function deleteAssessment(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("lesson_assessments").delete().eq("id", id);
+  if (error) throw error;
+}
+export async function submitAttempt(sb: SupabaseClient, input: { profile_id: string; assessment_id: string; selected_index: number; is_correct: boolean }): Promise<void> {
+  const { error } = await sb.from("assessment_attempts").upsert(input, { onConflict: "profile_id,assessment_id" });
+  if (error) throw error;
+}
+export async function listMyAttempts(sb: SupabaseClient, profileId: string, assessmentIds: string[]): Promise<Record<string, number>> {
+  if (assessmentIds.length === 0) return {};
+  const { data, error } = await sb.from("assessment_attempts").select("assessment_id, selected_index").eq("profile_id", profileId).in("assessment_id", assessmentIds);
+  if (error) return {};
+  return Object.fromEntries((data ?? []).map((a) => [a.assessment_id, a.selected_index]));
+}
+
+// ---------- Bloco 7 — Certificações ----------
+/** Confere se o aluno já concluiu 100% do curso e, se sim, emite (ou devolve) o certificado. */
+export async function maybeIssueCertificate(sb: SupabaseClient, courseId: string, profileId: string): Promise<string | null> {
+  const { data, error } = await sb.rpc("maybe_issue_certificate", { p_course_id: courseId, p_profile_id: profileId });
+  if (error) { console.error("[academy] maybeIssueCertificate", error); return null; }
+  return data as string | null;
+}
+export async function getMyCertificate(sb: SupabaseClient, courseId: string, profileId: string): Promise<CourseCertificate | null> {
+  const { data, error } = await sb.from("course_certificates").select("*").eq("course_id", courseId).eq("profile_id", profileId).maybeSingle();
+  if (error) return null;
+  return data as CourseCertificate | null;
+}
+export async function listMyCertificates(sb: SupabaseClient, profileId: string): Promise<CourseCertificate[]> {
+  const { data, error } = await sb.from("course_certificates").select("*").eq("profile_id", profileId).order("issued_at", { ascending: false });
+  if (error) return [];
+  return (data ?? []) as CourseCertificate[];
 }
