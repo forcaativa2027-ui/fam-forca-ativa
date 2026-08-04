@@ -7,7 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   LogOut, Sparkles, AlertTriangle, BarChart3, Users, Heart, Map,
   MessageSquareHeart, User, Check, Plus, Calendar as Cal,
-  Award, ClipboardList, Wand2, ChevronRight,
+  Award, ClipboardList, Wand2, ChevronRight, GraduationCap,
 } from "lucide-react";
 import { useAccessibility } from "@/components/shared/AccessibilityProvider";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ import { CompleteProfileCard } from "./CompleteProfileCard";
 import { MyCredentialCard } from "./MyCredentialCard";
 import { MemberHeader } from "./MemberHeader";
 import { DiarioFormacao } from "./DiarioFormacao";
+import { AcademyTab } from "./AcademyTab";
 import { NotificationsPanel, useNotificationCount, NotificationBadge } from "./NotificationsPanel";
 import { EventLoginPopup } from "./EventLoginPopup";
 import { supabase } from "@/lib/supabase/client";
@@ -83,6 +84,8 @@ export default function PanelDashboard() {
     { key: "geral", label: "Visão Geral", icon: <BarChart3 size={18} />, onClick: () => setTab("geral") },
     { key: "alertas", label: "Alertas", icon: <NotificationBadge count={notifCount} />, onClick: () => setTab("alertas") },
     { key: "celula", label: "Life Group", icon: <Users size={18} />, onClick: () => setTab("celula") },
+    { key: "academy", label: "Academy", icon: <GraduationCap size={18} />, onClick: () => setTab("academy") },
+    { key: "jornada", label: "Jornada", icon: <Map size={18} />, onClick: () => setTab("jornada") },
     { key: "oracao", label: "Oração", icon: <MessageSquareHeart size={18} />, onClick: () => setTab("oracao") },
     { key: "perfil", label: "Perfil", icon: <User size={18} />, onClick: () => setTab("perfil") },
   ];
@@ -123,6 +126,7 @@ export default function PanelDashboard() {
             />
           </TabsContent>
           <TabsContent value="discipulado"><DiscipleshipTab member={member ?? null} /></TabsContent>
+          <TabsContent value="academy"><AcademyTab member={member ?? null} onGoToJourney={() => setTab("jornada")} /></TabsContent>
           <TabsContent value="jornada"><JourneyTab member={member ?? null} /></TabsContent>
           <TabsContent value="oracao"><PrayerTab member={member ?? null} /></TabsContent>
           <TabsContent value="ministerio"><MyMinistriesPanel /></TabsContent>
