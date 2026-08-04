@@ -1,6 +1,6 @@
 "use client";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Escola, CourseModule, CourseLesson, CourseContentItem } from "@/types/domain";
+import type { Escola, CourseModule, CourseLesson, CourseContentItem, JornadaFormacao, ProgramaFormacao, EscolaTreeItem } from "@/types/domain";
 
 // ---------- Escolas ----------
 export async function listEscolas(sb: SupabaseClient): Promise<Escola[]> {
@@ -80,5 +80,46 @@ export async function completeLesson(sb: SupabaseClient, lessonId: string, profi
     { profile_id: profileId, lesson_id: lessonId, status: "concluida", completed_at: new Date().toISOString() },
     { onConflict: "profile_id,lesson_id" },
   );
+  if (error) throw error;
+}
+
+// ---------- Jornada de Formação e Programa (Escola → Jornada → Programa → Curso) ----------
+export async function listJornadas(sb: SupabaseClient, escolaId: string): Promise<JornadaFormacao[]> {
+  const { data, error } = await sb.from("jornadas_formacao").select("*").eq("escola_id", escolaId).eq("is_active", true).order("order_index");
+  if (error) { console.error("[academy] listJornadas", error); return []; }
+  return (data ?? []) as JornadaFormacao[];
+}
+export async function createJornada(sb: SupabaseClient, input: { escola_id: string; name: string; description?: string; order_index?: number }): Promise<void> {
+  const { error } = await sb.from("jornadas_formacao").insert(input);
+  if (error) throw error;
+}
+export async function deleteJornada(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("jornadas_formacao").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function listProgramas(sb: SupabaseClient, jornadaId: string): Promise<ProgramaFormacao[]> {
+  const { data, error } = await sb.from("programas_formacao").select("*").eq("jornada_id", jornadaId).eq("is_active", true).order("order_index");
+  if (error) { console.error("[academy] listProgramas", error); return []; }
+  return (data ?? []) as ProgramaFormacao[];
+}
+export async function createPrograma(sb: SupabaseClient, input: { jornada_id: string; name: string; description?: string; order_index?: number }): Promise<void> {
+  const { error } = await sb.from("programas_formacao").insert(input);
+  if (error) throw error;
+}
+export async function deletePrograma(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("programas_formacao").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function getEscolaTree(sb: SupabaseClient, escolaId: string): Promise<EscolaTreeItem[]> {
+  const { data, error } = await sb.rpc("get_escola_tree", { p_escola_id: escolaId });
+  if (error) { console.error("[academy] getEscolaTree", error); return []; }
+  return (data ?? []) as EscolaTreeItem[];
+}
+
+/** Vincula um curso já existente a um Programa (opcional — cursos sem programa continuam soltos direto na Escola). */
+export async function linkCourseToPrograma(sb: SupabaseClient, courseId: string, programaId: string | null): Promise<void> {
+  const { error } = await sb.from("courses").update({ programa_id: programaId }).eq("id", courseId);
   if (error) throw error;
 }
