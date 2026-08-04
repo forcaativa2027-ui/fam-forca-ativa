@@ -20,7 +20,7 @@ import type { Course, CourseClass, EnrollmentStatus } from "@/types/domain";
  * ("lideranca"/"ministerial" soltos) funcionando, sem quebrar cursos
  * já cadastrados.
  */
-const ESCOLAS: { key: string; label: string; icon: typeof BookOpen }[] = [
+export const ESCOLAS: { key: string; label: string; icon: typeof BookOpen }[] = [
   { key: "formacao_inicial", label: "Formação Inicial", icon: Sparkles },
   { key: "escola_biblica", label: "Escola Bíblica", icon: BookOpen },
   { key: "escola_teologica", label: "Escola Teológica", icon: Landmark },
@@ -29,14 +29,14 @@ const ESCOLAS: { key: string; label: string; icon: typeof BookOpen }[] = [
   { key: "escola_missoes", label: "Escola de Missões", icon: Globe2 },
   { key: "outros", label: "Outros", icon: GraduationCap },
 ];
-const CATEGORY_LABELS: Record<string, string> = {
+export const CATEGORY_LABELS: Record<string, string> = {
   formacao_inicial: "Formação Inicial", escola_biblica: "Escola Bíblica", escola_teologica: "Escola Teológica",
   escola_ministerial: "Escola Ministerial", escola_familia: "Escola da Família", escola_missoes: "Escola de Missões",
   // categorias antigas — mantidas só pra continuar exibindo cursos já cadastrados corretamente
   formacao_basica: "Formação Inicial", lideranca: "Escola Ministerial", ministerial: "Escola Ministerial",
 };
 /** Agrupa um curso já cadastrado (categoria antiga ou nova) na Escola certa pra exibição. */
-function escolaKeyOf(category: string | null): string {
+export function escolaKeyOf(category: string | null): string {
   if (!category) return "outros";
   if (["formacao_inicial", "formacao_basica"].includes(category)) return "formacao_inicial";
   if (["escola_ministerial", "lideranca", "ministerial"].includes(category)) return "escola_ministerial";

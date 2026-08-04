@@ -93,7 +93,6 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "structure",     label: "Estrutura Organizacional", icon: <GitBranch size={15} /> },
         { key: "genealogy",     label: "Genealogia",     icon: <Network size={15} /> },
         { key: "ministerios",   label: "Ministérios",    icon: <Mic2 size={15} /> },
-        { key: "formacao",      label: "Formação",       icon: <GraduationCap size={15} /> },
         { key: "life-groups",   label: "Life Groups",    icon: <Flame size={15} /> },
         { key: "evangelism-groups", label: "Grupos de Evangelismo", icon: <Megaphone size={15} /> },
         { key: "mda",           label: "Estrutura MDA",  icon: <Network size={15} /> },
@@ -141,6 +140,14 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
       icon: <Sparkles size={16} />,
       items: [
         { key: "cecmais-ofertas", label: "Ofertas", icon: <Sparkles size={15} /> },
+      ],
+    },
+    {
+      id: "academy",
+      label: "CEC Academy",
+      icon: <GraduationCap size={16} />,
+      items: [
+        { key: "formacao",      label: "Escolas e Cursos", icon: <GraduationCap size={15} /> },
       ],
     },
     {
