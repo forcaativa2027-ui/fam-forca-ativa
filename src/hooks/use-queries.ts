@@ -833,3 +833,17 @@ export const useMyJournalEntries = (profileId: string | null) =>
     queryFn: () => Journal.listMyJournalEntries(supabase, profileId as string),
     enabled: !!profileId,
   });
+
+// ── CEC Academy Bloco 1 — Escola/Módulo/Lição ────────────────────
+import * as AcademyContent from "@/services/academyContent";
+export const useEscolas = () => useQuery({ queryKey: ["escolas"], queryFn: () => AcademyContent.listEscolas(supabase) });
+export const useCourseModules = (courseId: string | null) =>
+  useQuery({ queryKey: ["course-modules", courseId], queryFn: () => AcademyContent.listCourseModules(supabase, courseId as string), enabled: !!courseId });
+export const useModuleLessons = (moduleId: string | null) =>
+  useQuery({ queryKey: ["module-lessons", moduleId], queryFn: () => AcademyContent.listModuleLessons(supabase, moduleId as string), enabled: !!moduleId });
+export const useCourseContent = (courseId: string | null, profileId: string | null) =>
+  useQuery({
+    queryKey: ["course-content", courseId, profileId],
+    queryFn: () => AcademyContent.listCourseContent(supabase, courseId as string, profileId),
+    enabled: !!courseId,
+  });
