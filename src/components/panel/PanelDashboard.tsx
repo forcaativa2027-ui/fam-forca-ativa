@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -68,7 +69,8 @@ export default function PanelDashboard() {
   const myChurchName = allChurches.find((c) => c.id === member?.church_id)?.name ?? null;
   const isAdmin = profile?.role === "apostolo" || profile?.role === "pastor";
   const notifCount = useNotificationCount();
-  const [tab, setTab] = useState("geral");
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState(searchParams.get("tab") ?? "geral");
 
   useEffect(() => {
     touchCurrentSession(supabase);
@@ -84,7 +86,6 @@ export default function PanelDashboard() {
     { key: "geral", label: "Visão Geral", icon: <BarChart3 size={18} />, onClick: () => setTab("geral") },
     { key: "alertas", label: "Alertas", icon: <NotificationBadge count={notifCount} />, onClick: () => setTab("alertas") },
     { key: "celula", label: "Life Group", icon: <Users size={18} />, onClick: () => setTab("celula") },
-    { key: "academy", label: "Academy", icon: <GraduationCap size={18} />, onClick: () => setTab("academy") },
     { key: "jornada", label: "Jornada", icon: <Map size={18} />, onClick: () => setTab("jornada") },
     { key: "oracao", label: "Oração", icon: <MessageSquareHeart size={18} />, onClick: () => setTab("oracao") },
     { key: "perfil", label: "Perfil", icon: <User size={18} />, onClick: () => setTab("perfil") },
@@ -93,7 +94,7 @@ export default function PanelDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <EventLoginPopup profile={profile} />
-      <MemberHeader active="dashboard" isAdmin={isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
+      <MemberHeader active={tab === "academy" ? "academy" : "dashboard"} isAdmin={isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
 
       <Tabs value={tab} onValueChange={setTab}>
         <main className="container space-y-8 py-8">
