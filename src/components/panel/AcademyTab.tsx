@@ -4,7 +4,7 @@ import { GraduationCap, Map, ChevronDown, ChevronRight, ArrowLeft, CheckCircle2,
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
-import { useCourses, useCourseModules, useCourseContent, useMyProfile } from "@/hooks/use-queries";
+import { useCourses, useCourseModules, useCourseContent, useMyProfile, useEscolas, useEscolaTree } from "@/hooks/use-queries";
 import { ESCOLAS, escolaKeyOf } from "@/components/admin/FormacaoAdmin";
 import * as Ac from "@/services/academyContent";
 import * as Journal from "@/services/formationJournal";
@@ -18,14 +18,17 @@ import type { Member, Course, CourseContentItem } from "@/types/domain";
  */
 export function AcademyTab({ member, onGoToJourney }: { member: Member | null; onGoToJourney: () => void }) {
   const { data: courses = [] } = useCourses();
+  const { data: dbEscolas = [] } = useEscolas();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [openCourse, setOpenCourse] = useState<Course | null>(null);
 
   const active = courses.filter((c) => c.is_active);
   const groups = ESCOLAS.map((escola) => ({
     ...escola,
-    courses: active.filter((c) => escolaKeyOf(c.category) === escola.key),
-  })).filter((g) => g.courses.length > 0);
+    dbId: dbEscolas.find((e) => e.slug === escola.key)?.id ?? null,
+    // "avulsos" = cursos dessa escola que ainda não foram organizados numa Jornada/Programa
+    courses: active.filter((c) => escolaKeyOf(c.category) === escola.key && !c.programa_id),
+  })).filter((g) => g.courses.length > 0 || g.dbId);
 
   if (openCourse) return <CourseContentViewer course={openCourse} onBack={() => setOpenCourse(null)} />;
 
@@ -52,12 +55,18 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
                 </button>
                 {!isCollapsed && (
                   <div className="space-y-1.5 border-t p-3">
-                    {g.courses.map((c) => (
-                      <button key={c.id} onClick={() => setOpenCourse(c)} className="block w-full rounded-lg border p-2.5 text-left transition hover:border-gold/50 hover:shadow-sm">
-                        <p className="text-sm font-semibold text-navy">{c.name}</p>
-                        {c.description && <p className="text-xs text-muted-foreground">{c.description}</p>}
-                      </button>
-                    ))}
+                    {g.dbId && <EscolaTreeView escolaId={g.dbId} onOpenCourse={setOpenCourse} />}
+                    {g.courses.length > 0 && (
+                      <div className="space-y-1.5">
+                        {g.dbId && <p className="pt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Outros cursos</p>}
+                        {g.courses.map((c) => (
+                          <button key={c.id} onClick={() => setOpenCourse(c)} className="block w-full rounded-lg border p-2.5 text-left transition hover:border-gold/50 hover:shadow-sm">
+                            <p className="text-sm font-semibold text-navy">{c.name}</p>
+                            {c.description && <p className="text-xs text-muted-foreground">{c.description}</p>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -71,6 +80,57 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
         <span className="flex items-center gap-2"><Map className="h-4 w-4 text-gold" />Ver meu histórico e Diário de Formação na Jornada</span>
         <ChevronRight className="h-4 w-4 text-muted-foreground" />
       </button>
+    </div>
+  );
+}
+
+/** Mostra a árvore Jornada de Formação → Programa → Curso de uma Escola. */
+function EscolaTreeView({ escolaId, onOpenCourse }: { escolaId: string; onOpenCourse: (c: Course) => void }) {
+  const { data: tree = [] } = useEscolaTree(escolaId);
+  const { data: allCourses = [] } = useCourses();
+  const [openJornada, setOpenJornada] = useState<string | null>(null);
+
+  const jornadaIds = Array.from(new Set(tree.map((t) => t.jornada_id)));
+  if (jornadaIds.length === 0) return null;
+
+  return (
+    <div className="space-y-1.5">
+      {jornadaIds.map((jid) => {
+        const jRows = tree.filter((t) => t.jornada_id === jid);
+        const jName = jRows[0]?.jornada_name ?? "";
+        const programaIds = Array.from(new Set(jRows.filter((r) => r.programa_id).map((r) => r.programa_id as string)));
+        const isOpen = openJornada === jid;
+        return (
+          <div key={jid} className="rounded-lg border border-gold/30 bg-gold/5">
+            <button onClick={() => setOpenJornada(isOpen ? null : jid)} className="flex w-full items-center justify-between p-2.5 text-left">
+              <span className="text-sm font-bold text-navy">🧭 {jName}</span>
+              {isOpen ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
+            </button>
+            {isOpen && (
+              <div className="space-y-1.5 border-t p-2.5">
+                {programaIds.map((pid) => {
+                  const pRows = jRows.filter((r) => r.programa_id === pid);
+                  const pName = pRows[0]?.programa_name ?? "";
+                  const cursos = allCourses.filter((c) => c.programa_id === pid && c.is_active);
+                  return (
+                    <div key={pid} className="rounded-md border bg-card p-2">
+                      <p className="text-xs font-bold uppercase tracking-wide text-gold">{pName}</p>
+                      <div className="mt-1 space-y-1">
+                        {cursos.map((c) => (
+                          <button key={c.id} onClick={() => onOpenCourse(c)} className="block w-full rounded border p-2 text-left text-xs hover:border-gold/50">
+                            {c.name}
+                          </button>
+                        ))}
+                        {cursos.length === 0 && <p className="text-[11px] italic text-muted-foreground">Nenhum curso ainda neste programa.</p>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
