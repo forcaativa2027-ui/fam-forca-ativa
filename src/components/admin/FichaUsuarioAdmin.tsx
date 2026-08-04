@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { IdCard, Shield, Plus, X, CheckCircle2 } from "lucide-react";
+import { IdCard, Shield, Plus, X, CheckCircle2, KeyRound, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,6 +78,8 @@ export function FichaUsuarioAdmin({ profileId, fullName, onBack }: { profileId: 
           </div>
         </CardContent>
       </Card>
+
+      <SecurityRecoveryCard profileId={profileId} />
 
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-2 font-display text-lg text-navy"><Shield className="h-5 w-5 text-gold" />Delegações</h3>
@@ -257,6 +259,54 @@ function NewDelegationForm({ profileId, onDone, onCancel }: { profileId: string;
         <div><Label className="text-xs">Observações (opcional)</Label><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} /></div>
         {err && <p className="text-sm text-destructive">{err}</p>}
         <Button onClick={grant} disabled={busy} className="w-full gap-1.5"><CheckCircle2 className="h-4 w-4" />{busy ? "Concedendo…" : "Conceder delegação"}</Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * UX-004 — Recuperação de conta travada. Redefine o 2FA de outra
+ * pessoa (remove os fatores dela) sem depender da sessão dela estar
+ * verificada — resolve exatamente o cenário "AAL2 required to
+ * unenroll verified factor" quando ela mesma não consegue.
+ */
+function SecurityRecoveryCard({ profileId }: { profileId: string }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+
+  async function resetMfa() {
+    if (!confirm("Redefinir o 2FA dessa pessoa? Ela vai precisar ativar de novo (escanear um QR Code novo) da próxima vez que quiser usar 2FA.")) return;
+    setBusy(true); setErr(""); setMsg("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin/reset-mfa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: session?.access_token, target_profile_id: profileId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Erro ao redefinir");
+      setMsg(json.removed > 0 ? `2FA redefinido — ${json.removed} fator(es) removido(s). Ela já consegue entrar só com a senha.` : "Essa pessoa não tinha nenhum fator de 2FA ativo.");
+    } catch (e: unknown) {
+      setErr((e as { message?: string })?.message ?? "Erro ao redefinir o 2FA.");
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <Card>
+      <CardHeader><CardTitle className="flex items-center gap-2 text-base"><KeyRound className="h-4 w-4 text-gold" />Recuperação de Acesso</CardTitle></CardHeader>
+      <CardContent className="space-y-2">
+        <p className="text-sm text-muted-foreground">
+          Se essa pessoa está travada na verificação em duas etapas (código inválido, celular perdido/trocado),
+          redefina o 2FA dela aqui — ela volta a entrar só com a senha, e pode ativar um 2FA novo depois.
+        </p>
+        {msg && <p className="text-sm text-green-700">{msg}</p>}
+        {err && <p className="text-sm text-destructive">{err}</p>}
+        <Button variant="outline" size="sm" onClick={resetMfa} disabled={busy} className="gap-1.5 border-amber-400 text-amber-700">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+          {busy ? "Redefinindo…" : "Redefinir 2FA desta pessoa"}
+        </Button>
       </CardContent>
     </Card>
   );
