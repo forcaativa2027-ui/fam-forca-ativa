@@ -1272,6 +1272,7 @@ export interface Course {
   id: string; name: string; description: string | null; category: string | null;
   church_id: string | null; is_active: boolean; created_at: string;
   escola_id: string | null;
+  programa_id: string | null;
   // CEC Academy — Metodologia de 5 dimensões
   content_conhecer: string | null; content_refletir: string | null; content_orar: string | null;
   content_praticar: string | null; content_compartilhar: string | null;
@@ -1311,6 +1312,19 @@ export type GrowthLevel = 0 | 1 | 2 | 3; // 0=não iniciado, 1=iniciado, 2=em pr
 export interface Escola {
   id: string; name: string; slug: string; description: string | null;
   icon_key: string | null; order_index: number; is_active: boolean; created_at: string;
+}
+export interface JornadaFormacao {
+  id: string; escola_id: string; name: string; description: string | null;
+  order_index: number; is_active: boolean; created_at: string;
+}
+export interface ProgramaFormacao {
+  id: string; jornada_id: string; name: string; description: string | null;
+  order_index: number; is_active: boolean; created_at: string;
+}
+export interface EscolaTreeItem {
+  jornada_id: string; jornada_name: string; jornada_order: number;
+  programa_id: string | null; programa_name: string | null; programa_order: number | null;
+  course_id: string | null; course_name: string | null; course_description: string | null;
 }
 export interface CourseModule {
   id: string; course_id: string; name: string; description: string | null; order_index: number; created_at: string;
