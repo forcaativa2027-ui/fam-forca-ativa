@@ -824,3 +824,12 @@ export const useMfaRequired = (profileId: string | null) =>
     enabled: !!profileId,
   });
 export const useMfaEnforcement = () => useQuery({ queryKey: ["mfa-enforcement"], queryFn: () => Mfa.getMfaEnforcement(supabase) });
+
+// ── CEC Academy — Diário de Formação ─────────────────────────────
+import * as Journal from "@/services/formationJournal";
+export const useMyJournalEntries = (profileId: string | null) =>
+  useQuery({
+    queryKey: ["formation-journal", profileId],
+    queryFn: () => Journal.listMyJournalEntries(supabase, profileId as string),
+    enabled: !!profileId,
+  });
