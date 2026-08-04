@@ -11,6 +11,18 @@ const STATUS_COLOR: Record<string, string> = {
   desistente: "bg-gray-100 text-gray-600 border-gray-300",
 };
 
+/** CEC Academy — pontinhos de leitura (não clicáveis aqui, só mostram o nível já registrado pelo admin/discipulador). */
+function GrowthDotsView({ label, value }: { label: string; value: number }) {
+  return (
+    <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+      {label}
+      {[1, 2, 3].map((n) => (
+        <span key={n} className={`h-1.5 w-1.5 rounded-full ${n <= value ? "bg-gold" : "bg-border"}`} />
+      ))}
+    </span>
+  );
+}
+
 export function FormacaoMembro({ memberId }: { memberId: string }) {
   const { data: enrollments = [], isLoading } = useMemberEnrollments(memberId);
 
@@ -27,14 +39,21 @@ export function FormacaoMembro({ memberId }: { memberId: string }) {
         ) : (
           <div className="space-y-2">
             {enrollments.map((e) => (
-              <div key={e.id} className="flex items-center justify-between gap-3 rounded-md border p-3">
-                <div>
-                  <p className="text-sm font-semibold text-navy">{e.course_name}</p>
-                  <p className="text-xs text-muted-foreground">{e.class_name}{e.completed_at ? ` · concluído em ${new Date(e.completed_at).toLocaleDateString("pt-BR")}` : ""}</p>
+              <div key={e.id} className="space-y-1.5 rounded-md border p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-navy">{e.course_name}</p>
+                    <p className="text-xs text-muted-foreground">{e.class_name}{e.completed_at ? ` · concluído em ${new Date(e.completed_at).toLocaleDateString("pt-BR")}` : ""}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {e.certificate_issued && <Award className="h-4 w-4 text-gold" />}
+                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${STATUS_COLOR[e.status]}`}>{ENROLLMENT_STATUS_LABELS[e.status]}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {e.certificate_issued && <Award className="h-4 w-4 text-gold" />}
-                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase ${STATUS_COLOR[e.status]}`}>{ENROLLMENT_STATUS_LABELS[e.status]}</span>
+                <div className="flex flex-wrap gap-3 border-t pt-1.5">
+                  <GrowthDotsView label="Conhecimento" value={e.knowledge_level} />
+                  <GrowthDotsView label="Vivência" value={e.practice_level} />
+                  <GrowthDotsView label="Compartilhamento" value={e.sharing_level} />
                 </div>
               </div>
             ))}
