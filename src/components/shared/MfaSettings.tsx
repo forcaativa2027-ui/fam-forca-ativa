@@ -26,6 +26,8 @@ export function MfaSettings({ profileId, isApostolo }: { profileId: string | nul
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
+  const [confirmingDisable, setConfirmingDisable] = useState(false);
+  const [disableCode, setDisableCode] = useState("");
 
   const verified = factors.find((f) => f.status === "verified");
 
@@ -55,14 +57,43 @@ export function MfaSettings({ profileId, isApostolo }: { profileId: string | nul
   async function disable() {
     if (!verified) return;
     if (!confirm("Desativar a autenticação de dois fatores? Sua conta ficará protegida só pela senha.")) return;
+    setErr("");
+    try {
+      const { current } = await Mfa.getAssuranceLevel(supabase);
+      if (current !== "aal2") {
+        // A sessão atual só validou a senha — o Supabase exige confirmar o código
+        // de novo antes de permitir desativar o 2FA (senão, quem só roubasse a
+        // senha já conseguiria desligar a proteção).
+        setConfirmingDisable(true);
+        return;
+      }
+    } catch { /* segue tentando direto — o erro real, se houver, aparece abaixo */ }
+    await doDisable();
+  }
+
+  async function doDisable() {
+    if (!verified) return;
     setBusy(true); setErr("");
     try {
       await Mfa.unenroll(supabase, verified.id);
       setMsg("Autenticação de dois fatores desativada.");
+      setConfirmingDisable(false); setDisableCode("");
       refetch();
     } catch (e: unknown) {
       setErr((e as { message?: string })?.message ?? "Erro ao desativar.");
     } finally { setBusy(false); }
+  }
+
+  async function confirmThenDisable() {
+    if (!verified || disableCode.length !== 6) { setErr("Digite o código de 6 dígitos do seu aplicativo autenticador."); return; }
+    setErr(""); setBusy(true);
+    try {
+      await Mfa.verifyLoginChallenge(supabase, verified.id, disableCode);
+      await doDisable();
+    } catch (e: unknown) {
+      setErr((e as { message?: string })?.message ?? "Código inválido. Confira o app e tente de novo.");
+      setBusy(false);
+    }
   }
 
   async function toggleEnforcement() {
@@ -102,10 +133,23 @@ export function MfaSettings({ profileId, isApostolo }: { profileId: string | nul
         {err && <p className="text-sm text-destructive">{err}</p>}
 
         {verified ? (
-          <div className="flex items-center justify-between rounded-lg border bg-green-50 p-3">
-            <span className="flex items-center gap-2 text-sm font-semibold text-green-800"><Smartphone className="h-4 w-4" />Ativo — {verified.friendly_name ?? "aplicativo autenticador"}</span>
-            <Button size="sm" variant="outline" className="text-red-600" onClick={disable} disabled={busy}>Desativar</Button>
-          </div>
+          confirmingDisable ? (
+            <div className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-4">
+              <p className="text-sm text-amber-800">Por segurança, confirme o código do seu aplicativo autenticador antes de desativar.</p>
+              <Input value={disableCode} onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" className="text-center text-lg tracking-widest" autoFocus onKeyDown={(e) => { if (e.key === "Enter") confirmThenDisable(); }} />
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => { setConfirmingDisable(false); setDisableCode(""); setErr(""); }} className="gap-1.5"><X className="h-4 w-4" />Cancelar</Button>
+                <Button onClick={confirmThenDisable} disabled={busy} className="flex-1 gap-1.5 bg-red-600 hover:bg-red-700">
+                  {busy && <Loader2 className="h-4 w-4 animate-spin" />}Confirmar e desativar
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between rounded-lg border bg-green-50 p-3">
+              <span className="flex items-center gap-2 text-sm font-semibold text-green-800"><Smartphone className="h-4 w-4" />Ativo — {verified.friendly_name ?? "aplicativo autenticador"}</span>
+              <Button size="sm" variant="outline" className="text-red-600" onClick={disable} disabled={busy}>Desativar</Button>
+            </div>
+          )
         ) : enrolling ? (
           <div className="space-y-3 rounded-lg border p-4">
             <p className="text-sm text-ink">1. Escaneie este QR Code com seu aplicativo autenticador:</p>
