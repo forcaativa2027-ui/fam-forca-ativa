@@ -1271,6 +1271,9 @@ export type ClassStatus = "planejada" | "em_andamento" | "concluida" | "cancelad
 export interface Course {
   id: string; name: string; description: string | null; category: string | null;
   church_id: string | null; is_active: boolean; created_at: string;
+  // CEC Academy — Metodologia de 5 dimensões
+  content_conhecer: string | null; content_refletir: string | null; content_orar: string | null;
+  content_praticar: string | null; content_compartilhar: string | null;
 }
 export interface CourseClass {
   id: string; course_id: string; church_id: string | null; name: string;
@@ -1281,6 +1284,8 @@ export interface CourseClass {
 export interface CourseEnrollment {
   id: string; class_id: string; member_id: string; status: EnrollmentStatus;
   enrolled_at: string; completed_at: string | null; certificate_issued: boolean; notes: string | null;
+  // CEC Academy — 3 indicadores de crescimento (substituem % concluído)
+  knowledge_level: GrowthLevel; practice_level: GrowthLevel; sharing_level: GrowthLevel;
 }
 export interface CourseEnrollmentView extends CourseEnrollment {
   member_name: string; class_name: string; class_status: ClassStatus;
@@ -1290,6 +1295,16 @@ export interface FormacaoStats {
   total_cursos: number; total_turmas_ativas: number;
   total_matriculados: number; total_concluintes_90d: number;
 }
+
+// CEC Academy — Diário de Formação
+export type JournalEntryType = "versiculo" | "oracao" | "reflexao" | "testemunho" | "aprendizado" | "duvida" | "missao_cumprida";
+export interface FormationJournalEntry {
+  id: string; profile_id: string; entry_type: JournalEntryType; content: string;
+  course_id: string | null; is_private: boolean; created_at: string; updated_at: string;
+}
+
+// CEC Academy — Indicadores de Crescimento (substituem % concluído)
+export type GrowthLevel = 0 | 1 | 2 | 3; // 0=não iniciado, 1=iniciado, 2=em progresso, 3=consolidado
 
 // Família (UX-003 §6.29/6.53)
 export type FamilyRelationshipType = "pai" | "mae" | "conjuge" | "filho" | "irmao" | "responsavel_legal" | "outro";
