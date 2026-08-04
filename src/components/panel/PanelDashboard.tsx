@@ -22,6 +22,7 @@ import { MemberOverviewTab } from "./MemberOverviewTab";
 import { CompleteProfileCard } from "./CompleteProfileCard";
 import { MyCredentialCard } from "./MyCredentialCard";
 import { MemberHeader } from "./MemberHeader";
+import { DiarioFormacao } from "./DiarioFormacao";
 import { NotificationsPanel, useNotificationCount, NotificationBadge } from "./NotificationsPanel";
 import { EventLoginPopup } from "./EventLoginPopup";
 import { supabase } from "@/lib/supabase/client";
@@ -295,6 +296,7 @@ function JourneyTab({ member }: { member: Member | null }) {
   if (!member) return <NotLinkedMessage subject="à jornada espiritual"/>;
 
   return (
+    <div className="space-y-4">
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2"><Map className="h-5 w-5 text-gold"/>Minha jornada espiritual</CardTitle>
@@ -317,6 +319,8 @@ function JourneyTab({ member }: { member: Member | null }) {
         )}
       </CardContent>
     </Card>
+    <DiarioFormacao />
+    </div>
   );
 }
 function TimelineEvent({ event }: { event: PastoralTimeline }) {
