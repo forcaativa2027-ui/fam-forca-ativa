@@ -72,6 +72,15 @@ export default function PanelDashboard() {
   const searchParams = useSearchParams();
   const [tab, setTab] = useState(searchParams.get("tab") ?? "geral");
 
+  // O clique no link "Academy" do cabeçalho muda só o parâmetro da URL (?tab=academy),
+  // sem recarregar a página — sem isso, o estado "tab" só era lido uma vez, na primeira
+  // carga, e o clique não tinha efeito nenhum enquanto o usuário já estava em /painel.
+  useEffect(() => {
+    const urlTab = searchParams.get("tab");
+    if (urlTab && urlTab !== tab) setTab(urlTab);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   useEffect(() => {
     touchCurrentSession(supabase);
   }, []);
