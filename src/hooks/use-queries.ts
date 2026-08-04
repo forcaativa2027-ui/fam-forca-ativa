@@ -853,3 +853,11 @@ export const useProgramas = (jornadaId: string | null) =>
   useQuery({ queryKey: ["programas", jornadaId], queryFn: () => AcademyContent.listProgramas(supabase, jornadaId as string), enabled: !!jornadaId });
 export const useEscolaTree = (escolaId: string | null) =>
   useQuery({ queryKey: ["escola-tree", escolaId], queryFn: () => AcademyContent.getEscolaTree(supabase, escolaId as string), enabled: !!escolaId });
+export const useMyTutoringCourses = (profileId: string | null) =>
+  useQuery({ queryKey: ["my-tutoring", profileId], queryFn: () => AcademyContent.listMyTutoringCourses(supabase, profileId as string), enabled: !!profileId });
+export const useLessonAssessments = (lessonId: string | null) =>
+  useQuery({ queryKey: ["lesson-assessments", lessonId], queryFn: () => AcademyContent.listLessonAssessments(supabase, lessonId as string), enabled: !!lessonId });
+export const useMyCertificate = (courseId: string | null, profileId: string | null) =>
+  useQuery({ queryKey: ["my-certificate", courseId, profileId], queryFn: () => AcademyContent.getMyCertificate(supabase, courseId as string, profileId as string), enabled: !!courseId && !!profileId });
+export const useMyCertificates = (profileId: string | null) =>
+  useQuery({ queryKey: ["my-certificates", profileId], queryFn: () => AcademyContent.listMyCertificates(supabase, profileId as string), enabled: !!profileId });
