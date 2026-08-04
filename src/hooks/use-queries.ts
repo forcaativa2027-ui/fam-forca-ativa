@@ -847,3 +847,9 @@ export const useCourseContent = (courseId: string | null, profileId: string | nu
     queryFn: () => AcademyContent.listCourseContent(supabase, courseId as string, profileId),
     enabled: !!courseId,
   });
+export const useJornadas = (escolaId: string | null) =>
+  useQuery({ queryKey: ["jornadas", escolaId], queryFn: () => AcademyContent.listJornadas(supabase, escolaId as string), enabled: !!escolaId });
+export const useProgramas = (jornadaId: string | null) =>
+  useQuery({ queryKey: ["programas", jornadaId], queryFn: () => AcademyContent.listProgramas(supabase, jornadaId as string), enabled: !!jornadaId });
+export const useEscolaTree = (escolaId: string | null) =>
+  useQuery({ queryKey: ["escola-tree", escolaId], queryFn: () => AcademyContent.getEscolaTree(supabase, escolaId as string), enabled: !!escolaId });
