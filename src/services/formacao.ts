@@ -9,7 +9,11 @@ export async function listCourses(sb: SupabaseClient): Promise<Course[]> {
   return (data ?? []) as Course[];
 }
 
-export async function createCourse(sb: SupabaseClient, input: { name: string; description?: string; category?: string; church_id?: string | null }): Promise<void> {
+export async function createCourse(sb: SupabaseClient, input: {
+  name: string; description?: string; category?: string; church_id?: string | null;
+  content_conhecer?: string; content_refletir?: string; content_orar?: string;
+  content_praticar?: string; content_compartilhar?: string;
+}): Promise<void> {
   const { error } = await sb.from("courses").insert(input);
   if (error) throw error;
 }
@@ -74,6 +78,14 @@ export async function enrollMember(sb: SupabaseClient, classId: string, memberId
 export async function updateEnrollmentStatus(sb: SupabaseClient, id: string, status: EnrollmentStatus): Promise<void> {
   const patch: Record<string, unknown> = { status };
   if (status === "concluido") patch.completed_at = new Date().toISOString();
+  const { error } = await sb.from("course_enrollments").update(patch).eq("id", id);
+  if (error) throw error;
+}
+
+/** CEC Academy — atualiza os 3 indicadores de crescimento de uma matrícula (em vez de só % concluído). */
+export async function updateEnrollmentGrowth(sb: SupabaseClient, id: string, patch: {
+  knowledge_level?: number; practice_level?: number; sharing_level?: number;
+}): Promise<void> {
   const { error } = await sb.from("course_enrollments").update(patch).eq("id", id);
   if (error) throw error;
 }
