@@ -1271,6 +1271,7 @@ export type ClassStatus = "planejada" | "em_andamento" | "concluida" | "cancelad
 export interface Course {
   id: string; name: string; description: string | null; category: string | null;
   church_id: string | null; is_active: boolean; created_at: string;
+  escola_id: string | null;
   // CEC Academy — Metodologia de 5 dimensões
   content_conhecer: string | null; content_refletir: string | null; content_orar: string | null;
   content_praticar: string | null; content_compartilhar: string | null;
@@ -1305,6 +1306,27 @@ export interface FormationJournalEntry {
 
 // CEC Academy — Indicadores de Crescimento (substituem % concluído)
 export type GrowthLevel = 0 | 1 | 2 | 3; // 0=não iniciado, 1=iniciado, 2=em progresso, 3=consolidado
+
+// CEC Academy Bloco 1 — Escola → Curso → Módulo → Lição
+export interface Escola {
+  id: string; name: string; slug: string; description: string | null;
+  icon_key: string | null; order_index: number; is_active: boolean; created_at: string;
+}
+export interface CourseModule {
+  id: string; course_id: string; name: string; description: string | null; order_index: number; created_at: string;
+}
+export interface CourseLesson {
+  id: string; module_id: string; title: string; objective: string | null; content_main: string | null;
+  bible_reference: string | null; video_url: string | null; audio_url: string | null;
+  content_reflexao: string | null; content_oracao: string | null; content_pratica: string | null; content_compartilhar: string | null;
+  order_index: number; created_at: string;
+}
+export type LessonProgressStatus = "nao_iniciada" | "em_andamento" | "concluida";
+export interface CourseContentItem {
+  module_id: string; module_name: string; module_order: number;
+  lesson_id: string; lesson_title: string; lesson_order: number;
+  status: LessonProgressStatus; completed_at: string | null;
+}
 
 // Família (UX-003 §6.29/6.53)
 export type FamilyRelationshipType = "pai" | "mae" | "conjuge" | "filho" | "irmao" | "responsavel_legal" | "outro";
