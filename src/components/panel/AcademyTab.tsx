@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-import { GraduationCap, Map, ChevronDown, ChevronRight, ArrowLeft, CheckCircle2, Circle, PlayCircle, BookOpen as BibleIcon } from "lucide-react";
+import { GraduationCap, Map, ChevronDown, ChevronRight, ArrowLeft, CheckCircle2, Circle, PlayCircle, BookOpen as BibleIcon, UserCheck, Award } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
-import { useCourses, useCourseModules, useCourseContent, useMyProfile, useEscolas, useEscolaTree } from "@/hooks/use-queries";
+import { useCourses, useCourseModules, useCourseContent, useMyProfile, useEscolas, useEscolaTree, useMyTutoringCourses, useMyCertificates } from "@/hooks/use-queries";
 import { ESCOLAS, escolaKeyOf } from "@/components/admin/FormacaoAdmin";
 import * as Ac from "@/services/academyContent";
 import * as Journal from "@/services/formationJournal";
@@ -19,6 +19,9 @@ import type { Member, Course, CourseContentItem } from "@/types/domain";
 export function AcademyTab({ member, onGoToJourney }: { member: Member | null; onGoToJourney: () => void }) {
   const { data: courses = [] } = useCourses();
   const { data: dbEscolas = [] } = useEscolas();
+  const { data: me } = useMyProfile();
+  const { data: tutoring = [] } = useMyTutoringCourses(me?.id ?? null);
+  const { data: certificates = [] } = useMyCertificates(me?.id ?? null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [openCourse, setOpenCourse] = useState<Course | null>(null);
 
@@ -34,6 +37,37 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
 
   return (
     <div className="space-y-4">
+      {tutoring.length > 0 && (
+        <Card className="border-2 border-gold/40">
+          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><UserCheck className="h-4 w-4 text-gold" />Minhas Tutorias</CardTitle></CardHeader>
+          <CardContent className="space-y-1.5 pt-0">
+            {tutoring.map((t) => (
+              <div key={t.course_id} className="flex items-center justify-between rounded-md border p-2 text-sm">
+                <span className="text-navy">{t.course_name}</span>
+                <span className="text-xs text-muted-foreground">{t.alunos_concluidos}/{t.total_alunos} concluíram</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {certificates.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><Award className="h-4 w-4 text-gold" />Meus Certificados</CardTitle></CardHeader>
+          <CardContent className="space-y-1.5 pt-0">
+            {certificates.map((c) => {
+              const courseName = courses.find((co) => co.id === c.course_id)?.name ?? "Curso";
+              return (
+                <div key={c.id} className="flex items-center justify-between rounded-md border bg-gold/5 p-2 text-sm">
+                  <span className="text-navy">{courseName}</span>
+                  <span className="font-mono text-[10px] text-muted-foreground">{c.certificate_code}</span>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><GraduationCap className="h-5 w-5 text-gold" />CEC Academy</CardTitle>
@@ -152,7 +186,7 @@ function CourseContentViewer({ course, onBack }: { course: Course; onBack: () =>
   const nextLesson = content.find((c) => c.status !== "concluida");
 
   if (openLesson) {
-    return <LessonViewer item={openLesson} profileId={me?.id ?? null} onBack={() => { setOpenLesson(null); refetch(); }} />;
+    return <LessonViewer item={openLesson} profileId={me?.id ?? null} courseId={course.id} onBack={() => { setOpenLesson(null); refetch(); }} />;
   }
 
   return (
@@ -192,32 +226,48 @@ function CourseContentViewer({ course, onBack }: { course: Course; onBack: () =>
   );
 }
 
-function LessonViewer({ item, profileId, onBack }: { item: CourseContentItem; profileId: string | null; onBack: () => void }) {
+function LessonViewer({ item, profileId, courseId, onBack }: { item: CourseContentItem; profileId: string | null; courseId: string; onBack: () => void }) {
   const [lesson, setLesson] = useState<import("@/types/domain").CourseLesson | null>(null);
+  const [assessments, setAssessments] = useState<import("@/types/domain").LessonAssessment[]>([]);
+  const [answers, setAnswers] = useState<Record<string, number>>({});
   const [busy, setBusy] = useState(false);
   const [journaled, setJournaled] = useState(false);
+  const [certificateCode, setCertificateCode] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from("course_lessons").select("*").eq("id", item.lesson_id).maybeSingle();
       setLesson(data as import("@/types/domain").CourseLesson | null);
+      const qs = await Ac.listLessonAssessments(supabase, item.lesson_id);
+      setAssessments(qs);
       if (profileId) Ac.startLesson(supabase, item.lesson_id, profileId).catch(() => {});
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item.lesson_id]);
 
+  const pendingAnswers = assessments.some((a) => answers[a.id] === undefined);
+
   async function markComplete() {
     if (!profileId) return;
     setBusy(true);
     try {
+      // Registra as respostas da avaliação, se houver
+      for (const a of assessments) {
+        const selected = answers[a.id];
+        if (selected === undefined) continue;
+        await Ac.submitAttempt(supabase, { profile_id: profileId, assessment_id: a.id, selected_index: selected, is_correct: selected === a.correct_index });
+      }
       await Ac.completeLesson(supabase, item.lesson_id, profileId);
       // Consolida automaticamente no Diário de Formação (Bloco 1 §1.3 — fluxo Academy → Jornada)
       await Journal.createJournalEntry(supabase, {
         profile_id: profileId, entry_type: "aprendizado",
         content: `Concluí a lição "${item.lesson_title}".`, is_private: true,
       });
+      // Bloco 7 — emite certificado automaticamente se o curso todo já foi concluído
+      const code = await Ac.maybeIssueCertificate(supabase, courseId, profileId);
+      if (code) setCertificateCode(code);
       setJournaled(true);
-      setTimeout(onBack, 1200);
+      setTimeout(onBack, code ? 2500 : 1200);
     } finally { setBusy(false); }
   }
 
@@ -244,10 +294,40 @@ function LessonViewer({ item, profileId, onBack }: { item: CourseContentItem; pr
           {lesson.content_pratica && <LessonBlock icon="🙌" label="Praticar" text={lesson.content_pratica} />}
           {lesson.content_compartilhar && <LessonBlock icon="🤝" label="Compartilhar" text={lesson.content_compartilhar} />}
 
+          {assessments.length > 0 && (
+            <div className="space-y-3 rounded-lg border border-gold/40 bg-gold/5 p-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-gold">✏️ Avaliação</p>
+              {assessments.map((a) => (
+                <div key={a.id}>
+                  <p className="text-sm font-semibold text-navy">{a.question}</p>
+                  <div className="mt-1.5 space-y-1">
+                    {a.options.map((opt, i) => (
+                      <button key={i} onClick={() => setAnswers((v) => ({ ...v, [a.id]: i }))}
+                        className={`block w-full rounded-md border px-2.5 py-1.5 text-left text-sm transition ${answers[a.id] === i ? "border-gold bg-gold/20 font-semibold text-navy" : "border-border text-ink hover:border-gold/40"}`}>
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {certificateCode && (
+            <div className="rounded-lg border-2 border-gold bg-gold/10 p-4 text-center">
+              <p className="text-2xl">🏆</p>
+              <p className="mt-1 font-display text-lg text-navy">Certificado emitido!</p>
+              <p className="text-xs text-muted-foreground">Você concluiu 100% do curso. Código: <span className="font-mono font-bold">{certificateCode}</span></p>
+            </div>
+          )}
+
           {journaled ? (
             <p className="text-sm font-semibold text-green-700">✓ Lição concluída — registrado no seu Diário de Formação!</p>
           ) : (
-            <Button onClick={markComplete} disabled={busy} className="w-full gap-1.5"><CheckCircle2 className="h-4 w-4" />{busy ? "Salvando…" : "Concluir lição"}</Button>
+            <Button onClick={markComplete} disabled={busy || pendingAnswers} className="w-full gap-1.5">
+              <CheckCircle2 className="h-4 w-4" />
+              {busy ? "Salvando…" : pendingAnswers ? "Responda a avaliação pra continuar" : "Concluir lição"}
+            </Button>
           )}
         </CardContent>
       </Card>
