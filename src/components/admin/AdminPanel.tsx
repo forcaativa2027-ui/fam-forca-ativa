@@ -62,6 +62,7 @@ import { ContentLibraryAdmin } from "./ContentLibraryAdmin";
 import { CategoriesTagsAdmin } from "./CategoriesTagsAdmin";
 import { NotificacoesAdmin } from "./NotificacoesAdmin";
 import { FormacaoAdmin } from "./FormacaoAdmin";
+import { KnowledgePointsAdmin } from "./KnowledgePointsAdmin";
 import { PainelUsuariosAdmin } from "./PainelUsuariosAdmin";
 import { MinisterialReportsAdmin } from "./MinisterialReportsAdmin";
 import { GenealogyAdmin } from "./GenealogyAdmin";
@@ -328,6 +329,7 @@ function TabContent({ activeTab, onNavigate, prefillEventId }: { activeTab: TabK
   switch (activeTab) {
     case "usuarios-painel":      return <PainelUsuariosAdmin onNavigate={onNavigate} />;
     case "formacao":             return <FormacaoAdmin />;
+    case "conhecimento-biblico": return <KnowledgePointsAdmin />;
     case "notificacoes":         return <NotificacoesAdmin />;
     case "agenda":               return <AgendaAdmin onNavigate={onNavigate} />;
     case "pendencias":          return <PendenciasAdmin onNavigate={onNavigate} />;
