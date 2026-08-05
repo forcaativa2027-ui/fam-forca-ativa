@@ -853,6 +853,17 @@ export const useProgramas = (jornadaId: string | null) =>
   useQuery({ queryKey: ["programas", jornadaId], queryFn: () => AcademyContent.listProgramas(supabase, jornadaId as string), enabled: !!jornadaId });
 export const useEscolaTree = (escolaId: string | null) =>
   useQuery({ queryKey: ["escola-tree", escolaId], queryFn: () => AcademyContent.getEscolaTree(supabase, escolaId as string), enabled: !!escolaId });
+
+// ── CEC Academy Bloco 4 — Pontos de Conhecimento ────────────────
+import * as Kp from "@/services/knowledgePoints";
+export const useKnowledgePoints = (category?: import("@/types/domain").KnowledgeCategory) =>
+  useQuery({ queryKey: ["knowledge-points", category], queryFn: () => Kp.listKnowledgePoints(supabase, category) });
+export const useKnowledgePointDetail = (id: string | null) =>
+  useQuery({ queryKey: ["knowledge-point-detail", id], queryFn: () => Kp.getKnowledgePointDetail(supabase, id as string), enabled: !!id });
+export const useLessonKnowledgePoints = (lessonId: string | null) =>
+  useQuery({ queryKey: ["lesson-knowledge-points", lessonId], queryFn: () => Kp.listLessonKnowledgePoints(supabase, lessonId as string), enabled: !!lessonId });
+export const useMyRecentKnowledgeViews = (profileId: string | null) =>
+  useQuery({ queryKey: ["my-recent-kp-views", profileId], queryFn: () => Kp.listMyRecentViews(supabase, profileId as string), enabled: !!profileId });
 export const useMyTutoringCourses = (profileId: string | null) =>
   useQuery({ queryKey: ["my-tutoring", profileId], queryFn: () => AcademyContent.listMyTutoringCourses(supabase, profileId as string), enabled: !!profileId });
 export const useLessonAssessments = (lessonId: string | null) =>
