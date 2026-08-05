@@ -864,6 +864,18 @@ export const useLessonKnowledgePoints = (lessonId: string | null) =>
   useQuery({ queryKey: ["lesson-knowledge-points", lessonId], queryFn: () => Kp.listLessonKnowledgePoints(supabase, lessonId as string), enabled: !!lessonId });
 export const useMyRecentKnowledgeViews = (profileId: string | null) =>
   useQuery({ queryKey: ["my-recent-kp-views", profileId], queryFn: () => Kp.listMyRecentViews(supabase, profileId as string), enabled: !!profileId });
+
+// ── CEC Academy Bloco 6 — Modo Educacional ──────────────────────
+import { getUserPreferences } from "@/services/accessibility";
+export const useEducationMode = (profileId: string | null) =>
+  useQuery({
+    queryKey: ["education-mode", profileId],
+    queryFn: async () => {
+      const prefs = await getUserPreferences(supabase, profileId as string);
+      return (prefs?.extra?.education_mode as import("@/types/domain").EducationMode) ?? "individual";
+    },
+    enabled: !!profileId,
+  });
 export const useMyTutoringCourses = (profileId: string | null) =>
   useQuery({ queryKey: ["my-tutoring", profileId], queryFn: () => AcademyContent.listMyTutoringCourses(supabase, profileId as string), enabled: !!profileId });
 export const useLessonAssessments = (lessonId: string | null) =>
