@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase/client";
 import { useKnowledgePoints, useKnowledgePointDetail, useMyRecentKnowledgeViews, useMyProfile } from "@/hooks/use-queries";
 import * as Kp from "@/services/knowledgePoints";
+import { RELATION_LABELS } from "@/components/admin/KnowledgePointsAdmin";
 import type { KnowledgeCategory, KnowledgePoint } from "@/types/domain";
 
 const CATEGORIES: { key: KnowledgeCategory; label: string; icon: typeof MapPin; question: string }[] = [
@@ -121,6 +122,9 @@ function PointExplorerView({ point, profileId, onOpenRelated, onBack }: {
               <div className="flex flex-wrap gap-1.5">
                 {detail?.related.map((r) => (
                   <button key={r.related_id} onClick={() => openRelatedById(r.related_id)} className="rounded-full border bg-card px-3 py-1.5 text-xs font-semibold text-navy hover:border-gold/50">
+                    {r.relation_type && r.relation_direction && (
+                      <span className="text-gold">{RELATION_LABELS[r.relation_type][r.relation_direction]} </span>
+                    )}
                     {r.related_title}
                   </button>
                 ))}
