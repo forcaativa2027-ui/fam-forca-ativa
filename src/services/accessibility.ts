@@ -19,3 +19,14 @@ export async function upsertUserPreferences(sb: SupabaseClient, profileId: strin
     .upsert({ profile_id: profileId, ...patch, updated_at: new Date().toISOString() }, { onConflict: "profile_id" });
   if (error) throw error;
 }
+
+// ---------- CEC Academy Bloco 6 — Modo Educacional ----------
+// Reaproveita user_preferences.extra (sem tabela nova, conforme ACA-B06-DB
+// §7: "nenhuma nova tabela será criada enquanto uma estrutura existente
+// puder atender à necessidade"). Guarda como extra.education_mode, no
+// mesmo padrão plano (snake_case) já usado pelas outras chaves de extra.
+export async function setEducationMode(sb: SupabaseClient, profileId: string, mode: import("@/types/domain").EducationMode): Promise<void> {
+  const current = await getUserPreferences(sb, profileId);
+  const extra = { ...(current?.extra ?? {}), education_mode: mode };
+  await upsertUserPreferences(sb, profileId, { extra });
+}
