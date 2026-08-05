@@ -1394,6 +1394,9 @@ export interface UserPreferences {
   extra: Record<string, unknown>; onboarded: boolean; updated_at: string;
 }
 
+// CEC Academy Bloco 6 — Modos Educacionais
+export type EducationMode = "individual" | "familia" | "life_group" | "sala_de_aula" | "pulpito" | "somente_audio";
+
 // Dízimos e Ofertas (QR Code PIX por igreja)
 export interface ChurchGivingInfo {
   id: string; church_id: string; qr_code_url: string | null;
