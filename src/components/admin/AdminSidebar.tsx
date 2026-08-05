@@ -7,7 +7,7 @@ import {
   FileBarChart, CalendarRange, CalendarDays,
   Megaphone, Image, Radio, BookOpen,
   DollarSign, Landmark, UserCog,
-  Download, Search, Bell, Video,
+  Download, Search, Bell, Video, Compass,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
   BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins, QrCode, Library, FolderTree,
@@ -22,7 +22,7 @@ export type TabKey =
   | "control-tower" | "intelligence" | "ministerial-reports" | "metas"
   | "members" | "leadership" | "score" | "birthdays" | "discipleship"
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
-  | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao"
+  | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao" | "conhecimento-biblico"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
   | "news" | "banners" | "sermons" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
@@ -148,6 +148,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
       icon: <GraduationCap size={16} />,
       items: [
         { key: "formacao",      label: "Escolas e Cursos", icon: <GraduationCap size={15} /> },
+        { key: "conhecimento-biblico", label: "Exploração Bíblica", icon: <Compass size={15} /> },
       ],
     },
     {
