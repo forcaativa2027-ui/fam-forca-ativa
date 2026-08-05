@@ -1357,6 +1357,20 @@ export interface TutoringCourse {
   course_id: string; course_name: string; total_alunos: number; alunos_concluidos: number;
 }
 
+// CEC Academy Bloco 4 — Exploração Inteligente do Conhecimento Bíblico
+export type KnowledgeCategory = "lugar" | "historia_cultura" | "linha_tempo" | "arqueologia" | "personagem";
+export interface KnowledgePoint {
+  id: string; category: KnowledgeCategory; title: string; subtitle: string | null; description: string | null;
+  image_url: string | null; period_label: string | null; latitude: number | null; longitude: number | null;
+  bible_refs: string | null; order_index: number; is_active: boolean; created_at: string;
+}
+export interface KnowledgePointRelated {
+  related_id: string; related_category: KnowledgeCategory; related_title: string; related_image_url: string | null;
+}
+export interface KnowledgePointDetail extends KnowledgePoint {
+  related: KnowledgePointRelated[];
+}
+
 // Família (UX-003 §6.29/6.53)
 export type FamilyRelationshipType = "pai" | "mae" | "conjuge" | "filho" | "irmao" | "responsavel_legal" | "outro";
 export interface MemberRelationship {
