@@ -1,6 +1,6 @@
 "use client";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { KnowledgeCategory, KnowledgePoint, KnowledgePointDetail, KnowledgePointRelated } from "@/types/domain";
+import type { KnowledgeCategory, KnowledgePoint, KnowledgePointDetail, KnowledgePointRelated, RelationType } from "@/types/domain";
 
 export async function listKnowledgePoints(sb: SupabaseClient, category?: KnowledgeCategory): Promise<KnowledgePoint[]> {
   let q = sb.from("knowledge_points").select("*").eq("is_active", true).order("order_index").order("title");
@@ -23,8 +23,9 @@ export async function getKnowledgePointDetail(sb: SupabaseClient, id: string): P
   const first = data[0];
   const related: KnowledgePointRelated[] = data
     .filter((r: { related_id: string | null }) => r.related_id)
-    .map((r: { related_id: string; related_category: KnowledgeCategory; related_title: string; related_image_url: string | null }) => ({
+    .map((r: { related_id: string; related_category: KnowledgeCategory; related_title: string; related_image_url: string | null; relation_type: RelationType | null; relation_direction: "saida" | "entrada" | null }) => ({
       related_id: r.related_id, related_category: r.related_category, related_title: r.related_title, related_image_url: r.related_image_url,
+      relation_type: r.relation_type, relation_direction: r.relation_direction,
     }));
   return {
     id: first.id, category: first.category, title: first.title, subtitle: first.subtitle, description: first.description,
@@ -51,8 +52,8 @@ export async function deleteKnowledgePoint(sb: SupabaseClient, id: string): Prom
   if (error) throw error;
 }
 
-export async function relateKnowledgePoints(sb: SupabaseClient, fromId: string, toId: string): Promise<void> {
-  const { error } = await sb.from("knowledge_point_relations").insert({ from_id: fromId, to_id: toId });
+export async function relateKnowledgePoints(sb: SupabaseClient, fromId: string, toId: string, relationType?: RelationType): Promise<void> {
+  const { error } = await sb.from("knowledge_point_relations").insert({ from_id: fromId, to_id: toId, relation_type: relationType ?? null });
   if (error) throw error;
 }
 export async function unrelateKnowledgePoints(sb: SupabaseClient, fromId: string, toId: string): Promise<void> {
@@ -89,4 +90,14 @@ export async function listMyRecentViews(sb: SupabaseClient, profileId: string, l
     .limit(limit);
   if (error) return [];
   return (data ?? []).map((r: { knowledge_points: unknown }) => r.knowledge_points).filter(Boolean) as KnowledgePoint[];
+}
+
+// ---------- Verificação pública de certificado ----------
+export interface CertificateVerification {
+  certificate_code: string; member_name: string; course_name: string; issued_at: string; valid: boolean;
+}
+export async function verifyCertificate(sb: SupabaseClient, code: string): Promise<CertificateVerification | null> {
+  const { data, error } = await sb.rpc("verify_certificate", { p_code: code });
+  if (error || !data || data.length === 0) return null;
+  return data[0] as CertificateVerification;
 }
