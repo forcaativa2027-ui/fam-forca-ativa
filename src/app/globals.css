@@ -71,6 +71,82 @@ html.cec-dark .bg-white {
 html.cec-dark .border-border {
   border-color: hsl(var(--border));
 }
+/* UI-002 — cobertura ampla: fundos pastéis claros (alertas/badges/tabelas/caixas de destaque)
+   ficam translúcidos em vez de quase-brancos, evitando texto escuro sobre fundo escuro.
+   Inclui as famílias de cor extras usadas em telas específicas (pink/sky/indigo/cyan/violet/fuchsia/lime/rose). */
+html.cec-dark [class*="bg-blue-50"], html.cec-dark [class*="bg-blue-100"],
+html.cec-dark [class*="bg-red-50"], html.cec-dark [class*="bg-red-100"],
+html.cec-dark [class*="bg-green-50"], html.cec-dark [class*="bg-green-100"],
+html.cec-dark [class*="bg-emerald-50"], html.cec-dark [class*="bg-emerald-100"],
+html.cec-dark [class*="bg-amber-50"], html.cec-dark [class*="bg-amber-100"],
+html.cec-dark [class*="bg-yellow-50"], html.cec-dark [class*="bg-yellow-100"],
+html.cec-dark [class*="bg-purple-50"], html.cec-dark [class*="bg-purple-100"],
+html.cec-dark [class*="bg-orange-50"], html.cec-dark [class*="bg-orange-100"],
+html.cec-dark [class*="bg-gray-50"], html.cec-dark [class*="bg-gray-100"],
+html.cec-dark [class*="bg-slate-50"], html.cec-dark [class*="bg-slate-100"],
+html.cec-dark [class*="bg-pink-50"], html.cec-dark [class*="bg-pink-100"],
+html.cec-dark [class*="bg-sky-50"], html.cec-dark [class*="bg-sky-100"],
+html.cec-dark [class*="bg-indigo-50"], html.cec-dark [class*="bg-indigo-100"],
+html.cec-dark [class*="bg-cyan-50"], html.cec-dark [class*="bg-cyan-100"],
+html.cec-dark [class*="bg-violet-50"], html.cec-dark [class*="bg-violet-100"],
+html.cec-dark [class*="bg-fuchsia-50"], html.cec-dark [class*="bg-fuchsia-100"],
+html.cec-dark [class*="bg-lime-50"], html.cec-dark [class*="bg-lime-100"],
+html.cec-dark [class*="bg-rose-50"], html.cec-dark [class*="bg-rose-100"],
+html.cec-dark [class*="bg-muted"] {
+  background-color: rgba(255, 255, 255, 0.07) !important;
+}
+/* Texto escuro pareado com esses fundos pastel (ex: bg-amber-50 + text-amber-800) — sem isso,
+   fica escuro sobre fundo agora escuro. Cobre a faixa 500-900, que é o intervalo mais usado. */
+html.cec-dark [class*="text-blue-5"], html.cec-dark [class*="text-blue-6"], html.cec-dark [class*="text-blue-7"], html.cec-dark [class*="text-blue-8"], html.cec-dark [class*="text-blue-9"],
+html.cec-dark [class*="text-red-5"], html.cec-dark [class*="text-red-6"], html.cec-dark [class*="text-red-7"], html.cec-dark [class*="text-red-8"], html.cec-dark [class*="text-red-9"],
+html.cec-dark [class*="text-green-5"], html.cec-dark [class*="text-green-6"], html.cec-dark [class*="text-green-7"], html.cec-dark [class*="text-green-8"], html.cec-dark [class*="text-green-9"],
+html.cec-dark [class*="text-emerald-5"], html.cec-dark [class*="text-emerald-6"], html.cec-dark [class*="text-emerald-7"], html.cec-dark [class*="text-emerald-8"],
+html.cec-dark [class*="text-amber-5"], html.cec-dark [class*="text-amber-6"], html.cec-dark [class*="text-amber-7"], html.cec-dark [class*="text-amber-8"],
+html.cec-dark [class*="text-yellow-7"], html.cec-dark [class*="text-yellow-8"],
+html.cec-dark [class*="text-purple-5"], html.cec-dark [class*="text-purple-6"], html.cec-dark [class*="text-purple-7"], html.cec-dark [class*="text-purple-8"],
+html.cec-dark [class*="text-sky-6"], html.cec-dark [class*="text-sky-7"], html.cec-dark [class*="text-sky-8"],
+html.cec-dark [class*="text-orange-5"], html.cec-dark [class*="text-orange-6"], html.cec-dark [class*="text-orange-7"], html.cec-dark [class*="text-orange-8"],
+html.cec-dark [class*="text-gray-5"], html.cec-dark [class*="text-gray-6"], html.cec-dark [class*="text-gray-7"], html.cec-dark [class*="text-gray-8"], html.cec-dark [class*="text-gray-9"],
+html.cec-dark [class*="text-slate-6"], html.cec-dark [class*="text-slate-7"], html.cec-dark [class*="text-slate-8"],
+html.cec-dark [class*="text-pink-5"], html.cec-dark [class*="text-pink-6"], html.cec-dark [class*="text-pink-7"], html.cec-dark [class*="text-pink-8"],
+html.cec-dark [class*="text-indigo-5"], html.cec-dark [class*="text-indigo-6"], html.cec-dark [class*="text-indigo-7"], html.cec-dark [class*="text-indigo-8"],
+html.cec-dark [class*="text-cyan-5"], html.cec-dark [class*="text-cyan-6"], html.cec-dark [class*="text-cyan-7"], html.cec-dark [class*="text-cyan-8"],
+html.cec-dark [class*="text-violet-5"], html.cec-dark [class*="text-violet-6"], html.cec-dark [class*="text-violet-7"], html.cec-dark [class*="text-violet-8"],
+html.cec-dark [class*="text-fuchsia-6"], html.cec-dark [class*="text-fuchsia-7"],
+html.cec-dark [class*="text-lime-6"], html.cec-dark [class*="text-lime-7"],
+html.cec-dark [class*="text-rose-5"], html.cec-dark [class*="text-rose-6"], html.cec-dark [class*="text-rose-7"], html.cec-dark [class*="text-rose-8"] {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+/* Bordas de alerta/badge/tabela — mesma lógica, ficam translúcidas em vez de quase-invisíveis */
+html.cec-dark [class*="border-blue-200"], html.cec-dark [class*="border-blue-300"],
+html.cec-dark [class*="border-red-200"], html.cec-dark [class*="border-red-300"],
+html.cec-dark [class*="border-green-200"], html.cec-dark [class*="border-green-300"],
+html.cec-dark [class*="border-amber-200"], html.cec-dark [class*="border-amber-300"],
+html.cec-dark [class*="border-yellow-200"], html.cec-dark [class*="border-yellow-300"],
+html.cec-dark [class*="border-gray-200"], html.cec-dark [class*="border-gray-300"],
+html.cec-dark [class*="border-pink-200"], html.cec-dark [class*="border-pink-300"],
+html.cec-dark [class*="border-sky-200"], html.cec-dark [class*="border-sky-300"],
+html.cec-dark [class*="border-indigo-200"], html.cec-dark [class*="border-indigo-300"],
+html.cec-dark [class*="border-cyan-200"], html.cec-dark [class*="border-cyan-300"],
+html.cec-dark [class*="border-violet-200"], html.cec-dark [class*="border-violet-300"] {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+/* Ícones/pontos "cheios" (ring/bg sólidos usados em badges pequenos de status) */
+html.cec-dark [class*="ring-pink-"], html.cec-dark [class*="ring-blue-1"] {
+  --tw-ring-color: rgba(255, 255, 255, 0.3) !important;
+}
+html.cec-dark [class*="shadow-red-100"], html.cec-dark [class*="shadow-blue-100"] {
+  --tw-shadow-color: transparent !important;
+}
+/* Abas (Tabs) inativas — texto cinza claro sobre fundo escuro fica ilegível */
+html.cec-dark [class*="text-muted"] {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+/* Cores de marca escritas em hexadecimal direto (ex: bg-[#0E2A47]) usadas em botões
+   de telas públicas — mantém o texto branco garantido por cima delas. */
+html.cec-dark [class*="bg-[#0E2A47]"], html.cec-dark [class*="bg-[#16345A]"] {
+  color: #ffffff !important;
+}
 
 /*
   Overrides escopados do tema azul (público + painel do membro).
@@ -106,6 +182,11 @@ html.cec-dark .border-border {
 .dark-blue-theme [class*="bg-yellow-50"],
 .dark-blue-theme [class*="bg-purple-50"],
 .dark-blue-theme [class*="bg-gray-50"],
+.dark-blue-theme [class*="bg-pink-50"],
+.dark-blue-theme [class*="bg-sky-50"],
+.dark-blue-theme [class*="bg-indigo-50"],
+.dark-blue-theme [class*="bg-cyan-50"],
+.dark-blue-theme [class*="bg-violet-50"],
 .dark-blue-theme [class*="bg-muted"] {
   background-color: rgba(255, 255, 255, 0.07) !important;
 }
@@ -131,14 +212,21 @@ html.cec-dark .border-border {
 .dark-blue-theme [class*="text-orange-7"],
 .dark-blue-theme [class*="text-orange-8"],
 .dark-blue-theme [class*="text-gray-7"],
-.dark-blue-theme [class*="text-gray-8"] {
+.dark-blue-theme [class*="text-gray-8"],
+.dark-blue-theme [class*="text-pink-6"],
+.dark-blue-theme [class*="text-pink-7"],
+.dark-blue-theme [class*="text-indigo-7"],
+.dark-blue-theme [class*="text-cyan-7"],
+.dark-blue-theme [class*="text-violet-7"] {
   color: rgba(255, 255, 255, 0.85) !important;
 }
 .dark-blue-theme [class*="border-blue-200"],
 .dark-blue-theme [class*="border-red-300"],
 .dark-blue-theme [class*="border-green-200"],
 .dark-blue-theme [class*="border-amber-300"],
-.dark-blue-theme [class*="border-red-200"] {
+.dark-blue-theme [class*="border-red-200"],
+.dark-blue-theme [class*="border-pink-200"],
+.dark-blue-theme [class*="border-indigo-200"] {
   border-color: rgba(255, 255, 255, 0.18) !important;
 }
 .dark-blue-theme [class*="shadow-red-100"],
