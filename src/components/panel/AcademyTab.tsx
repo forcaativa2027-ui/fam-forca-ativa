@@ -10,6 +10,10 @@ import * as Ac from "@/services/academyContent";
 import * as Journal from "@/services/formationJournal";
 import { KnowledgeExplorer } from "./KnowledgeExplorer";
 import { AcademyModeBanner, AcademyModeSelector } from "./AcademyModeSelector";
+import { AcademyTTSControls, AcademyHighlightedText, AcademyVoiceButton } from "./AcademyTTS";
+import { useTTS } from "@/hooks/useTTS";
+import { useOffline } from "@/hooks/useOffline";
+import { AcademyOfflineIndicator, AcademyDownloadButton } from "./AcademyOffline";
 import type { Member, Course, CourseContentItem } from "@/types/domain";
 
 /**
@@ -22,6 +26,7 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
   const { data: courses = [] } = useCourses();
   const { data: dbEscolas = [] } = useEscolas();
   const { data: me } = useMyProfile();
+  const offline = useOffline(me?.id ?? null);
   const { data: tutoring = [] } = useMyTutoringCourses(me?.id ?? null);
   const { data: certificates = [] } = useMyCertificates(me?.id ?? null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -37,11 +42,12 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
     courses: active.filter((c) => escolaKeyOf(c.category) === escola.key && !c.programa_id),
   })).filter((g) => g.courses.length > 0 || g.dbId);
 
-  if (openCourse) return <CourseContentViewer course={openCourse} onBack={() => setOpenCourse(null)} />;
+  if (openCourse) return <CourseContentViewer course={openCourse} offline={offline} onBack={() => setOpenCourse(null)} />;
   if (showExplorer) return <KnowledgeExplorer onBack={() => setShowExplorer(false)} />;
 
   return (
     <div className="space-y-4">
+      <AcademyOfflineIndicator offline={offline} />
       <AcademyModeBanner profileId={me?.id ?? null} onOpenSelector={() => setShowModeSelector(true)} />
       <button onClick={() => setShowModeSelector(true)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-navy">
         <Settings2 className="h-3.5 w-3.5" />Ajustar modo educacional (Individual, Família, Life Group…)
@@ -187,10 +193,27 @@ function EscolaTreeView({ escolaId, onOpenCourse }: { escolaId: string; onOpenCo
 }
 
 /** Módulos → Lições de um curso, com progresso e continuidade de onde o aluno parou. */
-function CourseContentViewer({ course, onBack }: { course: Course; onBack: () => void }) {
+function CourseContentViewer({ course, offline, onBack }: { course: Course; offline: ReturnType<typeof useOffline>; onBack: () => void }) {
   const { data: me } = useMyProfile();
-  const { data: content = [], refetch } = useCourseContent(course.id, me?.id ?? null);
+  const { data: onlineContent = [], refetch } = useCourseContent(course.id, me?.id ?? null);
   const [openLesson, setOpenLesson] = useState<CourseContentItem | null>(null);
+  const [offlineCourse, setOfflineCourse] = useState<import("@/services/offlineStorage").OfflineCourse | null>(null);
+
+  const usingOffline = !offline.isOnline && offline.isCourseDownloaded(course.id);
+
+  useEffect(() => {
+    if (usingOffline) {
+      import("@/services/offlineStorage").then((m) => m.getCourseOffline(course.id)).then(setOfflineCourse);
+    }
+  }, [usingOffline, course.id]);
+
+  // Modo offline: monta a lista a partir do que foi baixado (sem status de progresso, que exige o servidor)
+  const content: CourseContentItem[] = usingOffline && offlineCourse
+    ? offlineCourse.lessons.map((l) => ({
+        module_id: l.module_id, module_name: l.module_name, module_order: 0,
+        lesson_id: l.id, lesson_title: l.title, lesson_order: 0, status: "nao_iniciada", completed_at: null,
+      }))
+    : onlineContent;
 
   // Agrupa por módulo, mantendo a ordem
   const moduleIds = Array.from(new Set(content.map((c) => c.module_id)));
@@ -203,7 +226,7 @@ function CourseContentViewer({ course, onBack }: { course: Course; onBack: () =>
   const nextLesson = content.find((c) => c.status !== "concluida");
 
   if (openLesson) {
-    return <LessonViewer item={openLesson} profileId={me?.id ?? null} courseId={course.id} onBack={() => { setOpenLesson(null); refetch(); }} />;
+    return <LessonViewer item={openLesson} profileId={me?.id ?? null} courseId={course.id} offline={offline} onBack={() => { setOpenLesson(null); refetch(); }} />;
   }
 
   return (
@@ -211,10 +234,17 @@ function CourseContentViewer({ course, onBack }: { course: Course; onBack: () =>
       <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-navy"><ArrowLeft className="h-4 w-4" />Voltar pra Academy</button>
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg text-navy">{course.name}</CardTitle>
-          {course.description && <CardDescription>{course.description}</CardDescription>}
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <CardTitle className="text-lg text-navy">{course.name}</CardTitle>
+              {course.description && <CardDescription>{course.description}</CardDescription>}
+            </div>
+            <AcademyDownloadButton offline={offline} courseId={course.id} courseName={course.name} courseDescription={course.description} />
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          {usingOffline && !offlineCourse && <p className="text-sm text-muted-foreground">Carregando conteúdo baixado…</p>}
+
           {nextLesson && (
             <Button onClick={() => setOpenLesson(nextLesson)} className="w-full gap-1.5">
               <PlayCircle className="h-4 w-4" />
@@ -222,7 +252,7 @@ function CourseContentViewer({ course, onBack }: { course: Course; onBack: () =>
             </Button>
           )}
 
-          {modules.length === 0 && <p className="py-6 text-center text-sm italic text-muted-foreground">Esse curso ainda não tem conteúdo cadastrado.</p>}
+          {modules.length === 0 && !usingOffline && <p className="py-6 text-center text-sm italic text-muted-foreground">Esse curso ainda não tem conteúdo cadastrado.</p>}
 
           {modules.map((m) => (
             <div key={m.id} className="rounded-lg border">
@@ -243,16 +273,28 @@ function CourseContentViewer({ course, onBack }: { course: Course; onBack: () =>
   );
 }
 
-function LessonViewer({ item, profileId, courseId, onBack }: { item: CourseContentItem; profileId: string | null; courseId: string; onBack: () => void }) {
+function LessonViewer({ item, profileId, courseId, offline, onBack }: { item: CourseContentItem; profileId: string | null; courseId: string; offline: ReturnType<typeof useOffline>; onBack: () => void }) {
   const [lesson, setLesson] = useState<import("@/types/domain").CourseLesson | null>(null);
   const [assessments, setAssessments] = useState<import("@/types/domain").LessonAssessment[]>([]);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [busy, setBusy] = useState(false);
   const [journaled, setJournaled] = useState(false);
+  const [queuedOffline, setQueuedOffline] = useState(false);
   const [certificateCode, setCertificateCode] = useState<string | null>(null);
+  const tts = useTTS(profileId);
 
   useEffect(() => {
     (async () => {
+      if (!offline.isOnline) {
+        const { getCourseOffline } = await import("@/services/offlineStorage");
+        const cached = await getCourseOffline(courseId);
+        const found = cached?.lessons.find((l) => l.id === item.lesson_id);
+        if (found) {
+          setLesson({ ...found, module_id: found.module_id, order_index: 0, created_at: "", audio_url: null } as import("@/types/domain").CourseLesson);
+          setAssessments([]); // avaliações não ficam disponíveis offline nessa primeira fase
+          return;
+        }
+      }
       const { data } = await supabase.from("course_lessons").select("*").eq("id", item.lesson_id).maybeSingle();
       setLesson(data as import("@/types/domain").CourseLesson | null);
       const qs = await Ac.listLessonAssessments(supabase, item.lesson_id);
@@ -264,27 +306,48 @@ function LessonViewer({ item, profileId, courseId, onBack }: { item: CourseConte
 
   const pendingAnswers = assessments.some((a) => answers[a.id] === undefined);
 
+  const ttsBlocks = lesson ? [
+    lesson.content_main && { id: "content_main", label: "Conteúdo", text: lesson.content_main },
+    lesson.content_reflexao && { id: "content_reflexao", label: "Refletir", text: lesson.content_reflexao },
+    lesson.content_oracao && { id: "content_oracao", label: "Orar", text: lesson.content_oracao },
+    lesson.content_pratica && { id: "content_pratica", label: "Praticar", text: lesson.content_pratica },
+    lesson.content_compartilhar && { id: "content_compartilhar", label: "Compartilhar", text: lesson.content_compartilhar },
+  ].filter(Boolean) as { id: string; label: string; text: string }[] : [];
+
+  function handleVoiceCommand(action: string) {
+    if (action === "ler") tts.read(ttsBlocks);
+    else if (action === "pausar") tts.pause();
+    else if (action === "continuar") tts.resume();
+    else if (action === "parar") tts.stop();
+    else if (action === "voltar") onBack();
+    else if (action === "concluir" && !pendingAnswers) markComplete();
+  }
+
   async function markComplete() {
     if (!profileId) return;
     setBusy(true);
     try {
-      // Registra as respostas da avaliação, se houver
+      // Registra as respostas da avaliação, se houver (só disponível online)
       for (const a of assessments) {
         const selected = answers[a.id];
         if (selected === undefined) continue;
         await Ac.submitAttempt(supabase, { profile_id: profileId, assessment_id: a.id, selected_index: selected, is_correct: selected === a.correct_index });
       }
-      await Ac.completeLesson(supabase, item.lesson_id, profileId);
-      // Consolida automaticamente no Diário de Formação (Bloco 1 §1.3 — fluxo Academy → Jornada)
-      await Journal.createJournalEntry(supabase, {
-        profile_id: profileId, entry_type: "aprendizado",
-        content: `Concluí a lição "${item.lesson_title}".`, is_private: true,
-      });
-      // Bloco 7 — emite certificado automaticamente se o curso todo já foi concluído
-      const code = await Ac.maybeIssueCertificate(supabase, courseId, profileId);
-      if (code) setCertificateCode(code);
-      setJournaled(true);
-      setTimeout(onBack, code ? 2500 : 1200);
+      const result = await offline.completeLessonOfflineAware(item.lesson_id, profileId, courseId);
+      if (result === "synced") {
+        // Consolida automaticamente no Diário de Formação (Bloco 1 §1.3 — fluxo Academy → Jornada)
+        await Journal.createJournalEntry(supabase, {
+          profile_id: profileId, entry_type: "aprendizado",
+          content: `Concluí a lição "${item.lesson_title}".`, is_private: true,
+        });
+        // Bloco 7 — emite certificado automaticamente se o curso todo já foi concluído
+        const code = await Ac.maybeIssueCertificate(supabase, courseId, profileId);
+        if (code) setCertificateCode(code);
+        setJournaled(true);
+      } else {
+        setQueuedOffline(true);
+      }
+      setTimeout(onBack, certificateCode ? 2500 : 1200);
     } finally { setBusy(false); }
   }
 
@@ -299,17 +362,22 @@ function LessonViewer({ item, profileId, courseId, onBack }: { item: CourseConte
           {lesson.objective && <CardDescription>🎯 {lesson.objective}</CardDescription>}
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <AcademyTTSControls tts={tts} blocks={ttsBlocks} />
+            <AcademyVoiceButton onCommand={handleVoiceCommand} />
+          </div>
+
           {lesson.bible_reference && (
             <div className="flex items-center gap-2 rounded-md bg-gold/10 px-3 py-2 text-sm font-semibold text-navy"><BibleIcon className="h-4 w-4 text-gold" />{lesson.bible_reference}</div>
           )}
-          {lesson.content_main && <p className="whitespace-pre-wrap text-sm text-ink">{lesson.content_main}</p>}
+          {lesson.content_main && <AcademyHighlightedText text={lesson.content_main} blockId="content_main" tts={tts} className="whitespace-pre-wrap text-sm text-ink" />}
           {lesson.video_url && (
             <a href={lesson.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm font-semibold text-navy underline"><PlayCircle className="h-4 w-4 text-gold" />Assistir vídeo</a>
           )}
-          {lesson.content_reflexao && <LessonBlock icon="💭" label="Refletir" text={lesson.content_reflexao} />}
-          {lesson.content_oracao && <LessonBlock icon="🙏" label="Orar" text={lesson.content_oracao} />}
-          {lesson.content_pratica && <LessonBlock icon="🙌" label="Praticar" text={lesson.content_pratica} />}
-          {lesson.content_compartilhar && <LessonBlock icon="🤝" label="Compartilhar" text={lesson.content_compartilhar} />}
+          {lesson.content_reflexao && <LessonBlock icon="💭" label="Refletir" text={lesson.content_reflexao} blockId="content_reflexao" tts={tts} />}
+          {lesson.content_oracao && <LessonBlock icon="🙏" label="Orar" text={lesson.content_oracao} blockId="content_oracao" tts={tts} />}
+          {lesson.content_pratica && <LessonBlock icon="🙌" label="Praticar" text={lesson.content_pratica} blockId="content_pratica" tts={tts} />}
+          {lesson.content_compartilhar && <LessonBlock icon="🤝" label="Compartilhar" text={lesson.content_compartilhar} blockId="content_compartilhar" tts={tts} />}
 
           {assessments.length > 0 && (
             <div className="space-y-3 rounded-lg border border-gold/40 bg-gold/5 p-3">
@@ -340,6 +408,8 @@ function LessonViewer({ item, profileId, courseId, onBack }: { item: CourseConte
 
           {journaled ? (
             <p className="text-sm font-semibold text-green-700">✓ Lição concluída — registrado no seu Diário de Formação!</p>
+          ) : queuedOffline ? (
+            <p className="text-sm font-semibold text-amber-700">✓ Concluída! Vamos sincronizar assim que você ficar online de novo.</p>
           ) : (
             <Button onClick={markComplete} disabled={busy || pendingAnswers} className="w-full gap-1.5">
               <CheckCircle2 className="h-4 w-4" />
@@ -352,11 +422,15 @@ function LessonViewer({ item, profileId, courseId, onBack }: { item: CourseConte
   );
 }
 
-function LessonBlock({ icon, label, text }: { icon: string; label: string; text: string }) {
+function LessonBlock({ icon, label, text, blockId, tts }: { icon: string; label: string; text: string; blockId?: string; tts?: ReturnType<typeof useTTS> }) {
   return (
     <div className="rounded-md border p-3">
       <p className="text-xs font-bold uppercase tracking-wide text-gold">{icon} {label}</p>
-      <p className="mt-1 text-sm text-ink">{text}</p>
+      {blockId && tts ? (
+        <AcademyHighlightedText text={text} blockId={blockId} tts={tts} className="mt-1 text-sm text-ink" />
+      ) : (
+        <p className="mt-1 text-sm text-ink">{text}</p>
+      )}
     </div>
   );
 }
