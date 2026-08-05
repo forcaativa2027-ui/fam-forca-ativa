@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { GraduationCap, Map, ChevronDown, ChevronRight, ArrowLeft, CheckCircle2, Circle, PlayCircle, BookOpen as BibleIcon, UserCheck, Award, Compass } from "lucide-react";
+import { GraduationCap, Map, ChevronDown, ChevronRight, ArrowLeft, CheckCircle2, Circle, PlayCircle, BookOpen as BibleIcon, UserCheck, Award, Compass, Settings2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
@@ -9,6 +9,7 @@ import { ESCOLAS, escolaKeyOf } from "@/components/admin/FormacaoAdmin";
 import * as Ac from "@/services/academyContent";
 import * as Journal from "@/services/formationJournal";
 import { KnowledgeExplorer } from "./KnowledgeExplorer";
+import { AcademyModeBanner, AcademyModeSelector } from "./AcademyModeSelector";
 import type { Member, Course, CourseContentItem } from "@/types/domain";
 
 /**
@@ -26,6 +27,7 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [openCourse, setOpenCourse] = useState<Course | null>(null);
   const [showExplorer, setShowExplorer] = useState(false);
+  const [showModeSelector, setShowModeSelector] = useState(false);
 
   const active = courses.filter((c) => c.is_active);
   const groups = ESCOLAS.map((escola) => ({
@@ -40,6 +42,12 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
 
   return (
     <div className="space-y-4">
+      <AcademyModeBanner profileId={me?.id ?? null} onOpenSelector={() => setShowModeSelector(true)} />
+      <button onClick={() => setShowModeSelector(true)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-navy">
+        <Settings2 className="h-3.5 w-3.5" />Ajustar modo educacional (Individual, Família, Life Group…)
+      </button>
+      {showModeSelector && <AcademyModeSelector profileId={me?.id ?? null} onClose={() => setShowModeSelector(false)} />}
+
       {tutoring.length > 0 && (
         <Card className="border-2 border-gold/40">
           <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><UserCheck className="h-4 w-4 text-gold" />Minhas Tutorias</CardTitle></CardHeader>
