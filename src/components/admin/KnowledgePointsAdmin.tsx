@@ -9,7 +9,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase/client";
 import { useKnowledgePoints, useKnowledgePointDetail } from "@/hooks/use-queries";
 import * as Kp from "@/services/knowledgePoints";
-import type { KnowledgeCategory, KnowledgePoint } from "@/types/domain";
+import type { KnowledgeCategory, KnowledgePoint, RelationType } from "@/types/domain";
+
+/** Rótulo de um relacionamento, considerando de qual lado (direção) está sendo visto. */
+export const RELATION_LABELS: Record<RelationType, { saida: string; entrada: string }> = {
+  pai_de: { saida: "Pai de", entrada: "Filho(a) de" },
+  mae_de: { saida: "Mãe de", entrada: "Filho(a) de" },
+  conjuge_de: { saida: "Cônjuge de", entrada: "Cônjuge de" },
+  contemporaneo_de: { saida: "Contemporâneo de", entrada: "Contemporâneo de" },
+  local_de: { saida: "Local de", entrada: "Relacionado ao local" },
+};
 
 const CATEGORIES: { key: KnowledgeCategory; label: string; icon: typeof MapPin; question: string }[] = [
   { key: "lugar", label: "Lugares", icon: MapPin, question: "Onde aconteceu?" },
@@ -95,11 +104,12 @@ function PointDetailAdmin({ point, onBack, onEdit, onDelete }: { point: Knowledg
   const { data: detail } = useKnowledgePointDetail(point.id);
   const { data: allPoints = [] } = useKnowledgePoints();
   const [linkId, setLinkId] = useState("");
+  const [relationType, setRelationType] = useState<RelationType | "">("");
 
   async function addRelation() {
     if (!linkId) return;
-    await Kp.relateKnowledgePoints(supabase, point.id, linkId);
-    setLinkId("");
+    await Kp.relateKnowledgePoints(supabase, point.id, linkId, relationType || undefined);
+    setLinkId(""); setRelationType("");
     qc.invalidateQueries({ queryKey: ["knowledge-point-detail", point.id] });
   }
   async function removeRelation(otherId: string) {
@@ -132,16 +142,27 @@ function PointDetailAdmin({ point, onBack, onEdit, onDelete }: { point: Knowledg
             <div className="flex flex-wrap gap-1.5">
               {(detail?.related ?? []).map((r) => (
                 <span key={r.related_id} className="flex items-center gap-1 rounded-full border bg-card px-2 py-1 text-xs">
+                  {r.relation_type && r.relation_direction && (
+                    <span className="font-semibold text-gold">{RELATION_LABELS[r.relation_type][r.relation_direction]}</span>
+                  )}
                   {r.related_title}
                   <button onClick={() => removeRelation(r.related_id)}><X className="h-3 w-3 text-muted-foreground hover:text-red-500" /></button>
                 </span>
               ))}
               {(detail?.related ?? []).length === 0 && <p className="text-xs italic text-muted-foreground">Nenhum relacionamento ainda.</p>}
             </div>
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
               <select value={linkId} onChange={(e) => setLinkId(e.target.value)} className="h-8 flex-1 rounded-md border bg-background px-2 text-xs">
                 <option value="">Relacionar com…</option>
                 {allPoints.filter((p) => p.id !== point.id).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+              </select>
+              <select value={relationType} onChange={(e) => setRelationType(e.target.value as RelationType | "")} className="h-8 flex-1 rounded-md border bg-background px-2 text-xs">
+                <option value="">Tipo (opcional)</option>
+                <option value="pai_de">Pai de</option>
+                <option value="mae_de">Mãe de</option>
+                <option value="conjuge_de">Cônjuge de</option>
+                <option value="contemporaneo_de">Contemporâneo de</option>
+                <option value="local_de">Local de</option>
               </select>
               <Button size="sm" onClick={addRelation} disabled={!linkId}>Vincular</Button>
             </div>
