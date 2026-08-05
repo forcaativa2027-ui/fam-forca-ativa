@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { GraduationCap, Map, ChevronDown, ChevronRight, ArrowLeft, CheckCircle2, Circle, PlayCircle, BookOpen as BibleIcon, UserCheck, Award } from "lucide-react";
+import { GraduationCap, Map, ChevronDown, ChevronRight, ArrowLeft, CheckCircle2, Circle, PlayCircle, BookOpen as BibleIcon, UserCheck, Award, Compass } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
@@ -8,6 +8,7 @@ import { useCourses, useCourseModules, useCourseContent, useMyProfile, useEscola
 import { ESCOLAS, escolaKeyOf } from "@/components/admin/FormacaoAdmin";
 import * as Ac from "@/services/academyContent";
 import * as Journal from "@/services/formationJournal";
+import { KnowledgeExplorer } from "./KnowledgeExplorer";
 import type { Member, Course, CourseContentItem } from "@/types/domain";
 
 /**
@@ -24,6 +25,7 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
   const { data: certificates = [] } = useMyCertificates(me?.id ?? null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [openCourse, setOpenCourse] = useState<Course | null>(null);
+  const [showExplorer, setShowExplorer] = useState(false);
 
   const active = courses.filter((c) => c.is_active);
   const groups = ESCOLAS.map((escola) => ({
@@ -34,6 +36,7 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
   })).filter((g) => g.courses.length > 0 || g.dbId);
 
   if (openCourse) return <CourseContentViewer course={openCourse} onBack={() => setOpenCourse(null)} />;
+  if (showExplorer) return <KnowledgeExplorer onBack={() => setShowExplorer(false)} />;
 
   return (
     <div className="space-y-4">
@@ -67,6 +70,12 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
           </CardContent>
         </Card>
       )}
+
+      <button onClick={() => setShowExplorer(true)}
+        className="flex w-full items-center justify-between rounded-xl border-2 border-gold/40 bg-gold/5 p-3.5 text-left transition hover:border-gold/60">
+        <span className="flex items-center gap-2 text-sm font-bold text-navy"><Compass className="h-5 w-5 text-gold" />Explorar o Conhecimento Bíblico</span>
+        <span className="text-xs text-muted-foreground">Lugares, personagens, linha do tempo, arqueologia…</span>
+      </button>
 
       <Card>
         <CardHeader>
