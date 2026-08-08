@@ -262,6 +262,9 @@ function ObjectForm({ editing, onClose, onDone }: { editing: KnowledgeObject | n
   const [license, setLicense] = useState(editing?.license ?? "");
   const [downloadAllowed, setDownloadAllowed] = useState(editing?.download_allowed ?? false);
   const [scope, setScope] = useState<KnowledgeObjectScope>(editing?.scope ?? "institucional");
+  const [subtitlesUrl, setSubtitlesUrl] = useState(editing?.subtitles_url ?? "");
+  const [audioDescriptionUrl, setAudioDescriptionUrl] = useState(editing?.audio_description_url ?? "");
+  const [durationSeconds, setDurationSeconds] = useState(editing?.duration_seconds?.toString() ?? "");
   const [changeNotes, setChangeNotes] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -276,6 +279,8 @@ function ObjectForm({ editing, onClose, onDone }: { editing: KnowledgeObject | n
         storage_url: storageUrl || undefined, external_url: externalUrl || undefined, thumbnail_url: thumbnailUrl || undefined,
         bible_refs: bibleRefs || undefined, license: license || undefined,
         download_allowed: downloadAllowed, scope,
+        subtitles_url: subtitlesUrl || undefined, audio_description_url: audioDescriptionUrl || undefined,
+        duration_seconds: durationSeconds ? Number(durationSeconds) : undefined,
       };
       if (editing) await Kl.updateKnowledgeObject(supabase, editing.id, payload, me?.id, changeNotes || undefined);
       else await Kl.createKnowledgeObject(supabase, { ...payload, status: "rascunho", created_by: me?.id });
@@ -311,6 +316,14 @@ function ObjectForm({ editing, onClose, onDone }: { editing: KnowledgeObject | n
         <Input value={thumbnailUrl} onChange={(e) => setThumbnailUrl(e.target.value)} placeholder="Imagem de capa (URL)" />
         <Input value={bibleRefs} onChange={(e) => setBibleRefs(e.target.value)} placeholder="Referências bíblicas (ex: João 3)" />
         <Input value={license} onChange={(e) => setLicense(e.target.value)} placeholder="Licença / direitos" />
+        {(objectType === "video" || objectType === "podcast" || objectType === "biblia") && (
+          <div className="rounded-md border p-2 space-y-2">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Player Unificado (Bloco 5)</p>
+            <Input value={subtitlesUrl} onChange={(e) => setSubtitlesUrl(e.target.value)} placeholder="Legendas — URL do arquivo WebVTT (opcional)" />
+            <Input value={audioDescriptionUrl} onChange={(e) => setAudioDescriptionUrl(e.target.value)} placeholder="Audiodescrição — URL de faixa alternativa (opcional)" />
+            <Input value={durationSeconds} onChange={(e) => setDurationSeconds(e.target.value)} type="number" placeholder="Duração em segundos (opcional)" />
+          </div>
+        )}
         <label className="flex items-center gap-2 text-xs text-ink">
           <input type="checkbox" checked={downloadAllowed} onChange={(e) => setDownloadAllowed(e.target.checked)} />Permitir download
         </label>
