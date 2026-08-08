@@ -877,6 +877,20 @@ export const useCentralEstudos = (lessonId: string | null) =>
   useQuery({ queryKey: ["central-estudos", lessonId], queryFn: () => Kl.getCentralEstudos(supabase, lessonId as string), enabled: !!lessonId });
 export const useVersionHistory = (objectId: string | null) =>
   useQuery({ queryKey: ["object-versions", objectId], queryFn: () => Kl.listVersionHistory(supabase, objectId as string), enabled: !!objectId });
+export const usePlaybackProgress = (profileId: string | null, objectId: string | null) =>
+  useQuery({ queryKey: ["playback-progress", profileId, objectId], queryFn: () => Kl.getPlaybackProgress(supabase, profileId as string, objectId as string), enabled: !!profileId && !!objectId });
+
+// ── CEC Academy — Bíblia Integrada ───────────────────────────────
+import * as Bible from "@/services/bibleReader";
+export const useBibleBooks = () => useQuery({ queryKey: ["bible-books"], queryFn: () => Bible.listBooks(), staleTime: 1000 * 60 * 60 });
+export const useBibleChapter = (version: string, bookAbbrev: string | null, chapter: number | null) =>
+  useQuery({ queryKey: ["bible-chapter", version, bookAbbrev, chapter], queryFn: () => Bible.getChapter(version, bookAbbrev as string, chapter as number), enabled: !!bookAbbrev && !!chapter });
+export const useBibleHighlights = (profileId: string | null, bookAbbrev: string | null, chapter: number | null, version: string) =>
+  useQuery({ queryKey: ["bible-highlights", profileId, bookAbbrev, chapter, version], queryFn: () => Bible.listHighlights(supabase, profileId as string, bookAbbrev as string, chapter as number, version), enabled: !!profileId && !!bookAbbrev && !!chapter });
+export const useBibleAnnotations = (profileId: string | null, bookAbbrev: string | null, chapter: number | null, version: string) =>
+  useQuery({ queryKey: ["bible-annotations", profileId, bookAbbrev, chapter, version], queryFn: () => Bible.listAnnotations(supabase, profileId as string, bookAbbrev as string, chapter as number, version), enabled: !!profileId && !!bookAbbrev && !!chapter });
+export const useBibleReadingProgress = (profileId: string | null) =>
+  useQuery({ queryKey: ["bible-reading-progress", profileId], queryFn: () => Bible.getReadingProgress(supabase, profileId as string), enabled: !!profileId });
 
 // ── CEC Academy Bloco 6 — Modo Educacional ──────────────────────
 import { getUserPreferences } from "@/services/accessibility";
