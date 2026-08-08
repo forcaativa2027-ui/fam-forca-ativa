@@ -1410,12 +1410,26 @@ export interface BibleBook { abbrev: { pt: string; en: string }; author: string;
 export interface BibleVerse { number: number; text: string }
 export interface BibleChapter { book: { abbrev: { pt: string; en: string }; name: string; author: string; group: string; version: string }; chapter: { number: number; verses: number }; verses: BibleVerse[] }
 export interface BibleHighlight {
-  id: string; profile_id: string; version: string; book_abbrev: string; chapter: number; verse: number;
+  id: string; profile_id: string; version: string; book_abbrev: string; chapter: number;
+  verse_start: number; verse_end: number;
   color: "gold" | "green" | "blue" | "pink" | "purple"; created_at: string;
 }
 export interface BibleAnnotation {
-  id: string; profile_id: string; version: string; book_abbrev: string; chapter: number; verse: number;
+  id: string; profile_id: string; version: string; book_abbrev: string; chapter: number;
+  verse_start: number; verse_end: number;
   note_text: string; created_at: string; updated_at: string;
+}
+export interface BibleBookmark {
+  id: string; profile_id: string; version: string; book_abbrev: string; chapter: number;
+  verse_start: number; verse_end: number; created_at: string;
+}
+export interface BibleRecentRead {
+  id: string; profile_id: string; version: string; book_abbrev: string; chapter: number; opened_at: string;
+}
+export type BibleReadingMode = "reading" | "study" | "devotional";
+export interface BibleReadingProgress {
+  profile_id: string; version: string; book_abbrev: string; chapter: number;
+  reading_mode: BibleReadingMode; updated_at: string;
 }
 export interface KnowledgeObjectRelated {
   related_id: string; related_title: string; related_type: KnowledgeObjectType; related_label: string | null;
