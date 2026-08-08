@@ -45,6 +45,8 @@ export interface KnowledgeObjectInput {
   download_allowed?: boolean; share_allowed?: boolean; print_allowed?: boolean;
   status?: KnowledgeObjectStatus; scope?: KnowledgeObjectScope;
   created_by?: string;
+  chapters?: { label: string; time_seconds: number }[]; subtitles_url?: string;
+  audio_description_url?: string; duration_seconds?: number;
 }
 export async function createKnowledgeObject(sb: SupabaseClient, input: KnowledgeObjectInput): Promise<string> {
   const { data, error } = await sb.from("knowledge_objects").insert(input).select("id").single();
@@ -110,4 +112,16 @@ export async function getCentralEstudos(sb: SupabaseClient, lessonId: string): P
   const { data, error } = await sb.rpc("get_central_estudos", { p_lesson_id: lessonId });
   if (error) { console.error("[library] getCentralEstudos", error); return []; }
   return (data ?? []) as CentralEstudosItem[];
+}
+
+// ---------- Bloco 5 — Progresso de reprodução (continuidade do Player Unificado) ----------
+export async function getPlaybackProgress(sb: SupabaseClient, profileId: string, objectId: string) {
+  const { data } = await sb.from("object_playback_progress").select("*").eq("profile_id", profileId).eq("object_id", objectId).maybeSingle();
+  return data;
+}
+export async function savePlaybackProgress(sb: SupabaseClient, profileId: string, objectId: string, positionSeconds: number, playbackRate: number, isFinished = false): Promise<void> {
+  await sb.from("object_playback_progress").upsert(
+    { profile_id: profileId, object_id: objectId, position_seconds: positionSeconds, playback_rate: playbackRate, is_finished: isFinished, updated_at: new Date().toISOString() },
+    { onConflict: "profile_id,object_id" },
+  );
 }
