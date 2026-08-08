@@ -865,6 +865,19 @@ export const useLessonKnowledgePoints = (lessonId: string | null) =>
 export const useMyRecentKnowledgeViews = (profileId: string | null) =>
   useQuery({ queryKey: ["my-recent-kp-views", profileId], queryFn: () => Kp.listMyRecentViews(supabase, profileId as string), enabled: !!profileId });
 
+// ── CEC Academy Blocos 2/3 — Conhecimento Integrado / Biblioteca ─
+import * as Kl from "@/services/knowledgeLibrary";
+export const useKnowledgeObjects = (filters?: { type?: import("@/types/domain").KnowledgeObjectType; status?: import("@/types/domain").KnowledgeObjectStatus }) =>
+  useQuery({ queryKey: ["knowledge-objects", filters], queryFn: () => Kl.listKnowledgeObjects(supabase, filters) });
+export const useKnowledgeObjectDetail = (id: string | null) =>
+  useQuery({ queryKey: ["knowledge-object-detail", id], queryFn: () => Kl.getKnowledgeObjectDetail(supabase, id as string), enabled: !!id });
+export const useLessonObjects = (lessonId: string | null) =>
+  useQuery({ queryKey: ["lesson-objects", lessonId], queryFn: () => Kl.listLessonObjects(supabase, lessonId as string), enabled: !!lessonId });
+export const useCentralEstudos = (lessonId: string | null) =>
+  useQuery({ queryKey: ["central-estudos", lessonId], queryFn: () => Kl.getCentralEstudos(supabase, lessonId as string), enabled: !!lessonId });
+export const useVersionHistory = (objectId: string | null) =>
+  useQuery({ queryKey: ["object-versions", objectId], queryFn: () => Kl.listVersionHistory(supabase, objectId as string), enabled: !!objectId });
+
 // ── CEC Academy Bloco 6 — Modo Educacional ──────────────────────
 import { getUserPreferences } from "@/services/accessibility";
 export const useEducationMode = (profileId: string | null) =>
