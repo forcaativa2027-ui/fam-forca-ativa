@@ -15,6 +15,8 @@ import { useTTS } from "@/hooks/useTTS";
 import { useOffline } from "@/hooks/useOffline";
 import { AcademyOfflineIndicator, AcademyDownloadButton } from "./AcademyOffline";
 import { CentralDeEstudos } from "./CentralDeEstudos";
+import { BibleReader } from "./BibleReader";
+import { parseBibleReference } from "@/services/bibleReader";
 import type { Member, Course, CourseContentItem } from "@/types/domain";
 
 /**
@@ -33,6 +35,7 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [openCourse, setOpenCourse] = useState<Course | null>(null);
   const [showExplorer, setShowExplorer] = useState(false);
+  const [showBible, setShowBible] = useState(false);
   const [showModeSelector, setShowModeSelector] = useState(false);
 
   const active = courses.filter((c) => c.is_active);
@@ -45,6 +48,7 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
 
   if (openCourse) return <CourseContentViewer course={openCourse} offline={offline} onBack={() => setOpenCourse(null)} />;
   if (showExplorer) return <KnowledgeExplorer onBack={() => setShowExplorer(false)} />;
+  if (showBible) return <BibleReader onBack={() => setShowBible(false)} />;
 
   return (
     <div className="space-y-4">
@@ -90,6 +94,12 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
         className="flex w-full items-center justify-between rounded-xl border-2 border-gold/40 bg-gold/5 p-3.5 text-left transition hover:border-gold/60">
         <span className="flex items-center gap-2 text-sm font-bold text-navy"><Compass className="h-5 w-5 text-gold" />Explorar o Conhecimento Bíblico</span>
         <span className="text-xs text-muted-foreground">Lugares, personagens, linha do tempo, arqueologia…</span>
+      </button>
+
+      <button onClick={() => setShowBible(true)}
+        className="flex w-full items-center justify-between rounded-xl border-2 border-navy/20 bg-navy/5 p-3.5 text-left transition hover:border-navy/40">
+        <span className="flex items-center gap-2 text-sm font-bold text-navy"><BibleIcon className="h-5 w-5 text-navy" />Bíblia Integrada</span>
+        <span className="text-xs text-muted-foreground">Leitura com grifos e anotações pessoais</span>
       </button>
 
       <Card>
@@ -282,6 +292,7 @@ function LessonViewer({ item, profileId, courseId, offline, onBack }: { item: Co
   const [journaled, setJournaled] = useState(false);
   const [queuedOffline, setQueuedOffline] = useState(false);
   const [certificateCode, setCertificateCode] = useState<string | null>(null);
+  const [openBibleRef, setOpenBibleRef] = useState(false);
   const tts = useTTS(profileId);
 
   useEffect(() => {
@@ -354,6 +365,11 @@ function LessonViewer({ item, profileId, courseId, offline, onBack }: { item: Co
 
   if (!lesson) return <p className="py-8 text-center text-sm text-muted-foreground">Carregando lição…</p>;
 
+  if (openBibleRef && lesson.bible_reference) {
+    const ref = parseBibleReference(lesson.bible_reference);
+    if (ref) return <BibleReader onBack={() => setOpenBibleRef(false)} initialBook={ref.bookAbbrev} initialChapter={ref.chapter} />;
+  }
+
   return (
     <div className="space-y-3">
       <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-navy"><ArrowLeft className="h-4 w-4" />Voltar pro curso</button>
@@ -369,7 +385,12 @@ function LessonViewer({ item, profileId, courseId, offline, onBack }: { item: Co
           </div>
 
           {lesson.bible_reference && (
-            <div className="flex items-center gap-2 rounded-md bg-gold/10 px-3 py-2 text-sm font-semibold text-navy"><BibleIcon className="h-4 w-4 text-gold" />{lesson.bible_reference}</div>
+            <div className="flex items-center justify-between gap-2 rounded-md bg-gold/10 px-3 py-2 text-sm font-semibold text-navy">
+              <span className="flex items-center gap-2"><BibleIcon className="h-4 w-4 text-gold" />{lesson.bible_reference}</span>
+              {parseBibleReference(lesson.bible_reference) && (
+                <button onClick={() => setOpenBibleRef(true)} className="text-xs font-bold text-gold underline">Abrir na Bíblia</button>
+              )}
+            </div>
           )}
           {lesson.content_main && <AcademyHighlightedText text={lesson.content_main} blockId="content_main" tts={tts} className="whitespace-pre-wrap text-sm text-ink" />}
           {lesson.video_url && (
