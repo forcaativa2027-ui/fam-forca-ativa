@@ -891,6 +891,12 @@ export const useBibleAnnotations = (profileId: string | null, bookAbbrev: string
   useQuery({ queryKey: ["bible-annotations", profileId, bookAbbrev, chapter, version], queryFn: () => Bible.listAnnotations(supabase, profileId as string, bookAbbrev as string, chapter as number, version), enabled: !!profileId && !!bookAbbrev && !!chapter });
 export const useBibleReadingProgress = (profileId: string | null) =>
   useQuery({ queryKey: ["bible-reading-progress", profileId], queryFn: () => Bible.getReadingProgress(supabase, profileId as string), enabled: !!profileId });
+export const useBibleBookmarks = (profileId: string | null) =>
+  useQuery({ queryKey: ["bible-bookmarks", profileId], queryFn: () => Bible.listBookmarks(supabase, profileId as string), enabled: !!profileId });
+export const useBibleRecentReads = (profileId: string | null) =>
+  useQuery({ queryKey: ["bible-recent-reads", profileId], queryFn: () => Bible.listRecentReads(supabase, profileId as string), enabled: !!profileId });
+export const useAllBibleAnnotations = (profileId: string | null) =>
+  useQuery({ queryKey: ["bible-annotations-all", profileId], queryFn: () => Bible.listAllAnnotations(supabase, profileId as string), enabled: !!profileId });
 
 // ── CEC Academy Bloco 6 — Modo Educacional ──────────────────────
 import { getUserPreferences } from "@/services/accessibility";
