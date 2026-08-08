@@ -1373,6 +1373,41 @@ export interface KnowledgePointDetail extends KnowledgePoint {
   related: KnowledgePointRelated[];
 }
 
+// CEC Academy Blocos 2/3 — Conhecimento Integrado + Biblioteca
+export type KnowledgeObjectType =
+  | "biblia" | "livro" | "pdf" | "video" | "podcast" | "imagem" | "mapa"
+  | "artigo" | "apostila" | "modelo_3d" | "infografico" | "plano_aula" | "questionario";
+export type EducationLevel = "introducao" | "fundamental" | "intermediario" | "avancado" | "pesquisa_academica";
+export type KnowledgeObjectStatus =
+  | "rascunho" | "em_catalogacao" | "em_curadoria" | "aguardando_aprovacao"
+  | "publicado" | "atualizado" | "arquivado";
+export type KnowledgeObjectScope = "global" | "institucional" | "local" | "turma" | "pessoal";
+
+export interface KnowledgeObject {
+  id: string; cid: string; title: string; description: string | null; object_type: KnowledgeObjectType;
+  language: string | null; author: string | null; institution: string | null; publisher: string | null; year: number | null;
+  storage_url: string | null; external_url: string | null; thumbnail_url: string | null;
+  escola_id: string | null; jornada_id: string | null; programa_id: string | null;
+  course_id: string | null; module_id: string | null; lesson_id: string | null;
+  education_level: EducationLevel | null; target_audience: string | null; bible_refs: string | null;
+  license: string | null; rights_origin: string | null;
+  download_allowed: boolean; share_allowed: boolean; print_allowed: boolean;
+  status: KnowledgeObjectStatus; scope: KnowledgeObjectScope;
+  created_by: string | null; curated_by: string | null; curator_notes: string | null;
+  approved_by: string | null; approved_at: string | null;
+  version: number; created_at: string; updated_at: string;
+}
+export interface KnowledgeObjectRelated {
+  related_id: string; related_title: string; related_type: KnowledgeObjectType; related_label: string | null;
+}
+export interface KnowledgeObjectDetail extends KnowledgeObject {
+  related: KnowledgeObjectRelated[];
+}
+export interface CentralEstudosItem {
+  kind: "objeto" | "ponto"; id: string; title: string; subtitle: string | null;
+  description: string | null; image_url: string | null; item_type: string;
+}
+
 // Família (UX-003 §6.29/6.53)
 export type FamilyRelationshipType = "pai" | "mae" | "conjuge" | "filho" | "irmao" | "responsavel_legal" | "outro";
 export interface MemberRelationship {
