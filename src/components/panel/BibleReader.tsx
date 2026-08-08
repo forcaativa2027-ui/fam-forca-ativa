@@ -21,7 +21,7 @@ const HIGHLIGHT_COLORS: Record<string, string> = {
  */
 export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: () => void; initialBook?: string; initialChapter?: number }) {
   const { data: me } = useMyProfile();
-  const { data: books = [] } = useBibleBooks();
+  const { data: books = [], isLoading: booksLoading, isError: booksError } = useBibleBooks();
   const { data: readingProgress } = useBibleReadingProgress(me?.id ?? null);
   const [version, setVersion] = useState("nvi");
   const [bookAbbrev, setBookAbbrev] = useState(initialBook ?? "");
@@ -78,7 +78,12 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
                 {nt.map((b) => <button key={b.abbrev.pt} onClick={() => openBook(b)} className="rounded-md border p-2 text-left text-sm hover:border-gold/50">{b.name}</button>)}
               </div>
             </div>
-            {books.length === 0 && <p className="text-sm italic text-muted-foreground">Carregando lista de livros…</p>}
+            {booksLoading && <p className="text-sm italic text-muted-foreground">Carregando lista de livros…</p>}
+            {!booksLoading && (booksError || books.length === 0) && (
+              <p className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                Não conseguimos carregar a lista de livros agora. Isso pode ser instabilidade temporária da fonte do texto bíblico — tenta recarregar a página em alguns instantes.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
