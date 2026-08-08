@@ -23,7 +23,7 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
   const { data: me } = useMyProfile();
   const { data: books = [], isLoading: booksLoading, isError: booksError } = useBibleBooks();
   const { data: readingProgress } = useBibleReadingProgress(me?.id ?? null);
-  const [version, setVersion] = useState("nvi");
+  const [version, setVersion] = useState("acf");
   const [bookAbbrev, setBookAbbrev] = useState(initialBook ?? "");
   const [chapter, setChapter] = useState(initialChapter ?? 1);
   const [showBookPicker, setShowBookPicker] = useState(!initialBook);
