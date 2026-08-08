@@ -5,21 +5,13 @@ import type { BibleBook, BibleChapter, BibleHighlight, BibleAnnotation } from "@
 /**
  * CEC Academy — Bíblia Integrada. O texto bíblico vem de uma API
  * pública e gratuita (abibliadigital.com.br, mantida pela
- * comunidade, código aberto). Sem custo, sem chave obrigatória —
- * só tem limite de 20 requisições/hora sem cadastro. Se isso virar
- * um gargalo real de uso, dá pra criar uma conta gratuita lá e
- * configurar um token (NEXT_PUBLIC_BIBLE_API_TOKEN).
+ * comunidade, código aberto), mas passando pelas nossas próprias
+ * rotas /api/bible/* — chamar a API externa direto do navegador
+ * esbarra em CORS, então o servidor faz essa ponte.
  */
-const API_BASE = "https://www.abibliadigital.com.br/api";
-
-function authHeaders(): HeadersInit {
-  const token = process.env.NEXT_PUBLIC_BIBLE_API_TOKEN;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 export async function listBooks(): Promise<BibleBook[]> {
   try {
-    const res = await fetch(`${API_BASE}/books`, { headers: authHeaders() });
+    const res = await fetch("/api/bible/books");
     if (!res.ok) return [];
     return await res.json();
   } catch { return []; }
@@ -27,7 +19,7 @@ export async function listBooks(): Promise<BibleBook[]> {
 
 export async function getChapter(version: string, bookAbbrev: string, chapter: number): Promise<BibleChapter | null> {
   try {
-    const res = await fetch(`${API_BASE}/verses/${version}/${bookAbbrev}/${chapter}`, { headers: authHeaders() });
+    const res = await fetch(`/api/bible/chapter?version=${version}&book=${bookAbbrev}&chapter=${chapter}`);
     if (!res.ok) return null;
     return await res.json();
   } catch { return null; }
