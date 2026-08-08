@@ -26,10 +26,7 @@ export async function getChapter(version: string, bookAbbrev: string, chapter: n
 }
 
 export const BIBLE_VERSIONS = [
-  { value: "nvi", label: "NVI — Nova Versão Internacional" },
   { value: "acf", label: "ACF — Almeida Corrigida Fiel" },
-  { value: "ra", label: "RA — Almeida Revista e Atualizada" },
-  { value: "kjv", label: "KJV — King James (inglês)" },
 ];
 
 // ---------- Grifos ----------
