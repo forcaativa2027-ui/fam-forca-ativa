@@ -14,6 +14,7 @@ import { AcademyTTSControls, AcademyHighlightedText, AcademyVoiceButton } from "
 import { useTTS } from "@/hooks/useTTS";
 import { useOffline } from "@/hooks/useOffline";
 import { AcademyOfflineIndicator, AcademyDownloadButton } from "./AcademyOffline";
+import { CentralDeEstudos } from "./CentralDeEstudos";
 import type { Member, Course, CourseContentItem } from "@/types/domain";
 
 /**
@@ -378,6 +379,8 @@ function LessonViewer({ item, profileId, courseId, offline, onBack }: { item: Co
           {lesson.content_oracao && <LessonBlock icon="🙏" label="Orar" text={lesson.content_oracao} blockId="content_oracao" tts={tts} />}
           {lesson.content_pratica && <LessonBlock icon="🙌" label="Praticar" text={lesson.content_pratica} blockId="content_pratica" tts={tts} />}
           {lesson.content_compartilhar && <LessonBlock icon="🤝" label="Compartilhar" text={lesson.content_compartilhar} blockId="content_compartilhar" tts={tts} />}
+
+          <CentralDeEstudos lessonId={item.lesson_id} />
 
           {assessments.length > 0 && (
             <div className="space-y-3 rounded-lg border border-gold/40 bg-gold/5 p-3">
