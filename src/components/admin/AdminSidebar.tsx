@@ -22,7 +22,7 @@ export type TabKey =
   | "control-tower" | "intelligence" | "ministerial-reports" | "metas"
   | "members" | "leadership" | "score" | "birthdays" | "discipleship"
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
-  | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao" | "conhecimento-biblico"
+  | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao" | "conhecimento-biblico" | "biblioteca-conhecimento"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
   | "news" | "banners" | "sermons" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
@@ -149,6 +149,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
       items: [
         { key: "formacao",      label: "Escolas e Cursos", icon: <GraduationCap size={15} /> },
         { key: "conhecimento-biblico", label: "Exploração Bíblica", icon: <Compass size={15} /> },
+        { key: "biblioteca-conhecimento", label: "Biblioteca (Conhecimento Integrado)", icon: <Library size={15} /> },
       ],
     },
     {
