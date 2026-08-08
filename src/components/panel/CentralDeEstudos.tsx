@@ -1,7 +1,9 @@
 "use client";
-import { BookOpen, Compass } from "lucide-react";
+import { BookOpen, Compass, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useCentralEstudos } from "@/hooks/use-queries";
+import { useCentralEstudos, useKnowledgeObjectDetail } from "@/hooks/use-queries";
+import { UnifiedMediaPlayer } from "./UnifiedMediaPlayer";
+import { useState } from "react";
 
 /**
  * CEC Academy Blocos 2/3 — Central de Estudos. Não guarda nada
@@ -11,6 +13,7 @@ import { useCentralEstudos } from "@/hooks/use-queries";
  */
 export function CentralDeEstudos({ lessonId }: { lessonId: string }) {
   const { data: items = [] } = useCentralEstudos(lessonId);
+  const [openObjectId, setOpenObjectId] = useState<string | null>(null);
   if (items.length === 0) return null;
 
   return (
@@ -21,7 +24,11 @@ export function CentralDeEstudos({ lessonId }: { lessonId: string }) {
         </p>
         <div className="grid gap-2 sm:grid-cols-2">
           {items.map((item) => (
-            <div key={`${item.kind}-${item.id}`} className="flex items-start gap-2 rounded-md border bg-card p-2.5">
+            <button
+              key={`${item.kind}-${item.id}`}
+              onClick={() => item.kind === "objeto" && setOpenObjectId(item.id)}
+              className="flex items-start gap-2 rounded-md border bg-card p-2.5 text-left hover:border-gold/50"
+            >
               {item.image_url ? (
                 <img src={item.image_url} alt="" className="h-10 w-10 shrink-0 rounded object-cover" />
               ) : (
@@ -31,10 +38,28 @@ export function CentralDeEstudos({ lessonId }: { lessonId: string }) {
                 <p className="truncate text-sm font-semibold text-navy">{item.title}</p>
                 {item.subtitle && <p className="truncate text-xs text-gold">{item.subtitle}</p>}
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </CardContent>
+
+      {openObjectId && <ObjectPlayerModal objectId={openObjectId} onClose={() => setOpenObjectId(null)} />}
     </Card>
+  );
+}
+
+function ObjectPlayerModal({ objectId, onClose }: { objectId: string; onClose: () => void }) {
+  const { data: detail } = useKnowledgeObjectDetail(objectId);
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4" onClick={onClose}>
+      <div className="w-full max-w-lg rounded-xl bg-card p-4" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-2 flex items-center justify-between">
+          <p className="font-display text-base text-navy">{detail?.title ?? "Carregando…"}</p>
+          <button onClick={onClose}><X className="h-4 w-4 text-muted-foreground" /></button>
+        </div>
+        {detail?.description && <p className="mb-2 text-sm text-muted-foreground">{detail.description}</p>}
+        {detail && <UnifiedMediaPlayer object={detail} />}
+      </div>
+    </div>
   );
 }
