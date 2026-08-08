@@ -1396,6 +1396,26 @@ export interface KnowledgeObject {
   created_by: string | null; curated_by: string | null; curator_notes: string | null;
   approved_by: string | null; approved_at: string | null;
   version: number; created_at: string; updated_at: string;
+  // Bloco 5 — Player Unificado
+  chapters: { label: string; time_seconds: number }[] | null;
+  subtitles_url: string | null; audio_description_url: string | null; duration_seconds: number | null;
+}
+export interface ObjectPlaybackProgress {
+  profile_id: string; object_id: string; position_seconds: number; playback_rate: number;
+  is_finished: boolean; updated_at: string;
+}
+
+// CEC Academy — Bíblia Integrada
+export interface BibleBook { abbrev: { pt: string; en: string }; author: string; chapters: number; group: string; name: string; testament: string }
+export interface BibleVerse { number: number; text: string }
+export interface BibleChapter { book: { abbrev: { pt: string; en: string }; name: string; author: string; group: string; version: string }; chapter: { number: number; verses: number }; verses: BibleVerse[] }
+export interface BibleHighlight {
+  id: string; profile_id: string; version: string; book_abbrev: string; chapter: number; verse: number;
+  color: "gold" | "green" | "blue" | "pink" | "purple"; created_at: string;
+}
+export interface BibleAnnotation {
+  id: string; profile_id: string; version: string; book_abbrev: string; chapter: number; verse: number;
+  note_text: string; created_at: string; updated_at: string;
 }
 export interface KnowledgeObjectRelated {
   related_id: string; related_title: string; related_type: KnowledgeObjectType; related_label: string | null;
