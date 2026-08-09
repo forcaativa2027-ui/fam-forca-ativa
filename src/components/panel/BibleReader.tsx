@@ -18,6 +18,8 @@ import { BibleModeSelector } from "./BibleModeSelector";
 import { BibleDevotionalPanel } from "./BibleDevotionalPanel";
 import { BibleSearchResults } from "./BibleSearchResults";
 import { BibleCrossReferencesPanel } from "./BibleCrossReferencesPanel";
+import { BibleKnowledgePointsPanel } from "./BibleKnowledgePointsPanel";
+import { BibleMapView } from "./BibleMapView";
 import { AcademyTTSControls } from "./AcademyTTS";
 import type { JournalEntryType } from "@/types/domain";
 
@@ -25,7 +27,7 @@ const HIGHLIGHT_COLORS: Record<string, string> = {
   gold: "bg-gold/30", green: "bg-green-200", blue: "bg-blue-200", pink: "bg-pink-200", purple: "bg-purple-200",
 };
 
-type Screen = "home" | "reader" | "saved" | "notes" | "search";
+type Screen = "home" | "reader" | "saved" | "notes" | "search" | "map";
 
 /**
  * CEC Academy — Bíblia Integrada. Orquestra Home, leitura de
@@ -156,10 +158,11 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
 
   function doSearch(q: string) { setSearchQuery(q); setScreen("search"); }
 
-  if (screen === "home") return <BibleHome profileId={me?.id ?? null} onBack={onBack} onOpen={openReference} onOpenSaved={() => setScreen("saved")} onOpenNotes={() => setScreen("notes")} onSearch={doSearch} />;
+  if (screen === "home") return <BibleHome profileId={me?.id ?? null} onBack={onBack} onOpen={openReference} onOpenSaved={() => setScreen("saved")} onOpenNotes={() => setScreen("notes")} onSearch={doSearch} onOpenMap={() => setScreen("map")} />;
   if (screen === "saved") return <BibleSavedVerses profileId={me?.id ?? null} onBack={() => setScreen("home")} onOpen={(a, c) => openReference(a, c)} />;
   if (screen === "notes") return <BibleNotesList profileId={me?.id ?? null} onBack={() => setScreen("home")} onOpen={(a, c) => openReference(a, c)} />;
   if (screen === "search") return <BibleSearchResults query={searchQuery} onBack={() => setScreen("home")} onOpen={(a, c, v) => openReference(a, c, v)} />;
+  if (screen === "map") return <BibleMapView onBack={() => setScreen("home")} />;
 
   return (
     <div className="space-y-3 pb-4">
@@ -248,7 +251,10 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
       </Card>
 
       {mode === "study" && selection && selection.start === selection.end && (
-        <BibleCrossReferencesPanel bookAbbrev={bookAbbrev} chapter={chapter} verse={selection.start} onOpen={(a, c, v) => openReference(a, c, v)} />
+        <>
+          <BibleCrossReferencesPanel bookAbbrev={bookAbbrev} chapter={chapter} verse={selection.start} onOpen={(a, c, v) => openReference(a, c, v)} />
+          <BibleKnowledgePointsPanel bookAbbrev={bookAbbrev} chapter={chapter} verse={selection.start} />
+        </>
       )}
 
       {mode === "study" && selection && (

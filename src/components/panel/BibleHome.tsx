@@ -13,11 +13,11 @@ import type { BibleBook } from "@/types/domain";
  * referência, continuar lendo, últimos acessados, e os livros
  * organizados por grupo. ACA-BIB-01 §4 / ACA-BIB-04 §5.
  */
-export function BibleHome({ profileId, onBack, onOpen, onOpenSaved, onOpenNotes, onSearch }: {
+export function BibleHome({ profileId, onBack, onOpen, onOpenSaved, onOpenNotes, onSearch, onOpenMap }: {
   profileId: string | null; onBack: () => void;
   onOpen: (bookAbbrev: string, chapter: number, verseStart?: number) => void;
   onOpenSaved?: () => void; onOpenNotes?: () => void;
-  onSearch?: (query: string) => void;
+  onSearch?: (query: string) => void; onOpenMap?: () => void;
 }) {
   const { data: books = [], isLoading: booksLoading, isError: booksError } = useBibleBooks();
   const { data: readingProgress } = useBibleReadingProgress(profileId);
@@ -51,10 +51,11 @@ export function BibleHome({ profileId, onBack, onOpen, onOpenSaved, onOpenNotes,
         <CardContent className="space-y-4 pt-4">
           <p className="flex items-center gap-2 font-display text-lg text-navy"><BookOpen className="h-5 w-5 text-gold" />Bíblia Integrada</p>
 
-          {(onOpenSaved || onOpenNotes) && (
+          {(onOpenSaved || onOpenNotes || onOpenMap) && (
             <div className="flex gap-2">
               {onOpenSaved && <button onClick={onOpenSaved} className="flex-1 rounded-md border p-2 text-center text-xs font-semibold text-navy hover:border-gold/50">Versículos Salvos</button>}
               {onOpenNotes && <button onClick={onOpenNotes} className="flex-1 rounded-md border p-2 text-center text-xs font-semibold text-navy hover:border-gold/50">Minhas Anotações</button>}
+              {onOpenMap && <button onClick={onOpenMap} className="flex-1 rounded-md border p-2 text-center text-xs font-semibold text-navy hover:border-gold/50">Mapa de Lugares</button>}
             </div>
           )}
 
