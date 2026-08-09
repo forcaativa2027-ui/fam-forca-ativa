@@ -29,6 +29,7 @@ export async function getChapter(version: string, bookAbbrev: string, chapter: n
 
 export const BIBLE_VERSIONS = [
   { value: "acf", label: "ACF — Almeida Corrigida Fiel" },
+  { value: "aa", label: "AA — Almeida Atualizada" },
 ];
 
 /**
