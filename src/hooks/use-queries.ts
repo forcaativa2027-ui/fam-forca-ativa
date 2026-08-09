@@ -897,6 +897,8 @@ export const useBibleRecentReads = (profileId: string | null) =>
   useQuery({ queryKey: ["bible-recent-reads", profileId], queryFn: () => Bible.listRecentReads(supabase, profileId as string), enabled: !!profileId });
 export const useAllBibleAnnotations = (profileId: string | null) =>
   useQuery({ queryKey: ["bible-annotations-all", profileId], queryFn: () => Bible.listAllAnnotations(supabase, profileId as string), enabled: !!profileId });
+export const useBibleSearch = (query: string, version = "acf") =>
+  useQuery({ queryKey: ["bible-search", query, version], queryFn: () => Bible.searchVerses(supabase, query, version), enabled: query.trim().length >= 2 });
 
 // ── CEC Academy Bloco 6 — Modo Educacional ──────────────────────
 import { getUserPreferences } from "@/services/accessibility";
