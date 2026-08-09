@@ -181,11 +181,29 @@ export function parseBibleReference(text: string): { bookAbbrev: string; chapter
 export interface BibleSearchResult {
   book_abbrev: string; book_name: string; chapter: number; verse: number; text: string; headline: string; rank: number;
 }
-export async function searchVerses(sb: SupabaseClient, query: string, version = "acf"): Promise<BibleSearchResult[]> {
+export async function searchVerses(sb: SupabaseClient, query: string, version = "acf", limit = 50): Promise<BibleSearchResult[]> {
   if (!query.trim()) return [];
-  const { data, error } = await sb.rpc("search_bible_verses", { p_query: query, p_version: version, p_limit: 50 });
+  const { data, error } = await sb.rpc("search_bible_verses", { p_query: query, p_version: version, p_limit: limit });
   if (error) { console.error("[bible] searchVerses", error); return []; }
   return (data ?? []) as BibleSearchResult[];
+}
+
+// ---------- Fase 4 — Léxico (Dicionário de Strong) ----------
+export interface LexiconEntry {
+  id: string; language: "hebrew" | "greek"; lemma: string | null; transliteration: string | null; short_definition: string | null; rank: number;
+}
+export async function searchLexicon(sb: SupabaseClient, query: string): Promise<LexiconEntry[]> {
+  if (!query.trim()) return [];
+  const { data, error } = await sb.rpc("search_strongs_lexicon", { p_query: query, p_limit: 30 });
+  if (error) { console.error("[bible] searchLexicon", error); return []; }
+  return (data ?? []) as LexiconEntry[];
+}
+export interface LexiconEntryDetail extends LexiconEntry {
+  definition: string | null; kjv_usage: string | null;
+}
+export async function getLexiconEntry(sb: SupabaseClient, id: string): Promise<LexiconEntryDetail | null> {
+  const { data } = await sb.from("strongs_lexicon").select("*").eq("id", id.toUpperCase()).maybeSingle();
+  return data as LexiconEntryDetail | null;
 }
 
 // ---------- Fase 2 — Referências Cruzadas ----------
