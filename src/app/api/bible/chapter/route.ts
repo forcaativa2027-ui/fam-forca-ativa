@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 /**
- * Capítulo da Bíblia — agora vem do nosso próprio banco (tabela
- * bible_verses), sem depender de nenhuma API externa. O parâmetro
- * "version" é aceito por compatibilidade, mas por enquanto só
- * temos a versão 'acf' carregada.
+ * Capítulo da Bíblia — vem do nosso próprio banco (tabela
+ * bible_verses), sem depender de API externa. Respeita a versão
+ * pedida (Fase 2 — Comparação de Traduções: ACF ou AA).
  */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
+  const version = searchParams.get("version") || "acf";
   const book = searchParams.get("book");
   const chapter = searchParams.get("chapter");
   if (!book || !chapter) return NextResponse.json({ error: "Parâmetros faltando" }, { status: 400 });
@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     );
     const [{ data: bookData }, { data: verses, error }] = await Promise.all([
       supabase.from("bible_books").select("*").eq("abbrev", book).maybeSingle(),
-      supabase.from("bible_verses").select("verse, text").eq("version", "acf").eq("book_abbrev", book).eq("chapter", Number(chapter)).order("verse"),
+      supabase.from("bible_verses").select("verse, text").eq("version", version).eq("book_abbrev", book).eq("chapter", Number(chapter)).order("verse"),
     ]);
     if (error) throw error;
     if (!bookData || !verses || verses.length === 0) {
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
 
     // Formato compatível com o que o app já espera
     return NextResponse.json({
-      book: { abbrev: { pt: bookData.abbrev, en: bookData.abbrev }, name: bookData.name, author: "", group: "", version: "acf" },
+      book: { abbrev: { pt: bookData.abbrev, en: bookData.abbrev }, name: bookData.name, author: "", group: "", version },
       chapter: { number: Number(chapter), verses: verses.length },
       verses: verses.map((v) => ({ number: v.verse, text: v.text })),
     });
