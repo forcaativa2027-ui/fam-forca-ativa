@@ -187,3 +187,34 @@ export async function searchVerses(sb: SupabaseClient, query: string, version = 
   if (error) { console.error("[bible] searchVerses", error); return []; }
   return (data ?? []) as BibleSearchResult[];
 }
+
+// ---------- Fase 2 — Referências Cruzadas ----------
+export interface CrossReference {
+  id: string; other_book: string; other_book_name: string; other_chapter: number;
+  other_verse_start: number; other_verse_end: number; description: string | null;
+}
+export async function getCrossReferences(sb: SupabaseClient, bookAbbrev: string, chapter: number, verse: number): Promise<CrossReference[]> {
+  const { data, error } = await sb.rpc("get_cross_references", { p_book: bookAbbrev, p_chapter: chapter, p_verse: verse });
+  if (error) { console.error("[bible] getCrossReferences", error); return []; }
+  return (data ?? []) as CrossReference[];
+}
+export async function addCrossReference(sb: SupabaseClient, input: {
+  from_book: string; from_chapter: number; from_verse_start: number; from_verse_end: number;
+  to_book: string; to_chapter: number; to_verse_start: number; to_verse_end: number;
+  description?: string; created_by?: string;
+}): Promise<void> {
+  const { error } = await sb.from("bible_cross_references").insert(input);
+  if (error) throw error;
+}
+export async function deleteCrossReference(sb: SupabaseClient, id: string): Promise<void> {
+  await sb.from("bible_cross_references").delete().eq("id", id);
+}
+export async function listAllCrossReferences(sb: SupabaseClient): Promise<(CrossReference & { from_book: string; from_chapter: number; from_verse_start: number; from_verse_end: number })[]> {
+  const { data, error } = await sb.from("bible_cross_references").select("*").order("created_at", { ascending: false });
+  if (error) return [];
+  return (data ?? []).map((r: { id: string; from_book: string; from_chapter: number; from_verse_start: number; from_verse_end: number; to_book: string; to_chapter: number; to_verse_start: number; to_verse_end: number; description: string | null }) => ({
+    id: r.id, from_book: r.from_book, from_chapter: r.from_chapter, from_verse_start: r.from_verse_start, from_verse_end: r.from_verse_end,
+    other_book: r.to_book, other_book_name: r.to_book, other_chapter: r.to_chapter, other_verse_start: r.to_verse_start, other_verse_end: r.to_verse_end,
+    description: r.description,
+  }));
+}
