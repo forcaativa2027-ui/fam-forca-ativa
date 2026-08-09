@@ -4,7 +4,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Bookmark as BookmarkIcon, Noteboo
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase/client";
-import { useMyProfile, useBibleBooks, useBibleChapter, useBibleHighlights, useBibleAnnotations, useBibleBookmarks } from "@/hooks/use-queries";
+import { useMyProfile, useBibleBooks, useBibleChapter, useBibleHighlights, useBibleAnnotations, useBibleBookmarks, useBibleReadingProgress } from "@/hooks/use-queries";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Bible from "@/services/bibleReader";
 import * as Journal from "@/services/formationJournal";
@@ -14,6 +14,8 @@ import { BibleVerseActions, type VerseSelection } from "./BibleVerseActions";
 import { BibleJournalAction } from "./BibleJournalAction";
 import { BibleSavedVerses } from "./BibleSavedVerses";
 import { BibleNotesList } from "./BibleNotesList";
+import { BibleModeSelector } from "./BibleModeSelector";
+import { BibleDevotionalPanel } from "./BibleDevotionalPanel";
 import { AcademyTTSControls } from "./AcademyTTS";
 import type { JournalEntryType } from "@/types/domain";
 
@@ -43,6 +45,9 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
   const [journalOpen, setJournalOpen] = useState(false);
   const [toast, setToast] = useState("");
   const tts = useTTS(me?.id ?? null);
+  const { data: readingProgress } = useBibleReadingProgress(me?.id ?? null);
+  const [mode, setModeState] = useState<import("@/types/domain").BibleReadingMode>("reading");
+  const [devotionalBusy, setDevotionalBusy] = useState(false);
 
   const { data: chapterData, isLoading } = useBibleChapter(version, bookAbbrev || null, bookAbbrev ? chapter : null);
   const { data: highlights = [], refetch: refetchHighlights } = useBibleHighlights(me?.id ?? null, bookAbbrev || null, chapter, version);
@@ -54,19 +59,40 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
   }, [me?.id, bookAbbrev, chapter, version, screen]);
 
   useEffect(() => { setSelection(null); }, [bookAbbrev, chapter]);
+  useEffect(() => { if (readingProgress?.reading_mode) setModeState(readingProgress.reading_mode); }, [readingProgress?.reading_mode]);
   useEffect(() => { if (toast) { const t = setTimeout(() => setToast(""), 2000); return () => clearTimeout(t); } }, [toast]);
+
+  function changeMode(m: import("@/types/domain").BibleReadingMode) {
+    setModeState(m);
+    setSelection(null);
+    if (me?.id) Bible.setReadingMode(supabase, me.id, m);
+  }
 
   function openReference(abbrev: string, ch: number, verseStart?: number) {
     setBookAbbrev(abbrev); setChapter(ch); setScreen("reader");
+    if (verseStart) changeMode("study");
     setSelection(verseStart ? { start: verseStart, end: verseStart } : null);
   }
 
   function clickVerse(num: number) {
+    if (mode !== "study") return;
     setSelection((prev) => {
       if (!prev) return { start: num, end: num };
       if (prev.start === num && prev.end === num) return null;
       return { start: Math.min(prev.start, num), end: Math.max(prev.end, num) };
     });
+  }
+
+  async function registerDevotional(answers: Record<string, string>) {
+    if (!me?.id || !chapterData) return;
+    setDevotionalBusy(true);
+    try {
+      const ref = `${currentBook?.name ?? bookAbbrev} ${chapter} — ${version.toUpperCase()}`;
+      const body = Object.entries(answers).filter(([, v]) => v.trim())
+        .map(([q, v]) => `${q}\n${v.trim()}`).join("\n\n");
+      await Journal.createJournalEntry(supabase, { profile_id: me.id, entry_type: "reflexao", content: `${ref}\n\n${body}`, is_private: true });
+      setToast("Registrado no Diário!");
+    } finally { setDevotionalBusy(false); }
   }
 
   const currentBook = books.find((b) => b.abbrev.pt === bookAbbrev);
@@ -132,8 +158,12 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
       <div className="flex items-center justify-between">
         <button onClick={() => setScreen("home")} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-navy"><ArrowLeft className="h-4 w-4" />Bíblia</button>
         <div className="flex gap-3">
-          <button onClick={() => setScreen("saved")} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-navy"><BookmarkIcon className="h-3.5 w-3.5" />Salvos</button>
-          <button onClick={() => setScreen("notes")} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-navy"><NotebookPen className="h-3.5 w-3.5" />Anotações</button>
+          {mode !== "reading" && (
+            <>
+              <button onClick={() => setScreen("saved")} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-navy"><BookmarkIcon className="h-3.5 w-3.5" />Salvos</button>
+              <button onClick={() => setScreen("notes")} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-navy"><NotebookPen className="h-3.5 w-3.5" />Anotações</button>
+            </>
+          )}
         </div>
       </div>
 
@@ -148,6 +178,8 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
             <span className="rounded-md border bg-background px-2 py-1 text-xs">{version.toUpperCase()}</span>
           </div>
 
+          <BibleModeSelector mode={mode} onChange={changeMode} />
+
           <AcademyTTSControls tts={tts} blocks={chapterData ? [{ id: "chapter", label: "Capítulo", text: chapterData.verses.map((v) => v.text).join(" ") }] : []} />
 
           {isLoading && <p className="py-6 text-center text-sm text-muted-foreground">Carregando texto…</p>}
@@ -158,22 +190,41 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
               const highlighted = highlights.find((h) => v.number >= h.verse_start && v.number <= h.verse_end);
               const note = annotations.find((a) => v.number >= a.verse_start && v.number <= a.verse_end);
               const isSelected = !!selection && v.number >= selection.start && v.number <= selection.end;
+              const verseSpan = (
+                <span className={`flex-1 text-sm text-ink ${highlighted ? `rounded px-1 ${HIGHLIGHT_COLORS[highlighted.color]}` : ""}`}>
+                  {v.text}
+                  {note && <span className="ml-1.5 text-xs text-gold">📝</span>}
+                </span>
+              );
+              if (mode !== "study") {
+                return (
+                  <div key={v.number} className="flex items-start gap-2 rounded-md p-1.5">
+                    <span className="mt-0.5 shrink-0 text-[11px] font-bold text-gold">{v.number}</span>
+                    {verseSpan}
+                  </div>
+                );
+              }
               return (
                 <button key={v.number} onClick={() => clickVerse(v.number)}
                   className={`flex w-full items-start gap-2 rounded-md p-1.5 text-left hover:bg-muted/20 ${isSelected ? "ring-2 ring-gold/60" : ""}`}>
                   <span className="mt-0.5 shrink-0 text-[11px] font-bold text-gold">{v.number}</span>
-                  <span className={`flex-1 text-sm text-ink ${highlighted ? `rounded px-1 ${HIGHLIGHT_COLORS[highlighted.color]}` : ""} ${tts.currentBlockId === "selection" || tts.currentBlockId === "chapter" ? "" : ""}`}>
-                    {v.text}
-                    {note && <span className="ml-1.5 text-xs text-gold">📝</span>}
-                  </span>
+                  {verseSpan}
                 </button>
               );
             })}
           </div>
+
+          {mode === "devotional" && chapterData && (
+            <BibleDevotionalPanel
+              reference={`${currentBook?.name ?? bookAbbrev} ${chapter}`}
+              busy={devotionalBusy}
+              onRegister={registerDevotional}
+            />
+          )}
         </CardContent>
       </Card>
 
-      {selection && (
+      {mode === "study" && selection && (
         <BibleVerseActions
           selection={selection} isSaved={isSaved} isHighlighted={isHighlighted}
           onHighlight={handleHighlight} onNote={() => { setNoteText(""); setNoteOpen(true); }}
