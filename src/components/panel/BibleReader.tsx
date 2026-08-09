@@ -20,6 +20,8 @@ import { BibleSearchResults } from "./BibleSearchResults";
 import { BibleCrossReferencesPanel } from "./BibleCrossReferencesPanel";
 import { BibleKnowledgePointsPanel } from "./BibleKnowledgePointsPanel";
 import { BibleMapView } from "./BibleMapView";
+import { BibleLexiconView } from "./BibleLexiconView";
+import { BibleConcordanceView } from "./BibleConcordanceView";
 import { AcademyTTSControls } from "./AcademyTTS";
 import type { JournalEntryType } from "@/types/domain";
 
@@ -27,7 +29,7 @@ const HIGHLIGHT_COLORS: Record<string, string> = {
   gold: "bg-gold/30", green: "bg-green-200", blue: "bg-blue-200", pink: "bg-pink-200", purple: "bg-purple-200",
 };
 
-type Screen = "home" | "reader" | "saved" | "notes" | "search" | "map";
+type Screen = "home" | "reader" | "saved" | "notes" | "search" | "map" | "lexicon" | "concordance";
 
 /**
  * CEC Academy — Bíblia Integrada. Orquestra Home, leitura de
@@ -158,11 +160,13 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
 
   function doSearch(q: string) { setSearchQuery(q); setScreen("search"); }
 
-  if (screen === "home") return <BibleHome profileId={me?.id ?? null} onBack={onBack} onOpen={openReference} onOpenSaved={() => setScreen("saved")} onOpenNotes={() => setScreen("notes")} onSearch={doSearch} onOpenMap={() => setScreen("map")} />;
+  if (screen === "home") return <BibleHome profileId={me?.id ?? null} onBack={onBack} onOpen={openReference} onOpenSaved={() => setScreen("saved")} onOpenNotes={() => setScreen("notes")} onSearch={doSearch} onOpenMap={() => setScreen("map")} onOpenLexicon={() => setScreen("lexicon")} onOpenConcordance={() => setScreen("concordance")} />;
   if (screen === "saved") return <BibleSavedVerses profileId={me?.id ?? null} onBack={() => setScreen("home")} onOpen={(a, c) => openReference(a, c)} />;
   if (screen === "notes") return <BibleNotesList profileId={me?.id ?? null} onBack={() => setScreen("home")} onOpen={(a, c) => openReference(a, c)} />;
   if (screen === "search") return <BibleSearchResults query={searchQuery} onBack={() => setScreen("home")} onOpen={(a, c, v) => openReference(a, c, v)} />;
   if (screen === "map") return <BibleMapView onBack={() => setScreen("home")} />;
+  if (screen === "lexicon") return <BibleLexiconView onBack={() => setScreen("home")} />;
+  if (screen === "concordance") return <BibleConcordanceView onBack={() => setScreen("home")} onOpen={(a, c, v) => openReference(a, c, v)} />;
 
   return (
     <div className="space-y-3 pb-4">
