@@ -175,3 +175,14 @@ export function parseBibleReference(text: string): { bookAbbrev: string; chapter
   const verseEnd = m[4] ? Number(m[4]) : verseStart;
   return { bookAbbrev: abbrev, chapter: Number(m[2]), verseStart, verseEnd };
 }
+
+// ---------- Fase 2 — Busca Avançada (texto completo, em português) ----------
+export interface BibleSearchResult {
+  book_abbrev: string; book_name: string; chapter: number; verse: number; text: string; headline: string; rank: number;
+}
+export async function searchVerses(sb: SupabaseClient, query: string, version = "acf"): Promise<BibleSearchResult[]> {
+  if (!query.trim()) return [];
+  const { data, error } = await sb.rpc("search_bible_verses", { p_query: query, p_version: version, p_limit: 50 });
+  if (error) { console.error("[bible] searchVerses", error); return []; }
+  return (data ?? []) as BibleSearchResult[];
+}
