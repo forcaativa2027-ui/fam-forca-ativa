@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase/client";
 import { useKnowledgePoints, useKnowledgePointDetail } from "@/hooks/use-queries";
 import * as Kp from "@/services/knowledgePoints";
+import * as Bible from "@/services/bibleReader";
+import { useMyProfile } from "@/hooks/use-queries";
 import type { KnowledgeCategory, KnowledgePoint, RelationType } from "@/types/domain";
 
 /** Rótulo de um relacionamento, considerando de qual lado (direção) está sendo visto. */
@@ -167,6 +169,8 @@ function PointDetailAdmin({ point, onBack, onEdit, onDelete }: { point: Knowledg
               <Button size="sm" onClick={addRelation} disabled={!linkId}>Vincular</Button>
             </div>
           </div>
+
+          <VerseLinkSection knowledgePointId={point.id} />
         </CardContent>
       </Card>
     </div>
@@ -227,5 +231,43 @@ function KnowledgePointForm({ editing, defaultCategory, onClose, onDone }: {
         <Button onClick={save} disabled={busy || !title.trim()} className="w-full">{busy ? "Salvando…" : "Salvar"}</Button>
       </CardContent>
     </Card>
+  );
+}
+
+/** Vincula esse Ponto de Conhecimento a um versículo específico — ponte com a Bíblia Integrada (Fase 3). */
+function VerseLinkSection({ knowledgePointId }: { knowledgePointId: string }) {
+  const { data: me } = useMyProfile();
+  const [ref, setRef] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [done, setDone] = useState(false);
+
+  async function link() {
+    setErr(""); setDone(false);
+    const parsed = Bible.parseBibleReference(ref);
+    if (!parsed || parsed.verseStart === undefined) { setErr("Use o formato \"João 3:16\" (com o versículo)."); return; }
+    setBusy(true);
+    try {
+      await Bible.linkKnowledgePointToVerse(supabase, {
+        book_abbrev: parsed.bookAbbrev, chapter: parsed.chapter,
+        verse_start: parsed.verseStart, verse_end: parsed.verseEnd ?? parsed.verseStart,
+        knowledge_point_id: knowledgePointId, created_by: me?.id,
+      });
+      setRef(""); setDone(true);
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Erro ao vincular — talvez já exista esse vínculo.");
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <div className="border-t pt-3">
+      <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">Vincular a um versículo (Bíblia Integrada)</p>
+      <div className="flex gap-2">
+        <Input value={ref} onChange={(e) => setRef(e.target.value)} placeholder="Ex: 1 Samuel 17:4" className="h-8 text-xs" />
+        <Button size="sm" onClick={link} disabled={busy || !ref}>Vincular</Button>
+      </div>
+      {err && <p className="mt-1 text-xs text-destructive">{err}</p>}
+      {done && <p className="mt-1 text-xs text-green-700">Vinculado! Vai aparecer na leitura desse versículo.</p>}
+    </div>
   );
 }
