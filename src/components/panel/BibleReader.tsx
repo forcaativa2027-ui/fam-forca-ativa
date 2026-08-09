@@ -17,6 +17,7 @@ import { BibleNotesList } from "./BibleNotesList";
 import { BibleModeSelector } from "./BibleModeSelector";
 import { BibleDevotionalPanel } from "./BibleDevotionalPanel";
 import { BibleSearchResults } from "./BibleSearchResults";
+import { BibleCrossReferencesPanel } from "./BibleCrossReferencesPanel";
 import { AcademyTTSControls } from "./AcademyTTS";
 import type { JournalEntryType } from "@/types/domain";
 
@@ -245,6 +246,10 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
           )}
         </CardContent>
       </Card>
+
+      {mode === "study" && selection && selection.start === selection.end && (
+        <BibleCrossReferencesPanel bookAbbrev={bookAbbrev} chapter={chapter} verse={selection.start} onOpen={(a, c, v) => openReference(a, c, v)} />
+      )}
 
       {mode === "study" && selection && (
         <BibleVerseActions
