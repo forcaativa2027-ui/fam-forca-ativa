@@ -897,8 +897,12 @@ export const useBibleRecentReads = (profileId: string | null) =>
   useQuery({ queryKey: ["bible-recent-reads", profileId], queryFn: () => Bible.listRecentReads(supabase, profileId as string), enabled: !!profileId });
 export const useAllBibleAnnotations = (profileId: string | null) =>
   useQuery({ queryKey: ["bible-annotations-all", profileId], queryFn: () => Bible.listAllAnnotations(supabase, profileId as string), enabled: !!profileId });
-export const useBibleSearch = (query: string, version = "acf") =>
-  useQuery({ queryKey: ["bible-search", query, version], queryFn: () => Bible.searchVerses(supabase, query, version), enabled: query.trim().length >= 2 });
+export const useBibleSearch = (query: string, version = "acf", limit = 50) =>
+  useQuery({ queryKey: ["bible-search", query, version, limit], queryFn: () => Bible.searchVerses(supabase, query, version, limit), enabled: query.trim().length >= 2 });
+export const useLexiconSearch = (query: string) =>
+  useQuery({ queryKey: ["lexicon-search", query], queryFn: () => Bible.searchLexicon(supabase, query), enabled: query.trim().length >= 2 });
+export const useLexiconEntry = (id: string | null) =>
+  useQuery({ queryKey: ["lexicon-entry", id], queryFn: () => Bible.getLexiconEntry(supabase, id as string), enabled: !!id });
 export const useCrossReferences = (bookAbbrev: string | null, chapter: number | null, verse: number | null) =>
   useQuery({ queryKey: ["cross-references", bookAbbrev, chapter, verse], queryFn: () => Bible.getCrossReferences(supabase, bookAbbrev as string, chapter as number, verse as number), enabled: !!bookAbbrev && !!chapter && !!verse });
 export const useVerseKnowledgePoints = (bookAbbrev: string | null, chapter: number | null, verse: number | null) =>
