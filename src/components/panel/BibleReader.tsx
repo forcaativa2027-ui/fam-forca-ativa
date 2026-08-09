@@ -36,7 +36,8 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
   const { data: me } = useMyProfile();
   const qc = useQueryClient();
   const { data: books = [] } = useBibleBooks();
-  const [version] = useState("acf");
+  const [version, setVersion] = useState("acf");
+  const [compareVersion, setCompareVersion] = useState<string | null>(null);
   const [bookAbbrev, setBookAbbrev] = useState(initialBook ?? "");
   const [chapter, setChapter] = useState(initialChapter ?? 1);
   const [screen, setScreen] = useState<Screen>(initialBook ? "reader" : "home");
@@ -52,6 +53,7 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: chapterData, isLoading } = useBibleChapter(version, bookAbbrev || null, bookAbbrev ? chapter : null);
+  const { data: compareData } = useBibleChapter(compareVersion ?? "", bookAbbrev || null, compareVersion && bookAbbrev ? chapter : null);
   const { data: highlights = [], refetch: refetchHighlights } = useBibleHighlights(me?.id ?? null, bookAbbrev || null, chapter, version);
   const { data: annotations = [], refetch: refetchAnnotations } = useBibleAnnotations(me?.id ?? null, bookAbbrev || null, chapter, version);
   const { data: bookmarks = [] } = useBibleBookmarks(me?.id ?? null);
@@ -180,7 +182,16 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
               <p className="font-display text-lg text-navy">{currentBook?.name} {chapter}</p>
               <button onClick={() => setChapter((c) => Math.min(totalChapters, c + 1))} disabled={chapter >= totalChapters} className="rounded-md border p-1.5 disabled:opacity-30"><ChevronRight className="h-4 w-4" /></button>
             </div>
-            <span className="rounded-md border bg-background px-2 py-1 text-xs">{version.toUpperCase()}</span>
+            <div className="flex items-center gap-1.5">
+              <select value={version} onChange={(e) => setVersion(e.target.value)} className="h-8 rounded-md border bg-background px-2 text-xs">
+                {Bible.BIBLE_VERSIONS.map((v) => <option key={v.value} value={v.value}>{v.value.toUpperCase()}</option>)}
+              </select>
+              <button
+                onClick={() => setCompareVersion((cv) => cv ? null : (Bible.BIBLE_VERSIONS.find((v) => v.value !== version)?.value ?? null))}
+                className={`rounded-md border px-2 py-1.5 text-[11px] font-semibold ${compareVersion ? "border-gold bg-gold/10 text-navy" : "text-muted-foreground"}`}>
+                Comparar
+              </button>
+            </div>
           </div>
 
           <BibleModeSelector mode={mode} onChange={changeMode} />
@@ -199,6 +210,12 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
                 <span className={`flex-1 text-sm text-ink ${highlighted ? `rounded px-1 ${HIGHLIGHT_COLORS[highlighted.color]}` : ""}`}>
                   {v.text}
                   {note && <span className="ml-1.5 text-xs text-gold">📝</span>}
+                  {compareVersion && compareData && (
+                    <span className="mt-0.5 block text-xs italic text-muted-foreground">
+                      <span className="font-bold not-italic text-gold">{compareVersion.toUpperCase()}: </span>
+                      {compareData.verses.find((cv) => cv.number === v.number)?.text ?? "—"}
+                    </span>
+                  )}
                 </span>
               );
               if (mode !== "study") {
