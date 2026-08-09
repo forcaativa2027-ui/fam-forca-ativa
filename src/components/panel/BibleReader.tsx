@@ -16,6 +16,7 @@ import { BibleSavedVerses } from "./BibleSavedVerses";
 import { BibleNotesList } from "./BibleNotesList";
 import { BibleModeSelector } from "./BibleModeSelector";
 import { BibleDevotionalPanel } from "./BibleDevotionalPanel";
+import { BibleSearchResults } from "./BibleSearchResults";
 import { AcademyTTSControls } from "./AcademyTTS";
 import type { JournalEntryType } from "@/types/domain";
 
@@ -23,7 +24,7 @@ const HIGHLIGHT_COLORS: Record<string, string> = {
   gold: "bg-gold/30", green: "bg-green-200", blue: "bg-blue-200", pink: "bg-pink-200", purple: "bg-purple-200",
 };
 
-type Screen = "home" | "reader" | "saved" | "notes";
+type Screen = "home" | "reader" | "saved" | "notes" | "search";
 
 /**
  * CEC Academy — Bíblia Integrada. Orquestra Home, leitura de
@@ -48,6 +49,7 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
   const { data: readingProgress } = useBibleReadingProgress(me?.id ?? null);
   const [mode, setModeState] = useState<import("@/types/domain").BibleReadingMode>("reading");
   const [devotionalBusy, setDevotionalBusy] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: chapterData, isLoading } = useBibleChapter(version, bookAbbrev || null, bookAbbrev ? chapter : null);
   const { data: highlights = [], refetch: refetchHighlights } = useBibleHighlights(me?.id ?? null, bookAbbrev || null, chapter, version);
@@ -149,9 +151,12 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
     setToast("Adicionado ao Diário!");
   }
 
-  if (screen === "home") return <BibleHome profileId={me?.id ?? null} onBack={onBack} onOpen={openReference} onOpenSaved={() => setScreen("saved")} onOpenNotes={() => setScreen("notes")} />;
+  function doSearch(q: string) { setSearchQuery(q); setScreen("search"); }
+
+  if (screen === "home") return <BibleHome profileId={me?.id ?? null} onBack={onBack} onOpen={openReference} onOpenSaved={() => setScreen("saved")} onOpenNotes={() => setScreen("notes")} onSearch={doSearch} />;
   if (screen === "saved") return <BibleSavedVerses profileId={me?.id ?? null} onBack={() => setScreen("home")} onOpen={(a, c) => openReference(a, c)} />;
   if (screen === "notes") return <BibleNotesList profileId={me?.id ?? null} onBack={() => setScreen("home")} onOpen={(a, c) => openReference(a, c)} />;
+  if (screen === "search") return <BibleSearchResults query={searchQuery} onBack={() => setScreen("home")} onOpen={(a, c, v) => openReference(a, c, v)} />;
 
   return (
     <div className="space-y-3 pb-4">

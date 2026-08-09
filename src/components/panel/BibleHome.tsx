@@ -13,10 +13,11 @@ import type { BibleBook } from "@/types/domain";
  * referência, continuar lendo, últimos acessados, e os livros
  * organizados por grupo. ACA-BIB-01 §4 / ACA-BIB-04 §5.
  */
-export function BibleHome({ profileId, onBack, onOpen, onOpenSaved, onOpenNotes }: {
+export function BibleHome({ profileId, onBack, onOpen, onOpenSaved, onOpenNotes, onSearch }: {
   profileId: string | null; onBack: () => void;
   onOpen: (bookAbbrev: string, chapter: number, verseStart?: number) => void;
   onOpenSaved?: () => void; onOpenNotes?: () => void;
+  onSearch?: (query: string) => void;
 }) {
   const { data: books = [], isLoading: booksLoading, isError: booksError } = useBibleBooks();
   const { data: readingProgress } = useBibleReadingProgress(profileId);
@@ -29,10 +30,15 @@ export function BibleHome({ profileId, onBack, onOpen, onOpenSaved, onOpenNotes 
   function submitSearch() {
     if (!search.trim()) return;
     const ref = parseBibleReference(search);
-    if (!ref) { setSearchErr(true); return; }
-    setSearchErr(false);
-    onOpen(ref.bookAbbrev, ref.chapter, ref.verseStart);
-    setSearch("");
+    if (ref) {
+      setSearchErr(false);
+      onOpen(ref.bookAbbrev, ref.chapter, ref.verseStart);
+      setSearch("");
+      return;
+    }
+    // Não é uma referência reconhecível — trata como busca de texto (Fase 2)
+    if (onSearch) { onSearch(search.trim()); setSearch(""); }
+    else setSearchErr(true);
   }
 
   function openBook(b: BibleBook) { onOpen(b.abbrev.pt, 1); }
@@ -58,7 +64,7 @@ export function BibleHome({ profileId, onBack, onOpen, onOpenSaved, onOpenNotes 
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input value={search} onChange={(e) => { setSearch(e.target.value); setSearchErr(false); }}
                   onKeyDown={(e) => e.key === "Enter" && submitSearch()}
-                  placeholder="Buscar livro, capítulo ou referência (ex: João 3:16)" className="pl-8" />
+                  placeholder="Referência (João 3:16) ou palavra/expressão pra buscar no texto" className="pl-8" />
               </div>
             </div>
             {searchErr && <p className="mt-1 text-xs text-destructive">Não entendi essa referência — tenta algo como "João 3" ou "Salmo 23:1-4".</p>}
