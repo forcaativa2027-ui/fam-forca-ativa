@@ -218,3 +218,32 @@ export async function listAllCrossReferences(sb: SupabaseClient): Promise<(Cross
     description: r.description,
   }));
 }
+
+// ---------- Fase 3 — Personagens, Lugares, Cronologia, Genealogias (ponte com o Bloco 4) ----------
+export interface VerseKnowledgePoint {
+  id: string; knowledge_point_id: string; title: string; subtitle: string | null; category: string; image_url: string | null;
+}
+export async function getVerseKnowledgePoints(sb: SupabaseClient, bookAbbrev: string, chapter: number, verse: number): Promise<VerseKnowledgePoint[]> {
+  const { data, error } = await sb.rpc("get_verse_knowledge_points", { p_book: bookAbbrev, p_chapter: chapter, p_verse: verse });
+  if (error) { console.error("[bible] getVerseKnowledgePoints", error); return []; }
+  return (data ?? []) as VerseKnowledgePoint[];
+}
+export async function linkKnowledgePointToVerse(sb: SupabaseClient, input: {
+  book_abbrev: string; chapter: number; verse_start: number; verse_end: number; knowledge_point_id: string; created_by?: string;
+}): Promise<void> {
+  const { error } = await sb.from("bible_verse_knowledge_points").insert(input);
+  if (error) throw error;
+}
+export async function unlinkKnowledgePointFromVerse(sb: SupabaseClient, id: string): Promise<void> {
+  await sb.from("bible_verse_knowledge_points").delete().eq("id", id);
+}
+
+export interface BiblePlace {
+  id: string; title: string; subtitle: string | null; description: string | null;
+  latitude: number; longitude: number; bible_refs: string | null;
+}
+export async function getBiblePlacesWithCoords(sb: SupabaseClient): Promise<BiblePlace[]> {
+  const { data, error } = await sb.rpc("get_bible_places_with_coords");
+  if (error) { console.error("[bible] getBiblePlacesWithCoords", error); return []; }
+  return (data ?? []) as BiblePlace[];
+}
