@@ -108,3 +108,30 @@ export async function setTerminology(sb: SupabaseClient, input: KidsTerminology)
   const { error } = await sb.from("kids_terminology").upsert(input, { onConflict: "church_id,concept_key" });
   if (error) throw error;
 }
+
+// ---------- Superfície Família — autocadastro (membro ou visitante logado) ----------
+export interface SelfRegisterDependentInput {
+  church_id: string; full_name: string; preferred_name?: string; birth_date?: string;
+  health_notes?: string; special_needs?: string; relationship?: GuardianRelationship;
+}
+export async function selfRegisterDependent(sb: SupabaseClient, input: SelfRegisterDependentInput): Promise<string> {
+  const { data, error } = await sb.rpc("kids_self_register_dependent", {
+    p_church_id: input.church_id, p_full_name: input.full_name, p_preferred_name: input.preferred_name ?? null,
+    p_birth_date: input.birth_date ?? null, p_health_notes: input.health_notes ?? null,
+    p_special_needs: input.special_needs ?? null, p_relationship: input.relationship ?? "outro",
+  });
+  if (error) throw error;
+  return data as string;
+}
+export async function selfAuthorizePerson(sb: SupabaseClient, input: {
+  dependent_id: string; full_name: string; phone?: string; document_number?: string;
+  relationship_label?: string; scope?: AuthorizationScope;
+}): Promise<string> {
+  const { data, error } = await sb.rpc("kids_self_authorize_person", {
+    p_dependent_id: input.dependent_id, p_full_name: input.full_name, p_phone: input.phone ?? null,
+    p_document_number: input.document_number ?? null, p_relationship_label: input.relationship_label ?? null,
+    p_scope: input.scope ?? "permanent",
+  });
+  if (error) throw error;
+  return data as string;
+}
