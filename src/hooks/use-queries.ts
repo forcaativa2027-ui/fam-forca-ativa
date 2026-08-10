@@ -897,6 +897,23 @@ export const useBibleRecentReads = (profileId: string | null) =>
   useQuery({ queryKey: ["bible-recent-reads", profileId], queryFn: () => Bible.listRecentReads(supabase, profileId as string), enabled: !!profileId });
 export const useAllBibleAnnotations = (profileId: string | null) =>
   useQuery({ queryKey: ["bible-annotations-all", profileId], queryFn: () => Bible.listAllAnnotations(supabase, profileId as string), enabled: !!profileId });
+
+// ── KIDS — Fase 1, Rodada 1: Identidade ──────────────────────────
+import * as Kids from "@/services/kidsIdentity";
+export const useKidsGroups = (churchId: string | null) =>
+  useQuery({ queryKey: ["kids-groups", churchId], queryFn: () => Kids.listGroups(supabase, churchId as string), enabled: !!churchId });
+export const useKidsDependents = (churchId: string | null) =>
+  useQuery({ queryKey: ["kids-dependents", churchId], queryFn: () => Kids.listDependents(supabase, churchId as string), enabled: !!churchId });
+export const useMyKidsDependents = (profileId: string | null) =>
+  useQuery({ queryKey: ["my-kids-dependents", profileId], queryFn: () => Kids.listMyDependents(supabase, profileId as string), enabled: !!profileId });
+export const useKidsDependent = (id: string | null) =>
+  useQuery({ queryKey: ["kids-dependent", id], queryFn: () => Kids.getDependent(supabase, id as string), enabled: !!id });
+export const useKidsGuardians = (dependentId: string | null) =>
+  useQuery({ queryKey: ["kids-guardians", dependentId], queryFn: () => Kids.listGuardians(supabase, dependentId as string), enabled: !!dependentId });
+export const useKidsAuthorizedPersons = (dependentId: string | null) =>
+  useQuery({ queryKey: ["kids-authorized-persons", dependentId], queryFn: () => Kids.listAuthorizedPersons(supabase, dependentId as string), enabled: !!dependentId });
+export const useKidsTerminology = (churchId: string | null) =>
+  useQuery({ queryKey: ["kids-terminology", churchId], queryFn: () => Kids.getTerminology(supabase, churchId as string), enabled: !!churchId });
 export const useBibleSearch = (query: string, version = "acf", limit = 50) =>
   useQuery({ queryKey: ["bible-search", query, version, limit], queryFn: () => Bible.searchVerses(supabase, query, version, limit), enabled: query.trim().length >= 2 });
 export const useLexiconSearch = (query: string) =>
