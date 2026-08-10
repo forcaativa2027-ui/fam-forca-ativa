@@ -641,7 +641,7 @@ export interface ControlTowerSummary {
 }
 
 // C19 — Governança por Delegação
-export type DelegationModule = "intelligence"|"reports"|"control_tower"|"finance"|"patrimony"|"audit"|"administrativo"|"comunicacao"|"documentacao"|"supervisao"|"usuarios";
+export type DelegationModule = "intelligence"|"reports"|"control_tower"|"finance"|"patrimony"|"audit"|"administrativo"|"comunicacao"|"documentacao"|"supervisao"|"usuarios"|"kids";
 
 export interface Permission {
   key: string; module: DelegationModule; label: string; description: string | null; is_write: boolean;
@@ -1620,3 +1620,35 @@ export type AccessibilityAnimations = "normal" | "reduzida" | "desativada";
 export type AccessibilityButtonSize = "normal" | "grande" | "extra_grande";
 export type AccessibilityIconStyle = "coloridos" | "monocromaticos" | "minimalistas";
 export type AccessibilityProfile = "padrao" | "idoso" | "baixa_visao" | "smartphone" | "tablet" | "desktop" | "simplificado";
+
+// ============================================================
+// KIDS — Sistema de Custódia, Cuidado, Desenvolvimento e
+// Transferência Segura de Crianças. Fase 1, Rodada 1: Identidade.
+// ============================================================
+export interface KidsGroup {
+  id: string; church_id: string; name: string; min_age: number | null; max_age: number | null;
+  description: string | null; is_active: boolean; created_at: string;
+}
+export interface KidsDependent {
+  id: string; church_id: string; full_name: string; preferred_name: string | null;
+  birth_date: string | null; photo_url: string | null; default_group_id: string | null;
+  health_notes: string | null; special_needs: string | null;
+  is_active: boolean; created_by: string | null; created_at: string; updated_at: string;
+}
+export type GuardianRelationship = "mae" | "pai" | "avo" | "ava" | "tio" | "tia" | "tutor_legal" | "outro";
+export interface KidsGuardian {
+  id: string; dependent_id: string; profile_id: string; relationship: GuardianRelationship;
+  is_primary: boolean; created_at: string;
+}
+export type AuthorizationScope = "permanent" | "temporary" | "single_use";
+export type AuthorizationStatus = "draft" | "pending" | "active" | "revoked" | "expired" | "used" | "cancelled";
+export interface KidsAuthorizedPerson {
+  id: string; dependent_id: string; authorized_by: string; authorized_profile_id: string | null;
+  full_name: string; document_number: string | null; phone: string | null; photo_url: string | null;
+  relationship_label: string | null; scope: AuthorizationScope;
+  valid_from: string; valid_until: string | null; status: AuthorizationStatus;
+  revoked_by: string | null; revoked_at: string | null; created_at: string;
+}
+export interface KidsTerminology {
+  church_id: string; concept_key: string; singular: string; plural: string | null; short_label: string | null;
+}
