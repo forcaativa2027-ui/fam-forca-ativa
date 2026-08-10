@@ -54,3 +54,23 @@ export async function getMyDependentsStatus(sb: SupabaseClient, profileId: strin
   if (error) { console.error("[kids] getMyDependentsStatus", error); return []; }
   return (data ?? []) as KidsDependentStatus[];
 }
+
+// ---------- Handoff (retirada, com conferência humana obrigatória) ----------
+export interface HandoffInput {
+  custody_record_id: string;
+  pickup_authorized_person_id?: string;  // ou isso...
+  pickup_guardian_id?: string;           // ...ou isso (nunca os dois)
+  claim_code?: string;
+  notes?: string;
+}
+export async function handoff(sb: SupabaseClient, input: HandoffInput): Promise<string> {
+  const { data, error } = await sb.rpc("kids_handoff", {
+    p_custody_record_id: input.custody_record_id,
+    p_pickup_authorized_person_id: input.pickup_authorized_person_id ?? null,
+    p_pickup_guardian_id: input.pickup_guardian_id ?? null,
+    p_claim_code: input.claim_code ?? null,
+    p_notes: input.notes ?? null,
+  });
+  if (error) throw error;
+  return data as string;
+}
