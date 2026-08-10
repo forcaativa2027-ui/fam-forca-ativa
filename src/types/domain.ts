@@ -1663,10 +1663,20 @@ export interface KidsCustodyRecord {
   id: string; dependent_id: string; session_id: string; status: CustodyRecordStatus;
   checked_in_at: string | null; checked_in_by: string | null; delivered_by: string | null; entry_notes: string | null;
   pickup_requested_at: string | null; pickup_requested_by: string | null; released_at: string | null;
-  created_at: string;
+  claim_code: string | null; created_at: string;
 }
 export interface KidsDependentStatus {
   dependent_id: string; full_name: string; preferred_name: string | null; photo_url: string | null;
   custody_record_id: string | null; custody_status: CustodyRecordStatus | null;
   session_name: string | null; checked_in_at: string | null; group_name: string | null;
+}
+export type HandoffPickupType = "guardian" | "authorized_person";
+export interface KidsHandoff {
+  id: string; custody_record_id: string; pickup_type: HandoffPickupType;
+  pickup_guardian_id: string | null; pickup_authorized_person_id: string | null;
+  operator_id: string; claim_code_matched: boolean; notes: string | null; confirmed_at: string;
+}
+export interface KidsAuditEvent {
+  id: string; church_id: string; event_type: string; dependent_id: string | null;
+  actor_id: string | null; details: Record<string, unknown> | null; created_at: string;
 }
