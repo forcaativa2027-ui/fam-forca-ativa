@@ -1,15 +1,16 @@
 "use client";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Baby, Plus, Shield, UserPlus, X } from "lucide-react";
+import { Baby, Check, Plus, Shield, UserPlus, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/shared/DatePicker";
 import { supabase } from "@/lib/supabase/client";
-import { useMyProfile, useMyKidsDependents, useKidsAuthorizedPersons } from "@/hooks/use-queries";
+import { useMyProfile, useMyKidsDependents, useKidsAuthorizedPersons, useMyDependentsStatus } from "@/hooks/use-queries";
 import * as Kids from "@/services/kidsIdentity";
+import * as KidsCustody from "@/services/kidsCustody";
 import type { KidsDependent, GuardianRelationship, AuthorizationScope } from "@/types/domain";
 
 const RELATIONSHIP_LABELS: Record<GuardianRelationship, string> = {
@@ -25,10 +26,11 @@ const RELATIONSHIP_LABELS: Record<GuardianRelationship, string> = {
 export function KidsFamilySurface({ churchId }: { churchId: string }) {
   const { data: me } = useMyProfile();
   const { data: dependents = [] } = useMyKidsDependents(me?.id ?? null);
+  const { data: statusList = [] } = useMyDependentsStatus(me?.id ?? null);
   const [showForm, setShowForm] = useState(false);
   const [selected, setSelected] = useState<KidsDependent | null>(null);
 
-  if (selected) return <ChildDetail dependent={selected} onBack={() => setSelected(null)} />;
+  if (selected) return <ChildDetail dependent={selected} status={statusList.find((s) => s.dependent_id === selected.id) ?? null} onBack={() => setSelected(null)} />;
 
   return (
     <div className="mx-auto max-w-lg space-y-4 p-4">
@@ -38,23 +40,36 @@ export function KidsFamilySurface({ churchId }: { churchId: string }) {
       </div>
 
       <div className="space-y-2">
-        {dependents.map((d) => (
-          <Card key={d.id} className="border-l-4 border-l-gold">
-            <CardContent className="flex items-center justify-between pt-4">
-              <button onClick={() => setSelected(d)} className="flex flex-1 items-center gap-3 text-left">
-                {d.photo_url ? (
-                  <img src={d.photo_url} alt="" className="h-11 w-11 rounded-full object-cover" />
-                ) : (
-                  <div className="grid h-11 w-11 place-items-center rounded-full bg-navy/10 font-bold text-navy">{d.full_name[0]}</div>
-                )}
-                <div>
-                  <p className="font-semibold text-navy">{d.preferred_name || d.full_name}</p>
-                  <p className="text-xs text-muted-foreground">Sem sessão ativa no momento</p>
-                </div>
-              </button>
-            </CardContent>
-          </Card>
-        ))}
+        {dependents.map((d) => {
+          const status = statusList.find((s) => s.dependent_id === d.id);
+          const inCustody = status?.custody_status === "in_custody";
+          const pickupRequested = status?.custody_status === "pickup_requested";
+          return (
+            <Card key={d.id} className="border-l-4 border-l-gold">
+              <CardContent className="flex items-center justify-between pt-4">
+                <button onClick={() => setSelected(d)} className="flex flex-1 items-center gap-3 text-left">
+                  {d.photo_url ? (
+                    <img src={d.photo_url} alt="" className="h-11 w-11 rounded-full object-cover" />
+                  ) : (
+                    <div className="grid h-11 w-11 place-items-center rounded-full bg-navy/10 font-bold text-navy">{d.full_name[0]}</div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-navy">{d.preferred_name || d.full_name}</p>
+                    {inCustody && (
+                      <p className="flex items-center gap-1 text-xs font-semibold text-green-700">
+                        <Check className="h-3 w-3" />Está conosco{status?.group_name ? ` · ${status.group_name}` : ""}
+                        {status?.checked_in_at && ` · Entrada: ${new Date(status.checked_in_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`}
+                      </p>
+                    )}
+                    {pickupRequested && <p className="text-xs font-semibold text-amber-700">Retirada solicitada — aguardando</p>}
+                    {!inCustody && !pickupRequested && <p className="text-xs text-muted-foreground">Sem sessão ativa no momento</p>}
+                  </div>
+                </button>
+                {inCustody && <RequestPickupButton custodyRecordId={status!.custody_record_id!} profileId={me?.id ?? null} />}
+              </CardContent>
+            </Card>
+          );
+        })}
         {dependents.length === 0 && (
           <Card>
             <CardContent className="py-8 text-center">
@@ -72,6 +87,20 @@ export function KidsFamilySurface({ churchId }: { churchId: string }) {
       )}
     </div>
   );
+}
+
+function RequestPickupButton({ custodyRecordId, profileId }: { custodyRecordId: string; profileId: string | null }) {
+  const qc = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  async function handle(e: React.MouseEvent) {
+    e.stopPropagation();
+    setBusy(true);
+    try {
+      await KidsCustody.requestPickup(supabase, custodyRecordId);
+      qc.invalidateQueries({ queryKey: ["my-dependents-status", profileId] });
+    } finally { setBusy(false); }
+  }
+  return <Button size="sm" onClick={handle} disabled={busy} className="shrink-0">{busy ? "…" : "Buscar"}</Button>;
 }
 
 function AddChildForm({ churchId, onClose }: { churchId: string; onClose: () => void }) {
@@ -121,7 +150,7 @@ function AddChildForm({ churchId, onClose }: { churchId: string; onClose: () => 
   );
 }
 
-function ChildDetail({ dependent: d, onBack }: { dependent: KidsDependent; onBack: () => void }) {
+function ChildDetail({ dependent: d, status, onBack }: { dependent: KidsDependent; status: import("@/types/domain").KidsDependentStatus | null; onBack: () => void }) {
   const qc = useQueryClient();
   const { data: persons = [] } = useKidsAuthorizedPersons(d.id);
   const [showForm, setShowForm] = useState(false);
@@ -141,6 +170,8 @@ function ChildDetail({ dependent: d, onBack }: { dependent: KidsDependent; onBac
     } finally { setBusy(false); }
   }
 
+  const inCustody = status?.custody_status === "in_custody";
+
   return (
     <div className="mx-auto max-w-lg space-y-4 p-4">
       <button onClick={onBack} className="text-sm text-muted-foreground hover:text-navy">← Voltar</button>
@@ -151,7 +182,11 @@ function ChildDetail({ dependent: d, onBack }: { dependent: KidsDependent; onBac
           )}
           <div>
             <h2 className="font-display text-lg text-navy">{d.full_name}</h2>
-            <p className="text-sm text-muted-foreground">Sem sessão ativa no momento</p>
+            {inCustody ? (
+              <p className="flex items-center gap-1 text-sm font-semibold text-green-700"><Check className="h-3.5 w-3.5" />Está conosco{status?.group_name ? ` · ${status.group_name}` : ""}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">Sem sessão ativa no momento</p>
+            )}
           </div>
         </CardContent>
       </Card>
