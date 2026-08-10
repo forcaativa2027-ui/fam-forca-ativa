@@ -41,6 +41,7 @@ import { FormacaoAdmin } from "../FormacaoAdmin";
 import { KnowledgePointsAdmin } from "../KnowledgePointsAdmin";
 import { KnowledgeLibraryAdmin } from "../KnowledgeLibraryAdmin";
 import { BibleCrossReferencesAdmin } from "../BibleCrossReferencesAdmin";
+import { KidsAdmin } from "../KidsAdmin";
 import { PainelUsuariosAdmin } from "../PainelUsuariosAdmin";
 import { MinisterialReportsAdmin } from "../MinisterialReportsAdmin";
 import { GenealogyAdmin } from "../GenealogyAdmin";
@@ -91,6 +92,7 @@ export function TabContent({ activeTab, onNavigate, prefillEventId }: { activeTa
     case "conhecimento-biblico": return <KnowledgePointsAdmin />;
     case "biblioteca-conhecimento": return <KnowledgeLibraryAdmin />;
     case "biblia-referencias": return <BibleCrossReferencesAdmin />;
+    case "kids-admin":          return <KidsAdmin />;
     case "notificacoes":         return <NotificacoesAdmin />;
     case "agenda":               return <AgendaAdmin onNavigate={onNavigate} />;
     case "pendencias":          return <PendenciasAdmin onNavigate={onNavigate} />;
