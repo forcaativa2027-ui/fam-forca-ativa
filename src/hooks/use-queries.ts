@@ -865,6 +865,21 @@ export const useLessonKnowledgePoints = (lessonId: string | null) =>
 export const useMyRecentKnowledgeViews = (profileId: string | null) =>
   useQuery({ queryKey: ["my-recent-kp-views", profileId], queryFn: () => Kp.listMyRecentViews(supabase, profileId as string), enabled: !!profileId });
 
+// ── ACA-UX-001 Fase D — Continue sua Jornada (progresso real) ────
+export const useMyContinueLearning = (profileId: string | null) =>
+  useQuery({
+    queryKey: ["my-continue-learning", profileId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_my_continue_learning", { p_profile_id: profileId });
+      if (error) { console.error("[academy] continue-learning", error); return null; }
+      return (data?.[0] ?? null) as {
+        course_id: string; course_name: string; module_name: string; lesson_title: string;
+        lesson_id: string; progress_pct: number; last_touched_at: string;
+      } | null;
+    },
+    enabled: !!profileId,
+  });
+
 // ── CEC Academy Blocos 2/3 — Conhecimento Integrado / Biblioteca ─
 import * as Kl from "@/services/knowledgeLibrary";
 export const useKnowledgeObjects = (filters?: { type?: import("@/types/domain").KnowledgeObjectType; status?: import("@/types/domain").KnowledgeObjectStatus }) =>
