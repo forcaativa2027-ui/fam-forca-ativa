@@ -62,6 +62,7 @@ export interface HandoffInput {
   pickup_guardian_id?: string;           // ...ou isso (nunca os dois)
   claim_code?: string;
   notes?: string;
+  credential_id?: string;
 }
 export async function handoff(sb: SupabaseClient, input: HandoffInput): Promise<string> {
   const { data, error } = await sb.rpc("kids_handoff", {
@@ -70,7 +71,31 @@ export async function handoff(sb: SupabaseClient, input: HandoffInput): Promise<
     p_pickup_guardian_id: input.pickup_guardian_id ?? null,
     p_claim_code: input.claim_code ?? null,
     p_notes: input.notes ?? null,
+    p_credential_id: input.credential_id ?? null,
   });
   if (error) throw error;
   return data as string;
+}
+
+// ---------- Credenciais Avançadas (token real + PIN + credencial familiar) ----------
+export async function issueCredential(sb: SupabaseClient, custodyRecordIds: string[], pin?: string, expiresAt?: string, authorizedPersonId?: string): Promise<{ credentialId: string; rawToken: string }> {
+  const { data, error } = await sb.rpc("kids_issue_credential", {
+    p_custody_record_ids: custodyRecordIds, p_pin: pin ?? null, p_expires_at: expiresAt ?? null, p_authorized_person_id: authorizedPersonId ?? null,
+  });
+  if (error) throw error;
+  const row = (data as { credential_id: string; raw_token: string }[])[0];
+  return { credentialId: row.credential_id, rawToken: row.raw_token };
+}
+export async function validateCredential(sb: SupabaseClient, token: string, pin?: string): Promise<import("@/types/domain").CredentialValidationRow[]> {
+  const { data, error } = await sb.rpc("kids_validate_credential", { p_token: token, p_pin: pin ?? null });
+  if (error) throw error;
+  return (data ?? []) as import("@/types/domain").CredentialValidationRow[];
+}
+export async function revokeCredential(sb: SupabaseClient, credentialId: string, reason?: string): Promise<void> {
+  const { error } = await sb.rpc("kids_revoke_credential", { p_credential_id: credentialId, p_reason: reason ?? null });
+  if (error) throw error;
+}
+/** URL de imagem QR (serviço público, sem dependência nova no projeto) */
+export function qrImageUrl(data: string, size = 240): string {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}`;
 }
