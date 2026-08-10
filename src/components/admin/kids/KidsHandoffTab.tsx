@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, Check, LogOut, ShieldCheck, User } from "lucide-react";
+import { AlertCircle, Check, LogOut, QrCode, ShieldCheck, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase/client";
 import { useKidsOpenSessions, useKidsSessionCustody, useKidsGuardians, useKidsAuthorizedPersons } from "@/hooks/use-queries";
 import * as KidsCustody from "@/services/kidsCustody";
+import type { CredentialValidationRow } from "@/types/domain";
 
 interface CustodyRow {
   id: string; dependent_id: string; status: string; claim_code: string | null;
@@ -25,6 +26,7 @@ export function KidsHandoffTab({ churchId }: { churchId: string }) {
   const [sessionId, setSessionId] = useState("");
   const { data: custodyRows = [] } = useKidsSessionCustody(sessionId || null);
   const [selected, setSelected] = useState<CustodyRow | null>(null);
+  const [validatedCredentialId, setValidatedCredentialId] = useState<string | undefined>(undefined);
 
   const pending = (custodyRows as unknown as CustodyRow[]).filter((r) => r.status === "in_custody" || r.status === "pickup_requested");
 
@@ -47,12 +49,15 @@ export function KidsHandoffTab({ churchId }: { churchId: string }) {
   }
 
   if (selected) {
-    return <HandoffConfirm row={selected} sessionId={sessionId} onDone={() => setSelected(null)} onCancel={() => setSelected(null)} />;
+    return <HandoffConfirm row={selected} sessionId={sessionId} credentialId={validatedCredentialId} onDone={() => { setSelected(null); setValidatedCredentialId(undefined); }} onCancel={() => { setSelected(null); setValidatedCredentialId(undefined); }} />;
   }
 
   return (
     <div className="space-y-3">
       <button onClick={() => setSessionId("")} className="text-sm text-muted-foreground hover:text-navy">← Trocar sessão</button>
+
+      <CredentialValidator pending={pending} onMatch={(row, credId) => { setSelected(row); setValidatedCredentialId(credId); }} />
+
       <Card>
         <CardContent className="space-y-2 pt-4">
           <p className="text-sm font-bold text-navy">Crianças em custódia</p>
@@ -79,7 +84,68 @@ export function KidsHandoffTab({ churchId }: { churchId: string }) {
   );
 }
 
-function HandoffConfirm({ row, sessionId, onDone, onCancel }: { row: CustodyRow; sessionId: string; onDone: () => void; onCancel: () => void }) {
+function CredentialValidator({ pending, onMatch }: { pending: CustodyRow[]; onMatch: (row: CustodyRow, credentialId: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [token, setToken] = useState("");
+  const [pin, setPin] = useState("");
+  const [rows, setRows] = useState<CredentialValidationRow[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function validate() {
+    if (!token.trim()) return;
+    setBusy(true); setErr(""); setRows([]);
+    try {
+      const result = await KidsCustody.validateCredential(supabase, token.trim(), pin || undefined);
+      if (result.length === 0 || result[0].status === "not_found") { setErr("Credencial não encontrada."); return; }
+      if (result[0].status !== "active" && result[0].status !== "issued") { setErr(`Credencial ${result[0].status === "expired" ? "expirada" : result[0].status === "revoked" ? "revogada" : result[0].status}.`); return; }
+      if (result[0].pin_required && !result[0].pin_ok) { setErr(pin ? "PIN incorreto." : "Essa credencial exige PIN."); return; }
+      setRows(result.filter((r) => !r.scope_consumed));
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "Erro ao validar");
+    } finally { setBusy(false); }
+  }
+
+  function pick(custodyRecordId: string, credentialId: string) {
+    const row = pending.find((p) => p.id === custodyRecordId);
+    if (row) onMatch(row, credentialId);
+  }
+
+  if (!open) {
+    return (
+      <Button onClick={() => setOpen(true)} variant="outline" className="w-full gap-1.5"><QrCode className="h-4 w-4" />Validar credencial (QR/token)</Button>
+    );
+  }
+
+  return (
+    <Card className="border-2 border-dashed border-gold/40">
+      <CardContent className="space-y-2 pt-4">
+        <p className="text-sm font-bold text-navy">Validar credencial</p>
+        <Input value={token} onChange={(e) => setToken(e.target.value)} placeholder="Cole ou digite o token (K6_...)" className="text-xs" />
+        <Input value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} placeholder="PIN (se a credencial exigir)" className="text-xs" />
+        {err && <p className="text-xs text-destructive">{err}</p>}
+        <div className="flex gap-1.5">
+          <Button size="sm" onClick={validate} disabled={busy || !token.trim()}>{busy ? "Validando…" : "Validar"}</Button>
+          <Button size="sm" variant="ghost" onClick={() => { setOpen(false); setRows([]); setErr(""); }}>Fechar</Button>
+        </div>
+
+        {rows.length > 0 && (
+          <div className="space-y-1.5 border-t pt-2">
+            <p className="text-xs font-bold uppercase text-muted-foreground">Selecione quem está sendo retirado</p>
+            {rows.map((r) => (
+              <button key={r.custody_record_id} onClick={() => pick(r.custody_record_id!, r.credential_id!)}
+                className="flex w-full items-center gap-2 rounded-md border bg-card p-2 text-left text-sm hover:border-gold/50">
+                <ShieldCheck className="h-4 w-4 text-green-600" />{r.dependent_name}
+              </button>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function HandoffConfirm({ row, sessionId, credentialId, onDone, onCancel }: { row: CustodyRow; sessionId: string; credentialId?: string; onDone: () => void; onCancel: () => void }) {
   const qc = useQueryClient();
   const { data: guardians = [] } = useKidsGuardians(row.dependent_id);
   const { data: authorizedPersons = [] } = useKidsAuthorizedPersons(row.dependent_id);
@@ -101,6 +167,7 @@ function HandoffConfirm({ row, sessionId, onDone, onCancel }: { row: CustodyRow;
         pickup_guardian_id: pickupMode === "guardian" ? pickupId : undefined,
         pickup_authorized_person_id: pickupMode === "authorized_person" ? pickupId : undefined,
         claim_code: claimCode || undefined, notes: notes || undefined,
+        credential_id: credentialId,
       });
       qc.invalidateQueries({ queryKey: ["kids-session-custody", sessionId] });
       onDone();
@@ -119,6 +186,7 @@ function HandoffConfirm({ row, sessionId, onDone, onCancel }: { row: CustodyRow;
           <div>
             <p className="font-display text-lg text-navy">{row.kids_dependents?.full_name}</p>
             <p className="flex items-center gap-1 text-xs text-muted-foreground"><ShieldCheck className="h-3.5 w-3.5" />Confirme quem está retirando</p>
+            {credentialId && <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-green-700"><Check className="h-3 w-3" />Credencial validada</p>}
           </div>
         </div>
 
