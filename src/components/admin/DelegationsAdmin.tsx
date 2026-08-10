@@ -39,6 +39,7 @@ const MODULE_LABELS: Record<DelegationModule, string> = {
   documentacao:   "🗂️ Documentação",
   supervisao:     "🧭 Supervisão Ministerial",
   usuarios:       "👤 Administração de Usuários",
+  kids:           "🧸 Ministério de Crianças",
 };
 const SCOPE_LABELS: Record<string, string> = {
   lg: "Life Group", setor: "Setor", area: "Área",

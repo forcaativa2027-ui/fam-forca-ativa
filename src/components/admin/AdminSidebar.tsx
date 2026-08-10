@@ -10,7 +10,7 @@ import {
   Download, Search, Bell, Video, Compass,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins, QrCode, Library, FolderTree,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins, QrCode, Library, FolderTree, Baby,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ export type TabKey =
   | "control-tower" | "intelligence" | "ministerial-reports" | "metas"
   | "members" | "leadership" | "score" | "birthdays" | "discipleship"
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
-  | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao" | "conhecimento-biblico" | "biblioteca-conhecimento" | "biblia-referencias"
+  | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao" | "conhecimento-biblico" | "biblioteca-conhecimento" | "biblia-referencias" | "kids-admin"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
   | "news" | "banners" | "sermons" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
@@ -93,6 +93,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "structure",     label: "Estrutura Organizacional", icon: <GitBranch size={15} /> },
         { key: "genealogy",     label: "Genealogia",     icon: <Network size={15} /> },
         { key: "ministerios",   label: "Ministérios",    icon: <Mic2 size={15} /> },
+        { key: "kids-admin",    label: "Ministério de Crianças (KIDS)", icon: <Baby size={15} /> },
         { key: "life-groups",   label: "Life Groups",    icon: <Flame size={15} /> },
         { key: "evangelism-groups", label: "Grupos de Evangelismo", icon: <Megaphone size={15} /> },
         { key: "mda",           label: "Estrutura MDA",  icon: <Network size={15} /> },
