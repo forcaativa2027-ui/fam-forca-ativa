@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { GraduationCap, Map, ChevronDown, ChevronRight, ArrowLeft, CheckCircle2, Circle, PlayCircle, BookOpen as BibleIcon, UserCheck, Award, Compass, Settings2 } from "lucide-react";
+import { GraduationCap, Map, ChevronDown, ChevronRight, ArrowLeft, CheckCircle2, Circle, PlayCircle, BookOpen as BibleIcon, BookOpenText, UserCheck, Award, Compass, Settings2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
@@ -17,6 +17,12 @@ import { AcademyOfflineIndicator, AcademyDownloadButton } from "./AcademyOffline
 import { CentralDeEstudos } from "./CentralDeEstudos";
 import { BibleReader } from "./BibleReader";
 import { parseBibleReference } from "@/services/bibleReader";
+import { useMyContinueLearning } from "@/hooks/use-queries";
+import { AcademyHeader } from "./academy/Headers";
+import { ContinueCard, StartCard } from "./academy/ContinueCard";
+import { FeatureCard, type FeatureCardViewModel } from "./academy/FeatureCard";
+import { SchoolCard } from "./academy/SchoolCard";
+import { SectionHeader, StatusBadge } from "./academy/SectionHeader";
 import type { Member, Course, CourseContentItem } from "@/types/domain";
 
 /**
@@ -32,6 +38,7 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
   const offline = useOffline(me?.id ?? null);
   const { data: tutoring = [] } = useMyTutoringCourses(me?.id ?? null);
   const { data: certificates = [] } = useMyCertificates(me?.id ?? null);
+  const { data: continueLearning } = useMyContinueLearning(me?.id ?? null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [openCourse, setOpenCourse] = useState<Course | null>(null);
   const [showExplorer, setShowExplorer] = useState(false);
@@ -50,98 +57,118 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
   if (showExplorer) return <KnowledgeExplorer onBack={() => setShowExplorer(false)} />;
   if (showBible) return <BibleReader onBack={() => setShowBible(false)} />;
 
+  const exploreItems: { vm: FeatureCardViewModel; onClick: () => void }[] = [
+    { vm: { id: "explorer", title: "Exploração Bíblica", description: "Lugares, personagens, linha do tempo, arqueologia…", icon: Compass, tone: "gold" }, onClick: () => setShowExplorer(true) },
+    { vm: { id: "bible", title: "Bíblia Integrada", description: "Leia, pesquise e aprofunde o estudo, com grifos e anotações.", icon: BookOpenText, tone: "navy" }, onClick: () => setShowBible(true) },
+  ];
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <AcademyOfflineIndicator offline={offline} />
       <AcademyModeBanner profileId={me?.id ?? null} onOpenSelector={() => setShowModeSelector(true)} />
-      <button onClick={() => setShowModeSelector(true)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-navy">
-        <Settings2 className="h-3.5 w-3.5" />Ajustar modo educacional (Individual, Família, Life Group…)
-      </button>
       {showModeSelector && <AcademyModeSelector profileId={me?.id ?? null} onClose={() => setShowModeSelector(false)} />}
 
+      <AcademyHeader />
+
+      <div>
+        <SectionHeader
+          title="Continue sua jornada"
+          action={<button onClick={() => setShowModeSelector(true)} className="flex items-center gap-1 text-[11px] font-semibold text-muted-foreground hover:text-navy"><Settings2 className="h-3 w-3" />Modo educacional</button>}
+        />
+        {continueLearning ? (
+          <ContinueCard
+            vm={{
+              title: continueLearning.course_name,
+              subtitle: `${continueLearning.module_name} • ${continueLearning.lesson_title}`,
+              progress: continueLearning.progress_pct,
+              actionLabel: "Continuar estudando",
+            }}
+            onClick={() => {
+              const course = active.find((c) => c.id === continueLearning.course_id);
+              if (course) setOpenCourse(course);
+            }}
+          />
+        ) : (
+          <StartCard title="Você ainda não começou nenhum curso" actionLabel="Começar agora" onClick={() => document.getElementById("academy-schools")?.scrollIntoView({ behavior: "smooth" })} />
+        )}
+      </div>
+
+      <div>
+        <SectionHeader title="Explorar" />
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          {exploreItems.map((item) => <FeatureCard key={item.vm.id} vm={item.vm} onClick={item.onClick} />)}
+        </div>
+      </div>
+
       {tutoring.length > 0 && (
-        <Card className="border-2 border-gold/40">
-          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><UserCheck className="h-4 w-4 text-gold" />Minhas Tutorias</CardTitle></CardHeader>
-          <CardContent className="space-y-1.5 pt-0">
-            {tutoring.map((t) => (
-              <div key={t.course_id} className="flex items-center justify-between rounded-md border p-2 text-sm">
-                <span className="text-navy">{t.course_name}</span>
-                <span className="text-xs text-muted-foreground">{t.alunos_concluidos}/{t.total_alunos} concluíram</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <div>
+          <SectionHeader title="Minhas Tutorias" />
+          <Card>
+            <CardContent className="space-y-1.5 pt-4">
+              {tutoring.map((t) => (
+                <div key={t.course_id} className="flex items-center justify-between rounded-md border p-2 text-sm">
+                  <span className="text-navy">{t.course_name}</span>
+                  <StatusBadge tone="gold">{t.alunos_concluidos}/{t.total_alunos} concluíram</StatusBadge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {certificates.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><Award className="h-4 w-4 text-gold" />Meus Certificados</CardTitle></CardHeader>
-          <CardContent className="space-y-1.5 pt-0">
-            {certificates.map((c) => {
-              const courseName = courses.find((co) => co.id === c.course_id)?.name ?? "Curso";
-              return (
-                <div key={c.id} className="flex items-center justify-between rounded-md border bg-gold/5 p-2 text-sm">
-                  <span className="text-navy">{courseName}</span>
-                  <span className="font-mono text-[10px] text-muted-foreground">{c.certificate_code}</span>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
+        <div>
+          <SectionHeader title="Meus Certificados" />
+          <Card>
+            <CardContent className="space-y-1.5 pt-4">
+              {certificates.map((c) => {
+                const courseName = courses.find((co) => co.id === c.course_id)?.name ?? "Curso";
+                return (
+                  <div key={c.id} className="flex items-center justify-between rounded-md border bg-gold/5 p-2 text-sm">
+                    <span className="flex items-center gap-1.5 text-navy"><Award className="h-3.5 w-3.5 text-gold" />{courseName}</span>
+                    <span className="font-mono text-[10px] text-muted-foreground">{c.certificate_code}</span>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </div>
       )}
 
-      <button onClick={() => setShowExplorer(true)}
-        className="flex w-full items-center justify-between rounded-xl border-2 border-gold/40 bg-gold/5 p-3.5 text-left transition hover:border-gold/60">
-        <span className="flex items-center gap-2 text-sm font-bold text-navy"><Compass className="h-5 w-5 text-gold" />Explorar o Conhecimento Bíblico</span>
-        <span className="text-xs text-muted-foreground">Lugares, personagens, linha do tempo, arqueologia…</span>
-      </button>
+      <div id="academy-schools">
+        <SectionHeader title="Escolas e Trilhas" />
+        {groups.length === 0 && <p className="py-6 text-center text-sm italic text-muted-foreground">Nenhum curso disponível no momento.</p>}
+        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+          {groups.map((g) => (
+            <SchoolCard
+              key={g.key}
+              vm={{ id: g.key, title: g.label, icon: g.icon, courseCount: g.courses.length || undefined }}
+              onClick={() => setCollapsed((c) => ({ ...c, [g.key]: !c[g.key] }))}
+            />
+          ))}
+        </div>
 
-      <button onClick={() => setShowBible(true)}
-        className="flex w-full items-center justify-between rounded-xl border-2 border-navy/20 bg-navy/5 p-3.5 text-left transition hover:border-navy/40">
-        <span className="flex items-center gap-2 text-sm font-bold text-navy"><BibleIcon className="h-5 w-5 text-navy" />Bíblia Integrada</span>
-        <span className="text-xs text-muted-foreground">Leitura com grifos e anotações pessoais</span>
-      </button>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2"><GraduationCap className="h-5 w-5 text-gold" />CEC Academy</CardTitle>
-          <CardDescription>Trilhas, escolas e cursos disponíveis pra sua formação contínua.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {groups.length === 0 && <p className="py-6 text-center text-sm italic text-muted-foreground">Nenhum curso disponível no momento.</p>}
-          {groups.map((g) => {
-            const Icon = g.icon;
-            const isCollapsed = collapsed[g.key];
-            return (
-              <div key={g.key} className="rounded-xl border">
-                <button onClick={() => setCollapsed((c) => ({ ...c, [g.key]: !c[g.key] }))} className="flex w-full items-center justify-between p-3">
-                  <span className="flex items-center gap-2 font-display text-base text-navy">
-                    <Icon className="h-4 w-4 text-gold" />{g.label}
-                    <span className="rounded-full bg-navy/10 px-2 py-0.5 text-[11px] font-bold text-navy">{g.courses.length}</span>
-                  </span>
-                  {isCollapsed ? <ChevronRight className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                </button>
-                {!isCollapsed && (
-                  <div className="space-y-1.5 border-t p-3">
-                    {g.dbId && <EscolaTreeView escolaId={g.dbId} onOpenCourse={setOpenCourse} />}
-                    {g.courses.length > 0 && (
-                      <div className="space-y-1.5">
-                        {g.dbId && <p className="pt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Outros cursos</p>}
-                        {g.courses.map((c) => (
-                          <button key={c.id} onClick={() => setOpenCourse(c)} className="block w-full rounded-lg border p-2.5 text-left transition hover:border-gold/50 hover:shadow-sm">
-                            <p className="text-sm font-semibold text-navy">{c.name}</p>
-                            {c.description && <p className="text-xs text-muted-foreground">{c.description}</p>}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+        {groups.filter((g) => collapsed[g.key]).map((g) => (
+          <div key={g.key} className="mt-3 rounded-xl border p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="flex items-center gap-2 font-display text-base text-navy"><g.icon className="h-4 w-4 text-gold" />{g.label}</p>
+              <button onClick={() => setCollapsed((c) => ({ ...c, [g.key]: false }))} className="text-xs text-muted-foreground hover:text-navy">Fechar</button>
+            </div>
+            {g.dbId && <EscolaTreeView escolaId={g.dbId} onOpenCourse={setOpenCourse} />}
+            {g.courses.length > 0 && (
+              <div className="space-y-1.5">
+                {g.dbId && <p className="pt-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Outros cursos</p>}
+                {g.courses.map((c) => (
+                  <button key={c.id} onClick={() => setOpenCourse(c)} className="block w-full rounded-lg border p-2.5 text-left transition hover:border-gold/50 hover:shadow-sm">
+                    <p className="text-sm font-semibold text-navy">{c.name}</p>
+                    {c.description && <p className="text-xs text-muted-foreground">{c.description}</p>}
+                  </button>
+                ))}
               </div>
-            );
-          })}
-        </CardContent>
-      </Card>
+            )}
+          </div>
+        ))}
+      </div>
 
       <button onClick={onGoToJourney}
         className="flex w-full items-center justify-between rounded-xl border bg-card p-3 text-sm text-navy hover:bg-accent">
