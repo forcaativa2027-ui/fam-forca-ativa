@@ -914,6 +914,17 @@ export const useKidsAuthorizedPersons = (dependentId: string | null) =>
   useQuery({ queryKey: ["kids-authorized-persons", dependentId], queryFn: () => Kids.listAuthorizedPersons(supabase, dependentId as string), enabled: !!dependentId });
 export const useKidsTerminology = (churchId: string | null) =>
   useQuery({ queryKey: ["kids-terminology", churchId], queryFn: () => Kids.getTerminology(supabase, churchId as string), enabled: !!churchId });
+
+// ── KIDS — Fase 1, Rodada 2: Custódia e Check-in ─────────────────
+import * as KidsCustody from "@/services/kidsCustody";
+export const useKidsSessions = (churchId: string | null) =>
+  useQuery({ queryKey: ["kids-sessions", churchId], queryFn: () => KidsCustody.listSessions(supabase, churchId as string), enabled: !!churchId });
+export const useKidsOpenSessions = (churchId: string | null) =>
+  useQuery({ queryKey: ["kids-open-sessions", churchId], queryFn: () => KidsCustody.listOpenSessions(supabase, churchId as string), enabled: !!churchId, refetchInterval: 30000 });
+export const useKidsSessionCustody = (sessionId: string | null) =>
+  useQuery({ queryKey: ["kids-session-custody", sessionId], queryFn: () => KidsCustody.listSessionCustody(supabase, sessionId as string), enabled: !!sessionId, refetchInterval: 15000 });
+export const useMyDependentsStatus = (profileId: string | null) =>
+  useQuery({ queryKey: ["my-dependents-status", profileId], queryFn: () => KidsCustody.getMyDependentsStatus(supabase, profileId as string), enabled: !!profileId, refetchInterval: 20000 });
 export const useBibleSearch = (query: string, version = "acf", limit = 50) =>
   useQuery({ queryKey: ["bible-search", query, version, limit], queryFn: () => Bible.searchVerses(supabase, query, version, limit), enabled: query.trim().length >= 2 });
 export const useLexiconSearch = (query: string) =>
