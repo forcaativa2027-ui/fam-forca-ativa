@@ -1,11 +1,13 @@
 "use client";
-import { Baby, Users2 } from "lucide-react";
+import { Baby, CalendarClock, LogIn, Users2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useChurches } from "@/hooks/use-queries";
 import { useState } from "react";
 import { KidsGroupsTab } from "./kids/KidsGroupsTab";
 import { KidsDependentsTab } from "./kids/KidsDependentsTab";
+import { KidsSessionsTab } from "./kids/KidsSessionsTab";
+import { KidsCheckInTab } from "./kids/KidsCheckInTab";
 
 /**
  * KIDS — Sistema de Custódia, Cuidado, Desenvolvimento e
@@ -40,12 +42,16 @@ export function KidsAdmin() {
       )}
 
       {activeChurchId ? (
-        <Tabs defaultValue="dependents">
+        <Tabs defaultValue="checkin">
           <TabsList>
+            <TabsTrigger value="checkin" className="gap-1.5"><LogIn className="h-3.5 w-3.5" />Check-in</TabsTrigger>
+            <TabsTrigger value="sessions" className="gap-1.5"><CalendarClock className="h-3.5 w-3.5" />Sessões</TabsTrigger>
             <TabsTrigger value="dependents" className="gap-1.5"><Baby className="h-3.5 w-3.5" />Crianças</TabsTrigger>
             <TabsTrigger value="groups" className="gap-1.5"><Users2 className="h-3.5 w-3.5" />Turmas</TabsTrigger>
           </TabsList>
           <div className="mt-4">
+            <TabsContent value="checkin"><KidsCheckInTab churchId={activeChurchId} /></TabsContent>
+            <TabsContent value="sessions"><KidsSessionsTab churchId={activeChurchId} /></TabsContent>
             <TabsContent value="dependents"><KidsDependentsTab churchId={activeChurchId} /></TabsContent>
             <TabsContent value="groups"><KidsGroupsTab churchId={activeChurchId} /></TabsContent>
           </div>
