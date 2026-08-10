@@ -1,11 +1,11 @@
 "use client";
 import Link from "next/link";
-import { LogOut, GraduationCap } from "lucide-react";
+import { LogOut, GraduationCap, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Mais } from "@/components/shared/CECmaisBrand";
 
 export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
-  active: "dashboard" | "carteira" | "academy" | "cecmais";
+  active: "dashboard" | "carteira" | "academy" | "cecmais" | "kids";
   isAdmin?: boolean;
   cardReady?: boolean;
   onSignOut: () => void;
@@ -41,6 +41,15 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
             >
               <GraduationCap className="h-4 w-4 text-amber-400" />
               Academy
+            </Link>
+            <Link
+              href="/painel?tab=kids"
+              className={`flex items-center gap-1 rounded px-2 py-1.5 text-xs font-semibold transition ${
+                active === "kids" ? "border-b-2 border-gold text-white" : "text-white/60 hover:text-white"
+              }`}
+            >
+              <Baby className="h-4 w-4 text-pink-300" />
+              Kids
             </Link>
             <Link
               href="/painel/cecmais/explorar"

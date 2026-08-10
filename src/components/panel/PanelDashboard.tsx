@@ -25,6 +25,7 @@ import { MyCredentialCard } from "./MyCredentialCard";
 import { MemberHeader } from "./MemberHeader";
 import { DiarioFormacao } from "./DiarioFormacao";
 import { AcademyTab } from "./AcademyTab";
+import { KidsFamilySurface } from "./kids/KidsFamilySurface";
 import { NotificationsPanel, useNotificationCount, NotificationBadge } from "./NotificationsPanel";
 import { EventLoginPopup } from "./EventLoginPopup";
 import { supabase } from "@/lib/supabase/client";
@@ -103,7 +104,7 @@ export default function PanelDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <EventLoginPopup profile={profile} />
-      <MemberHeader active={tab === "academy" ? "academy" : "dashboard"} isAdmin={isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
+      <MemberHeader active={tab === "academy" ? "academy" : tab === "kids" ? "kids" : "dashboard"} isAdmin={isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
 
       <Tabs value={tab} onValueChange={setTab}>
         <main className="container space-y-8 py-8">
@@ -137,6 +138,7 @@ export default function PanelDashboard() {
           </TabsContent>
           <TabsContent value="discipulado"><DiscipleshipTab member={member ?? null} /></TabsContent>
           <TabsContent value="academy"><AcademyTab member={member ?? null} onGoToJourney={() => setTab("jornada")} /></TabsContent>
+          <TabsContent value="kids">{profile?.church_id && <KidsFamilySurface churchId={profile.church_id} />}</TabsContent>
           <TabsContent value="jornada"><JourneyTab member={member ?? null} /></TabsContent>
           <TabsContent value="oracao"><PrayerTab member={member ?? null} /></TabsContent>
           <TabsContent value="ministerio"><MyMinistriesPanel /></TabsContent>
