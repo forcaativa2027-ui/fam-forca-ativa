@@ -1680,3 +1680,14 @@ export interface KidsAuditEvent {
   id: string; church_id: string; event_type: string; dependent_id: string | null;
   actor_id: string | null; details: Record<string, unknown> | null; created_at: string;
 }
+export type CredentialStatus = "issued" | "active" | "suspended" | "revoked" | "expired" | "consumed";
+export interface KidsCredential {
+  id: string; church_id: string; issued_to_profile: string; authorized_person_id: string | null;
+  status: CredentialStatus; purpose: "pickup" | "checkin_lookup" | "guardian_verification";
+  expires_at: string | null; revoked_at: string | null; revoked_by: string | null; revoke_reason: string | null;
+  created_by: string | null; created_at: string;
+}
+export interface CredentialValidationRow {
+  credential_id: string | null; status: string; pin_required: boolean; pin_ok: boolean;
+  custody_record_id: string | null; dependent_name: string | null; scope_consumed: boolean;
+}
