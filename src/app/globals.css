@@ -30,6 +30,15 @@
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* ACA-UX-001 Fase B — moldura de ícone dos novos cards (FeatureCard,
+     SchoolCard, BibleToolCard, BibleCategoryCard). Só cuida de forma e
+     tamanho — a cor de fundo/ícone fica a cargo de quem usa (ex:
+     bg-gold/10 text-gold), pra caber a identidade de cada escola/área. */
+  .icon-tile { @apply grid shrink-0 place-items-center rounded-xl; }
+  .icon-tile-sm { @apply icon-tile h-9 w-9; }
+  .icon-tile-md { @apply icon-tile h-11 w-11; }
+  .icon-tile-lg { @apply icon-tile h-14 w-14; }
 }
 
 /*
