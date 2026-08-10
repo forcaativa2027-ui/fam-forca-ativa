@@ -1652,3 +1652,21 @@ export interface KidsAuthorizedPerson {
 export interface KidsTerminology {
   church_id: string; concept_key: string; singular: string; plural: string | null; short_label: string | null;
 }
+export type CustodySessionStatus = "scheduled" | "open" | "closed" | "cancelled";
+export interface KidsCustodySession {
+  id: string; church_id: string; group_id: string | null; name: string;
+  starts_at: string; ends_at: string | null; status: CustodySessionStatus;
+  capacity: number | null; created_by: string | null; created_at: string;
+}
+export type CustodyRecordStatus = "expected" | "in_custody" | "pickup_requested" | "released" | "cancelled";
+export interface KidsCustodyRecord {
+  id: string; dependent_id: string; session_id: string; status: CustodyRecordStatus;
+  checked_in_at: string | null; checked_in_by: string | null; delivered_by: string | null; entry_notes: string | null;
+  pickup_requested_at: string | null; pickup_requested_by: string | null; released_at: string | null;
+  created_at: string;
+}
+export interface KidsDependentStatus {
+  dependent_id: string; full_name: string; preferred_name: string | null; photo_url: string | null;
+  custody_record_id: string | null; custody_status: CustodyRecordStatus | null;
+  session_name: string | null; checked_in_at: string | null; group_name: string | null;
+}
