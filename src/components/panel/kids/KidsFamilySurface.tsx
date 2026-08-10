@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Baby, Check, Plus, Shield, UserPlus, X } from "lucide-react";
+import { Baby, Check, Plus, QrCode, Shield, UserPlus, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { supabase } from "@/lib/supabase/client";
 import { useMyProfile, useMyKidsDependents, useKidsAuthorizedPersons, useMyDependentsStatus } from "@/hooks/use-queries";
 import * as Kids from "@/services/kidsIdentity";
 import * as KidsCustody from "@/services/kidsCustody";
+import { KidsCredentialIssuer } from "./KidsCredentialIssuer";
 import type { KidsDependent, GuardianRelationship, AuthorizationScope } from "@/types/domain";
 
 const RELATIONSHIP_LABELS: Record<GuardianRelationship, string> = {
@@ -28,9 +29,12 @@ export function KidsFamilySurface({ churchId }: { churchId: string }) {
   const { data: dependents = [] } = useMyKidsDependents(me?.id ?? null);
   const { data: statusList = [] } = useMyDependentsStatus(me?.id ?? null);
   const [showForm, setShowForm] = useState(false);
+  const [showCredential, setShowCredential] = useState(false);
   const [selected, setSelected] = useState<KidsDependent | null>(null);
 
   if (selected) return <ChildDetail dependent={selected} status={statusList.find((s) => s.dependent_id === selected.id) ?? null} onBack={() => setSelected(null)} />;
+
+  const inCustodyList = statusList.filter((s) => s.custody_status === "in_custody");
 
   return (
     <div className="mx-auto max-w-lg space-y-4 p-4">
@@ -80,11 +84,19 @@ export function KidsFamilySurface({ churchId }: { churchId: string }) {
         )}
       </div>
 
+      {inCustodyList.length > 0 && (
+        <Button onClick={() => setShowCredential(true)} variant="outline" className="w-full gap-1.5">
+          <QrCode className="h-4 w-4" />Gerar credencial de retirada
+        </Button>
+      )}
+
       {showForm ? (
         <AddChildForm churchId={churchId} onClose={() => setShowForm(false)} />
       ) : (
         <Button onClick={() => setShowForm(true)} className="w-full gap-1.5"><Plus className="h-4 w-4" />Cadastrar filho(a)</Button>
       )}
+
+      {showCredential && <KidsCredentialIssuer inCustody={inCustodyList} onClose={() => setShowCredential(false)} />}
     </div>
   );
 }
