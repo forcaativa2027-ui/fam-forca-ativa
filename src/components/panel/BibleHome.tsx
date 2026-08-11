@@ -9,7 +9,7 @@ import { BibleBookGroups } from "./BibleBookGroups";
 import { BibleHeader, RecentPassageChip } from "./academy/Headers";
 import { ContinueCard } from "./academy/ContinueCard";
 import { BibleToolCard, type BibleToolViewModel } from "./academy/BibleToolCard";
-import { SectionHeader } from "./academy/SectionHeader";
+import { SectionHeader } from "@/components/shared/ui/SectionHeader";
 import type { BibleBook } from "@/types/domain";
 
 /**

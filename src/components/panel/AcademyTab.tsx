@@ -22,7 +22,7 @@ import { AcademyHeader } from "./academy/Headers";
 import { ContinueCard, StartCard } from "./academy/ContinueCard";
 import { FeatureCard, type FeatureCardViewModel } from "./academy/FeatureCard";
 import { SchoolCard } from "./academy/SchoolCard";
-import { SectionHeader, StatusBadge } from "./academy/SectionHeader";
+import { SectionHeader, StatusBadge } from "@/components/shared/ui/SectionHeader";
 import type { Member, Course, CourseContentItem } from "@/types/domain";
 
 /**
@@ -31,6 +31,22 @@ import type { Member, Course, CourseContentItem } from "@/types/domain";
  * registrada na Jornada." Aqui o membro navega pelas Escolas,
  * cursos, módulos e lições; o histórico/diário continua na aba Jornada.
  */
+/** Identidade de cor por escola (§43 — diferenciação visual entre elas). Só cor; ícone continua o mesmo já definido em ESCOLAS. */
+const SCHOOL_TINT: Record<string, string> = {
+  formacao_inicial: "bg-amber-500/10 text-amber-600",
+  escola_biblica: "bg-blue-500/10 text-blue-600",
+  escola_teologica: "bg-purple-500/10 text-purple-600",
+  escola_ministerial: "bg-emerald-500/10 text-emerald-600",
+  escola_familia: "bg-rose-500/10 text-rose-600",
+  escola_missoes: "bg-cyan-500/10 text-cyan-600",
+  outros: "bg-navy/10 text-navy",
+};
+const SCHOOL_TEXT_TINT: Record<string, string> = {
+  formacao_inicial: "text-amber-600", escola_biblica: "text-blue-600", escola_teologica: "text-purple-600",
+  escola_ministerial: "text-emerald-600", escola_familia: "text-rose-600", escola_missoes: "text-cyan-600",
+  outros: "text-navy",
+};
+
 export function AcademyTab({ member, onGoToJourney }: { member: Member | null; onGoToJourney: () => void }) {
   const { data: courses = [] } = useCourses();
   const { data: dbEscolas = [] } = useEscolas();
@@ -142,7 +158,7 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
           {groups.map((g) => (
             <SchoolCard
               key={g.key}
-              vm={{ id: g.key, title: g.label, icon: g.icon, courseCount: g.courses.length || undefined }}
+              vm={{ id: g.key, title: g.label, icon: g.icon, courseCount: g.courses.length || undefined, tint: SCHOOL_TINT[g.key] }}
               onClick={() => setCollapsed((c) => ({ ...c, [g.key]: !c[g.key] }))}
             />
           ))}
@@ -151,7 +167,7 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
         {groups.filter((g) => collapsed[g.key]).map((g) => (
           <div key={g.key} className="mt-3 rounded-xl border p-3">
             <div className="mb-2 flex items-center justify-between">
-              <p className="flex items-center gap-2 font-display text-base text-navy"><g.icon className="h-4 w-4 text-gold" />{g.label}</p>
+              <p className="flex items-center gap-2 font-display text-base text-navy"><g.icon className={`h-4 w-4 ${SCHOOL_TEXT_TINT[g.key] ?? "text-gold"}`} />{g.label}</p>
               <button onClick={() => setCollapsed((c) => ({ ...c, [g.key]: false }))} className="text-xs text-muted-foreground hover:text-navy">Fechar</button>
             </div>
             {g.dbId && <EscolaTreeView escolaId={g.dbId} onOpenCourse={setOpenCourse} />}
