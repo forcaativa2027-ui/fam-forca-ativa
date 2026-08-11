@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/shared/DatePicker";
-import { useUsersDirectorySearch, useStates, useDistricts, useSectors, useChurches } from "@/hooks/use-queries";
+import { useUsersDirectorySearch, useStates, useDistricts, useSectors, useChurches, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 
 const ROLE_LABELS: Record<string, string> = {
   apostolo: "Apóstolo", pastor: "Pastor", supervisor: "Supervisor",
@@ -31,6 +32,7 @@ export function AdvancedSearchAdmin() {
   const [stateId, setStateId] = useState("");
   const [districtId, setDistrictId] = useState("");
   const [sectorId, setSectorId] = useState("");
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
   const [churchId, setChurchId] = useState("");
   const [role, setRole] = useState("");
   const [journeyStage, setJourneyStage] = useState("");
@@ -55,7 +57,7 @@ export function AdvancedSearchAdmin() {
   }
 
   function exportCsv() {
-    const header = ["Nome", "E-mail", "Telefone", "CEC ID", "Cargo", "Situação", "Status", "Igreja", "Setor", "Distrito", "Estado", "Ingresso"];
+    const header = ["Nome", "E-mail", "Telefone", "CEC ID", "Cargo", "Situação", "Status", "Igreja", terms.setor, terms.distrito, "Estado", "Ingresso"];
     const rows = results.map((u) => [
       u.full_name, u.email ?? "", u.phone ?? "", u.cec_id ?? "",
       ROLE_LABELS[u.role] ?? u.role, JOURNEY_LABELS[u.journey_stage ?? ""] ?? "", STATUS_LABELS[u.member_status ?? ""] ?? "",
@@ -107,11 +109,11 @@ export function AdvancedSearchAdmin() {
           {showMoreFilters && (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <Select value={districtId} onValueChange={setDistrictId}>
-                <SelectTrigger><SelectValue placeholder="Distrito" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={terms.distrito} /></SelectTrigger>
                 <SelectContent><SelectItem value="">Todos os distritos</SelectItem>{districts.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}</SelectContent>
               </Select>
               <Select value={sectorId} onValueChange={setSectorId}>
-                <SelectTrigger><SelectValue placeholder="Setor" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={terms.setor} /></SelectTrigger>
                 <SelectContent><SelectItem value="">Todos os setores</SelectItem>{sectors.map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
               </Select>
               <Select value={journeyStage} onValueChange={setJourneyStage}>

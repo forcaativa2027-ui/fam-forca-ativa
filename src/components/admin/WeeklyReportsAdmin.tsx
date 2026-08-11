@@ -11,7 +11,8 @@ import { DatePicker } from "@/components/shared/DatePicker";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { weeklyReportSchema, type WeeklyReportFormInput } from "@/schemas";
-import { useAllMembers, useWeeklyReports } from "@/hooks/use-queries";
+import { useAllMembers, useWeeklyReports, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 import { createWeeklyReport, deleteWeeklyReport } from "@/services/weeklyReports";
 import { logAudit } from "@/services/audit";
@@ -45,6 +46,7 @@ function ScopeSelector({ onSelect }: { onSelect: (lgId: string, lgName: string) 
   const [nucleos,   setNucleos]   = useState<OrgNode[]>([]);
   const [distritos, setDistritos] = useState<OrgNode[]>([]);
   const [areas,     setAreas]     = useState<OrgNode[]>([]);
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
   const [setores,   setSetores]   = useState<OrgNode[]>([]);
   const [allLgs,    setAllLgs]    = useState<LifeGroup[]>([]);
   const [filteredLgs, setFilteredLgs] = useState<LifeGroup[]>([]);
@@ -122,7 +124,7 @@ function ScopeSelector({ onSelect }: { onSelect: (lgId: string, lgName: string) 
 
         {/* Seletor de núcleo */}
         {scopeType === "nucleo" && (
-          <Field label="Núcleo">
+          <Field label={terms.nucleo}>
             <select value={selectedNucleo} onChange={(e) => setSelectedNucleo(e.target.value)}
               className="h-10 w-full rounded-md border bg-background px-3 text-sm">
               <option value="">— Selecione —</option>
@@ -133,7 +135,7 @@ function ScopeSelector({ onSelect }: { onSelect: (lgId: string, lgName: string) 
 
         {/* Seletor de distrito */}
         {scopeType === "distrito" && (
-          <Field label="Distrito">
+          <Field label={terms.distrito}>
             <select value={selectedDistrito} onChange={(e) => setSelectedDistrito(e.target.value)}
               className="h-10 w-full rounded-md border bg-background px-3 text-sm">
               <option value="">— Selecione —</option>
@@ -155,7 +157,7 @@ function ScopeSelector({ onSelect }: { onSelect: (lgId: string, lgName: string) 
 
         {/* Seletor de setor */}
         {scopeType === "setor" && (
-          <Field label="Setor">
+          <Field label={terms.setor}>
             <select value={selectedSetor} onChange={(e) => setSelectedSetor(e.target.value)}
               className="h-10 w-full rounded-md border bg-background px-3 text-sm">
               <option value="">— Selecione —</option>

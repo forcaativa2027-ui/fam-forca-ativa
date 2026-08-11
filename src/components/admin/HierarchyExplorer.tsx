@@ -2,7 +2,8 @@
 import { useMemo, useState } from "react";
 import { ChevronRight, Network, Users, Flame, ArrowLeft, Landmark, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useMdaHealth } from "@/hooks/use-queries";
+import { useMdaHealth, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import type { MdaHealthRow, MdaStatus } from "@/types/domain";
 
 type Level = "nacional" | "estado" | "nucleo" | "distrito" | "setor" | "igreja" | "lg";
@@ -25,10 +26,6 @@ const HEALTH_STYLE: Record<MdaStatus, { emoji: string; bg: string; border: strin
   atencao:   { emoji: "🟡", bg: "bg-yellow-50", border: "border-yellow-300", text: "text-yellow-700", label: "Atenção" },
   necessita: { emoji: "🔴", bg: "bg-red-50",    border: "border-red-300",    text: "text-red-700",    label: "Necessita apoio" },
 };
-const LEVEL_LABEL: Record<Level, string> = {
-  nacional: "Nacional", estado: "Estado", nucleo: "Núcleo", distrito: "Distrito",
-  setor: "Setor", igreja: "Igreja Local", lg: "Life Group",
-};
 const LEVEL_CHILD_LABEL: Record<Level, string> = {
   nacional: "estado(s)", estado: "unidade(s)", nucleo: "unidade(s)", distrito: "unidade(s)",
   setor: "igreja(s) local(is)", igreja: "life group(s)", lg: "",
@@ -40,24 +37,24 @@ const LEVEL_ICON: Record<Level, React.ReactNode> = {
 
 // Pra cada linha (LG) da view, devolve o id/nome/saúde daquele nível específico —
 // ou null se esse nível foi PULADO na árvore daquela igreja (níveis flexíveis).
-function fieldForLevel(row: MdaHealthRow, level: Level): { id: string; name: string; health: MdaStatus | null } | null {
+function fieldForLevel(row: MdaHealthRow, level: Level, terms: Record<string, string> = ORG_TERM_DEFAULTS): { id: string; name: string; health: MdaStatus | null } | null {
   switch (level) {
     case "estado": return row.state_id ? { id: row.state_id, name: row.state_name ?? "Estado", health: row.state_health } : null;
-    case "nucleo": return row.nucleo_id ? { id: row.nucleo_id, name: row.nucleo_name ?? "Núcleo", health: row.nucleo_health } : null;
-    case "distrito": return row.district_id ? { id: row.district_id, name: row.district_name ?? "Distrito", health: row.district_health } : null;
-    case "setor": return row.sector_id ? { id: row.sector_id, name: row.sector_name ?? "Setor", health: row.sector_health } : null;
+    case "nucleo": return row.nucleo_id ? { id: row.nucleo_id, name: row.nucleo_name ?? terms.nucleo, health: row.nucleo_health } : null;
+    case "distrito": return row.district_id ? { id: row.district_id, name: row.district_name ?? terms.distrito, health: row.district_health } : null;
+    case "setor": return row.sector_id ? { id: row.sector_id, name: row.sector_name ?? terms.setor, health: row.sector_health } : null;
     case "igreja": return row.church_id ? { id: row.church_id, name: row.church_name ?? "Igreja", health: row.church_health } : null;
-    case "lg": return row.lg_id ? { id: row.lg_id, name: row.lg_name ?? "Life Group", health: row.lg_health } : null;
+    case "lg": return row.lg_id ? { id: row.lg_id, name: row.lg_name ?? terms.lg, health: row.lg_health } : null;
     default: return null;
   }
 }
 
 // Acha o próximo nível que REALMENTE existe pra essa linha, a partir de um índice —
 // é isso que permite pular Núcleo/Distrito/Setor sem a linha "desaparecer" do drill-down.
-function nextExistingLevel(row: MdaHealthRow, fromIndex: number): { level: Level; data: { id: string; name: string; health: MdaStatus | null } } | null {
+function nextExistingLevel(row: MdaHealthRow, fromIndex: number, terms: Record<string, string> = ORG_TERM_DEFAULTS): { level: Level; data: { id: string; name: string; health: MdaStatus | null } } | null {
   for (let i = fromIndex; i < LEVEL_ORDER.length; i++) {
     const lvl = LEVEL_ORDER[i];
-    const data = fieldForLevel(row, lvl);
+    const data = fieldForLevel(row, lvl, terms);
     if (data) return { level: lvl, data };
   }
   return null;
@@ -65,10 +62,11 @@ function nextExistingLevel(row: MdaHealthRow, fromIndex: number): { level: Level
 
 export function HierarchyExplorer() {
   const { data: rows = [], isLoading } = useMdaHealth();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
   const [path, setPath] = useState<PathStep[]>([{ level: "nacional", id: null, name: "Comunidade Evangélica Cristã" }]);
   const current = path[path.length - 1];
 
-  const cards = useMemo(() => buildCards(rows, current), [rows, current]);
+  const cards = useMemo(() => buildCards(rows, current, terms), [rows, current, terms]);
   const currentLg = current.level === "lg" ? rows.find((r) => r.lg_id === current.id) : null;
 
   function drillInto(card: NodeCard) {
@@ -137,7 +135,7 @@ export function HierarchyExplorer() {
                       {LEVEL_ICON[c.level]}
                       <div>
                         <b className="text-sm text-navy">{c.name}</b>
-                        <span className="ml-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">{LEVEL_LABEL[c.level]}</span>
+                        <span className="ml-1.5 text-[10px] uppercase tracking-wide text-muted-foreground">{c.level === "estado" ? "Estado" : (terms[c.level] ?? c.level)}</span>
                       </div>
                     </div>
                     {c.health && <span className="text-sm">{HEALTH_STYLE[c.health].emoji}</span>}
@@ -162,12 +160,12 @@ export function HierarchyExplorer() {
   );
 }
 
-function buildCards(rows: MdaHealthRow[], current: PathStep): NodeCard[] {
+function buildCards(rows: MdaHealthRow[], current: PathStep, terms: Record<string, string> = ORG_TERM_DEFAULTS): NodeCard[] {
   const currentIndex = LEVEL_ORDER.indexOf(current.level);
 
   // Escopa as linhas ao nó atual (por id do próprio nível atual)
   const scoped = current.level === "nacional" ? rows : rows.filter((r) => {
-    const f = fieldForLevel(r, current.level);
+    const f = fieldForLevel(r, current.level, terms);
     return f?.id === current.id;
   });
 
@@ -176,7 +174,7 @@ function buildCards(rows: MdaHealthRow[], current: PathStep): NodeCard[] {
   const groups = new Map<string, { level: Level; name: string; health: MdaStatus | null; rows: MdaHealthRow[] }>();
 
   for (const r of scoped) {
-    const next = nextExistingLevel(r, currentIndex + 1);
+    const next = nextExistingLevel(r, currentIndex + 1, terms);
     if (!next) continue; // essa linha não tem mais nenhum nível abaixo do atual (raro, mas defensivo)
     const key = `${next.level}:${next.data.id}`;
     if (!groups.has(key)) groups.set(key, { level: next.level, name: next.data.name, health: next.data.health, rows: [] });
@@ -190,7 +188,7 @@ function buildCards(rows: MdaHealthRow[], current: PathStep): NodeCard[] {
     // Conta "netos": quantos filhos diretos (do próximo nível existente) esse grupo tem
     const grandChildKeys = new Set<string>();
     for (const r of group.rows) {
-      const grandChild = nextExistingLevel(r, childIndex + 1);
+      const grandChild = nextExistingLevel(r, childIndex + 1, terms);
       if (grandChild) grandChildKeys.add(`${grandChild.level}:${grandChild.data.id}`);
     }
     cards.push({
