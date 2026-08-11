@@ -104,6 +104,16 @@ html.cec-dark [class*="bg-rose-50"], html.cec-dark [class*="bg-rose-100"],
 html.cec-dark [class*="bg-muted"] {
   background-color: rgba(255, 255, 255, 0.07) !important;
 }
+
+/* ACA-UX-001 Fase G (QA) — as cores de ícone das Escolas (SchoolCard) usam a
+   faixa -600, pensada pra fundo claro. Clareia pra -400 no modo escuro,
+   mantendo a mesma identidade de cor com contraste adequado. */
+html.cec-dark .text-amber-600 { color: #fbbf24 !important; }
+html.cec-dark .text-blue-600 { color: #60a5fa !important; }
+html.cec-dark .text-purple-600 { color: #c084fc !important; }
+html.cec-dark .text-emerald-600 { color: #34d399 !important; }
+html.cec-dark .text-rose-600 { color: #fb7185 !important; }
+html.cec-dark .text-cyan-600 { color: #22d3ee !important; }
 /* Texto escuro pareado com esses fundos pastel (ex: bg-amber-50 + text-amber-800) — sem isso,
    fica escuro sobre fundo agora escuro. Cobre a faixa 500-900, que é o intervalo mais usado. */
 html.cec-dark [class*="text-blue-5"], html.cec-dark [class*="text-blue-6"], html.cec-dark [class*="text-blue-7"], html.cec-dark [class*="text-blue-8"], html.cec-dark [class*="text-blue-9"],
