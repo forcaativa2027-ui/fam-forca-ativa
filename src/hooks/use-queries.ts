@@ -26,6 +26,16 @@ export const useChurches       = () => useQuery({ queryKey: ["churches"],   quer
 /** Igreja/instituto do usuário logado — base pra marca personalizada (logo, cores, nome). */
 export const useMyChurch = (churchId: string | null | undefined) =>
   useQuery({ queryKey: ["my-church", churchId], queryFn: () => C.getChurch(supabase, churchId as string), enabled: !!churchId });
+
+// ── Terminologia organizacional (Núcleo/Setor/Distrito/etc.) ────
+import * as OrgTerm from "@/services/orgTerminology";
+export const useOrgTerminology = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["org-terminology", churchId ?? null],
+    queryFn: () => OrgTerm.getOrgTerminology(supabase, churchId),
+    staleTime: 1000 * 60 * 10,
+    placeholderData: OrgTerm.ORG_TERM_DEFAULTS,
+  });
 export const useChurchStateName = (churchId: string | null) =>
   useQuery({
     queryKey: ["church-state-name", churchId],
