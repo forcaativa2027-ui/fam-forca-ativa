@@ -10,15 +10,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-  useNewsVideosAdmin, useRegistrationEventsAdmin, useStates, useNucleos, useDistricts, useSectors, useChurches, useMyProfile,
+  useNewsVideosAdmin, useRegistrationEventsAdmin, useStates, useNucleos, useDistricts, useSectors, useChurches, useMyProfile, useOrgTerminology,
 } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import * as NewsVideos from "@/services/newsVideos";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import type { NewsVideoScope, NewsVideoStatus, CecNewsVideoAdmin } from "@/types/domain";
 
-const SCOPE_LABELS: Record<NewsVideoScope, string> = {
-  nacional: "Nacional", sede: "Estado", nucleo: "Núcleo", distrito: "Distrito", setor: "Setor", igreja: "Igreja/Comunidade",
-};
 const STATUS_CONFIG: Record<NewsVideoStatus, { label: string; color: string }> = {
   rascunho: { label: "Rascunho", color: "bg-gray-100 text-gray-700 border-gray-300" },
   em_revisao: { label: "Em revisão", color: "bg-amber-100 text-amber-800 border-amber-300" },
@@ -40,6 +38,8 @@ export function CecNewsVideosAdmin({ prefillEventId }: { prefillEventId?: string
   const { data: videos = [], refetch } = useNewsVideosAdmin();
   const [showForm, setShowForm] = useState(!!prefillEventId);
   const [editing, setEditing] = useState<CecNewsVideoAdmin | null>(null);
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
+  const scopeLabels: Record<string, string> = { nacional: terms.nacional, sede: "Estado", nucleo: terms.nucleo, distrito: terms.distrito, setor: terms.setor, igreja: terms.igreja };
 
   async function remove(v: CecNewsVideoAdmin) {
     if (!confirm(`Remover o vídeo "${v.title}"?`)) return;
@@ -73,7 +73,7 @@ export function CecNewsVideosAdmin({ prefillEventId }: { prefillEventId?: string
                   <p className="truncate font-semibold text-navy">{v.title}</p>
                 </div>
                 <p className="truncate text-xs text-muted-foreground">
-                  {SCOPE_LABELS[v.scope]}{v.scope_ref_name ? ` · ${v.scope_ref_name}` : ""}
+                  {scopeLabels[v.scope]}{v.scope_ref_name ? ` · ${v.scope_ref_name}` : ""}
                   {v.event_name && <span className="ml-1 inline-flex items-center gap-0.5"><Link2 className="h-3 w-3" />{v.event_name}</span>}
                 </p>
               </div>
@@ -109,6 +109,8 @@ function VideoFormDialog({ editing, prefillEventId, onClose, onDone }: { editing
   const { data: districts = [] } = useDistricts();
   const { data: sectors = [] } = useSectors();
   const { data: churches = [] } = useChurches();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
+  const scopeLabels: Record<string, string> = { nacional: terms.nacional, sede: "Estado", nucleo: terms.nucleo, distrito: terms.distrito, setor: terms.setor, igreja: terms.igreja };
 
   const [title, setTitle] = useState(editing?.title ?? "");
   const [description, setDescription] = useState(editing?.description ?? "");
@@ -220,12 +222,12 @@ function VideoFormDialog({ editing, prefillEventId, onClose, onDone }: { editing
               <Label className="text-xs">Abrangência</Label>
               <Select value={scope} onValueChange={(v) => { setScope(v as NewsVideoScope); setScopeRefId(""); }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{Object.entries(SCOPE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                <SelectContent>{Object.entries(scopeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             {scope !== "nacional" && (
               <div>
-                <Label className="text-xs">{SCOPE_LABELS[scope]}</Label>
+                <Label className="text-xs">{scopeLabels[scope]}</Label>
                 <Select value={scopeRefId} onValueChange={setScopeRefId}>
                   <SelectTrigger><SelectValue placeholder="Selecione…" /></SelectTrigger>
                   <SelectContent>{scopeOptions.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}</SelectContent>
