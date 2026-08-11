@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Bookmark as BookmarkIcon, NotebookPen } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Bookmark as BookmarkIcon, NotebookPen, PanelRightOpen } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Drawer } from "@/components/ui/drawer";
 import { supabase } from "@/lib/supabase/client";
 import { useMyProfile, useBibleBooks, useBibleChapter, useBibleHighlights, useBibleAnnotations, useBibleBookmarks, useBibleReadingProgress } from "@/hooks/use-queries";
 import { useQueryClient } from "@tanstack/react-query";
@@ -56,6 +57,7 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
   const [mode, setModeState] = useState<import("@/types/domain").BibleReadingMode>("reading");
   const [devotionalBusy, setDevotionalBusy] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [studyDrawerOpen, setStudyDrawerOpen] = useState(false);
 
   const { data: chapterData, isLoading } = useBibleChapter(version, bookAbbrev || null, bookAbbrev ? chapter : null);
   const { data: compareData } = useBibleChapter(compareVersion ?? "", bookAbbrev || null, compareVersion && bookAbbrev ? chapter : null);
@@ -168,6 +170,8 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
   if (screen === "lexicon") return <BibleLexiconView onBack={() => setScreen("home")} />;
   if (screen === "concordance") return <BibleConcordanceView onBack={() => setScreen("home")} onOpen={(a, c, v) => openReference(a, c, v)} />;
 
+  const studyPanelVisible = mode === "study" && selection && selection.start === selection.end;
+
   return (
     <div className="space-y-3 pb-4">
       <div className="flex items-center justify-between">
@@ -182,84 +186,108 @@ export function BibleReader({ onBack, initialBook, initialChapter }: { onBack: (
         </div>
       </div>
 
-      <Card>
-        <CardContent className="space-y-3 pt-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <button onClick={() => setChapter((c) => Math.max(1, c - 1))} disabled={chapter <= 1} className="rounded-md border p-1.5 disabled:opacity-30"><ChevronLeft className="h-4 w-4" /></button>
-              <p className="font-display text-lg text-navy">{currentBook?.name} {chapter}</p>
-              <button onClick={() => setChapter((c) => Math.min(totalChapters, c + 1))} disabled={chapter >= totalChapters} className="rounded-md border p-1.5 disabled:opacity-30"><ChevronRight className="h-4 w-4" /></button>
+      {/* ACA-UX-001 §22 — Desktop: Reader central | Painel de estudo opcional. Mobile: só o Reader, ferramentas no Drawer. */}
+      <div className="md:grid md:grid-cols-[1fr_320px] md:items-start md:gap-4">
+        <Card>
+          <CardContent className="space-y-3 pt-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <button onClick={() => setChapter((c) => Math.max(1, c - 1))} disabled={chapter <= 1} className="rounded-md border p-1.5 disabled:opacity-30"><ChevronLeft className="h-4 w-4" /></button>
+                <p className="font-display text-lg text-navy">{currentBook?.name} {chapter}</p>
+                <button onClick={() => setChapter((c) => Math.min(totalChapters, c + 1))} disabled={chapter >= totalChapters} className="rounded-md border p-1.5 disabled:opacity-30"><ChevronRight className="h-4 w-4" /></button>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <select value={version} onChange={(e) => setVersion(e.target.value)} className="h-8 rounded-md border bg-background px-2 text-xs">
+                  {Bible.BIBLE_VERSIONS.map((v) => <option key={v.value} value={v.value}>{v.value.toUpperCase()}</option>)}
+                </select>
+                <button
+                  onClick={() => setCompareVersion((cv) => cv ? null : (Bible.BIBLE_VERSIONS.find((v) => v.value !== version)?.value ?? null))}
+                  className={`rounded-md border px-2 py-1.5 text-[11px] font-semibold ${compareVersion ? "border-gold bg-gold/10 text-navy" : "text-muted-foreground"}`}>
+                  Comparar
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <select value={version} onChange={(e) => setVersion(e.target.value)} className="h-8 rounded-md border bg-background px-2 text-xs">
-                {Bible.BIBLE_VERSIONS.map((v) => <option key={v.value} value={v.value}>{v.value.toUpperCase()}</option>)}
-              </select>
-              <button
-                onClick={() => setCompareVersion((cv) => cv ? null : (Bible.BIBLE_VERSIONS.find((v) => v.value !== version)?.value ?? null))}
-                className={`rounded-md border px-2 py-1.5 text-[11px] font-semibold ${compareVersion ? "border-gold bg-gold/10 text-navy" : "text-muted-foreground"}`}>
-                Comparar
-              </button>
-            </div>
-          </div>
 
-          <BibleModeSelector mode={mode} onChange={changeMode} />
+            <BibleModeSelector mode={mode} onChange={changeMode} />
 
-          <AcademyTTSControls tts={tts} blocks={chapterData ? [{ id: "chapter", label: "Capítulo", text: chapterData.verses.map((v) => v.text).join(" ") }] : []} />
+            <AcademyTTSControls tts={tts} blocks={chapterData ? [{ id: "chapter", label: "Capítulo", text: chapterData.verses.map((v) => v.text).join(" ") }] : []} />
 
-          {isLoading && <p className="py-6 text-center text-sm text-muted-foreground">Carregando texto…</p>}
-          {!isLoading && !chapterData && <p className="py-6 text-center text-sm text-muted-foreground">Não foi possível carregar esse capítulo agora — tenta de novo em instantes.</p>}
+            {isLoading && <p className="py-6 text-center text-sm text-muted-foreground">Carregando texto…</p>}
+            {!isLoading && !chapterData && <p className="py-6 text-center text-sm text-muted-foreground">Não foi possível carregar esse capítulo agora — tenta de novo em instantes.</p>}
 
-          <div className="space-y-1">
-            {chapterData?.verses.map((v) => {
-              const highlighted = highlights.find((h) => v.number >= h.verse_start && v.number <= h.verse_end);
-              const note = annotations.find((a) => v.number >= a.verse_start && v.number <= a.verse_end);
-              const isSelected = !!selection && v.number >= selection.start && v.number <= selection.end;
-              const verseSpan = (
-                <span className={`flex-1 text-sm text-ink ${highlighted ? `rounded px-1 ${HIGHLIGHT_COLORS[highlighted.color]}` : ""}`}>
-                  {v.text}
-                  {note && <span className="ml-1.5 text-xs text-gold">📝</span>}
-                  {compareVersion && compareData && (
-                    <span className="mt-0.5 block text-xs italic text-muted-foreground">
-                      <span className="font-bold not-italic text-gold">{compareVersion.toUpperCase()}: </span>
-                      {compareData.verses.find((cv) => cv.number === v.number)?.text ?? "—"}
-                    </span>
-                  )}
-                </span>
-              );
-              if (mode !== "study") {
+            <div className="space-y-1">
+              {chapterData?.verses.map((v) => {
+                const highlighted = highlights.find((h) => v.number >= h.verse_start && v.number <= h.verse_end);
+                const note = annotations.find((a) => v.number >= a.verse_start && v.number <= a.verse_end);
+                const isSelected = !!selection && v.number >= selection.start && v.number <= selection.end;
+                const verseSpan = (
+                  <span className={`flex-1 text-sm text-ink ${highlighted ? `rounded px-1 ${HIGHLIGHT_COLORS[highlighted.color]}` : ""}`}>
+                    {v.text}
+                    {note && <span className="ml-1.5 text-xs text-gold">📝</span>}
+                    {compareVersion && compareData && (
+                      <span className="mt-0.5 block text-xs italic text-muted-foreground">
+                        <span className="font-bold not-italic text-gold">{compareVersion.toUpperCase()}: </span>
+                        {compareData.verses.find((cv) => cv.number === v.number)?.text ?? "—"}
+                      </span>
+                    )}
+                  </span>
+                );
+                if (mode !== "study") {
+                  return (
+                    <div key={v.number} className="flex items-start gap-2 rounded-md p-1.5">
+                      <span className="mt-0.5 shrink-0 text-[11px] font-bold text-gold">{v.number}</span>
+                      {verseSpan}
+                    </div>
+                  );
+                }
                 return (
-                  <div key={v.number} className="flex items-start gap-2 rounded-md p-1.5">
+                  <button key={v.number} onClick={() => clickVerse(v.number)}
+                    className={`flex w-full items-start gap-2 rounded-md p-1.5 text-left hover:bg-muted/20 ${isSelected ? "ring-2 ring-gold/60" : ""}`}>
                     <span className="mt-0.5 shrink-0 text-[11px] font-bold text-gold">{v.number}</span>
                     {verseSpan}
-                  </div>
+                  </button>
                 );
-              }
-              return (
-                <button key={v.number} onClick={() => clickVerse(v.number)}
-                  className={`flex w-full items-start gap-2 rounded-md p-1.5 text-left hover:bg-muted/20 ${isSelected ? "ring-2 ring-gold/60" : ""}`}>
-                  <span className="mt-0.5 shrink-0 text-[11px] font-bold text-gold">{v.number}</span>
-                  {verseSpan}
-                </button>
-              );
-            })}
+              })}
+            </div>
+
+            {mode === "devotional" && chapterData && (
+              <BibleDevotionalPanel
+                reference={`${currentBook?.name ?? bookAbbrev} ${chapter}`}
+                busy={devotionalBusy}
+                onRegister={registerDevotional}
+              />
+            )}
+
+            {/* Mobile: gatilho do Drawer com o painel de estudo — só aparece quando há algo pra mostrar */}
+            {studyPanelVisible && (
+              <button onClick={() => setStudyDrawerOpen(true)}
+                className="flex w-full items-center justify-center gap-1.5 rounded-md border border-dashed border-gold/40 py-2 text-xs font-semibold text-navy md:hidden">
+                <PanelRightOpen className="h-3.5 w-3.5" />Ver referências e conexões
+              </button>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Desktop: painel de estudo fixo ao lado, recolhível só existindo quando há conteúdo (os painéis já se auto-ocultam vazios) */}
+        {studyPanelVisible && (
+          <div className="hidden space-y-3 md:sticky md:top-4 md:block">
+            <BibleCrossReferencesPanel bookAbbrev={bookAbbrev} chapter={chapter} verse={selection.start} onOpen={(a, c, v) => openReference(a, c, v)} />
+            <BibleKnowledgePointsPanel bookAbbrev={bookAbbrev} chapter={chapter} verse={selection.start} />
           </div>
+        )}
+      </div>
 
-          {mode === "devotional" && chapterData && (
-            <BibleDevotionalPanel
-              reference={`${currentBook?.name ?? bookAbbrev} ${chapter}`}
-              busy={devotionalBusy}
-              onRegister={registerDevotional}
-            />
+      {/* Mobile: mesmo conteúdo do painel, dentro do Drawer */}
+      <Drawer open={studyDrawerOpen} onClose={() => setStudyDrawerOpen(false)} title="Referências e conexões">
+        <div className="space-y-3">
+          {studyPanelVisible && (
+            <>
+              <BibleCrossReferencesPanel bookAbbrev={bookAbbrev} chapter={chapter} verse={selection.start} onOpen={(a, c, v) => { openReference(a, c, v); setStudyDrawerOpen(false); }} />
+              <BibleKnowledgePointsPanel bookAbbrev={bookAbbrev} chapter={chapter} verse={selection.start} />
+            </>
           )}
-        </CardContent>
-      </Card>
-
-      {mode === "study" && selection && selection.start === selection.end && (
-        <>
-          <BibleCrossReferencesPanel bookAbbrev={bookAbbrev} chapter={chapter} verse={selection.start} onOpen={(a, c, v) => openReference(a, c, v)} />
-          <BibleKnowledgePointsPanel bookAbbrev={bookAbbrev} chapter={chapter} verse={selection.start} />
-        </>
-      )}
+        </div>
+      </Drawer>
 
       {mode === "study" && selection && (
         <BibleVerseActions
