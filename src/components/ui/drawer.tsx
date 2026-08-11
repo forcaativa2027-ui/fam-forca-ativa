@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 /**
@@ -9,8 +9,11 @@ import { X } from "lucide-react";
  * div com overlay + slide-up via CSS, com fechar por ESC/overlay.
  */
 export function Drawer({ open, onClose, title, children }: { open: boolean; onClose: () => void; title?: string; children: React.ReactNode }) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (!open) return;
+    closeRef.current?.focus();
     function onKey(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -29,7 +32,7 @@ export function Drawer({ open, onClose, title, children }: { open: boolean; onCl
       >
         <div className="mb-2 flex items-center justify-between">
           {title && <p className="text-sm font-bold text-navy">{title}</p>}
-          <button onClick={onClose} aria-label="Fechar" className="ml-auto rounded-full p-1 hover:bg-muted/30"><X className="h-4 w-4 text-muted-foreground" /></button>
+          <button ref={closeRef} onClick={onClose} aria-label="Fechar" className="ml-auto rounded-full p-1 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"><X className="h-4 w-4 text-muted-foreground" /></button>
         </div>
         {children}
       </div>
