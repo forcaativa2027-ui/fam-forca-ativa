@@ -21,12 +21,16 @@ export function Mais({ className = "" }: { className?: string }) {
   );
 }
 
-/** "CECmais" completo — para o logotipo do módulo. */
-export function CECmaisLogo({ size = "md", className = "" }: { size?: "sm" | "md" | "lg"; className?: string }) {
+/**
+ * "CECmais" completo — para o logotipo do módulo. Aceita um nome
+ * curto por igreja/instituto (`churches.short_name`); cai em "CEC"
+ * se a igreja não tiver definido o próprio.
+ */
+export function CECmaisLogo({ size = "md", className = "", brandName = "CEC" }: { size?: "sm" | "md" | "lg"; className?: string; brandName?: string }) {
   const sizes = { sm: "text-lg", md: "text-2xl", lg: "text-4xl" };
   return (
     <span className={`font-display font-bold text-navy ${sizes[size]} ${className}`}>
-      CEC<Mais className={size === "lg" ? "text-4xl" : size === "md" ? "text-2xl" : "text-lg"} />
+      {brandName}<Mais className={size === "lg" ? "text-4xl" : size === "md" ? "text-2xl" : "text-lg"} />
     </span>
   );
 }
