@@ -8,11 +8,15 @@ export type LivingLogoProps = {
   showSlogan?: boolean;
   compact?: boolean;
   className?: string;
+  logoUrl?: string | null;   // personalização por igreja/instituto — cai no padrão CEC se vazio
+  alt?: string;
 };
 
 /**
  * DS-003 §4/§6 — Living Logo (Fase 1).
- * Usa o PNG transparente único que já existe hoje (`/images/cec-family-logo.png`).
+ * Usa o PNG transparente único que já existe hoje (`/images/cec-family-logo.png`)
+ * como padrão — mas aceita `logoUrl` pra igrejas/institutos com marca própria
+ * (campo `churches.logo_url`, que já existia e não estava conectado a nada).
  * Aplica, respeitando `prefers-reduced-motion`:
  *   - entrada com fade + leve ampliação de 96% → 100%;
  *   - "respiração" discreta contínua da logo inteira;
@@ -22,7 +26,7 @@ export type LivingLogoProps = {
  * (chama, asas, clave, partículas) — fora do escopo desta fase.
  */
 export function LivingLogo({
-  size = 96, animated = true, showSlogan = false, compact = false, className = "",
+  size = 96, animated = true, showSlogan = false, compact = false, className = "", logoUrl, alt,
 }: LivingLogoProps) {
   const [entered, setEntered] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -36,6 +40,11 @@ export function LivingLogo({
   }, []);
 
   const breathing = animated && !reducedMotion;
+  const imgClass = [
+    "relative h-full w-full object-contain transition-all duration-700 ease-out",
+    entered ? "scale-100 opacity-100" : "scale-[0.96] opacity-0",
+    breathing ? "animate-living-breathe" : "",
+  ].join(" ");
 
   return (
     <div className={`flex flex-col items-center ${compact ? "gap-1.5" : "gap-3"} ${className}`}>
@@ -47,18 +56,12 @@ export function LivingLogo({
             style={{ width: size * 0.85, height: size * 0.5, top: -size * 0.08 }}
           />
         )}
-        <Image
-          src="/images/cec-family-logo.png"
-          alt="CEC FAMILY"
-          width={size}
-          height={size}
-          priority
-          className={[
-            "relative h-full w-full object-contain transition-all duration-700 ease-out",
-            entered ? "scale-100 opacity-100" : "scale-[0.96] opacity-0",
-            breathing ? "animate-living-breathe" : "",
-          ].join(" ")}
-        />
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt={alt ?? "Logo"} width={size} height={size} className={imgClass} />
+        ) : (
+          <Image src="/images/cec-family-logo.png" alt={alt ?? "CEC FAMILY"} width={size} height={size} priority className={imgClass} />
+        )}
       </div>
 
       {showSlogan && !compact && (
