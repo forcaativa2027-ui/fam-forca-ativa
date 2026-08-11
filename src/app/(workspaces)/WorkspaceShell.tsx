@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
+import { useMyProfile, useMyChurch } from "@/hooks/use-queries";
 
 /**
  * Shell do grupo (workspaces). Navegação entre workspaces é provisória —
@@ -30,6 +31,9 @@ export function WorkspaceShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { data: me } = useMyProfile();
+  const { data: myChurch } = useMyChurch(me?.church_id);
+  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC Family";
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -43,7 +47,7 @@ export function WorkspaceShell({
           <Button asChild variant="ghost" size="sm" className="text-white/70 hover:bg-white/10 hover:text-white">
             <Link href="/admin"><ArrowLeft className="mr-1 h-3.5 w-3.5" /> Painel</Link>
           </Button>
-          <span className="font-display text-sm font-semibold">CEC Family · {title}</span>
+          <span className="font-display text-sm font-semibold">{brandLabel} · {title}</span>
           <nav className="hidden items-center gap-1 md:flex">
             {MIGRATED_WORKSPACES.map((w) => (
               <Link
