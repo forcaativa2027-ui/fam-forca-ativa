@@ -110,7 +110,7 @@ export interface Church {
   parent_level?: ChurchParentLevel | null; parent_territorial_id?: string | null;
   address:string|null; city:string|null; state:string|null;
   slug:string|null; pastor_id:string|null;
-  logo_url:string|null; banner_url:string|null;
+  logo_url:string|null; banner_url:string|null; short_name:string|null;
   primary_color:string|null; secondary_color:string|null;
   short_description:string|null; site_url:string|null; whatsapp_phone:string|null;
   is_active?:boolean;
