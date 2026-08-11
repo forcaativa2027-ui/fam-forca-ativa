@@ -9,22 +9,25 @@ export interface SchoolCardViewModel {
   icon: LucideIcon;
   courseCount?: number;
   lessonCount?: number;
+  tint?: string;   // classes tailwind, ex: "bg-blue-500/10 text-blue-600"
 }
 
 /**
  * ACA-UX-001 Fase C — card de Escola/Trilha (§12). Não mostra "0"
  * como informação principal — some a contagem quando vazia (§12).
+ * Cada escola pode ter sua própria cor (identidade visual, §43).
  */
 export function SchoolCard({ vm, onClick }: { vm: SchoolCardViewModel; onClick: () => void }) {
   const Icon = vm.icon;
   const hasCounts = (vm.courseCount ?? 0) > 0;
+  const tint = vm.tint ?? "bg-gold/10 text-gold";
 
   return (
     <button
       onClick={onClick}
       className="flex h-full w-full flex-col items-start gap-2 rounded-xl border bg-card p-4 text-left transition hover:border-gold/50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
     >
-      <span className="icon-tile-md bg-gold/10 text-gold" aria-hidden="true"><Icon className="h-5 w-5" /></span>
+      <span className={`icon-tile-md ${tint}`} aria-hidden="true"><Icon className="h-5 w-5" /></span>
       <span className="font-display text-base text-navy">{vm.title}</span>
       {vm.description && <span className="text-xs text-muted-foreground">{vm.description}</span>}
       <span className="mt-auto flex w-full items-center justify-between pt-2">
