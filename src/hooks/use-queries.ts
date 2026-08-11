@@ -23,6 +23,9 @@ import * as Wf from "@/services/editorialWorkflow";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
+/** Igreja/instituto do usuário logado — base pra marca personalizada (logo, cores, nome). */
+export const useMyChurch = (churchId: string | null | undefined) =>
+  useQuery({ queryKey: ["my-church", churchId], queryFn: () => C.getChurch(supabase, churchId as string), enabled: !!churchId });
 export const useChurchStateName = (churchId: string | null) =>
   useQuery({
     queryKey: ["church-state-name", churchId],
