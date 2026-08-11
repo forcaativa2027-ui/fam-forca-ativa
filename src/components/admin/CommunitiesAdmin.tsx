@@ -28,6 +28,7 @@ const communitySchema = z.object({
   city: z.string().trim().optional().or(z.literal("")),
   address: z.string().trim().optional().or(z.literal("")),
   short_description: z.string().trim().optional().or(z.literal("")),
+  short_name: z.string().trim().max(20, "Máximo 20 caracteres").optional().or(z.literal("")),
   logo_url: z.string().url("URL inválida").optional().or(z.literal("")),
   banner_url: z.string().url("URL inválida").optional().or(z.literal("")),
   primary_color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor hex inválida").optional().or(z.literal("")),
@@ -79,6 +80,7 @@ export function CommunitiesAdmin() {
       address: c.address ?? "",
       short_description: c.short_description ?? "",
       logo_url: c.logo_url ?? "",
+      short_name: c.short_name ?? "",
       banner_url: c.banner_url ?? "",
       primary_color: c.primary_color ?? "#0E2A47",
       secondary_color: c.secondary_color ?? "#C9A227",
@@ -115,6 +117,7 @@ export function CommunitiesAdmin() {
         state: v.state || null, city: v.city || null, address: v.address || null,
         short_description: v.short_description || null,
         logo_url: v.logo_url || null, banner_url: v.banner_url || null,
+        short_name: v.short_name || null,
         primary_color: v.primary_color || null, secondary_color: v.secondary_color || null,
         site_url: v.site_url || null, whatsapp_phone: v.whatsapp_phone || null,
         phone_primary: v.phone_primary || null,
@@ -322,7 +325,10 @@ export function CommunitiesAdmin() {
             <details className="rounded-md border bg-navy-50/50 p-3" open>
               <summary className="cursor-pointer text-xs font-bold uppercase tracking-wider text-navy-600">Identidade visual</summary>
               <div className="mt-3 space-y-3">
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Field label="Nome curto (marca)" error={errors.short_name?.message}>
+                    <Input {...register("short_name")} placeholder="Ex: CEC, Vida — usado em 'Vidamais', logo do cabeçalho" maxLength={20} />
+                  </Field>
                   <Field label="Logo (URL)" error={errors.logo_url?.message}>
                     <Input {...register("logo_url")} placeholder="https://..." />
                   </Field>
