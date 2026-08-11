@@ -336,7 +336,7 @@ export function ExportAdmin() {
 
       <p className="text-xs text-muted-foreground text-center pt-2">
         💡 Arquivos Excel abrem diretamente no Microsoft Excel e Google Sheets.
-        PDFs são gerados com formatação CEC Family.
+        PDFs são gerados com formatação institucional.
       </p>
     </div>
   );

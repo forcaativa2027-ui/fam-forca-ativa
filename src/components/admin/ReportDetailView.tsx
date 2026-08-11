@@ -5,7 +5,7 @@ import {
   CheckCircle2, XCircle, BookOpen, MessageCircle, Sparkles, AlertTriangle, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useReportFull } from "@/hooks/use-queries";
+import { useReportFull, useMyProfile, useMyChurch } from "@/hooks/use-queries";
 
 const WEEKDAYS_PT: Record<string, string> = {
   domingo: "Domingo", segunda: "Segunda-feira", terca: "Terça-feira",
@@ -15,6 +15,9 @@ const WEEKDAYS_PT: Record<string, string> = {
 export function ReportDetailView({ reportId }: { reportId: string }) {
   const router = useRouter();
   const { data, isLoading, error } = useReportFull(reportId);
+  const { data: me } = useMyProfile();
+  const { data: myChurch } = useMyChurch(me?.church_id);
+  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC FAMILY";
 
   if (isLoading) {
     return (
@@ -84,7 +87,7 @@ export function ReportDetailView({ reportId }: { reportId: string }) {
         <header className="mb-6 border-b pb-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-widest text-gold">CEC FAMILY · Relatório Semanal</p>
+              <p className="text-[11px] uppercase tracking-widest text-gold">{brandLabel} · Relatório Semanal</p>
               <h1 className="mt-1 font-display text-3xl text-navy">{cell?.name ?? "Life Group"}</h1>
               <div className="mt-3 grid gap-1 text-sm text-muted">
                 {leader_name && (
@@ -327,7 +330,7 @@ export function ReportDetailView({ reportId }: { reportId: string }) {
 
         {/* Rodapé */}
         <footer className="mt-8 border-t pt-3 text-center text-[10px] text-muted">
-          Relatório gerado pelo CEC FAMILY · Criado em {new Date(report.created_at).toLocaleString("pt-BR")}
+          Relatório gerado pelo {brandLabel} · Criado em {new Date(report.created_at).toLocaleString("pt-BR")}
         </footer>
       </article>
     </main>

@@ -6,7 +6,7 @@ import {
   AlertTriangle, Lock, Clock, BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useMonthlyReportFull, useCells, useAllMembers } from "@/hooks/use-queries";
+import { useMonthlyReportFull, useCells, useAllMembers, useMyProfile, useMyChurch } from "@/hooks/use-queries";
 import type { MonthlyReportWeek } from "@/types/domain";
 
 const WEEKDAYS_PT: Record<string, string> = {
@@ -36,6 +36,9 @@ export function MonthlyReportDetailView({ reportId }: { reportId: string }) {
   const { data: full, isLoading, error } = useMonthlyReportFull(reportId);
   const { data: cells = [] } = useCells();
   const { data: allMembers = [] } = useAllMembers();
+  const { data: me } = useMyProfile();
+  const { data: myChurch } = useMyChurch(me?.church_id);
+  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC FAMILY";
 
   if (isLoading) {
     return (
@@ -108,7 +111,7 @@ export function MonthlyReportDetailView({ reportId }: { reportId: string }) {
         <header className="mb-6 border-b pb-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-widest text-gold">CEC FAMILY · Relatório Mensal</p>
+              <p className="text-[11px] uppercase tracking-widest text-gold">{brandLabel} · Relatório Mensal</p>
               <h1 className="mt-1 font-display text-3xl text-navy">{cell?.name ?? "Life Group"}</h1>
               <div className="mt-3 grid gap-1 text-sm text-muted">
                 {leaderMember && (
@@ -237,7 +240,7 @@ export function MonthlyReportDetailView({ reportId }: { reportId: string }) {
 
         {/* Rodapé */}
         <footer className="mt-8 border-t pt-3 text-center text-[10px] text-muted">
-          Relatório mensal gerado pelo CEC FAMILY · Consolidado em {new Date(report.created_at).toLocaleString("pt-BR")}
+          Relatório mensal gerado pelo {brandLabel} · Consolidado em {new Date(report.created_at).toLocaleString("pt-BR")}
         </footer>
       </article>
     </main>
