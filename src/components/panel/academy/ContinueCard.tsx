@@ -1,6 +1,6 @@
 "use client";
 import { ArrowRight } from "lucide-react";
-import { ProgressIndicator } from "./ProgressIndicator";
+import { ProgressIndicator } from "@/components/shared/ui/ProgressIndicator";
 
 export interface ContinueCardViewModel {
   title: string;
