@@ -65,6 +65,7 @@ export function fallbackCommunity(): Church {
     pastor_id: null,
     logo_url: null,
     banner_url: null,
+    short_name: null,
     primary_color: "#0E2A47",
     secondary_color: "#C9A227",
     short_description: null,
