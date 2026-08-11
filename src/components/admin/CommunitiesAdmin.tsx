@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/shared/DatePicker";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useChurches, useSectors, useNucleos, useDistricts } from "@/hooks/use-queries";
+import { useChurches, useSectors, useNucleos, useDistricts, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 import { logAudit, diffFields } from "@/services/audit";
 import type { Church } from "@/types/domain";
@@ -54,6 +55,7 @@ export function CommunitiesAdmin() {
   const { data: sectors = [] } = useSectors();
   const { data: nucleos = [] } = useNucleos();
   const { data: districts = [] } = useDistricts();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Church | null>(null);
   const [err, setErr] = useState("");
@@ -231,7 +233,7 @@ export function CommunitiesAdmin() {
                     <option value="nucleo">Núcleo (pula Distrito e Setor)</option>
                   </select>
                 </Field>
-                <Field label={territorialLevelWatch === "nucleo" ? "Núcleo" : territorialLevelWatch === "distrito" ? "Distrito" : "Setor"} error={errors.parent_territorial_id?.message}>
+                <Field label={territorialLevelWatch === "nucleo" ? terms.nucleo : territorialLevelWatch === "distrito" ? terms.distrito : terms.setor} error={errors.parent_territorial_id?.message}>
                   <select {...register("parent_territorial_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
                     <option value="">— Sem vínculo definido ainda —</option>
                     {(territorialLevelWatch === "nucleo" ? nucleos : territorialLevelWatch === "distrito" ? districts : sectors)
@@ -411,12 +413,12 @@ export function CommunitiesAdmin() {
                         .find((p) => p.id === c.parent_territorial_id)?.name ?? "—"}
                       {c.parent_level && c.parent_level !== "setor" && (
                         <span className="ml-1 rounded bg-amber-100 px-1 text-[10px] text-amber-700">
-                          direto no {c.parent_level === "nucleo" ? "Núcleo" : "Distrito"}
+                          direto no {c.parent_level === "nucleo" ? terms.nucleo : terms.distrito}
                         </span>
                       )}
                     </p>
                   ) : c.sector_id ? (
-                    <p className="mt-1 text-[11px] text-muted">📍 {sectors.find((s) => s.id === c.sector_id)?.name ?? "Setor"}</p>
+                    <p className="mt-1 text-[11px] text-muted">📍 {sectors.find((s) => s.id === c.sector_id)?.name ?? terms.setor}</p>
                   ) : (
                     <p className="mt-1 text-[11px] font-semibold text-amber-600">⚠ Sem Setor vinculado (fora da árvore MEO-001)</p>
                   )}
