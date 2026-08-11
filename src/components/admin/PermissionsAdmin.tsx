@@ -9,11 +9,8 @@ import { usePastors, useStates, useNucleos, useDistricts, useSectors, useChurche
 import { supabase } from "@/lib/supabase/client";
 import { setPastorScopeLevel, type ScopeLevel, type PastorScope } from "@/services/pastorScope";
 import { logAudit } from "@/services/audit";
-
-const LEVEL_LABELS: Record<ScopeLevel, string> = {
-  nacional: "Nacional (vê tudo)", estado: "Estado", nucleo: "Núcleo",
-  distrito: "Distrito", setor: "Setor", igreja: "Igreja Local",
-};
+import { useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 
 interface Option { id: string; name: string; }
 
@@ -25,6 +22,11 @@ export function PermissionsAdmin() {
   const { data: districts = [] } = useDistricts();
   const { data: sectors = [] } = useSectors();
   const { data: churches = [] } = useChurches();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
+  const levelLabels: Record<ScopeLevel, string> = {
+    nacional: `${terms.nacional} (vê tudo)`, estado: "Estado", nucleo: terms.nucleo,
+    distrito: terms.distrito, setor: terms.setor, igreja: "Igreja Local",
+  };
 
   const optionsByLevel: Record<Exclude<ScopeLevel, "nacional">, Option[]> = {
     estado: states.map(s => ({ id: s.id, name: `${s.name} (${s.uf})` })),
@@ -92,7 +94,7 @@ export function PermissionsAdmin() {
             {p.scope_level && (
               <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-gold">
                 <MapPin className="h-3 w-3" />
-                Escopo atual: {LEVEL_LABELS[p.scope_level]}{currentLabel ? ` — ${currentLabel}` : ""}
+                Escopo atual: {levelLabels[p.scope_level]}{currentLabel ? ` — ${currentLabel}` : ""}
               </p>
             )}
           </div>
@@ -109,8 +111,8 @@ export function PermissionsAdmin() {
                 className="h-9 w-full rounded-md border bg-background px-2 text-xs"
               >
                 <option value="">— Sem escopo (vê tudo, legado) —</option>
-                {(Object.keys(LEVEL_LABELS) as ScopeLevel[]).map(l => (
-                  <option key={l} value={l}>{LEVEL_LABELS[l]}</option>
+                {(Object.keys(levelLabels) as ScopeLevel[]).map(l => (
+                  <option key={l} value={l}>{levelLabels[l]}</option>
                 ))}
               </select>
             </div>
