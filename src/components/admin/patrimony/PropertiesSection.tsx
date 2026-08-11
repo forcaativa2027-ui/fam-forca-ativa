@@ -186,7 +186,7 @@ function PropertyForm({ churches, editing, defaultChurchId, onClose }: {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Nome / identificação" error={errors.name?.message}>
-              <Input {...register("name")} placeholder="Ex: Templo Central CEC Manaus" />
+              <Input {...register("name")} placeholder="Ex: Templo Central" />
             </Field>
             <Field label="Tipo de ocupação">
               <select {...register("occupation_type")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
