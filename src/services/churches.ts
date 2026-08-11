@@ -29,6 +29,11 @@ export async function listChurches(sb: SupabaseClient): Promise<Church[]> {
   if (error) throw error;
   return (data ?? []) as Church[];
 }
+export async function getChurch(sb: SupabaseClient, id: string): Promise<Church | null> {
+  const { data, error } = await sb.from("churches").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data as Church | null;
+}
 export async function listDistricts(sb: SupabaseClient): Promise<District[]> {
   const { data, error } = await sb.from("districts").select("*").order("name");
   if (error) throw error;
