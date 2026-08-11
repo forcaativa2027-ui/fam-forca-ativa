@@ -20,9 +20,10 @@ import { BuscaUsuariosAdmin } from "./BuscaUsuariosAdmin";
 import {
   useDelegations, useCouncilMembers, useRoleDelegations,
   useEmergencyAccess, useComplianceDashboard, useModuleRanking,
-  useChurches, useAllMembers, useMyProfile,
+  useChurches, useAllMembers, useMyProfile, useOrgTerminology,
 } from "@/hooks/use-queries";
 import * as Del from "@/services/delegations";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 import type { DelegationPanel, DelegationModule, DelegationScope, CouncilVote } from "@/types/domain";
 
@@ -41,10 +42,7 @@ const MODULE_LABELS: Record<DelegationModule, string> = {
   usuarios:       "👤 Administração de Usuários",
   kids:           "🧸 Ministério de Crianças",
 };
-const SCOPE_LABELS: Record<string, string> = {
-  lg: "Life Group", setor: "Setor", area: "Área",
-  distrito: "Distrito", nucleo: "Núcleo", sede: "Sede", nacional: "Nacional",
-};
+const SCOPE_KEYS = ["lg", "setor", "area", "distrito", "nucleo", "sede", "nacional"] as const;
 const TRUST_LABELS: Record<number, string> = {
   1: "Consulta", 2: "Operacional", 3: "Gestão",
   4: "Regional", 5: "Estratégico", 6: "Nacional",
@@ -63,7 +61,6 @@ const VOTE_CONFIG: Record<CouncilVote, { color: string; label: string }> = {
   abstencao:  { color: "text-gray-500",  label: "⚪ Abstenção" },
 };
 const MODULES = Object.entries(MODULE_LABELS) as [DelegationModule, string][];
-const SCOPES  = Object.entries(SCOPE_LABELS);
 
 // ── Busca de membro (por nome, resolve pra profile_id) ─────────
 function MemberSearchInput({ selectedName, onSelect }: {
@@ -122,6 +119,7 @@ function DelegationCard({ d, isApostolo, onAction }: {
   onAction: (action: string, d: DelegationPanel) => void;
 }) {
   const cfg = STATUS_CONFIG[d.status] ?? STATUS_CONFIG.pendente;
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
   return (
     <Card className={`border-l-4 ${d.is_critical ? "border-l-red-500" : "border-l-[#C9A227]"}`}>
       <CardContent className="pt-3 pb-3">
@@ -146,7 +144,7 @@ function DelegationCard({ d, isApostolo, onAction }: {
               <span>·</span>
               <span>Nível {d.trust_level} — {TRUST_LABELS[d.trust_level]}</span>
               <span>·</span>
-              <span>{SCOPE_LABELS[d.scope]}: {d.scope_name}</span>
+              <span>{terms[d.scope] ?? d.scope}: {d.scope_name}</span>
             </div>
             {d.request_reason && (
               <p className="text-xs text-gray-600 italic">"{d.request_reason}"</p>
@@ -280,6 +278,8 @@ export function GrantDelegationDialog({ onClose, presetProfileId, presetProfileN
   const [scope, setScope] = useState<DelegationScope>("nacional");
   const [scopeName, setScopeName] = useState("Nacional");
   const [reason, setReason] = useState("");
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
+  const scopeEntries = SCOPE_KEYS.map((k) => [k, terms[k] ?? k] as const);
   const [expires, setExpires] = useState("");
   const [propagates, setPropagates] = useState(true);
   const [selectedPerms, setSelectedPerms] = useState<Set<string>>(new Set());
@@ -353,7 +353,7 @@ export function GrantDelegationDialog({ onClose, presetProfileId, presetProfileN
             <div><Label className="text-xs">Escopo *</Label>
               <Select value={scope} onValueChange={v => setScope(v as DelegationScope)}>
                 <SelectTrigger><SelectValue/></SelectTrigger>
-                <SelectContent>{SCOPES.map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                <SelectContent>{scopeEntries.map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
               </Select>
             </div>
           </div>
@@ -663,6 +663,8 @@ function RequestTab() {
   const [scope, setScope]     = useState<DelegationScope>("lg");
   const [scopeName, setScopeName] = useState("Meu LG");
   const [reason, setReason]   = useState("");
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
+  const scopeEntries = SCOPE_KEYS.map((k) => [k, terms[k] ?? k] as const);
   const [expires, setExpires] = useState("");
   const [busy, setBusy]       = useState(false);
   const [sent, setSent]       = useState(false);
@@ -715,7 +717,7 @@ function RequestTab() {
         <div><Label className="text-xs">Escopo *</Label>
           <Select value={scope} onValueChange={v => setScope(v as DelegationScope)}>
             <SelectTrigger><SelectValue/></SelectTrigger>
-            <SelectContent>{SCOPES.map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+            <SelectContent>{scopeEntries.map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
           </Select>
         </div>
       </div>
@@ -748,6 +750,8 @@ export function ActionModal({ action, delegation, onClose, onDone }: {
 }) {
   const [notes, setNotes]   = useState("");
   const [level, setLevel]   = useState(String(delegation.trust_level));
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
+  const scopeEntries = SCOPE_KEYS.map((k) => [k, terms[k] ?? k] as const);
   const [scope, setScope]   = useState<DelegationScope>(delegation.scope);
   const [scopeName, setScopeName] = useState(delegation.scope_name);
   const [expires, setExpires] = useState("");
@@ -810,7 +814,7 @@ export function ActionModal({ action, delegation, onClose, onDone }: {
                 <div><Label className="text-xs">Escopo</Label>
                   <Select value={scope} onValueChange={v => setScope(v as DelegationScope)}>
                     <SelectTrigger><SelectValue/></SelectTrigger>
-                    <SelectContent>{SCOPES.map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                    <SelectContent>{scopeEntries.map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>

@@ -10,7 +10,7 @@ import {
   Download, Search, Bell, Video, Compass,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins, QrCode, Library, FolderTree, Baby,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins, QrCode, Library, FolderTree, Baby, Tags,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ export type TabKey =
   | "control-tower" | "intelligence" | "ministerial-reports" | "metas"
   | "members" | "leadership" | "score" | "birthdays" | "discipleship"
   | "acolhimento" | "evasao" | "crm" | "prayer-requests" | "visit-requests"
-  | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao" | "conhecimento-biblico" | "biblioteca-conhecimento" | "biblia-referencias" | "kids-admin"
+  | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao" | "conhecimento-biblico" | "biblioteca-conhecimento" | "biblia-referencias" | "kids-admin" | "org-terminology"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
   | "news" | "banners" | "sermons" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
@@ -182,6 +182,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "leadership",  label: "Liderança / Níveis",  icon: <UserCog2 size={15} /> },
         { key: "invites",     label: "Convites",            icon: <Link2 size={15} /> },
         { key: "permissions", label: "Permissões",          icon: <Shield size={15} /> },
+        { key: "org-terminology", label: "Terminologia Organizacional", icon: <Tags size={15} /> },
         { key: "delegations", label: "Delegações",          icon: <Gavel size={15} /> },
         { key: "score",            label: "Score",               icon: <Star size={15} /> },
         { key: "birthdays",        label: "Aniversários",        icon: <Cake size={15} /> },
