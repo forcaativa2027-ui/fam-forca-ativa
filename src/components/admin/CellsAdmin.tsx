@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cellSchema, type CellInput } from "@/schemas";
-import { useCells, useSectors, useAllMembers, useChurches } from "@/hooks/use-queries";
+import { useCells, useSectors, useAllMembers, useChurches, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 import { createCell, updateCell, deleteCell } from "@/services/cells";
 import { logAudit, diffFields } from "@/services/audit";
@@ -215,12 +216,13 @@ function CellFormFields({ register, errors, watch, setValue, sectors, churches, 
   sectors: Sector[]; churches: Church[];
   members: { id: string; profile_id: string | null; full_name: string }[];
 }) {
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
   return (
     <>
-      <Field label="Nome do Life Group" error={errors.name?.message}>
+      <Field label={`Nome do ${terms.lg}`} error={errors.name?.message}>
         <Input {...register("name")} placeholder="Ex: Vida Nova" />
       </Field>
-      <Field label="Setor" error={errors.sector_id?.message}>
+      <Field label={terms.setor} error={errors.sector_id?.message}>
         <select {...register("sector_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
           <option value="">— Selecione um setor —</option>
           {sectors.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
