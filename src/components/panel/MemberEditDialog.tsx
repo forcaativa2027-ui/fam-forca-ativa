@@ -10,8 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useChurches, useCells, useStates, useNucleos, useDistricts, useSectors, useChurchAncestry,
-  useMemberRelocations, useLeadershipAssignments, useAllMembers, useMemberCard, useMemberStructureNames,
+  useMemberRelocations, useLeadershipAssignments, useAllMembers, useMemberCard, useMemberStructureNames, useOrgTerminology,
 } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 import { sendPasswordResetTo } from "@/services/security";
 import { updateMember } from "@/services/members";
@@ -272,6 +273,7 @@ function ClassificationTab({ member }: { member: Member }) {
 // ── Aba 3: Estrutura Organizacional (reaproveita relocate_member) ──
 function StructureTab({ member, onClose }: { member: Member; onClose: () => void }) {
   const qc = useQueryClient();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
   const { data: churches = [] } = useChurches();
   const { data: cells = [] } = useCells();
   const { data: statesList = [] } = useStates();
@@ -340,17 +342,17 @@ function StructureTab({ member, onClose }: { member: Member; onClose: () => void
             <option value="">— Todos —</option>{statesList.map(s => <option key={s.id} value={s.id}>{s.name} ({s.uf})</option>)}
           </select>
         </Field>
-        <Field label="Núcleo">
+        <Field label={terms.nucleo}>
           <select value={nucleoId} onChange={e => { setNucleoId(e.target.value); setDistrictId(""); setSectorId(""); setChurchId(""); setLgId(""); }} className="h-9 w-full rounded-md border bg-background px-2 text-xs">
             <option value="">— Todos —</option>{nucleosOpts.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
           </select>
         </Field>
-        <Field label="Distrito">
+        <Field label={terms.distrito}>
           <select value={districtId} onChange={e => { setDistrictId(e.target.value); setSectorId(""); setChurchId(""); setLgId(""); }} className="h-9 w-full rounded-md border bg-background px-2 text-xs">
             <option value="">— Todos —</option>{districtsOpts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </Field>
-        <Field label="Setor">
+        <Field label={terms.setor}>
           <select value={sectorId} onChange={e => { setSectorId(e.target.value); setChurchId(""); setLgId(""); }} className="h-9 w-full rounded-md border bg-background px-2 text-xs">
             <option value="">— Todos —</option>{sectorsOpts.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
