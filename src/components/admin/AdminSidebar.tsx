@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useMyProfile, useMyActiveModules } from "@/hooks/use-queries";
+import { useMyProfile, useMyActiveModules, useMyChurch } from "@/hooks/use-queries";
 import { DELEGATION_TAB_MAP } from "@/services/delegations";
 
 export type TabKey =
@@ -218,6 +218,8 @@ export function AdminSidebar({
   activeTab, onNavigate, counts = {}, userName, userRole, onSearch, mobileOnly = false,
 }: AdminSidebarProps) {
   const { data: profile } = useMyProfile();
+  const { data: myChurch } = useMyChurch(profile?.church_id);
+  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC FAMILY";
   const { data: activeModules = [] } = useMyActiveModules();
   const isApostolo = profile?.role === "apostolo";
 
@@ -262,7 +264,7 @@ export function AdminSidebar({
         {!collapsed && (
           <div className="flex items-center gap-2">
             <span className="text-gold text-base">✦</span>
-            <span className="font-display text-sm font-bold tracking-wide">CEC FAMILY</span>
+            <span className="font-display text-sm font-bold tracking-wide">{brandLabel}</span>
           </div>
         )}
         <button
@@ -416,7 +418,7 @@ export function AdminSidebar({
                 <aside className="flex h-full w-full flex-col bg-navy text-white">
                   <div className="flex h-14 items-center border-b border-white/10 px-4">
                     <span className="text-gold mr-2">✦</span>
-                    <span className="font-display text-sm font-bold">CEC FAMILY</span>
+                    <span className="font-display text-sm font-bold">{brandLabel}</span>
                   </div>
                   {onSearch && (
                     <button onClick={() => { onSearch(); setMobileOpen(false); }}

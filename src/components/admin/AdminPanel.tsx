@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useMyProfile, useMyActiveModules, usePendingCounts, useMfaRequired, useMfaFactors } from "@/hooks/use-queries";
+import { useMyProfile, useMyActiveModules, usePendingCounts, useMfaRequired, useMfaFactors, useMyChurch } from "@/hooks/use-queries";
 import { AdminSidebar, type TabKey } from "./AdminSidebar";
 import { GlobalSearchDialog } from "./GlobalSearchDialog";
 import { GlobalSearch } from "./GlobalSearch";
@@ -13,6 +13,8 @@ import { TabContent } from "./panel/TabRouter";
 
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
+  const { data: myChurch } = useMyChurch(me?.church_id);
+  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC Family";
   const { data: counts } = usePendingCounts();
   const { data: myModules = [] } = useMyActiveModules();
   const isAdmin = me && (me.role === "apostolo" || myModules.length > 0);
@@ -126,7 +128,7 @@ export default function AdminPanel() {
                 onSearch={() => setSearchOpen(true)}
                 mobileOnly
               />
-              <span className="font-display text-sm font-semibold text-white/70">CEC Family</span>
+              <span className="font-display text-sm font-semibold text-white/70">{brandLabel}</span>
             </div>
             <Button
               asChild
