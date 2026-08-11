@@ -8,15 +8,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { useChurches } from "@/hooks/use-queries";
+import { useChurches, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 import { getChurchDependencies, moveChurch, deleteChurch } from "@/services/community";
 import { logAudit } from "@/services/audit";
 import type { Church, ChurchDependencies } from "@/types/domain";
 
-const TYPE_LABELS: Record<string, string> = {
-  sede: "Sede", nucleo: "Núcleo", igreja_local: "Igreja Local",
-};
 const TYPE_COLORS: Record<string, string> = {
   sede: "bg-gold/15 text-gold border-gold/30",
   nucleo: "bg-blue-50 text-blue-700 border-blue-200",
@@ -125,6 +123,8 @@ function TreeNodeView({ node, lifeGroups, onMove, onAskDelete }: {
   const status = c.status_admin ?? "ativa";
   const statusCfg = STATUS_LABELS[status];
   const myLgs = lifeGroups.filter(lg => lg.church_id === c.id);
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
+  const typeLabels: Record<string, string> = { sede: terms.sede, nucleo: terms.nucleo, igreja_local: "Igreja Local" };
 
   return (
     <div>
@@ -146,7 +146,7 @@ function TreeNodeView({ node, lifeGroups, onMove, onAskDelete }: {
           <div className="flex flex-wrap items-center gap-1.5">
             <b className="truncate text-sm text-navy">{c.name}</b>
             <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase ${TYPE_COLORS[c.type]}`}>
-              {TYPE_LABELS[c.type]}
+              {typeLabels[c.type]}
             </span>
             {statusCfg && (
               <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase ${statusCfg.cls}`}>
@@ -209,6 +209,8 @@ function TreeNodeView({ node, lifeGroups, onMove, onAskDelete }: {
 // ── Dialog Mover ─────────────────────────────────────────────
 function MoveDialog({ church, churches, onClose }: { church: Church; churches: Church[]; onClose: () => void }) {
   const qc = useQueryClient();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
+  const typeLabels: Record<string, string> = { sede: terms.sede, nucleo: terms.nucleo, igreja_local: "Igreja Local" };
   const [selectedParent, setSelectedParent] = useState<string>(church.parent_id ?? "");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -245,7 +247,7 @@ function MoveDialog({ church, churches, onClose }: { church: Church; churches: C
           <select value={selectedParent} onChange={(e) => setSelectedParent(e.target.value)}
             className="h-10 w-full rounded-md border bg-background px-3 text-sm">
             {church.type === "sede" && <option value="">— Sem Comunidade Mãe —</option>}
-            {candidates.map(c => <option key={c.id} value={c.id}>{c.name} ({TYPE_LABELS[c.type]})</option>)}
+            {candidates.map(c => <option key={c.id} value={c.id}>{c.name} ({typeLabels[c.type]})</option>)}
           </select>
           {candidates.length === 0 && church.type !== "sede" && (
             <p className="text-xs text-yellow-700">

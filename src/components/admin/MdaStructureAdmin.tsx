@@ -12,7 +12,8 @@ import {
   districtSchema, areaSchema, sectorSchema,
   type DistrictInput, type AreaInput, type SectorInput,
 } from "@/schemas";
-import { useDistricts, useAreas, useSectors, useNucleos, useStates, useAllMembers } from "@/hooks/use-queries";
+import { useDistricts, useAreas, useSectors, useNucleos, useStates, useAllMembers, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 import * as Ch from "@/services/churches";
 import { logAudit, diffFields } from "@/services/audit";
@@ -62,6 +63,7 @@ function DistrictsSection() {
   const { data: districts = [] } = useDistricts();
   const { data: nucleos = [] } = useNucleos();
   const { data: statesList = [] } = useStates();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
   const { data: members = [] } = useAllMembers();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<District | null>(null);
@@ -131,7 +133,7 @@ function DistrictsSection() {
                   <option value="estado">Estado (pula o Núcleo)</option>
                 </select>
               </Field>
-              <Field label={parentLevel === "estado" ? "Estado" : "Núcleo"} error={errors.parent_id?.message}>
+              <Field label={parentLevel === "estado" ? "Estado" : terms.nucleo} error={errors.parent_id?.message}>
                 <select {...register("parent_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
                   <option value="">— Selecione —</option>
                   {parentOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -187,6 +189,7 @@ function AreasSection() {
   const { data: areas = [] } = useAreas();
   const { data: districts = [] } = useDistricts();
   const { data: members = [] } = useAllMembers();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
   const qc = useQueryClient();
   const [editing, setEditing] = useState<Area | null>(null);
   const [err, setErr] = useState("");
@@ -244,7 +247,7 @@ function AreasSection() {
               <Field label="Nome da área" error={errors.name?.message}>
                 <Input {...register("name")} placeholder="Ex: Área Norte" />
               </Field>
-              <Field label="Distrito" error={errors.district_id?.message}>
+              <Field label={terms.distrito} error={errors.district_id?.message}>
                 <select {...register("district_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
                   <option value="">— Selecione —</option>
                   {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -296,6 +299,7 @@ function SectorsSection() {
   const { data: sectors = [] } = useSectors();
   const { data: districts = [] } = useDistricts();
   const { data: nucleos = [] } = useNucleos();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
   const { data: areas = [] } = useAreas();
   const { data: members = [] } = useAllMembers();
   const qc = useQueryClient();
@@ -366,7 +370,7 @@ function SectorsSection() {
                   <option value="nucleo">Núcleo (pula o Distrito)</option>
                 </select>
               </Field>
-              <Field label={parentLevel === "nucleo" ? "Núcleo" : "Distrito"} error={errors.parent_id?.message}>
+              <Field label={parentLevel === "nucleo" ? terms.nucleo : terms.distrito} error={errors.parent_id?.message}>
                 <select {...register("parent_id")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
                   <option value="">— Selecione —</option>
                   {parentOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}

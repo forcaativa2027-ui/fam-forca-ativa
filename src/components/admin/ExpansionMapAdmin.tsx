@@ -7,7 +7,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useExpansionCities, useExpansionStates } from "@/hooks/use-queries";
+import { useExpansionCities, useExpansionStates, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 
 interface MarkerData {
@@ -181,6 +182,7 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
   const [lgs,       setLgs]       = useState<LgSummary[]>([]);
   const [finance,   setFinance]   = useState<FinanceSummary | null>(null);
   const [patrimony, setPatrimony] = useState<PatrimonyInfo | null>(null);
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
   const [reports,   setReports]   = useState<ReportStatus | null>(null);
   const [loading,   setLoading]   = useState(true);
   const [section,   setSection]   = useState("overview");
@@ -309,7 +311,7 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
                       <div>
                         <p className="font-semibold text-navy text-sm">{c.name}</p>
                         <p className="text-[11px] text-muted mt-0.5">
-                          {c.type === "sede" ? "Sede" : c.type === "nucleo" ? "Núcleo" : "Igreja Local"}
+                          {c.type === "sede" ? terms.sede : c.type === "nucleo" ? terms.nucleo : "Igreja Local"}
                           {c.status_admin && ` · ${c.status_admin}`}
                         </p>
                         {c.created_at && (
@@ -324,7 +326,7 @@ function LocationPanel({ marker, onClose }: { marker: MarkerData; onClose: () =>
                         c.type === "nucleo" ? "bg-blue-50 text-blue-700 border-blue-200" :
                         "bg-green-50 text-green-700 border-green-200",
                       ].join(" ")}>
-                        {c.type === "sede" ? "Sede" : c.type === "nucleo" ? "Núcleo" : "Igreja"}
+                        {c.type === "sede" ? terms.sede : c.type === "nucleo" ? terms.nucleo : "Igreja"}
                       </span>
                     </div>
                   </div>
