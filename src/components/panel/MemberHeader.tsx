@@ -1,8 +1,9 @@
 "use client";
 import Link from "next/link";
-import { LogOut, GraduationCap, Baby } from "lucide-react";
+import { LogOut, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Mais } from "@/components/shared/CECmaisBrand";
+import { Servo360Icon } from "@/components/servo360/Servo360Icon";
 
 export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
   active: "dashboard" | "carteira" | "academy" | "cecmais" | "kids";
@@ -19,18 +20,20 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
           <nav className="ml-3 hidden items-center gap-1 border-l border-white/20 pl-3 sm:flex">
             <Link
               href="/painel"
-              className={`rounded px-2 py-1.5 text-xs font-semibold transition ${
+              className={`flex items-center gap-1 rounded px-2 py-1.5 text-xs font-semibold transition ${
                 active === "dashboard" ? "border-b-2 border-gold text-white" : "text-white/60 hover:text-white"
               }`}
             >
+              <Servo360Icon iconKey="s360-icon-home" size={16} />
               Área do membro
             </Link>
             <Link
               href="/painel/carteira"
-              className={`rounded px-2 py-1.5 text-xs font-semibold transition ${
+              className={`flex items-center gap-1 rounded px-2 py-1.5 text-xs font-semibold transition ${
                 active === "carteira" ? "border-b-2 border-gold text-white" : "text-white/60 hover:text-white"
               }`}
             >
+              <Servo360Icon iconKey="s360-icon-wallet" size={16} />
               Carteira Digital
             </Link>
             <Link
@@ -39,7 +42,7 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
                 active === "academy" ? "border-b-2 border-gold text-white" : "text-white/60 hover:text-white"
               }`}
             >
-              <GraduationCap className="h-4 w-4 text-amber-400" />
+              <Servo360Icon iconKey="s360-icon-academy" size={16} />
               Academy
             </Link>
             <Link
