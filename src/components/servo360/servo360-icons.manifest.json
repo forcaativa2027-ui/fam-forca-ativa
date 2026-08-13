@@ -1,0 +1,89 @@
+{
+  "version": "1.1.0",
+  "icons": [
+    {
+      "key": "s360-icon-home",
+      "family": "core",
+      "name": "home",
+      "asset": "/assets/servo360/icons/core/home.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-dashboard",
+      "family": "core",
+      "name": "dashboard",
+      "asset": "/assets/servo360/icons/core/dashboard.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-notifications",
+      "family": "core",
+      "name": "notifications",
+      "asset": "/assets/servo360/icons/core/notifications.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-agenda",
+      "family": "core",
+      "name": "agenda",
+      "asset": "/assets/servo360/icons/core/agenda.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-cultos",
+      "family": "core",
+      "name": "cultos",
+      "asset": "/assets/servo360/icons/core/cultos.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-profile",
+      "family": "member",
+      "name": "profile",
+      "asset": "/assets/servo360/icons/member/profile.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-my-profile",
+      "family": "member",
+      "name": "my-profile",
+      "asset": "/assets/servo360/icons/member/my-profile.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-invites",
+      "family": "member",
+      "name": "invites",
+      "asset": "/assets/servo360/icons/member/invites.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-wallet",
+      "family": "member",
+      "name": "wallet",
+      "asset": "/assets/servo360/icons/member/wallet.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-bible",
+      "family": "academy",
+      "name": "bible-study",
+      "asset": "/assets/servo360/icons/academy/bible.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-admin",
+      "family": "admin",
+      "name": "admin",
+      "asset": "/assets/servo360/icons/admin/admin.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-security",
+      "family": "admin",
+      "name": "security",
+      "asset": "/assets/servo360/icons/admin/security.webp",
+      "status": "production-ready"
+    }
+  ]
+}
