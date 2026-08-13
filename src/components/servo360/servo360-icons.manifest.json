@@ -1,5 +1,5 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "icons": [
     {
       "key": "s360-icon-home",
@@ -65,10 +65,52 @@
       "status": "production-ready"
     },
     {
+      "key": "s360-icon-journey",
+      "family": "member",
+      "name": "journey",
+      "asset": "/assets/servo360/icons/member/journey.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-ministry",
+      "family": "member",
+      "name": "ministry",
+      "asset": "/assets/servo360/icons/member/ministry.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-prayer",
+      "family": "member",
+      "name": "prayer",
+      "asset": "/assets/servo360/icons/member/prayer.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-donate",
+      "family": "member",
+      "name": "giving",
+      "asset": "/assets/servo360/icons/member/giving.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-help-support",
+      "family": "member",
+      "name": "help-support",
+      "asset": "/assets/servo360/icons/member/help-support.webp",
+      "status": "production-ready"
+    },
+    {
       "key": "s360-icon-bible",
       "family": "academy",
       "name": "bible-study",
       "asset": "/assets/servo360/icons/academy/bible.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-academy",
+      "family": "academy",
+      "name": "academy",
+      "asset": "/assets/servo360/icons/academy/academy.webp",
       "status": "production-ready"
     },
     {
@@ -83,6 +125,13 @@
       "family": "admin",
       "name": "security",
       "asset": "/assets/servo360/icons/admin/security.webp",
+      "status": "production-ready"
+    },
+    {
+      "key": "s360-icon-life-group",
+      "family": "life-group",
+      "name": "life-group",
+      "asset": "/assets/servo360/icons/life-group/life-group.webp",
       "status": "production-ready"
     }
   ]
