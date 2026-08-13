@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { GraduationCap, Map, ChevronDown, ChevronRight, ArrowLeft, CheckCircle2, Circle, PlayCircle, BookOpen as BibleIcon, BookOpenText, UserCheck, Award, Compass, Settings2 } from "lucide-react";
+import { GraduationCap, Map, ChevronDown, ChevronRight, ArrowLeft, CheckCircle2, Circle, PlayCircle, BookOpen as BibleIcon, UserCheck, Award, Compass, Settings2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase/client";
@@ -21,6 +21,7 @@ import { useMyContinueLearning } from "@/hooks/use-queries";
 import { AcademyHeader } from "./academy/Headers";
 import { ContinueCard, StartCard } from "./academy/ContinueCard";
 import { FeatureCard, type FeatureCardViewModel } from "./academy/FeatureCard";
+import { Servo360Card } from "../servo360/Servo360Card";
 import { SchoolCard } from "./academy/SchoolCard";
 import { SectionHeader, StatusBadge } from "@/components/shared/ui/SectionHeader";
 import type { Member, Course, CourseContentItem } from "@/types/domain";
@@ -75,7 +76,6 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
 
   const exploreItems: { vm: FeatureCardViewModel; onClick: () => void }[] = [
     { vm: { id: "explorer", title: "Exploração Bíblica", description: "Lugares, personagens, linha do tempo, arqueologia…", icon: Compass, tone: "gold" }, onClick: () => setShowExplorer(true) },
-    { vm: { id: "bible", title: "Bíblia Integrada", description: "Leia, pesquise e aprofunde o estudo, com grifos e anotações.", icon: BookOpenText, tone: "navy" }, onClick: () => setShowBible(true) },
   ];
 
   return (
@@ -113,6 +113,14 @@ export function AcademyTab({ member, onGoToJourney }: { member: Member | null; o
         <SectionHeader title="Explorar" />
         <div className="grid gap-2.5 sm:grid-cols-2">
           {exploreItems.map((item) => <FeatureCard key={item.vm.id} vm={item.vm} onClick={item.onClick} />)}
+          {/* SERVO360-ICON-001 — piloto: Bíblia Integrada com ícone 3D e Servo360Card oficial */}
+          <Servo360Card
+            title="Bíblia Integrada"
+            description="Leia, pesquise e aprofunde o estudo, com grifos e anotações."
+            iconKey="s360-icon-bible"
+            variant="feature"
+            onClick={() => setShowBible(true)}
+          />
         </div>
       </div>
 
