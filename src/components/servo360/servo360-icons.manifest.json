@@ -9,7 +9,7 @@
     },
     {
       "key": "s360-icon-agenda",
-      "asset": "/assets/servo360/icons/content/agenda/agenda.webp",
+      "asset": "/assets/servo360/icons/agenda/agenda.webp",
       "source": "agenda/agenda.webp"
     },
     {
@@ -19,7 +19,7 @@
     },
     {
       "key": "s360-icon-events",
-      "asset": "/assets/servo360/icons/content/events/events.webp",
+      "asset": "/assets/servo360/icons/events/events.webp",
       "source": "events/events.webp"
     },
     {
@@ -34,7 +34,7 @@
     },
     {
       "key": "s360-icon-live",
-      "asset": "/assets/servo360/icons/content/live/live.webp",
+      "asset": "/assets/servo360/icons/live/live.webp",
       "source": "live/live.webp"
     },
     {
@@ -79,17 +79,17 @@
     },
     {
       "key": "s360-icon-news",
-      "asset": "/assets/servo360/icons/content/news/news.webp",
+      "asset": "/assets/servo360/icons/news/news.webp",
       "source": "news/news.webp"
     },
     {
       "key": "s360-icon-web-radio",
-      "asset": "/assets/servo360/icons/content/radio/web-radio.webp",
+      "asset": "/assets/servo360/icons/radio/web-radio.webp",
       "source": "radio/web-radio.webp"
     },
     {
       "key": "s360-icon-services",
-      "asset": "/assets/servo360/icons/content/service/service.webp",
+      "asset": "/assets/servo360/icons/service/service.webp",
       "source": "service/service.webp"
     },
     {
@@ -99,7 +99,7 @@
     },
     {
       "key": "s360-icon-videos",
-      "asset": "/assets/servo360/icons/content/videos/videos.webp",
+      "asset": "/assets/servo360/icons/videos/videos.webp",
       "source": "videos/videos.webp"
     }
   ]
