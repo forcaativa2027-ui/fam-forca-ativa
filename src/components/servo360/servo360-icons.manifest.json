@@ -1,11 +1,31 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "basePath": "/assets/servo360/icons",
   "icons": [
     {
       "key": "s360-icon-bible-integrated",
       "asset": "/assets/servo360/icons/academy/bible-integrated.webp",
       "source": "academy/bible-integrated.webp"
+    },
+    {
+      "key": "s360-icon-bible",
+      "asset": "/assets/servo360/icons/academy/bible.webp",
+      "source": "academy/bible.webp"
+    },
+    {
+      "key": "s360-icon-home",
+      "asset": "/assets/servo360/icons/member/profile.webp",
+      "source": "member/profile.webp"
+    },
+    {
+      "key": "s360-icon-wallet",
+      "asset": "/assets/servo360/icons/member/wallet.webp",
+      "source": "member/wallet.webp"
+    },
+    {
+      "key": "s360-icon-academy",
+      "asset": "/assets/servo360/icons/academy/academy.webp",
+      "source": "academy/academy.webp"
     },
     {
       "key": "s360-icon-agenda",
