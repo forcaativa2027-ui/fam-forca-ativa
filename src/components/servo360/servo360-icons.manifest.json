@@ -1,138 +1,106 @@
 {
-  "version": "1.2.0",
+  "version": "1.0.0",
+  "basePath": "/assets/servo360/icons",
   "icons": [
     {
-      "key": "s360-icon-home",
-      "family": "core",
-      "name": "home",
-      "asset": "/assets/servo360/icons/core/home.webp",
-      "status": "production-ready"
-    },
-    {
-      "key": "s360-icon-dashboard",
-      "family": "core",
-      "name": "dashboard",
-      "asset": "/assets/servo360/icons/core/dashboard.webp",
-      "status": "production-ready"
-    },
-    {
-      "key": "s360-icon-notifications",
-      "family": "core",
-      "name": "notifications",
-      "asset": "/assets/servo360/icons/core/notifications.webp",
-      "status": "production-ready"
+      "key": "s360-icon-bible-integrated",
+      "asset": "/assets/servo360/icons/academy/bible-integrated.webp",
+      "source": "academy/bible-integrated.webp"
     },
     {
       "key": "s360-icon-agenda",
-      "family": "core",
-      "name": "agenda",
-      "asset": "/assets/servo360/icons/core/agenda.webp",
-      "status": "production-ready"
+      "asset": "/assets/servo360/icons/content/agenda/agenda.webp",
+      "source": "agenda/agenda.webp"
     },
     {
-      "key": "s360-icon-cultos",
-      "family": "core",
-      "name": "cultos",
-      "asset": "/assets/servo360/icons/core/cultos.webp",
-      "status": "production-ready"
+      "key": "s360-icon-web-radio-app",
+      "asset": "/assets/servo360/icons/app/web-radio-app.webp",
+      "source": "app/web-radio-app.webp"
     },
     {
-      "key": "s360-icon-profile",
-      "family": "member",
-      "name": "profile",
-      "asset": "/assets/servo360/icons/member/profile.webp",
-      "status": "production-ready"
+      "key": "s360-icon-events",
+      "asset": "/assets/servo360/icons/content/events/events.webp",
+      "source": "events/events.webp"
     },
     {
-      "key": "s360-icon-my-profile",
-      "family": "member",
-      "name": "my-profile",
-      "asset": "/assets/servo360/icons/member/my-profile.webp",
-      "status": "production-ready"
-    },
-    {
-      "key": "s360-icon-invites",
-      "family": "member",
-      "name": "invites",
-      "asset": "/assets/servo360/icons/member/invites.webp",
-      "status": "production-ready"
-    },
-    {
-      "key": "s360-icon-wallet",
-      "family": "member",
-      "name": "wallet",
-      "asset": "/assets/servo360/icons/member/wallet.webp",
-      "status": "production-ready"
-    },
-    {
-      "key": "s360-icon-journey",
-      "family": "member",
-      "name": "journey",
-      "asset": "/assets/servo360/icons/member/journey.webp",
-      "status": "production-ready"
-    },
-    {
-      "key": "s360-icon-ministry",
-      "family": "member",
-      "name": "ministry",
-      "asset": "/assets/servo360/icons/member/ministry.webp",
-      "status": "production-ready"
-    },
-    {
-      "key": "s360-icon-prayer",
-      "family": "member",
-      "name": "prayer",
-      "asset": "/assets/servo360/icons/member/prayer.webp",
-      "status": "production-ready"
-    },
-    {
-      "key": "s360-icon-donate",
-      "family": "member",
-      "name": "giving",
-      "asset": "/assets/servo360/icons/member/giving.webp",
-      "status": "production-ready"
-    },
-    {
-      "key": "s360-icon-help-support",
-      "family": "member",
-      "name": "help-support",
-      "asset": "/assets/servo360/icons/member/help-support.webp",
-      "status": "production-ready"
-    },
-    {
-      "key": "s360-icon-bible",
-      "family": "academy",
-      "name": "bible-study",
-      "asset": "/assets/servo360/icons/academy/bible.webp",
-      "status": "production-ready"
-    },
-    {
-      "key": "s360-icon-academy",
-      "family": "academy",
-      "name": "academy",
-      "asset": "/assets/servo360/icons/academy/academy.webp",
-      "status": "production-ready"
-    },
-    {
-      "key": "s360-icon-admin",
-      "family": "admin",
-      "name": "admin",
-      "asset": "/assets/servo360/icons/admin/admin.webp",
-      "status": "production-ready"
-    },
-    {
-      "key": "s360-icon-security",
-      "family": "admin",
-      "name": "security",
-      "asset": "/assets/servo360/icons/admin/security.webp",
-      "status": "production-ready"
+      "key": "s360-icon-giving",
+      "asset": "/assets/servo360/icons/finance/giving.webp",
+      "source": "finance/giving.webp"
     },
     {
       "key": "s360-icon-life-group",
-      "family": "life-group",
-      "name": "life-group",
-      "asset": "/assets/servo360/icons/life-group/life-group.webp",
-      "status": "production-ready"
+      "asset": "/assets/servo360/icons/community/life-group/life-group.webp",
+      "source": "life-group/life-group.webp"
+    },
+    {
+      "key": "s360-icon-live",
+      "asset": "/assets/servo360/icons/content/live/live.webp",
+      "source": "live/live.webp"
+    },
+    {
+      "key": "s360-icon-alerts",
+      "asset": "/assets/servo360/icons/member/alerts.webp",
+      "source": "member/alerts.webp"
+    },
+    {
+      "key": "s360-icon-discipleship",
+      "asset": "/assets/servo360/icons/member/discipleship.webp",
+      "source": "member/discipleship.webp"
+    },
+    {
+      "key": "s360-icon-invite",
+      "asset": "/assets/servo360/icons/member/invite.webp",
+      "source": "member/invite.webp"
+    },
+    {
+      "key": "s360-icon-notifications",
+      "asset": "/assets/servo360/icons/member/notifications.webp",
+      "source": "member/notifications.webp"
+    },
+    {
+      "key": "s360-icon-participation",
+      "asset": "/assets/servo360/icons/member/participation.webp",
+      "source": "member/participation.webp"
+    },
+    {
+      "key": "s360-icon-profile",
+      "asset": "/assets/servo360/icons/member/profile.webp",
+      "source": "member/profile.webp"
+    },
+    {
+      "key": "s360-icon-prayer-requests",
+      "asset": "/assets/servo360/icons/ministry/prayer-requests.webp",
+      "source": "ministry/prayer-requests.webp"
+    },
+    {
+      "key": "s360-icon-worship",
+      "asset": "/assets/servo360/icons/ministry/worship.webp",
+      "source": "ministry/worship.webp"
+    },
+    {
+      "key": "s360-icon-news",
+      "asset": "/assets/servo360/icons/content/news/news.webp",
+      "source": "news/news.webp"
+    },
+    {
+      "key": "s360-icon-web-radio",
+      "asset": "/assets/servo360/icons/content/radio/web-radio.webp",
+      "source": "radio/web-radio.webp"
+    },
+    {
+      "key": "s360-icon-services",
+      "asset": "/assets/servo360/icons/content/service/service.webp",
+      "source": "service/service.webp"
+    },
+    {
+      "key": "s360-icon-talk-to-someone",
+      "asset": "/assets/servo360/icons/support/talk-to-someone.webp",
+      "source": "support/talk-to-someone.webp"
+    },
+    {
+      "key": "s360-icon-videos",
+      "asset": "/assets/servo360/icons/content/videos/videos.webp",
+      "source": "videos/videos.webp"
     }
   ]
 }
