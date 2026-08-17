@@ -47,7 +47,7 @@ export function RadioPage() {
 
   useEffect(() => {
     if (config?.stream_url) {
-      player.playStream(config.stream_url, config.display_name ?? "Rádio Web", config.logo_url ?? null);
+      player.playStream(config.stream_url ?? "", config.display_name ?? "Rádio Web", config.logo_url ?? undefined);
     }
   }, [config, player]);
 
