@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -13,6 +14,7 @@ export interface RadioFavorite {
 
 export interface RadioFavoriteInsert {
   program_id: string;
+  user_id: string;
 }
 
 export function useRadioFavorites(userId: string | null) {
@@ -34,14 +36,14 @@ export function useRadioFavorites(userId: string | null) {
   });
 }
 
-export function useToggleFavorite() {
+export function useToggleFavorite(userId: string) {
   return useMutation({
     mutationFn: async (programId: string) => {
       const { data, error } = await supabase
         .from("radio_user_favorites")
         .upsert(
           {
-            user_id: userId!,
+            user_id: userId,
             program_id: programId,
           },
           {
@@ -52,6 +54,6 @@ export function useToggleFavorite() {
       
       if (error) throw error;
       return data;
-    },
+
   });
 }
