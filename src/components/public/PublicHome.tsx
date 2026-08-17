@@ -26,6 +26,7 @@ import { PublicParticipateSection } from "./PublicParticipateSection";
 import { HeroCarousel } from "./HeroCarousel";
 import type { EventItem, Church, Cell } from "@/types/domain";
 import { RadioPage } from "@/components/radio/RadioPage";
+import { RadioMiniPlayer } from "@/components/radio/RadioMiniPlayer";
 
 const STATUS_LABELS: Record<EventItem["status"], string> = {
   abertas: "Inscrições abertas", encerradas: "Encerradas", esgotado: "Esgotado", em_breve: "Em breve",
