@@ -20,6 +20,7 @@ import * as Sec from "@/services/security";
 import * as CL from "@/services/contentLibrary";
 import * as Tx from "@/services/taxonomy";
 import * as Wf from "@/services/editorialWorkflow";
+import * as Radio from "@/services/radio";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -985,3 +986,13 @@ export const useMyCertificate = (courseId: string | null, profileId: string | nu
   useQuery({ queryKey: ["my-certificate", courseId, profileId], queryFn: () => AcademyContent.getMyCertificate(supabase, courseId as string, profileId as string), enabled: !!courseId && !!profileId });
 export const useMyCertificates = (profileId: string | null) =>
   useQuery({ queryKey: ["my-certificates", profileId], queryFn: () => AcademyContent.listMyCertificates(supabase, profileId as string), enabled: !!profileId });
+
+// Rádio Web
+export const useRadioConfig = (churchId?: string | null) =>
+  useQuery({ queryKey: ["radio-config", churchId ?? "all"], queryFn: () => Radio.getRadioConfig(supabase, churchId) });
+
+export const useRadioPrograms = (churchId?: string | null) =>
+  useQuery({ queryKey: ["radio-programs", churchId ?? "all"], queryFn: () => Radio.listRadioPrograms(supabase, churchId) });
+
+export const useRadioEpisodes = (churchId?: string | null, category?: string) =>
+  useQuery({ queryKey: ["radio-episodes", churchId ?? "all", category ?? "all"], queryFn: () => Radio.listRadioEpisodes(supabase, churchId, category) });

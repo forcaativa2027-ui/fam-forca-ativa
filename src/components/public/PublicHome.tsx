@@ -7,6 +7,7 @@ import {
   Clock, ArrowRight, ExternalLink, LayoutDashboard, FileDown,
   Home, Newspaper, Video, MessageCircle, HeartHandshake, LogIn, Users2,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -71,6 +72,7 @@ export default function PublicHome() {
   const navItems: BottomNavItem[] = [
     { key: "inicio", label: "Início", icon: <Home size={18} />, onClick: () => setTab("inicio") },
     { key: "noticias", label: "Notícias", icon: <Newspaper size={18} />, onClick: () => setTab("noticias") },
+    { key: "radio", label: "Radio", icon: <Music size={18} />, onClick: () => setTab("radio") },
     { key: "videos", label: "Vídeos", icon: <Video size={18} />, onClick: () => setTab("videos") },
     { key: "cultos", label: "Cultos", icon: <ChurchIcon size={18} />, onClick: () => setTab("cultos") },
     { key: "agenda", label: "Agenda", icon: <Calendar size={18} />, onClick: () => setTab("agenda") },
@@ -221,6 +223,11 @@ export default function PublicHome() {
           <PublicNewsSection churchId={communityId} />
         </TabsContent>
 
+        {/* === RADIO === */}
+        <TabsContent value="radio">
+          <RadioPage />
+        </TabsContent>
+
         {/* === CULTOS === */}
         <TabsContent value="cultos">
           <h2 className="mb-2 font-display text-2xl text-navy">Cultos e encontros</h2>
@@ -364,6 +371,7 @@ export default function PublicHome() {
         </TabsContent>
       </Tabs>
 
+      <RadioMiniPlayer />
       <BottomNavSpacer />
 
       <footer className="container flex flex-wrap items-center justify-between gap-3 border-t py-6">

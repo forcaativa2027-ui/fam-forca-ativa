@@ -1171,8 +1171,63 @@ export interface RelmdaMonthlyComparisonRow {
 }
 
 // ============================================================
+// Rádio Web
+// ============================================================
+export interface RadioConfig {
+  id: string;
+  church_id: string | null;
+  is_enabled: boolean;
+  display_name: string;
+  short_name: string | null;
+  logo_url: string | null;
+  stream_url: string | null;
+  theme_color: string | null;
+  description: string | null;
+}
+
+export interface RadioProgram {
+  id: string;
+  church_id: string | null;
+  title: string;
+  description: string | null;
+  host_name: string | null;
+  cover_url: string | null;
+  weekday: Weekday | null;
+  start_time: string | null;
+  end_time: string | null;
+  is_recurring: boolean;
+  is_active: boolean;
+  sort_order: number;
+}
+
+export type RadioEpisodeCategory =
+  | "pregacao"
+  | "louvor"
+  | "noticia"
+  | "devocional"
+  | "entrevista"
+  | "estudo"
+  | "especial";
+
+export interface RadioEpisode {
+  id: string;
+  church_id: string | null;
+  program_id: string | null;
+  title: string;
+  description: string | null;
+  cover_url: string | null;
+  audio_url: string;
+  duration_seconds: number | null;
+  category: RadioEpisodeCategory | null;
+  speaker: string | null;
+  published_at: string | null;
+  status: "draft" | "published" | "archived";
+  is_featured: boolean;
+  sort_order: number;
+}
+
+// ============================================================
 // Eventos com Inscrição (sem pagamento por enquanto)
-// Diferente de EventItem/EventStatus acima, que são da Agenda simples.
 // ============================================================
 export type RegistrationEventStatus = "rascunho" | "em_revisao" | "agendado" | "inscricoes_abertas" | "inscricoes_encerradas" | "lotado" | "em_andamento" | "finalizado" | "cancelado" | "arquivado";
 export type EventRegistrationStatus = "confirmada" | "lista_espera" | "cancelada";
