@@ -71,3 +71,4 @@ export function suggestRotation(memberIds: string[]): (string | null)[] {
   const shuffled = [...memberIds].sort(() => Math.random() - 0.5);
   return MEETING_MOMENTS.map((_, i) => shuffled[i % shuffled.length]);
 }
+
