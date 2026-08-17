@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { QueryProvider } from "@/components/layout/QueryProvider";
 import { AccessibilityProvider } from "@/components/shared/AccessibilityProvider";
+import { RadioPlayerProvider } from "@/components/radio/RadioPlayerContext";
 import { AccessibilityButton } from "@/components/shared/AccessibilityButton";
 import { AccessibilityOnboarding } from "@/components/shared/AccessibilityOnboarding";
 
@@ -15,11 +16,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR">
       <body>
         <QueryProvider>
-          <AccessibilityProvider>
-            {children}
-            <AccessibilityButton />
-            <AccessibilityOnboarding />
-          </AccessibilityProvider>
+          <RadioPlayerProvider>
+            <AccessibilityProvider>
+              {children}
+              <AccessibilityButton />
+              <AccessibilityOnboarding />
+            </AccessibilityProvider>
+          </RadioPlayerProvider>
         </QueryProvider>
       </body>
     </html>
