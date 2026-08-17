@@ -1,173 +1,170 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRadioPlayer } from "./RadioPlayerContext";
-import { listRadioPrograms, listRadioEpisodes, getRadioConfig } from "@/services/radio";
-import { useRadioConfig, useRadioPrograms, useRadioEpisodes } from "@/hooks/use-queries";
-import { ChurchIcon } from "lucide-react";
+import { useRadioPlayer } from "@/contexts/RadioPlayerContext";
+import { useToast } from "@/components/shared/ToastProvider";
 
-interface Program {
+interface RadioProgram {
   id: string;
   title: string;
-  description: string | null;
-  host_name: string | null;
-  cover_url: string | null;
-  weekday: string | null;
-  start_time: string | null;
-  end_time: string | null;
-  is_recurring: boolean;
-  is_active: boolean;
-  sort_order: number;
+  description?: string;
+  host_name?: string;
+  category: string;
+  start_time: string;
+  end_time?: string;
+  isLive: boolean;
+  audioUrl: string;
+  thumbnailUrl?: string;
 }
 
-interface Episode {
-  id: string;
-  title: string;
-  description: string | null;
-  cover_url: string | null;
-  audio_url: string;
-  duration_seconds: number | null;
-  category: string | null;
-  speaker: string | null;
-  published_at: string | null;
-  status: "draft" | "published" | "archived";
-  is_featured: boolean;
-  sort_order: number;
-}
+const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  pregacao: React.createElement("svg", { className: "h-5 w-5" }, ...),
+  louvor: React.createElement("svg", { className: "h-5 w-5" }, ...),
+  devocional: React.createElement("svg", { className: "h-5 w-5" }, ...),
+  noticia: React.createElement("svg", { className: "h-5 w-5" }, ...),
+  entrevista: React.createElement("svg", { className: "h-5 w-5" }, ...),
+  estudo: React.createElement("svg", { className: "h-5 w-5" }, ...),
+  especial: React.createElement("svg", { className: "h-5 w-5" }, ...),
+};
 
 export function RadioPage() {
-  const [churchId, setChurchId] = useState<string | undefined>(undefined);
-  const [category, setCategory] = useState<string | undefined>(undefined);
-  const [showPlayer, setShowPlayer] = useState(false);
-
-  const { data: config = null } = useRadioConfig(churchId);
-  const { data: programs = [] } = useRadioPrograms(churchId);
-  const { data: episodes = [], isLoading } = useRadioEpisodes(churchId, category);
-
-  const player = useRadioPlayer();
+  const { state, play } = useRadioPlayer();
+  const { toast } = useToast();
+  const [programs, setPrograms] = useState<RadioProgram[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState<string>("todos");
 
   useEffect(() => {
-    if (config?.stream_url) {
-      player.playStream(config.stream_url ?? "", config.display_name ?? "Rádio Web", config.logo_url ?? undefined);
+    // Carregar programas do banco quando o componente monta
+    const loadPrograms = async () => {
+      try {
+        const { supabase } = await import("@/lib/supabase/client");
+        const { data, error } = await supabase
+          .from("radio_programs")
+          .select("*")
+          .eq("is_active", true)
+          .order("start_time", { ascending: true });
+        
+        if (error) throw error;
+        setPrograms(data as RadioProgram[]);
+      } catch (e) {
+        console.error("Erro ao carregar programas:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadPrograms();
+  }, []);
+
+  function handlePlay(program: RadioProgram) {
+    // Verificar se já está tocando esse programa
+    if (state.currentTrack?.id === program.id && state.isPlaying) {
+      // Se estiver tocando o mesmo, faz pause
+      // Note: precisaríamos de um toggle no player
+      toast("info", "Já está tocando", program.title);
+      return;
     }
-  }, [config, player]);
+    
+    play({
+      id: program.id,
+      title: program.title,
+      artist: program.host_name,
+      url: program.audioUrl,
+      isLive: program.isLive,
+      thumbnail: program.thumbnailUrl,
+    });
+    toast("success", "Ouvindo agora", program.title);
+  }
 
-  return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container mx-auto max-w-7xl">
-        <header className="mb-8">
-          <h1 className="font-display text-3xl font-bold text-navy">Rádio Web</h1>
-          {config && (
-            <p className="mt-2 text-muted">{config.display_name || "Rádio Web"}</p>
-          )}
-        </header>
+  const categories = ["todos", ...new Set(programs.map(p => p.category))];
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          {/* Configuração e Programação (esquerda) */}
-          <div className="lg:col-span-2 space-y-6">
-
-            {/* Config da rádio */}
-            {config && (
-              <div className="bg-card p-6 rounded-xl border border-gold/30">
-                <div className="flex items-center gap-4">
-                  {config.logo_url && (
-                    <img src={config.logo_url} alt={config.display_name} className="h-12 w-12 rounded object-cover" />
-                  )}
-                  <div>
-                    <h2 className="font-display text-xl font-bold text-navy">{config.display_name}</h2>
-                    {config.short_name && (
-                      <p className="text-sm text-muted">{config.short_name}</p>
-                    )}
-                  </div>
-                </div>
-                <p className="mt-2 text-sm text-muted">{config.description || "Sem descrição"}.</p>
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <button onClick={() => setShowPlayer(true)} className="flex-1 py-2 rounded bg-gold text-navy font-semibold">Tocar AO VIVO</button>
-                  <button onClick={() => setShowPlayer(false)} className="py-2 rounded border border-gold text-navy font-semibold">Player</button>
-                </div>
-              </div>
-            )}
-
-            {/* Programação */}
-            <div>
-              <h2 className="font-display text-2xl font-bold text-navy">Programação</h2>
-              {programs.length === 0 && (
-                <p className="text-muted">Nenhum programa cadastrado.</p>
-              )}
-              <div className="space-y-3">
-                {programs.map((p) => (
-                  <div key={p.id} className="p-4 rounded-xl border border-gold/30 hover:border-gold">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-navy">{p.title}</span>
-                      {p.is_recurring && (
-                        <span className="text-xs bg-gold/10 text-gold px-2 py-1 rounded">Recorrente</span>
-                      )}
-                    </div>
-                    {p.description && (
-                      <p className="mt-1 text-sm text-muted line-clamp-2">{p.description}</p>
-                    )}
-                    <div className="mt-2 flex items-center gap-2 text-xs text-muted">
-                      {p.weekday && <span>{WEEKDAY_LABELS[p.weekday as keyof typeof WEEKDAY_LABELS]}:</span>}
-      <span>{p.start_time?.slice(0, 5) || "—"} – {p.end_time?.slice(0, 5) || "—"}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Episódios (direita) */}
-          <div>
-            <h2 className="font-display text-2xl font-bold text-navy">Episódios</h2>
-            {isLoading && (
-              <p className="text-muted py-4">Carregando...</p>
-            )}
-            {episodes.length === 0 && (
-              <p className="text-muted py-4">Nenhum episódio disponível.</p>
-            )}
-            <div className="space-y-3">
-              {episodes.map((e) => (
-                <div key={e.id} className="p-4 rounded-xl border border-gray-200 hover:border-gold transition-colors">
-                  <div className="flex items-center gap-3">
-                    {e.is_featured && (
-                      <span className="text-xs bg-gold/10 text-gold px-2 py-1 rounded">Destacado</span>
-                    )}
-                    <span className="text-sm font-medium text-navy">{e.title}</span>
-                  </div>
-                  {e.description && (
-                    <p className="mt-1 text-sm text-muted line-clamp-2">{e.description}</p>
-                  )}
-                  <div className="mt-2 flex items-center gap-2 text-xs text-muted">
-                    {e.speaker && <span>{e.speaker}</span>}
-                    {e.published_at && (
-                      <span>
-                        {new Date(e.published_at).toLocaleDateString("pt-BR")}
-                        {e.category && <span>{e.category}</span>}
-                      </span>
-                    )}
-                  </div>
-                  {e.audio_url && (
-                    <button
-                      onClick={() => {
-                        player.playEpisode(e.audio_url, e.title, e.cover_url ?? undefined);
-                        setShowPlayer(true);
-                      }}
-                      className="mt-2 w-full py-2 rounded bg-gold text-navy font-semibold text-sm"
-                    >
-                      Tocar
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <div className="text-center">
+          <svg className="h-12 w-12 mx-auto text-gold animate-pulse" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" fill="none" stroke="gold" strokeWidth="3"/>
+            <path fill="gold" d="M8 16l4-4 4 4V8"/>
+          </svg>
+          <p className="mt-3 text-sm text-muted-foreground">Carregando Rádio Web...</p>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 pb-24">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl font-bold text-navy">Rádio Web</h1>
+        <p className="text-sm text-muted-foreground">Sua comunidade, sempre ouvindo</p>
+      </div>
+
+      {/* Ao Vivo */}
+      {state.currentTrack && state.currentTrack.isLive && (
+        <section className="rounded-2xl border-2 border-red-200 bg-red-50 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white uppercase">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5C5.8 3.5 2.5 5.7 1 8.5s3.5 5 8 5 8-2.5 8-5S18.5 3.5 12 3.5zm0 2C5.5 5.5 2 8 2 11.5s2.5 6 6 6 6-2.5 6-6S14.5 5.5 12 5.5zm0 6.5C2.5 8.5 1 10.5 1 14s2.5 5.5 6 5.5 5-2.5 8-5S17 8.5 12 8.5zm0 6.5C8 11.5 6 13 6 15.5s2.5 4.5 6 4.5S15.5 11.5 12 11.5zm3.5-10.5c.8-.8 2-.8 2.8 0l2.1 2.1c.4.4.4 1 0 1.4l-2 2c-.4.4-1 .4-1.4 0l-1.4-1.4c-.8-.8-2-.8-2.8 0l-2.1 2.1c-.4.4-.4 1 0 1.4l1.4 1.4c.4.4 1 .4 1.4 0z"/></svg>
+              Tocando
+            </span>
+          </div>
+          <h2 className="text-xl font-bold text-navy">{state.currentTrack?.title}</h2>
+          {state.currentTrack?.artist && <p className="text-sm text-muted-foreground">com {state.currentTrack?.artist}</p>}
+          {state.currentTrack?.description && <p className="text-sm text-ink/70">{state.currentTrack?.description}</p>}
+          <button
+            onClick={() => handlePlay({ ...state.currentTrack, isLive: true })}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gold px-4 py-3 font-bold text-navy hover:bg-gold/90 transition"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="gold" strokeWidth="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg> Continuar
+          </button>
+        </section>
+      )}
+
+      {/* Programação */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-bold text-navy">Programação e Conteúdos</h2>
+        {programs.length === 0 && (
+          <p className="text-center text-sm text-muted-foreground py-8">
+            Nenhum conteúdo disponível nesta categoria.
+          </p>
+        )}
+        {programs.map(program => {
+          const isPlaying = state.currentTrack?.id === program.id && state.isPlaying;
+          const CategoryIcon = CATEGORY_ICONS[program.category] || React.createElement("svg", { className: "h-5 w-5 text-navy/50" }, ...);
+          
+          return (
+            <div
+              key={program.id}
+              className={`group flex items-center gap-3 rounded-xl border p-4 transition hover:shadow-md cursor-pointer ${isPlaying ? "border-gold bg-gold/5" : "hover:border-navy/30"}`}
+              onClick={() => handlePlay(program)}
+            >
+              <div className={`shrink-0 flex h-12 w-12 items-center justify-center rounded-xl ${isPlaying ? "bg-gold/20" : "bg-muted"}`}>
+                {isPlaying ? (
+                  <svg className="h-5 w-5 text-gold animate-pulse" viewBox="0 0 24 24" fill="currentColor"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                ) : (
+                  CategoryIcon
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-sm text-navy truncate">{program.title}</p>
+                {program.host_name && <p className="text-xs text-muted-foreground">{program.host_name}</p>}
+                <div className="flex items-center gap-2 mt-0.5">
+                  {program.isLive && (
+                    <span className="text-[10px] font-bold text-red-500">AO VIVO</span>
+                  )}
+                  <span className="text-[10px] text-muted-foreground">
+                    {new Date(program.start_time * 1000).toLocaleString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+              </div>
+              <button className="shrink-0 p-2 rounded-full hover:bg-gold/10 transition">
+                <svg className="h-5 w-5 text-gold" viewBox="0 0 24 24" fill="none" stroke="gold" strokeWidth="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+          );
+        })}
+      </section>
     </div>
   );
 }
-
-const WEEKDAY_LABELS: Record<string, string> = {
-  domingo: "Domingo", segunda: "Segunda", terca: "Terça",
-  quarta: "Quarta", quinta: "Quinta", sexta: "Sexta", sabado: "Sábado",
-};
