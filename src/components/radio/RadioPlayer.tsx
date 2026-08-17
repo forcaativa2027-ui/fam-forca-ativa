@@ -2,9 +2,7 @@
 import { useRef, useState, useEffect } from "react";
 import { useRadioPlayer } from "./RadioPlayerContext";
 
-export function RadioPlayer({
-  churchId,
-}: { churchId?: string }) = {
+export function RadioPlayer({ churchId }: { churchId?: string }): React.ReactNode = {
   const { isPlaying, currentTitle, isLive, streamUrl, volume, togglePlay, setVolume, seek, stop } = useRadioPlayer();
   const [expanded, setExpanded] = useState(false);
   const [episode, setEpisode] = useState<{ url: string; title: string; cover: string } | null>(null);
