@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -54,6 +53,6 @@ export function useToggleFavorite(userId: string) {
       
       if (error) throw error;
       return data;
-
+    },
   });
 }
