@@ -149,7 +149,7 @@ export function RadioPage() {
                   {e.audio_url && (
                     <button
                       onClick={() => {
-                        player.playEpisode(e.audio_url, e.title, e.cover_url ?? null);
+                        player.playEpisode(e.audio_url, e.title, e.cover_url ?? undefined);
                         setShowPlayer(true);
                       }}
                       className="mt-2 w-full py-2 rounded bg-gold text-navy font-semibold text-sm"
