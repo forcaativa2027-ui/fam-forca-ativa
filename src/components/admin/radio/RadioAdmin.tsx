@@ -1,20 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, X, Music } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Music, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { radioProgramSchema, type RadioProgramInput } from "@/schemas/radioProgramSchema";
-import { useAllRadioPrograms, useAllRadioEpisodes, useMyProfile } from "@/hooks/use-queries";
+import { useAllRadioPrograms, useAllRadioEpisodes, useMyProfile, useRadioConfigAdmin } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import {
   createRadioProgram, updateRadioProgram, deleteRadioProgram,
   createRadioEpisode, updateRadioEpisode, deleteRadioEpisode,
+  upsertRadioConfig,
 } from "@/services/radio";
 import type { RadioProgram, RadioEpisode, Weekday } from "@/types/domain";
 
@@ -43,12 +44,69 @@ export function RadioAdmin() {
   const churchId = myProfile?.church_id ?? null;
   const { data: programs = [] } = useAllRadioPrograms(churchId);
   const { data: episodes = [] } = useAllRadioEpisodes(churchId);
+  const { data: config } = useRadioConfigAdmin(churchId);
   const qc = useQueryClient();
-  const [section, setSection] = useState<"programas" | "episodios">("programas");
+  const [section, setSection] = useState<"config" | "programas" | "episodios">("programas");
   const [editing, setEditing] = useState<RadioProgram | null>(null);
   const [editingEp, setEditingEp] = useState<RadioEpisode | null>(null);
   const [err, setErr] = useState("");
   const [formOpen, setFormOpen] = useState(false);
+
+  const [cfg, setCfg] = useState({
+    is_enabled: config?.is_enabled ?? false,
+    display_name: config?.display_name ?? "Rádio Web",
+    short_name: config?.short_name ?? "",
+    logo_url: config?.logo_url ?? "",
+    stream_url: config?.stream_url ?? "",
+    theme_color: config?.theme_color ?? "",
+    description: config?.description ?? "",
+  });
+  const [cfgSaving, setCfgSaving] = useState(false);
+  const [cfgSaved, setCfgSaved] = useState(false);
+
+  useEffect(() => {
+    if (config && section === "config") syncConfig();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config]);
+
+  function syncConfig() {
+    setCfg({
+      is_enabled: config?.is_enabled ?? false,
+      display_name: config?.display_name ?? "Rádio Web",
+      short_name: config?.short_name ?? "",
+      logo_url: config?.logo_url ?? "",
+      stream_url: config?.stream_url ?? "",
+      theme_color: config?.theme_color ?? "",
+      description: config?.description ?? "",
+    });
+  }
+
+  async function saveConfig(e: React.FormEvent) {
+    e.preventDefault();
+    setErr("");
+    setCfgSaving(true);
+    try {
+      await upsertRadioConfig(supabase, {
+        church_id: churchId,
+        is_enabled: cfg.is_enabled,
+        display_name: cfg.display_name || "Rádio Web",
+        short_name: cfg.short_name || null,
+        logo_url: cfg.logo_url || null,
+        stream_url: cfg.stream_url || null,
+        theme_color: cfg.theme_color || null,
+        description: cfg.description || null,
+      });
+      qc.invalidateQueries({ queryKey: ["radio-config-admin"] });
+      qc.invalidateQueries({ queryKey: ["radio-config"] });
+      setCfgSaved(true);
+      setTimeout(() => setCfgSaved(false), 2500);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Erro ao salvar configuração";
+      setErr(msg);
+    } finally {
+      setCfgSaving(false);
+    }
+  }
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
     useForm<RadioProgramInput>({
@@ -181,6 +239,9 @@ export function RadioAdmin() {
       {/* Alternador de seção */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex gap-2">
+          <Button variant={section === "config" ? "default" : "outline"} onClick={() => { setSection("config"); syncConfig(); }}>
+            <Settings className="mr-1 h-4 w-4" /> Configuração
+          </Button>
           <Button variant={section === "programas" ? "default" : "outline"} onClick={() => setSection("programas")}>
             Programação
           </Button>
@@ -192,16 +253,63 @@ export function RadioAdmin() {
           <Button onClick={() => { setErr(""); setFormOpen(true); }} className="flex items-center gap-2">
             <Plus className="h-4 w-4" /> Adicionar Programa
           </Button>
-        ) : (
+        ) : section === "episodios" ? (
           <Button onClick={openNewEpisode} className="flex items-center gap-2">
             <Plus className="h-4 w-4" /> Adicionar Conteúdo
           </Button>
-        )}
+        ) : null}
       </div>
 
       {err && <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{err}</p>}
 
-      {section === "programas" ? (
+      {section === "config" ? (
+        <Card className="rounded-xl border border-border p-6">
+          <CardHeader>
+            <CardTitle>Configuração da Rádio Web</CardTitle>
+            <CardDescription>Ativar a rádio, nome, logomarca e URL do stream ao vivo</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={saveConfig} className="space-y-4">
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <input type="checkbox" checked={cfg.is_enabled} onChange={(e) => setCfg({ ...cfg, is_enabled: e.target.checked })} />
+                Rádio habilitada (aparece no menu público e na Home)
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Nome de exibição</Label>
+                  <Input value={cfg.display_name} onChange={(e) => setCfg({ ...cfg, display_name: e.target.value })} placeholder="Rádio Web" />
+                </div>
+                <div>
+                  <Label>Nome curto</Label>
+                  <Input value={cfg.short_name} onChange={(e) => setCfg({ ...cfg, short_name: e.target.value })} placeholder="Rádio CEC" />
+                </div>
+              </div>
+              <div>
+                <Label>URL do stream (ao vivo)</Label>
+                <Input value={cfg.stream_url} onChange={(e) => setCfg({ ...cfg, stream_url: e.target.value })} type="url" placeholder="https://.../stream.m3u8 ou .mp3" />
+              </div>
+              <div>
+                <Label>URL do logo</Label>
+                <Input value={cfg.logo_url} onChange={(e) => setCfg({ ...cfg, logo_url: e.target.value })} type="url" placeholder="https://.../logo.png" />
+              </div>
+              <div>
+                <Label>Cor do tema</Label>
+                <Input value={cfg.theme_color} onChange={(e) => setCfg({ ...cfg, theme_color: e.target.value })} placeholder="#1a3a5c" />
+              </div>
+              <div>
+                <Label>Descrição</Label>
+                <Input value={cfg.description} onChange={(e) => setCfg({ ...cfg, description: e.target.value })} placeholder="Descrição da rádio" />
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                {cfgSaved && <span className="text-sm text-emerald-600">Configuração salva!</span>}
+                <Button type="submit" disabled={cfgSaving}>
+                  {cfgSaving ? "Salvando..." : "Salvar configuração"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      ) : section === "programas" ? (
         <Card className="rounded-xl border border-border p-6">
           <CardHeader>
             <CardTitle>Programação da Rádio Web</CardTitle>
