@@ -145,3 +145,33 @@ export async function deleteRadioEpisode(sb: SupabaseClient, id: string): Promis
   const { error } = await sb.from("radio_episodes").delete().eq("id", id);
   if (error) throw error;
 }
+
+export interface RadioConfigInput {
+  church_id: string | null;
+  is_enabled: boolean;
+  display_name: string;
+  short_name?: string | null;
+  logo_url?: string | null;
+  stream_url?: string | null;
+  theme_color?: string | null;
+  description?: string | null;
+}
+
+export async function getRadioConfigByChurch(sb: SupabaseClient, churchId: string | null): Promise<RadioConfig | null> {
+  let q = sb.from("radio_config").select("*");
+  if (churchId) q = q.eq("church_id", churchId);
+  else q = q.is("church_id", null);
+  const { data, error } = await q.maybeSingle();
+  if (error) return null;
+  return data as RadioConfig | null;
+}
+
+export async function upsertRadioConfig(sb: SupabaseClient, data: RadioConfigInput): Promise<RadioConfig> {
+  const { data: saved, error } = await sb
+    .from("radio_config")
+    .upsert(data, { onConflict: "church_id" })
+    .select()
+    .single();
+  if (error) throw error;
+  return saved as RadioConfig;
+}
