@@ -9,6 +9,7 @@ import { AccessibilityOnboarding } from "@/components/shared/AccessibilityOnboar
 export const metadata: Metadata = {
   title: "CEC Family",
   description: "Plataforma apostólica da CEC Manaus — discipulado, células e gestão pastoral",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
