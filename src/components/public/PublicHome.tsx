@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   Play, Calendar, Music, MapPin, Church as ChurchIcon, Sun, Sparkles,
   Clock, ArrowRight, ExternalLink, LayoutDashboard, FileDown,
-  Home, Newspaper, Video, MessageCircle, HeartHandshake, LogIn, Users2,
+  Home, Newspaper, Video, MessageCircle, HeartHandshake, LogIn, Users2, Radio,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ import { PublicContactForms } from "./PublicContactForms";
 import { PublicParticipateSection } from "./PublicParticipateSection";
 import { HeroCarousel } from "./HeroCarousel";
 import type { EventItem, Church, Cell } from "@/types/domain";
-import RadioPage from "@/components/radio/RadioPage";
+import { RadioPage } from "@/components/radio/RadioPage";
 import { RadioMiniPlayer } from "@/components/radio/RadioMiniPlayer";
 
 const STATUS_LABELS: Record<EventItem["status"], string> = {
@@ -74,7 +74,8 @@ export default function PublicHome() {
   const navItems: BottomNavItem[] = [
     { key: "inicio", label: "Início", icon: <Home size={18} />, onClick: () => setTab("inicio") },
     { key: "noticias", label: "Notícias", icon: <Newspaper size={18} />, onClick: () => setTab("noticias") },
-    { key: "radio", label: "Radio", icon: <Music size={18} />, onClick: () => setTab("radio") },
+    { key: "radio", label: "Rádio Web", icon: <Radio size={18} />, onClick: () => setTab("radio") },
+
     { key: "videos", label: "Vídeos", icon: <Video size={18} />, onClick: () => setTab("videos") },
     { key: "cultos", label: "Cultos", icon: <ChurchIcon size={18} />, onClick: () => setTab("cultos") },
     { key: "agenda", label: "Agenda", icon: <Calendar size={18} />, onClick: () => setTab("agenda") },
