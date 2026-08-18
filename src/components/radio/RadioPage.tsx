@@ -1,53 +1,21 @@
 "use client";
+import { useState, useEffect } from "react";
+import { useRadioPlayer } from "./RadioPlayerContext";
+import { useRadioConfig } from "@/hooks/use-queries";
 
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase-client";
+export default function RadioPage() {
+  const { isPlaying, currentTitle } = useRadioPlayer();
+  const { data: config, isLoading } = useRadioConfig();
 
-export interface RadioFavorite {
-  id: string;
-  program_id: string;
-  user_id: string;
-  created_at: string;
+  return (
+    <div>
+      <h1>Rádio Web</h1>
+      <p>Status: {isPlaying ? "Tocando" : "Parado"}</p>
+      <p>Title: {currentTitle}</p>
+      {config && (
+        <p>Display: {config.display_name}</p>
+      )}
+      {isLoading && <p>Carregando config...</p>}
+    </div>
+  );
 }
-
-export interface RadioFavoriteInsert {
-  program_id: string;
-  user_id: string;
-}
-
-export function useRadioFavorites(userId: string | null) {
-  return useQuery({
-    queryKey: ["radio-favorites", userId],
-    queryFn: async () => {
-      if (!userId) return [] as RadioFavorite[];
-      const { data, error } = await supabase
-        .from("radio_user_favorites")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as RadioFavorite[];
-    },
-    enabled: !!userId,
-  });
-}
-
-export function useToggleFavorite(userId: string) {
-  return useMutation({
-    mutationFn: async (programId: string) => {
-      const { data, error } = await supabase
-        .from("radio_user_favorites")
-        .upsert(
-          {
-            user_id: userId,
-            program_id: programId,
-          },
-          {
-            onConflict: "program_id_user_id",
-            ignoreDuplicates: true,
-          }
-        );
-      if (error) throw error;
-      return data;
-    },
-  });
