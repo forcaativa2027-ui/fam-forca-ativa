@@ -8,7 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   LogOut, Sparkles, AlertTriangle, BarChart3, Users, Heart, Map,
   MessageSquareHeart, User, Check, Plus, Calendar as Cal,
-  Award, ClipboardList, Wand2, ChevronRight, GraduationCap,
+  Award, ClipboardList, Wand2, ChevronRight, GraduationCap, Radio,
 } from "lucide-react";
 import { useAccessibility } from "@/components/shared/AccessibilityProvider";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,8 @@ import { AcademyTab } from "./AcademyTab";
 import { KidsFamilySurface } from "./kids/KidsFamilySurface";
 import { NotificationsPanel, useNotificationCount, NotificationBadge } from "./NotificationsPanel";
 import { EventLoginPopup } from "./EventLoginPopup";
+import RadioPage from "@/components/radio/RadioPage";
+import { RadioMiniPlayer } from "@/components/radio/RadioMiniPlayer";
 import { supabase } from "@/lib/supabase/client";
 import { touchCurrentSession } from "@/services/security";
 import {
@@ -94,6 +96,7 @@ export default function PanelDashboard() {
 
   const panelNavItems: BottomNavItem[] = [
     { key: "geral", label: "Visão Geral", icon: <BarChart3 size={18} />, onClick: () => setTab("geral") },
+    { key: "radio", label: "Rádio Web", icon: <Radio size={18} />, onClick: () => setTab("radio") },
     { key: "alertas", label: "Alertas", icon: <NotificationBadge count={notifCount} />, onClick: () => setTab("alertas") },
     { key: "celula", label: "Life Group", icon: <Users size={18} />, onClick: () => setTab("celula") },
     { key: "jornada", label: "Jornada", icon: <Map size={18} />, onClick: () => setTab("jornada") },
@@ -127,6 +130,7 @@ export default function PanelDashboard() {
             )}
           </TabsContent>
           <TabsContent value="alertas"><NotificationsPanel /></TabsContent>
+          <TabsContent value="radio"><RadioPage churchId={profile?.church_id ?? undefined} /></TabsContent>
           <TabsContent value="celula">
             <LifeGroupDashboard
               member={member ?? null}
@@ -147,6 +151,7 @@ export default function PanelDashboard() {
         <BottomNavSpacer />
       </Tabs>
       <BottomNav items={panelNavItems} activeKey={tab} />
+      <RadioMiniPlayer />
     </div>
   );
 }
