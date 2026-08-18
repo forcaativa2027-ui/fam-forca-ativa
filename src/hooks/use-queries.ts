@@ -996,3 +996,19 @@ export const useRadioPrograms = (churchId?: string | null) =>
 
 export const useRadioEpisodes = (churchId?: string | null, category?: string) =>
   useQuery({ queryKey: ["radio-episodes", churchId ?? "all", category ?? "all"], queryFn: () => Radio.listRadioEpisodes(supabase, churchId, category) });
+
+
+// Rádio Programas (CRUD)
+export const useAllRadioPrograms = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["all-radio-programs", churchId],
+    queryFn: () => Radio.getAllPrograms(supabase, churchId),
+    staleTime: 30 * 1000,
+  });
+
+export const useRadioProgram = (programId: string) =>
+  useQuery({
+    queryKey: ["radio-program", programId],
+    queryFn: () => Radio.getProgramById(supabase, programId),
+    enabled: !!programId,
+  });
