@@ -15,7 +15,7 @@ import { BottomNav, BottomNavSpacer, type BottomNavItem } from "@/components/sha
 import {
   usePublicSermons, usePublicEvents, useChurches, useCells, usePublicNews, useChurchGivingInfo,
   useServiceTimes, useTodaysWord, useActiveBanners, useActiveCommunity, useMyProfile,
-  usePublicRegistrationEvents, useRadioEnabled, useRadioConfig,
+  usePublicRegistrationEvents, useRadioConfig,
 } from "@/hooks/use-queries";
 import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import { youtubeThumb } from "@/services/content";
