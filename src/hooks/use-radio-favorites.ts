@@ -3,17 +3,32 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase/client";
 
+export interface RadioFavorite {
+  id: string;
+  program_id: string;
+  user_id: string;
+  created_at: string;
+}
+
+export interface RadioFavoriteInsert {
+  program_id: string;
+  user_id: string;
+}
+
 export function useRadioFavorites(userId: string | null) {
   return useQuery({
     queryKey: ["radio-favorites", userId],
     queryFn: async () => {
       if (!userId) return [];
+      
       const { data, error } = await supabase
         .from("radio_user_favorites")
         .select("*")
-        .eq("user_id", userId);
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+      
       if (error) throw error;
-      return data;
+      return data as RadioFavorite[];
     },
     enabled: !!userId,
   });
@@ -34,8 +49,8 @@ export function useToggleFavorite(userId: string) {
             ignoreDuplicates: true,
           }
         );
+      
       if (error) throw error;
       return data;
     },
   });
-}
