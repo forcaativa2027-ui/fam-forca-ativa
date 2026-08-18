@@ -55,4 +55,3 @@ export function useToggleFavorite(userId: string) {
       return data;
     },
   });
-}
