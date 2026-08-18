@@ -1012,3 +1012,10 @@ export const useRadioProgram = (programId: string) =>
     queryFn: () => Radio.getProgramById(supabase, programId),
     enabled: !!programId,
   });
+
+export const useAllRadioEpisodes = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["all-radio-episodes", churchId],
+    queryFn: () => Radio.listAllRadioEpisodes(supabase, churchId),
+    staleTime: 30 * 1000,
+  });
