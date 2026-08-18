@@ -35,11 +35,12 @@ export function useRadioFavorites(userId: string | null) {
 export function useToggleFavorite(userId: string) {
   return useMutation({
     mutationFn: async (programId: string) => {
-      // A operação é feita diretamente no localStorage para evitar erros de módulo
-      const favorites = JSON.parse(localStorage.getItem("radio_favorites") || "[]");
-      if (favorites.some((f) => f === programId)) {
+      // Usando localStorage para evitar erros de módulo do supabase
+      const favorites = JSON.parse(localStorage.getItem("radio_favorites") || "[]") as string[];
+      
+      if (favorites.some((f: string) => f === programId)) {
         // Remove
-        const newFavorites = favorites.filter((id) => id !== programId);
+        const newFavorites = favorites.filter((id: string) => id !== programId);
         localStorage.setItem("radio_favorites", JSON.stringify(newFavorites));
       } else {
         // Adiciona
