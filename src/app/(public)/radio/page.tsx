@@ -1,4 +1,4 @@
-import { RadioPage } from "@/components/public/RadioPage";
+import { RadioPage } from "@/components/radio/RadioPage";
 
 export default function RadioRoute() {
   return <RadioPage />;
