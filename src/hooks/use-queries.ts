@@ -997,6 +997,9 @@ export const useRadioPrograms = (churchId?: string | null) =>
 export const useRadioEpisodes = (churchId?: string | null, category?: string) =>
   useQuery({ queryKey: ["radio-episodes", churchId ?? "all", category ?? "all"], queryFn: () => Radio.listRadioEpisodes(supabase, churchId, category) });
 
+export const useRadioConfigAdmin = (churchId: string | null) =>
+  useQuery({ queryKey: ["radio-config-admin", churchId], queryFn: () => Radio.getRadioConfigByChurch(supabase, churchId), enabled: !!churchId });
+
 
 // Rádio Programas (CRUD)
 export const useAllRadioPrograms = (churchId?: string | null) =>
