@@ -120,10 +120,10 @@ export function RadioAdmin() {
                     {p.host_name ? ` · ${p.host_name}` : ""}
                   </p>
                 </div>
-                <Button size="ghost" className="p-1 rounded" onClick={() => startEdit(p)} title="Editar">
+                <Button variant="ghost" size="icon" className="p-1 rounded" onClick={() => startEdit(p)} title="Editar">
                   <Pencil className="h-3 w-3" />
                 </Button>
-                <Button size="ghost" className="p-1 rounded text-destructive" onClick={() => remove(p)} title="Excluir">
+                <Button variant="ghost" size="icon" className="p-1 rounded text-destructive" onClick={() => remove(p)} title="Excluir">
                   <Trash2 className="h-3 w-3" />
                 </Button>
               </div>
