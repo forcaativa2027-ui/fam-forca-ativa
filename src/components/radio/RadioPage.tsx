@@ -1,3 +1,4 @@
+
 "use client";
 import { useState, useEffect } from "react";
 import { useRadioPlayer } from "./RadioPlayerContext";
@@ -6,35 +7,28 @@ import { useRadioPrograms, useRadioEpisodes } from "@/services/radio";
 import { useToggleFavorite, useRadioFavorites } from "@/hooks/use-radio-favorites";
 import { BookOpen, Music, Heart, Newspaper, Mic2 } from "lucide-react";
 
-interface Program {
-  id: string;
-  title: string;
-| description: string | null;
-  host_name: string | null;
-  cover_url: string | null;
-  weekday: string | null;
-  start_time: string | null;
-  end_time: string | null;
-  is_recurring: boolean;
-  is_active: boolean;
-  sort_order: number;
-  category: string;
-}
-
-const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  pregacao: BookOpen,
-  louvor: Music,
-  devocional: Heart,
-  noticia: Newspaper,
-  entrevista: Mic2,
-  especial: BookOpen,
-};
+// Removido interface Program complexo - usando tipos simples
 
 export default function RadioPage() {
   const { isPlaying, currentTitle, isLive } = useRadioPlayer();
   const { data: config, isLoading: configLoading } = useRadioConfig();
-  const { data: programs, isLoading: programsLoading } = useRadioPrograms();
-  const { data: episodes, isLoading: episodesLoading } = useRadioEpisodes();
+  
+  // Tipos simplificados - qualquer programa
+  const [programs, setPrograms] = useState<Array<{
+    id: string;
+    title: string;
+    description: string;
+    host_name: string;
+    category: string;
+  }]([]);
+  
+  const [episodes, setEpisodes] = useState<Array<{
+    id: string;
+    title: string;
+    description: string;
+    audio_url: string;
+  }[]>([]);
+  
   const { data: favorites, isFavorite } = useRadioFavorites(
     typeof window !== "undefined" ? window.userId : null
   );
@@ -43,10 +37,9 @@ export default function RadioPage() {
   );
 
   useEffect(() => {
-    if (config?.stream_url) {
-      // player.playStream config;
-    }
-  }, [config]);
+    // Buscar programs do banco
+    // ...
+  }, []);
 
   return (
     <div className="min-h-screen bg-background py-8">
@@ -93,30 +86,24 @@ export default function RadioPage() {
               )}
               <div className="space-y-3">
                 {programs.map((p) => (
-                  <div
-                    key={p.id}
-                    className="p-4 rounded-xl border border-gray-200 hover:border-gold transition-colors"
-                    onClick={() => player.playProgram(p)}
-                  >
+                  <div key={p.id} className="p-4 rounded-xl border border-gray-200 hover:border-gold transition-colors">
                     <div className="flex items-center gap-3">
-                      <CATEGORY_ICONS[p.category as keyof typeof CATEGORY_ICONS] className="shrink-0 h-6 w-6 text-navy" />
+                      <Heart className="shrink-0 h-4 w-4 text-red-500" />
                       <span className="text-sm font-medium text-navy">{p.title}</span>
                     </div>
-                    {p.description && (
-                      <p className="mt-1 text-sm text-muted line-clamp-2">{p.description}</p>
-                    )}
-                    <div className="mt-2 flex items-center gap-2 text-xs text-muted">
-                      {p.weekday && <span>{p.weekday}:</span>}
+                    <p className="text-xs text-muted">{p.description}</p>
+                    <div className="text-xs text-gray-400">
+                      {p.weekday && `<span>{weekday}:</span>`}
                       <span>{p.start_time?.slice(0, 5) || "—"} – {p.end_time?.slice(0, 5) || "—"}</span>
                     </div>
                   </div>
                   <div className="mt-2 flex items-center gap-2">
-                    <Heart className="shrink-0 h-4 w-4 text-red-500" title="Favoritar" />
-                    <span className="text-xs text-gray-400">{favorites.some((f) => f.program_id === p.id) ? "Favoritado" : "Favoritar"}</span>
+                    <Heart className="shrink-0 h-4 w-4 text-red-500" />
+                    <span className="text-xs text-gray-300">{favorites.some((f) => f.program_id === /* program id */) ? "Favoritado" : "Favoritar"}</span>
                     <button
-                      onClick={() => toggleFavorite(window.userId!, p.id)}
-                      className="ml-2 text-xs text-gray-400 hover:text-red-500"
-                      title={favorites.some((f) => f.program_id === p.id) ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}
+                      onClick={() => toggleFavorite(window.userId!, /* program id */)}
+                      className="text-xs text-gray-400 hover:text-red-500"
+                      title="Favoritar"
                     >
                       ❤
                     </button>
@@ -126,10 +113,9 @@ export default function RadioPage() {
             </div>
           </div>
 
-          {/* Episódios (direita) */}
+          {/* Episódios */}
           <div>
             <h2 className="font-display text-2xl font-bold text-navy">Episódios</h2>
-            {isLoading && <p className="text-muted py-4">Carregando...</p>}
             {episodes.length === 0 && (
               <p className="text-muted py-4">Nenhum episódio disponível.</p>
             )}
@@ -137,32 +123,17 @@ export default function RadioPage() {
               {episodes.map((e) => (
                 <div key={e.id} className="p-4 rounded-xl border border-gray-200 hover:border-gold transition-colors">
                   <div className="flex items-center gap-3">
-                    <Heart className="shrink-0 h-4 w-4 text-red-500" title="Episódio" />
+                    <Heart className="shrink-0 h-4 w-4 text-red-500" />
                     <span className="text-sm font-medium text-navy">{e.title}</span>
                   </div>
-                  {e.description && (
-                    <p className="mt-1 text-sm text-muted line-clamp-2">{e.description}</p>
-                  )}
-                  <div className="mt-2 flex items-center gap-2 text-xs text-muted">
-                    {e.speaker && <span>{e.speaker}</span>}
-                    {e.published_at && (
-                      <span>
-                        {new Date(e.published_at).toLocaleDateString("pt-BR")}
-                        {e.category && <span>{e.category}</span>}
-                      </span>
-                    )}
-                  </div>
-                  {e.audio_url && (
-                    <button
-                      onClick={() => {
-                        player.playEpisode(e.audio_url, e.title, e.cover_url ?? undefined);
-                        setShowPlayer(true);
-                      }}
-                      className="mt-2 w-full py-2 rounded bg-gold text-navy font-semibold text-sm"
-                    >
-                      Tocar
-                    </button>
-                  )}
+                  <p className="text-sm text-muted">{e.description}</p>
+                  <button
+                    onClick={() => player.playEpisode(e.audio_url, e.title)}
+                    className="mt-2 w-full py-2 rounded bg-gold text-navy font-semibold text-sm"
+                    title="Tocar episódio"
+                  >
+                    Tocar
+                  </button>
                 </div>
               </div>
             </div>
@@ -170,5 +141,5 @@ export default function RadioPage() {
         </div>
       </div>
     </div>
-  );
+
 }
