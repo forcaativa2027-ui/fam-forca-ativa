@@ -95,3 +95,53 @@ export async function deleteRadioProgram(sb: SupabaseClient, id: string): Promis
   const { error } = await sb.from("radio_programs").delete().eq("id", id);
   if (error) throw error;
 }
+
+export interface RadioEpisodeInput {
+  church_id?: string | null;
+  program_id?: string | null;
+  title: string;
+  description?: string | null;
+  cover_url?: string | null;
+  audio_url: string;
+  duration_seconds?: number | null;
+  category?: RadioEpisode["category"];
+  speaker?: string | null;
+  published_at?: string | null;
+  status?: RadioEpisode["status"];
+  is_featured?: boolean;
+  sort_order?: number;
+}
+
+export async function listAllRadioEpisodes(sb: SupabaseClient, churchId?: string | null, limit = 100): Promise<RadioEpisode[]> {
+  let q = sb.from("radio_episodes").select("*").order("published_at", { ascending: false }).limit(limit);
+  if (churchId) q = q.or(`church_id.eq.${churchId},church_id.is.null`);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as RadioEpisode[];
+}
+
+export async function createRadioEpisode(sb: SupabaseClient, data: RadioEpisodeInput): Promise<RadioEpisode> {
+  const { data: created, error } = await sb
+    .from("radio_episodes")
+    .insert({ ...data, status: data.status ?? "draft", published_at: data.published_at ?? new Date().toISOString() })
+    .select()
+    .single();
+  if (error) throw error;
+  return created as RadioEpisode;
+}
+
+export async function updateRadioEpisode(sb: SupabaseClient, id: string, data: Partial<RadioEpisodeInput>): Promise<RadioEpisode> {
+  const { data: updated, error } = await sb
+    .from("radio_episodes")
+    .update(data)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return updated as RadioEpisode;
+}
+
+export async function deleteRadioEpisode(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("radio_episodes").delete().eq("id", id);
+  if (error) throw error;
+}
