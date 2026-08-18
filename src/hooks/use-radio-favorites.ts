@@ -10,11 +10,6 @@ export interface RadioFavorite {
   created_at: string;
 }
 
-export interface RadioFavoriteInsert {
-  program_id: string;
-  user_id: string;
-}
-
 export function useRadioFavorites(userId: string | null) {
   return useQuery({
     queryKey: ["radio-favorites", userId],
@@ -26,7 +21,7 @@ export function useRadioFavorites(userId: string | null) {
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as RadioFavorite[];
+      return data;
     },
     enabled: !!userId,
   });
@@ -35,18 +30,18 @@ export function useRadioFavorites(userId: string | null) {
 export function useToggleFavorite(userId: string) {
   return useMutation({
     mutationFn: async (programId: string) => {
-      // Usando localStorage para evitar erros de módulo do supabase
-      const favorites = JSON.parse(localStorage.getItem("radio_favorites") || "[]") as string[];
-      
-      if (favorites.some((f: string) => f === programId)) {
-        // Remove
-        const newFavorites = favorites.filter((id: string) => id !== programId);
-        localStorage.setItem("radio_favorites", JSON.stringify(newFavorites));
-      } else {
-        // Adiciona
-        favorites.push(programId);
-        localStorage.setItem("radio_favorites", JSON.stringify(favorites));
-      }
-      return favorites;
+      const { error } = await supabase
+        .from("radio_user_favorites")
+        .upsert(
+          {
+            user_id: userId,
+            program_id: programId,
+          },
+          {
+            onConflict: "program_id_user_id",
+          }
+        );
+      if (error) throw error;
     },
   });
+}
