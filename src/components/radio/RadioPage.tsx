@@ -1,9 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRadioPlayer } from "./RadioPlayerContext";
 import { listRadioPrograms, listRadioEpisodes, getRadioConfig } from "@/services/radio";
 import { useRadioConfig, useRadioPrograms, useRadioEpisodes } from "@/hooks/use-queries";
-import { ChurchIcon } from "lucide-react";
+import { InstallRadioButton } from "@/components/public/InstallRadioButton";
+import { Share2 } from "lucide-react";
 
 interface Program {
   id: string;
@@ -45,6 +46,52 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
 
   const player = useRadioPlayer();
 
+  const liveProgram = useMemo(() => {
+    const today = WEEKDAY_KEYS[new Date().getDay()];
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    return programs.find((p) => {
+      if (!p.weekday || p.weekday !== today || !p.start_time) return false;
+      const start = toMinutes(p.start_time);
+      if (p.end_time) {
+        const end = toMinutes(p.end_time);
+        return end >= start ? nowMin >= start && nowMin < end : nowMin >= start || nowMin < end;
+      }
+      return nowMin >= start;
+    }) ?? null;
+  }, [programs]);
+
+  const nextProgram = useMemo(() => {
+    const today = WEEKDAY_KEYS[new Date().getDay()];
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const laterToday = programs
+      .filter((p) => p.weekday === today && p.start_time && toMinutes(p.start_time) > nowMin)
+      .sort((a, b) => toMinutes(a.start_time!) - toMinutes(b.start_time!));
+    if (laterToday.length > 0) return laterToday[0];
+    for (let d = 1; d <= 7; d++) {
+      const day = WEEKDAY_KEYS[(now.getDay() + d) % 7];
+      const next = programs
+        .filter((p) => p.weekday === day && p.start_time)
+        .sort((a, b) => toMinutes(a.start_time!) - toMinutes(b.start_time!));
+      if (next.length > 0) return { ...next[0], weekday: day };
+    }
+    return null;
+  }, [programs]);
+
+  async function handleShare() {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Rádio Web", text: "Ouça a rádio da nossa comunidade", url });
+      } else {
+        await navigator.clipboard.writeText(url);
+      }
+    } catch {
+      // compartilhamento cancelado ou indisponível — ignora
+    }
+  }
+
   useEffect(() => {
     if (config?.stream_url) {
       player.playStream(config.stream_url ?? "", config.display_name ?? "Rádio Web", config.logo_url ?? undefined);
@@ -55,10 +102,21 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
     <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto max-w-7xl">
         <header className="mb-8">
-          <h1 className="font-display text-3xl font-bold text-navy">Rádio Web</h1>
-          {config && (
-            <p className="mt-2 text-muted">{config.display_name || "Rádio Web"}</p>
-          )}
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h1 className="font-display text-3xl font-bold text-navy">Rádio Web</h1>
+              {config && (
+                <p className="mt-2 text-muted">{config.display_name || "Rádio Web"}</p>
+              )}
+            </div>
+            <button
+              onClick={handleShare}
+              aria-label="Compartilhar Rádio Web"
+              className="p-3 rounded-xl border border-gold/30 text-navy hover:bg-gold/10 transition"
+            >
+              <Share2 className="h-5 w-5" />
+            </button>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -85,6 +143,42 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
                   <button onClick={() => setShowPlayer(true)} className="flex-1 py-2 rounded bg-gold text-navy font-semibold">Tocar AO VIVO</button>
                   <button onClick={() => setShowPlayer(false)} className="py-2 rounded border border-gold text-navy font-semibold">Player</button>
                 </div>
+                <div className="mt-4">
+                  <InstallRadioButton />
+                </div>
+              </div>
+            )}
+
+            {/* Ao Vivo / Próximo */}
+            {(liveProgram || nextProgram) && (
+              <div className="space-y-3">
+                {liveProgram && (
+                  <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white uppercase">
+                        <span className="h-2 w-2 rounded-full bg-white animate-pulse" /> Ao vivo
+                      </span>
+                    </div>
+                    <h3 className="mt-2 font-display text-lg font-bold text-navy">{liveProgram.title}</h3>
+                    {liveProgram.host_name && <p className="text-sm text-muted">com {liveProgram.host_name}</p>}
+                    {liveProgram.description && <p className="mt-1 text-sm text-muted line-clamp-2">{liveProgram.description}</p>}
+                    <div className="mt-2 text-xs text-muted">
+                      {WEEKDAY_LABELS[liveProgram.weekday as keyof typeof WEEKDAY_LABELS]}, {liveProgram.start_time?.slice(0, 5)} – {liveProgram.end_time?.slice(0, 5) || "—"}
+                    </div>
+                  </div>
+                )}
+                {nextProgram && (
+                  <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                    <p className="text-xs font-bold uppercase text-blue-600">Próximo</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="text-sm font-semibold text-navy">{nextProgram.title}</span>
+                      {nextProgram.weekday !== WEEKDAY_KEYS[new Date().getDay()] && (
+                        <span className="text-xs text-muted">{WEEKDAY_LABELS[nextProgram.weekday as keyof typeof WEEKDAY_LABELS]}</span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-muted">{nextProgram.start_time?.slice(0, 5)}</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -171,5 +265,12 @@ const WEEKDAY_LABELS: Record<string, string> = {
   domingo: "Domingo", segunda: "Segunda", terca: "Terça",
   quarta: "Quarta", quinta: "Quinta", sexta: "Sexta", sabado: "Sábado",
 };
+
+const WEEKDAY_KEYS = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+
+function toMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
 
 export default RadioPage;
