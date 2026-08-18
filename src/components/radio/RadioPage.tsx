@@ -34,8 +34,8 @@ interface Episode {
   sort_order: number;
 }
 
-export function RadioPage() {
-  const [churchId, setChurchId] = useState<string | undefined>(undefined);
+export function RadioPage({ churchId: initialChurchId }: { churchId?: string } = {}) {
+  const [churchId] = useState<string | undefined>(initialChurchId ?? undefined);
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [showPlayer, setShowPlayer] = useState(false);
 
