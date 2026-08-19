@@ -1248,6 +1248,7 @@ export interface RadioEpisode {
   published_at: string | null;
   status: "draft" | "published" | "archived";
   is_featured: boolean;
+  is_podcast?: boolean;
   sort_order: number;
 }
 
@@ -1835,4 +1836,57 @@ export interface RadioRecording {
   review_notes: string | null;
   is_reprise: boolean;
   created_at: string;
+}
+
+// ============================================================
+// Rádio Web — Ciclo 2 (RADIO-005): podcasts, analytics, multi-convidados
+// ============================================================
+export type RadioGuestRole = "convidado" | "especial" | "co-apresentador" | "musica";
+
+export interface RadioProgramGuest {
+  id: string;
+  program_id: string;
+  guest_name: string;
+  guest_email: string | null;
+  guest_role: RadioGuestRole;
+  sort_order: number;
+  created_at: string;
+}
+
+export type RadioPlaySource = "episode" | "podcast" | "live" | "recording" | "reprise";
+
+export interface RadioPlayEvent {
+  id: string;
+  church_id: string | null;
+  profile_id: string | null;
+  episode_id: string | null;
+  recording_id: string | null;
+  program_id: string | null;
+  source: RadioPlaySource;
+  started_at: string;
+  listened_seconds: number;
+  ip_hash: string | null;
+  user_agent: string | null;
+}
+
+export interface RadioEpisodePlayStats {
+  episode_id: string;
+  title: string;
+  church_id: string | null;
+  category: string | null;
+  is_podcast: boolean | null;
+  total_plays: number;
+  total_listened_seconds: number;
+  unique_listeners: number;
+  last_play_at: string | null;
+}
+
+export interface RadioAnalyticsSummary {
+  total_plays: number;
+  total_listened_seconds: number;
+  unique_listeners: number;
+  live_plays: number;
+  podcast_plays: number;
+  episode_plays: number;
+  last_7d_plays: number;
 }
