@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { RadioConfig, RadioProgram, RadioEpisode } from "@/types/domain";
+import type { RadioConfig, RadioProgram, RadioEpisode, Weekday, RadioPlaylist, RadioPlaylistItem } from "@/types/domain";
 import { radioProgramSchema, type RadioProgramInput } from "@/schemas/radioProgramSchema";
 
 export async function getRadioConfig(sb: SupabaseClient, churchId?: string | null): Promise<RadioConfig | null> {
@@ -174,4 +174,84 @@ export async function upsertRadioConfig(sb: SupabaseClient, data: RadioConfigInp
     .single();
   if (error) throw error;
   return saved as RadioConfig;
+}
+
+// ── Broadcast Engine ──
+
+export interface WhatsOnAir {
+  program_id: string;
+  title: string;
+  description: string | null;
+  host_name: string | null;
+  mode: RadioProgram["mode"];
+  start_time: string | null;
+  end_time: string | null;
+  weekday: Weekday | null;
+  fallback_url: string | null;
+  is_special: boolean;
+  stream_url: string | null;
+}
+
+export async function whatsOnAir(sb: SupabaseClient, churchId: string): Promise<WhatsOnAir | null> {
+  const { data, error } = await sb.rpc("radio_whats_on_air", { p_church_id: churchId });
+  if (error) return null;
+  if (!data || data.length === 0) return null;
+  return data[0] as WhatsOnAir;
+}
+
+// ── Playlists ──
+
+export interface RadioPlaylistInput {
+  church_id: string | null;
+  name: string;
+  description?: string | null;
+  mode?: "ordered" | "shuffle" | "thematic";
+  is_active?: boolean;
+  sort_order?: number;
+}
+
+export async function listRadioPlaylists(sb: SupabaseClient, churchId?: string | null): Promise<RadioPlaylist[]> {
+  let q = sb.from("radio_playlists").select("*").order("sort_order");
+  if (churchId) q = q.or(`church_id.eq.${churchId},church_id.is.null`);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as RadioPlaylist[];
+}
+
+export async function createRadioPlaylist(sb: SupabaseClient, data: RadioPlaylistInput): Promise<RadioPlaylist> {
+  const { data: created, error } = await sb.from("radio_playlists").insert(data).select().single();
+  if (error) throw error;
+  return created as RadioPlaylist;
+}
+
+export async function updateRadioPlaylist(sb: SupabaseClient, id: string, data: Partial<RadioPlaylistInput>): Promise<RadioPlaylist> {
+  const { data: updated, error } = await sb.from("radio_playlists").update(data).eq("id", id).select().single();
+  if (error) throw error;
+  return updated as RadioPlaylist;
+}
+
+export async function deleteRadioPlaylist(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("radio_playlists").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function listPlaylistItems(sb: SupabaseClient, playlistId: string): Promise<RadioPlaylistItem[]> {
+  const { data, error } = await sb.from("radio_playlist_items").select("*").eq("playlist_id", playlistId).order("sort_order");
+  if (error) throw error;
+  return (data ?? []) as RadioPlaylistItem[];
+}
+
+export async function addPlaylistItem(sb: SupabaseClient, playlistId: string, episodeId: string, sortOrder?: number): Promise<RadioPlaylistItem> {
+  const { data: created, error } = await sb
+    .from("radio_playlist_items")
+    .insert({ playlist_id: playlistId, episode_id: episodeId, sort_order: sortOrder ?? 0 })
+    .select()
+    .single();
+  if (error) throw error;
+  return created as RadioPlaylistItem;
+}
+
+export async function removePlaylistItem(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("radio_playlist_items").delete().eq("id", id);
+  if (error) throw error;
 }
