@@ -659,3 +659,70 @@ export async function deleteRadioListener(sb: SupabaseClient, id: string): Promi
   const { error } = await sb.from("radio_listeners").delete().eq("id", id);
   if (error) throw error;
 }
+
+// ── Ciclo 8: Relatórios de audiência avançados ──
+
+export type PlaySeriesBucket = "day" | "week" | "month";
+
+export interface PlaySeriesPoint {
+  bucket: string;
+  plays: number;
+  seconds: number;
+}
+
+export interface PlaysByProgramRow {
+  program: string;
+  plays: number;
+  seconds: number;
+}
+
+export interface PlaysBySourceRow {
+  source: string;
+  plays: number;
+  seconds: number;
+}
+
+export async function getRadioPlaySeries(
+  sb: SupabaseClient,
+  churchId: string | null,
+  days = 30,
+  bucket: PlaySeriesBucket = "day",
+  programId?: string | null
+): Promise<PlaySeriesPoint[]> {
+  const { data, error } = await sb.rpc("radio_play_series", {
+    p_church_id: churchId,
+    p_days: days,
+    p_bucket: bucket,
+    p_program_id: programId ?? null,
+  });
+  if (error) throw error;
+  return (data ?? []) as PlaySeriesPoint[];
+}
+
+export async function getRadioPlaysByProgram(
+  sb: SupabaseClient,
+  churchId: string | null,
+  days = 30,
+  programId?: string | null
+): Promise<PlaysByProgramRow[]> {
+  const { data, error } = await sb.rpc("radio_play_by_program", {
+    p_church_id: churchId,
+    p_days: days,
+    p_program_id: programId ?? null,
+  });
+  if (error) throw error;
+  return (data ?? []) as PlaysByProgramRow[];
+}
+
+export async function getRadioPlaysBySource(
+  sb: SupabaseClient,
+  churchId: string | null,
+  days = 30
+): Promise<PlaysBySourceRow[]> {
+  const { data, error } = await sb.rpc("radio_play_by_source", {
+    p_church_id: churchId,
+    p_days: days,
+  });
+  if (error) throw error;
+  return (data ?? []) as PlaysBySourceRow[];
+}

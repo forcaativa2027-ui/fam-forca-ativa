@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { radioProgramSchema, type RadioProgramInput } from "@/schemas/radioProgramSchema";
-import { useAllRadioPrograms, useAllRadioEpisodes, useMyProfile, useRadioConfigAdmin, useWhatsOnAir, useRadioPlaylists, useStudioInvites, useRadioRecordings, usePlaylistItems, usePodcastEpisodes, useRadioAnalytics, useEpisodePlayStats, useProgramGuests } from "@/hooks/use-queries";
+import { useAllRadioPrograms, useAllRadioEpisodes, useMyProfile, useRadioConfigAdmin, useWhatsOnAir, useRadioPlaylists, useStudioInvites, useRadioRecordings, usePlaylistItems, usePodcastEpisodes, useRadioAnalytics, useEpisodePlayStats, useProgramGuests, useRadioPlaySeries, useRadioPlaysByProgram, useRadioPlaysBySource } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { StudioRemoto } from "./StudioRemoto";
+import { BarChart, HBarList, fmtDateShort, fmtMin, downloadCsv } from "./AnalyticsCharts";
 import {
   createRadioProgram, updateRadioProgram, deleteRadioProgram,
   createRadioEpisode, updateRadioEpisode, deleteRadioEpisode,
@@ -67,6 +68,18 @@ export function RadioAdmin() {
   const [listeners, setListeners] = useState<RadioListenerWithPrograms[]>([]);
   const [listenersLoading, setListenersLoading] = useState(false);
   const [embedCopied, setEmbedCopied] = useState(false);
+  const [analyticsDays, setAnalyticsDays] = useState(7);
+  const [analyticsProgram, setAnalyticsProgram] = useState<string>("");
+
+  const analyticsBucket = analyticsDays > 30 ? "week" : "day";
+  const { data: series = [] } = useRadioPlaySeries(
+    churchId,
+    analyticsDays,
+    analyticsBucket,
+    analyticsProgram || null
+  );
+  const { data: byProgram = [] } = useRadioPlaysByProgram(churchId, analyticsDays, analyticsProgram || null);
+  const { data: bySource = [] } = useRadioPlaysBySource(churchId, analyticsDays);
 
   const [cfg, setCfg] = useState({
     is_enabled: config?.is_enabled ?? false,
@@ -985,6 +998,45 @@ export function RadioAdmin() {
               <CardDescription>Plays registrados pela biblioteca, podcasts, transmissões e reprises</CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                <div className="flex gap-1 rounded-lg border border-border p-1">
+                  {[7, 30, 90].map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => setAnalyticsDays(d)}
+                      className={`rounded-md px-3 py-1 text-xs font-semibold transition ${
+                        analyticsDays === d ? "bg-gold text-navy" : "text-navy hover:bg-gold/10"
+                      }`}
+                    >
+                      {d} dias
+                    </button>
+                  ))}
+                </div>
+                <select
+                  value={analyticsProgram}
+                  onChange={(e) => setAnalyticsProgram(e.target.value)}
+                  className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm text-navy"
+                >
+                  <option value="">Todos os programas</option>
+                  {programs.map((p) => (
+                    <option key={p.id} value={p.id}>{p.title}</option>
+                  ))}
+                </select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto"
+                  onClick={() =>
+                    downloadCsv("radio-plays.csv", [
+                      ["periodo", "plays", "minutos"],
+                      ...series.map((s) => [fmtDateShort(s.bucket), s.plays, Math.round(s.seconds / 60)]),
+                    ])
+                  }
+                >
+                  Exportar CSV
+                </Button>
+              </div>
+
               {!analytics ? (
                 <p className="text-center text-muted-foreground py-8">Carregando métricas...</p>
               ) : analytics.total_plays === 0 ? (
@@ -1001,7 +1053,7 @@ export function RadioAdmin() {
                   </div>
                   <div className="rounded-lg border border-border p-4">
                     <p className="text-2xl font-bold text-navy">
-                      {Math.round(analytics.total_listened_seconds / 60)} min
+                      {fmtMin(analytics.total_listened_seconds)}
                     </p>
                     <p className="text-xs text-muted-foreground">Tempo escutado</p>
                   </div>
@@ -1024,6 +1076,68 @@ export function RadioAdmin() {
 
           <Card className="rounded-xl border border-border p-6">
             <CardHeader>
+              <CardTitle>Plays por período</CardTitle>
+              <CardDescription>
+                {analyticsDays > 30 ? "Agrupado por semana" : "Agrupado por dia"} · {analyticsProgram ? "filtrado pelo programa selecionado" : "todos os programas"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {series.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">Sem dados no período.</p>
+              ) : (
+                <BarChart
+                  data={series.map((s) => ({ label: fmtDateShort(s.bucket), value: s.plays }))}
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="rounded-xl border border-border p-6">
+              <CardHeader>
+                <CardTitle>Plays por Programa</CardTitle>
+                <CardDescription>Ranking dos programas mais ouvidos no período</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {byProgram.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">Sem dados no período.</p>
+                ) : (
+                  <HBarList data={byProgram.map((p) => ({ label: p.program, value: p.plays }))} />
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-xl border border-border p-6">
+              <CardHeader>
+                <CardTitle>Plays por Origem</CardTitle>
+                <CardDescription>De onde vieram os plays no período</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {bySource.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">Sem dados no período.</p>
+                ) : (
+                  <HBarList
+                    data={bySource.map((s) => ({
+                      label:
+                        s.source === "live"
+                          ? "Ao vivo"
+                          : s.source === "podcast"
+                            ? "Podcast"
+                            : s.source === "recording"
+                              ? "Gravação"
+                              : s.source === "reprise"
+                                ? "Reprise"
+                                : s.source,
+                      value: s.plays,
+                    }))}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="rounded-xl border border-border p-6">
+            <CardHeader>
               <CardTitle>Ranking por Conteúdo</CardTitle>
               <CardDescription>Os conteúdos mais ouvidos</CardDescription>
             </CardHeader>
@@ -1037,7 +1151,7 @@ export function RadioAdmin() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-navy">{s.title}</p>
                         <p className="text-xs text-muted-foreground">
-                          {s.total_plays} plays · {Math.round((s.total_listened_seconds ?? 0) / 60)} min
+                          {s.total_plays} plays · {fmtMin(s.total_listened_seconds ?? 0)}
                           {s.is_podcast ? " · Podcast" : ""}
                         </p>
                       </div>

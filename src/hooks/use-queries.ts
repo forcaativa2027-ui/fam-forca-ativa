@@ -1102,3 +1102,33 @@ export const useRadioSchedule = (churchId?: string | null) =>
     queryFn: () => Radio.getRadioWeeklySchedule(supabase, churchId ?? null),
     staleTime: 60 * 1000,
   });
+
+export const useRadioPlaySeries = (
+  churchId: string | null,
+  days: number,
+  bucket: "day" | "week" | "month",
+  programId?: string | null
+) =>
+  useQuery({
+    queryKey: ["radio-play-series", churchId ?? "all", days, bucket, programId ?? "all"],
+    queryFn: () => Radio.getRadioPlaySeries(supabase, churchId, days, bucket, programId),
+    staleTime: 30 * 1000,
+  });
+
+export const useRadioPlaysByProgram = (
+  churchId: string | null,
+  days: number,
+  programId?: string | null
+) =>
+  useQuery({
+    queryKey: ["radio-plays-by-program", churchId ?? "all", days, programId ?? "all"],
+    queryFn: () => Radio.getRadioPlaysByProgram(supabase, churchId, days, programId),
+    staleTime: 30 * 1000,
+  });
+
+export const useRadioPlaysBySource = (churchId: string | null, days: number) =>
+  useQuery({
+    queryKey: ["radio-plays-by-source", churchId ?? "all", days],
+    queryFn: () => Radio.getRadioPlaysBySource(supabase, churchId, days),
+    staleTime: 30 * 1000,
+  });
