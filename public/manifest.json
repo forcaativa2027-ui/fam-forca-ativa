@@ -3,6 +3,8 @@
   "short_name": "Rádio CEC",
   "description": "Rádio Web da Comunidade Evangélica de Campinas",
   "start_url": "/radio",
+  "scope": "/",
+  "id": "/radio",
   "display": "standalone",
   "background_color": "#1a3a5c",
   "theme_color": "#1a3a5c",
