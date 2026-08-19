@@ -1022,3 +1022,26 @@ export const useAllRadioEpisodes = (churchId?: string | null) =>
     queryFn: () => Radio.listAllRadioEpisodes(supabase, churchId),
     staleTime: 30 * 1000,
   });
+
+export const useWhatsOnAir = (churchId: string | null) =>
+  useQuery({
+    queryKey: ["radio-whats-on-air", churchId],
+    queryFn: () => Radio.whatsOnAir(supabase, churchId as string),
+    enabled: !!churchId,
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+  });
+
+export const useRadioPlaylists = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-playlists", churchId ?? "all"],
+    queryFn: () => Radio.listRadioPlaylists(supabase, churchId),
+    staleTime: 30 * 1000,
+  });
+
+export const usePlaylistItems = (playlistId: string) =>
+  useQuery({
+    queryKey: ["radio-playlist-items", playlistId],
+    queryFn: () => Radio.listPlaylistItems(supabase, playlistId),
+    enabled: !!playlistId,
+  });
