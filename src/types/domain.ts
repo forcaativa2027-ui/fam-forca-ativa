@@ -1250,6 +1250,12 @@ export interface RadioEpisode {
   is_featured: boolean;
   is_podcast?: boolean;
   sort_order: number;
+  transcript_text?: string | null;
+  auto_summary?: string | null;
+  auto_tags?: string[] | null;
+  transcript_status?: "none" | "processing" | "done" | "failed";
+  transcript_error?: string | null;
+  transcript_updated_at?: string | null;
 }
 
 // ============================================================

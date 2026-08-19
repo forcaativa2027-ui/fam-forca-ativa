@@ -238,12 +238,17 @@ export function RadioAdmin() {
   const [epCoverUrl, setEpCoverUrl] = useState("");
   const [epIsFeatured, setEpIsFeatured] = useState(false);
   const [epSubmitting, setEpSubmitting] = useState(false);
+  const [epTranscript, setEpTranscript] = useState("");
+  const [epSummary, setEpSummary] = useState("");
+  const [epTags, setEpTags] = useState("");
+  const [transcribingId, setTranscribingId] = useState<string | null>(null);
 
   function openNewEpisode() {
     setEditingEp(null);
     setErr("");
     setEpTitle(""); setEpDescription(""); setEpCategory("pregacao");
     setEpSpeaker(""); setEpAudioUrl(""); setEpCoverUrl(""); setEpIsFeatured(false);
+    setEpTranscript(""); setEpSummary(""); setEpTags("");
     setEpFormOpen(true);
   }
   function openEditEpisode(e: RadioEpisode) {
@@ -252,6 +257,9 @@ export function RadioAdmin() {
     setEpTitle(e.title); setEpDescription(e.description ?? "");
     setEpCategory(e.category ?? "pregacao"); setEpSpeaker(e.speaker ?? "");
     setEpAudioUrl(e.audio_url); setEpCoverUrl(e.cover_url ?? ""); setEpIsFeatured(e.is_featured);
+    setEpTranscript(e.transcript_text ?? "");
+    setEpSummary(e.auto_summary ?? "");
+    setEpTags((e.auto_tags ?? []).join(", "));
     setEpFormOpen(true);
   }
   function closeEpisodeForm() {
@@ -269,6 +277,9 @@ export function RadioAdmin() {
           title: epTitle, description: epDescription || null, category: epCategory,
           speaker: epSpeaker || null, audio_url: epAudioUrl, cover_url: epCoverUrl || null,
           is_featured: epIsFeatured,
+          transcript_text: epTranscript || null,
+          auto_summary: epSummary || null,
+          auto_tags: epTags.split(",").map((t) => t.trim()).filter(Boolean),
         });
       } else {
         const nextOrder = episodes.length > 0 ? Math.max(...episodes.map((x) => x.sort_order)) + 1 : 0;
@@ -277,6 +288,9 @@ export function RadioAdmin() {
           category: epCategory, speaker: epSpeaker || null, audio_url: epAudioUrl,
           cover_url: epCoverUrl || null, is_featured: epIsFeatured, sort_order: nextOrder,
           status: "published",
+          transcript_text: epTranscript || null,
+          auto_summary: epSummary || null,
+          auto_tags: epTags.split(",").map((t) => t.trim()).filter(Boolean),
         });
       }
       closeEpisodeForm();
@@ -295,6 +309,26 @@ export function RadioAdmin() {
       await deleteRadioEpisode(supabase, e.id);
       qc.invalidateQueries({ queryKey: ["all-radio-episodes"] });
     } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
+  }
+
+  async function transcribeEpisode(e: RadioEpisode) {
+    setErr("");
+    setTranscribingId(e.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/radio/transcribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ episode_id: e.id, access_token: session?.access_token }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Erro ao transcrever");
+      qc.invalidateQueries({ queryKey: ["all-radio-episodes"] });
+    } catch (e2: unknown) {
+      setErr(e2 instanceof Error ? e2.message : "Erro ao transcrever");
+    } finally {
+      setTranscribingId(null);
+    }
   }
 
   // ── Playlists ──
@@ -1094,8 +1128,47 @@ export function RadioAdmin() {
                       {EPISODE_CATEGORIES.find((c) => c.value === e.category)?.label ?? e.category}
                       {e.speaker ? ` · ${e.speaker}` : ""}
                       {e.status === "published" ? " · Publicado" : " · Rascunho"}
+                      {e.transcript_status && e.transcript_status !== "none" && (
+                        <span className="ml-1 inline-block">
+                          ·{" "}
+                          <span
+                            className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                              e.transcript_status === "done"
+                                ? "bg-green-100 text-green-700"
+                                : e.transcript_status === "processing"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : e.transcript_status === "failed"
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {e.transcript_status === "done"
+                              ? "Transcrito"
+                              : e.transcript_status === "processing"
+                                ? "Transcrevendo"
+                                : e.transcript_status === "failed"
+                                  ? "Falhou"
+                                  : e.transcript_status}
+                          </span>
+                        </span>
+                      )}
+                      {e.transcript_error && (
+                        <span className="ml-1 text-[10px] text-red-600" title={e.transcript_error}>
+                          {e.transcript_error.slice(0, 60)}
+                        </span>
+                      )}
                     </p>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => transcribeEpisode(e)}
+                    disabled={transcribingId === e.id || e.transcript_status === "processing"}
+                    title="Transcrever áudio e gerar resumo/tags"
+                  >
+                    {transcribingId === e.id ? "Transcrevendo..." : "Transcrever"}
+                  </Button>
                   <Button
                     variant={e.is_podcast ? "default" : "outline"}
                     size="sm"
@@ -1276,6 +1349,30 @@ export function RadioAdmin() {
                 <div>
                   <Label>Capa (URL)</Label>
                   <Input value={epCoverUrl} onChange={(e) => setEpCoverUrl(e.target.value)} type="url" placeholder="https://.../capa.jpg" />
+                </div>
+                <div>
+                  <Label>Transcrição (texto do áudio)</Label>
+                  <textarea
+                    value={epTranscript}
+                    onChange={(e) => setEpTranscript(e.target.value)}
+                    rows={4}
+                    placeholder="Cole aqui a transcrição, ou use o botão 'Transcrever' na listagem para gerar automaticamente."
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <Label>Resumo automático</Label>
+                  <textarea
+                    value={epSummary}
+                    onChange={(e) => setEpSummary(e.target.value)}
+                    rows={3}
+                    placeholder="Resumo gerado por IA (ou edite manualmente)"
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <Label>Tags (separadas por vírgula)</Label>
+                  <Input value={epTags} onChange={(e) => setEpTags(e.target.value)} placeholder="fé, esperança, louvor" />
                 </div>
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={epIsFeatured} onChange={(e) => setEpIsFeatured(e.target.checked)} /> Destacar na rádio

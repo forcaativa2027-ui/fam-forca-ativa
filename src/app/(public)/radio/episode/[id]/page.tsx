@@ -110,6 +110,23 @@ export default async function RadioEpisodePage({ params }: PageProps) {
               <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-muted">{episode.description}</p>
             )}
 
+            {episode.auto_summary && (
+              <div className="mt-4 rounded-xl border border-gold/30 bg-gold/5 p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-gold">Resumo</p>
+                <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-muted">{episode.auto_summary}</p>
+              </div>
+            )}
+
+            {(episode.auto_tags ?? []).length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {(episode.auto_tags ?? []).map((tag) => (
+                  <span key={tag} className="rounded-full border border-gold/30 bg-background px-3 py-1 text-xs text-navy">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
             <div className="mt-6 flex flex-wrap items-center gap-3">
               {episode.audio_url && (
                 <EpisodePlayButton

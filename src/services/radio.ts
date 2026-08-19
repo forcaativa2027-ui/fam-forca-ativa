@@ -111,6 +111,10 @@ export interface RadioEpisodeInput {
   is_featured?: boolean;
   is_podcast?: boolean;
   sort_order?: number;
+  transcript_text?: string | null;
+  auto_summary?: string | null;
+  auto_tags?: string[] | null;
+  transcript_status?: RadioEpisode["transcript_status"];
 }
 
 export async function listAllRadioEpisodes(sb: SupabaseClient, churchId?: string | null, limit = 100): Promise<RadioEpisode[]> {
