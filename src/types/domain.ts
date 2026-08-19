@@ -1185,6 +1185,8 @@ export interface RadioConfig {
   description: string | null;
 }
 
+export type RadioProgramMode = "automatico" | "gravado" | "ao_vivo" | "hibrido";
+
 export interface RadioProgram {
   id: string;
   church_id: string | null;
@@ -1197,6 +1199,29 @@ export interface RadioProgram {
   end_time: string | null;
   is_recurring: boolean;
   is_active: boolean;
+  sort_order: number;
+  mode?: RadioProgramMode | null;
+  fallback_url?: string | null;
+  playlist_id?: string | null;
+  is_special?: boolean;
+  special_start_date?: string | null;
+  special_end_date?: string | null;
+}
+
+export interface RadioPlaylist {
+  id: string;
+  church_id: string | null;
+  name: string;
+  description: string | null;
+  mode: "ordered" | "shuffle" | "thematic";
+  is_active: boolean;
+  sort_order: number;
+}
+
+export interface RadioPlaylistItem {
+  id: string;
+  playlist_id: string;
+  episode_id: string | null;
   sort_order: number;
 }
 
