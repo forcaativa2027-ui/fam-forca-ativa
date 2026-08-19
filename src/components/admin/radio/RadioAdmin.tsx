@@ -420,6 +420,45 @@ export function RadioAdmin() {
     } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
   }
 
+  // ── Ciclo 2: Podcasts ──
+  async function togglePodcast(e: RadioEpisode) {
+    try {
+      await updateRadioEpisode(supabase, e.id, { is_podcast: !e.is_podcast });
+      qc.invalidateQueries({ queryKey: ["all-radio-episodes"] });
+      qc.invalidateQueries({ queryKey: ["radio-podcasts"] });
+    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
+  }
+
+  // ── Ciclo 2: Convidados por programa ──
+  const [guestsForProgram, setGuestsForProgram] = useState<RadioProgram | null>(null);
+  const [guestName, setGuestName] = useState("");
+  const [guestRole, setGuestRole] = useState<RadioProgramGuest["guest_role"]>("convidado");
+  const [guestSaving, setGuestSaving] = useState(false);
+  const { data: programGuests = [] } = useProgramGuests(guestsForProgram?.id ?? "");
+
+  async function addGuest() {
+    if (!guestsForProgram || !guestName.trim()) return;
+    setGuestSaving(true);
+    try {
+      await createProgramGuest(supabase, {
+        program_id: guestsForProgram.id,
+        guest_name: guestName.trim(),
+        guest_role: guestRole,
+      });
+      setGuestName("");
+      qc.invalidateQueries({ queryKey: ["radio-program-guests"] });
+    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
+    finally { setGuestSaving(false); }
+  }
+
+  async function removeGuest(id: string) {
+    if (!confirm("Remover este convidado?")) return;
+    try {
+      await deleteProgramGuest(supabase, id);
+      qc.invalidateQueries({ queryKey: ["radio-program-guests"] });
+    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
+  }
+
   return (
     <div className="space-y-6">
       {/* Alternador de seção */}
@@ -480,119 +519,7 @@ export function RadioAdmin() {
         <CardContent>
           {!onAir ? (
             <p className="text-sm text-muted-foreground">Nenhum programa vigente neste horário. A rádio usa a stream configurada como fallback.</p>
-) : section === "podcasts" ? (
-        <div className="space-y-4">
-          <Card className="rounded-xl border border-border p-6">
-            <CardHeader>
-              <CardTitle>Podcasts</CardTitle>
-              <CardDescription>Episódios publicados e marcados como podcast — exibidos na aba Podcasts do player e no feed RSS</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-3 text-xs text-muted-foreground">
-                Marque um conteúdo como podcast na aba Conteúdos para ele aparecer aqui e no feed RSS.
-              </p>
-              {podcastEpisodes.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">Nenhum podcast publicado ainda.</p>
-              )}
-              <div className="space-y-2">
-                {podcastEpisodes.map((e) => (
-                  <div key={e.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/50">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-sm text-navy truncate">{e.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {e.speaker ? `${e.speaker} · ` : ""}
-                        {e.published_at ? new Date(e.published_at).toLocaleDateString("pt-BR") : "sem data"}
-                      </p>
-                    </div>
-                    <a
-                      href={`/radio/feed.xml`}
-                      className="text-xs font-semibold text-gold underline"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Ver feed RSS
-                    </a>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      ) : section === "analytics" ? (
-        <div className="space-y-4">
-          <Card className="rounded-xl border border-border p-6">
-            <CardHeader>
-              <CardTitle>Analytics de Audiência</CardTitle>
-              <CardDescription>Plays registrados pela biblioteca, podcasts, transmissões e reprises</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {!analytics ? (
-                <p className="text-center text-muted-foreground py-8">Carregando métricas...</p>
-              ) : analytics.total_plays === 0 ? (
-                <p className="text-center text-muted-foreground py-8">Nenhum play registrado ainda.</p>
-              ) : (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  <div className="rounded-lg border border-border p-4">
-                    <p className="text-2xl font-bold text-navy">{analytics.total_plays}</p>
-                    <p className="text-xs text-muted-foreground">Total de plays</p>
-                  </div>
-                  <div className="rounded-lg border border-border p-4">
-                    <p className="text-2xl font-bold text-navy">{analytics.unique_listeners}</p>
-                    <p className="text-xs text-muted-foreground">Ouvintes únicos</p>
-                  </div>
-                  <div className="rounded-lg border border-border p-4">
-                    <p className="text-2xl font-bold text-navy">
-                      {Math.round(analytics.total_listened_seconds / 60)} min
-                    </p>
-                    <p className="text-xs text-muted-foreground">Tempo escutado</p>
-                  </div>
-                  <div className="rounded-lg border border-border p-4">
-                    <p className="text-2xl font-bold text-navy">{analytics.live_plays}</p>
-                    <p className="text-xs text-muted-foreground">Ao vivo</p>
-                  </div>
-                  <div className="rounded-lg border border-border p-4">
-                    <p className="text-2xl font-bold text-navy">{analytics.podcast_plays}</p>
-                    <p className="text-xs text-muted-foreground">Podcasts</p>
-                  </div>
-                  <div className="rounded-lg border border-border p-4">
-                    <p className="text-2xl font-bold text-navy">{analytics.last_7d_plays}</p>
-                    <p className="text-xs text-muted-foreground">Plays (7 dias)</p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-xl border border-border p-6">
-            <CardHeader>
-              <CardTitle>Ranking por Conteúdo</CardTitle>
-              <CardDescription>Os conteúdos mais ouvidos</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {episodeStats.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">Sem dados ainda.</p>
-              ) : (
-                <div className="space-y-2">
-                  {episodeStats.slice(0, 10).map((s) => (
-                    <div key={s.episode_id} className="flex items-center gap-3 rounded-lg border border-border p-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-navy">{s.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {s.total_plays} plays · {Math.round((s.total_listened_seconds ?? 0) / 60)} min
-                          {s.is_podcast ? " · Podcast" : ""}
-                        </p>
-                      </div>
-                      <span className="rounded-full bg-navy/10 px-2 py-0.5 text-xs font-bold text-navy">
-                        #{s.total_plays}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      ) : (
+          ) : (
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
               <div>
                 <span className="block text-xs text-muted-foreground">Programa</span>
@@ -770,46 +697,8 @@ export function RadioAdmin() {
                 {invites.map((inv) => {
                   const p = programs.find((x) => x.id === inv.program_id);
                   const active = inv.status === "ativo";
-// ── Ciclo 2: Podcasts ──
-  async function togglePodcast(e: RadioEpisode) {
-    try {
-      await updateRadioEpisode(supabase, e.id, { is_podcast: !e.is_podcast });
-      qc.invalidateQueries({ queryKey: ["all-radio-episodes"] });
-      qc.invalidateQueries({ queryKey: ["radio-podcasts"] });
-    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
-  }
 
-  // ── Ciclo 2: Convidados por programa ──
-  const [guestsForProgram, setGuestsForProgram] = useState<RadioProgram | null>(null);
-  const [guestName, setGuestName] = useState("");
-  const [guestRole, setGuestRole] = useState<RadioProgramGuest["guest_role"]>("convidado");
-  const [guestSaving, setGuestSaving] = useState(false);
-  const { data: programGuests = [] } = useProgramGuests(guestsForProgram?.id ?? "");
-
-  async function addGuest() {
-    if (!guestsForProgram || !guestName.trim()) return;
-    setGuestSaving(true);
-    try {
-      await createProgramGuest(supabase, {
-        program_id: guestsForProgram.id,
-        guest_name: guestName.trim(),
-        guest_role: guestRole,
-      });
-      setGuestName("");
-      qc.invalidateQueries({ queryKey: ["radio-program-guests"] });
-    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
-    finally { setGuestSaving(false); }
-  }
-
-  async function removeGuest(id: string) {
-    if (!confirm("Remover este convidado?")) return;
-    try {
-      await deleteProgramGuest(supabase, id);
-      qc.invalidateQueries({ queryKey: ["radio-program-guests"] });
-    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
-  }
-
-  return (
+                  return (
                     <div key={inv.id} className="flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/50">
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-sm text-navy truncate">
@@ -938,6 +827,118 @@ export function RadioAdmin() {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : section === "podcasts" ? (
+        <div className="space-y-4">
+          <Card className="rounded-xl border border-border p-6">
+            <CardHeader>
+              <CardTitle>Podcasts</CardTitle>
+              <CardDescription>Episódios publicados e marcados como podcast — exibidos na aba Podcasts do player e no feed RSS</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Marque um conteúdo como podcast na aba Conteúdos para ele aparecer aqui e no feed RSS.
+              </p>
+              {podcastEpisodes.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">Nenhum podcast publicado ainda.</p>
+              )}
+              <div className="space-y-2">
+                {podcastEpisodes.map((e) => (
+                  <div key={e.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/50">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-sm text-navy truncate">{e.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {e.speaker ? `${e.speaker} · ` : ""}
+                        {e.published_at ? new Date(e.published_at).toLocaleDateString("pt-BR") : "sem data"}
+                      </p>
+                    </div>
+                    <a
+                      href={`/radio/feed.xml`}
+                      className="text-xs font-semibold text-gold underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Ver feed RSS
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : section === "analytics" ? (
+        <div className="space-y-4">
+          <Card className="rounded-xl border border-border p-6">
+            <CardHeader>
+              <CardTitle>Analytics de Audiência</CardTitle>
+              <CardDescription>Plays registrados pela biblioteca, podcasts, transmissões e reprises</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!analytics ? (
+                <p className="text-center text-muted-foreground py-8">Carregando métricas...</p>
+              ) : analytics.total_plays === 0 ? (
+                <p className="text-center text-muted-foreground py-8">Nenhum play registrado ainda.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  <div className="rounded-lg border border-border p-4">
+                    <p className="text-2xl font-bold text-navy">{analytics.total_plays}</p>
+                    <p className="text-xs text-muted-foreground">Total de plays</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4">
+                    <p className="text-2xl font-bold text-navy">{analytics.unique_listeners}</p>
+                    <p className="text-xs text-muted-foreground">Ouvintes únicos</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4">
+                    <p className="text-2xl font-bold text-navy">
+                      {Math.round(analytics.total_listened_seconds / 60)} min
+                    </p>
+                    <p className="text-xs text-muted-foreground">Tempo escutado</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4">
+                    <p className="text-2xl font-bold text-navy">{analytics.live_plays}</p>
+                    <p className="text-xs text-muted-foreground">Ao vivo</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4">
+                    <p className="text-2xl font-bold text-navy">{analytics.podcast_plays}</p>
+                    <p className="text-xs text-muted-foreground">Podcasts</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4">
+                    <p className="text-2xl font-bold text-navy">{analytics.last_7d_plays}</p>
+                    <p className="text-xs text-muted-foreground">Plays (7 dias)</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-xl border border-border p-6">
+            <CardHeader>
+              <CardTitle>Ranking por Conteúdo</CardTitle>
+              <CardDescription>Os conteúdos mais ouvidos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {episodeStats.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">Sem dados ainda.</p>
+              ) : (
+                <div className="space-y-2">
+                  {episodeStats.slice(0, 10).map((s) => (
+                    <div key={s.episode_id} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-navy">{s.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {s.total_plays} plays · {Math.round((s.total_listened_seconds ?? 0) / 60)} min
+                          {s.is_podcast ? " · Podcast" : ""}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-navy/10 px-2 py-0.5 text-xs font-bold text-navy">
+                        #{s.total_plays}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
