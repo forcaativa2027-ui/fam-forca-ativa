@@ -261,13 +261,44 @@ export async function removePlaylistItem(sb: SupabaseClient, id: string): Promis
 
 const RADIO_BUCKET = "radio-audio";
 
-export async function uploadRadioRecording(sb: SupabaseClient, blob: Blob, churchId: string | null): Promise<{ path: string; publicUrl: string }> {
-  const slug = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webm`;
+function extForMime(mimeType: string | null | undefined): string {
+  if (mimeType && mimeType.includes("mp4")) return "m4a";
+  if (mimeType && mimeType.includes("ogg")) return "ogg";
+  return "webm";
+}
+
+export async function uploadRadioRecording(
+  sb: SupabaseClient,
+  blob: Blob,
+  churchId: string | null,
+  mimeType?: string | null
+): Promise<{ path: string; publicUrl: string }> {
+  const slug = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${extForMime(mimeType)}`;
   const path = `${churchId ?? "geral"}/${slug}`;
-  const { error } = await sb.storage.from(RADIO_BUCKET).upload(path, blob, { contentType: "audio/webm" });
+  const contentType = mimeType || blob.type || "audio/webm";
+  const { error } = await sb.storage.from(RADIO_BUCKET).upload(path, blob, { contentType });
   if (error) throw error;
   const { data } = sb.storage.from(RADIO_BUCKET).getPublicUrl(path);
   return { path, publicUrl: data.publicUrl };
+}
+
+export async function uploadRadioCover(
+  sb: SupabaseClient,
+  file: File,
+  churchId: string | null
+): Promise<{ path: string; publicUrl: string }> {
+  const ext = file.name.includes(".") ? file.name.split(".").pop() : "png";
+  const slug = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const path = `covers/${churchId ?? "geral"}/${slug}`;
+  const { error } = await sb.storage.from(RADIO_BUCKET).upload(path, file, { contentType: file.type || "image/png" });
+  if (error) throw error;
+  const { data } = sb.storage.from(RADIO_BUCKET).getPublicUrl(path);
+  return { path, publicUrl: data.publicUrl };
+}
+
+export async function deleteRadioStoragePath(sb: SupabaseClient, path: string): Promise<void> {
+  const { error } = await sb.storage.from(RADIO_BUCKET).remove([path]);
+  if (error) throw error;
 }
 
 // ── Convites do apresentador (Studio) ──
@@ -359,6 +390,8 @@ export async function updateRadioRecording(sb: SupabaseClient, id: string, data:
   episode_id: string | null;
   is_reprise: boolean;
   review_notes: string | null;
+  cover_url: string | null;
+  cover_storage_path: string | null;
 }>): Promise<RadioRecording> {
   const { data: updated, error } = await sb.from("radio_recordings").update(data).eq("id", id).select().single();
   if (error) throw error;

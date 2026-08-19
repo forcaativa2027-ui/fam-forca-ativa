@@ -698,7 +698,7 @@ export function RadioAdmin() {
                   const p = programs.find((x) => x.id === inv.program_id);
                   const active = inv.status === "ativo";
 
-                  return (
+  return (
                     <div key={inv.id} className="flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/50">
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-sm text-navy truncate">
@@ -802,6 +802,9 @@ export function RadioAdmin() {
               <div className="space-y-2">
                 {recordings.map((r) => (
                   <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/50">
+                    {r.cover_url && (
+                      <img src={r.cover_url} alt="Capa" className="h-12 w-12 rounded object-cover" />
+                    )}
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-sm text-navy truncate">{r.title}</p>
                       <p className="text-xs text-muted-foreground">

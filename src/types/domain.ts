@@ -1830,6 +1830,8 @@ export interface RadioRecording {
   audio_url: string | null;
   duration_seconds: number | null;
   status: RadioRecordingStatus;
+  cover_url?: string | null;
+  cover_storage_path?: string | null;
   recorded_at: string;
   reviewed_by: string | null;
   reviewed_at: string | null;
