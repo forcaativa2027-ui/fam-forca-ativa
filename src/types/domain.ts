@@ -1771,3 +1771,68 @@ export interface CredentialValidationRow {
   credential_id: string | null; status: string; pin_required: boolean; pin_ok: boolean;
   custody_record_id: string | null; dependent_name: string | null; scope_consumed: boolean;
 }
+
+// ============================================================
+// Rádio Web — Studio (convites do apresentador) e Gravações (RADIO-004)
+// ============================================================
+export type RadioStudioInviteStatus = "ativo" | "revogado" | "expirado" | "usado";
+
+export interface RadioStudioInvite {
+  id: string;
+  church_id: string | null;
+  program_id: string | null;
+  token: string;
+  presenter_name: string | null;
+  presenter_email: string | null;
+  role: string;
+  status: RadioStudioInviteStatus;
+  waitroom_at: string | null;
+  techcheck_at: string | null;
+  starts_at: string;
+  ends_at: string;
+  access_ends_at: string | null;
+  used_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  revoked_at: string | null;
+  revoke_reason: string | null;
+}
+
+export interface RadioInviteValidation {
+  valid: boolean;
+  reason: string | null;
+  invite_id: string | null;
+  program_id: string | null;
+  program_title: string | null;
+  presenter_name: string | null;
+  role: string | null;
+  church_id: string | null;
+  waitroom_at: string | null;
+  techcheck_at: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  access_ends_at: string | null;
+}
+
+export type RadioRecordingStatus =
+  | "gravando" | "processando" | "revisao" | "publicada" | "reprovada" | "erro";
+
+export interface RadioRecording {
+  id: string;
+  church_id: string | null;
+  program_id: string | null;
+  episode_id: string | null;
+  title: string;
+  presenter_name: string | null;
+  category: string | null;
+  storage_path: string;
+  audio_url: string | null;
+  duration_seconds: number | null;
+  status: RadioRecordingStatus;
+  recorded_at: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_notes: string | null;
+  is_reprise: boolean;
+  created_at: string;
+}
