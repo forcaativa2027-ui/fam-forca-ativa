@@ -1095,3 +1095,10 @@ export const useProgramGuests = (programId: string) =>
     queryFn: () => Radio.listProgramGuests(supabase, programId),
     enabled: !!programId,
   });
+
+export const useRadioSchedule = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-schedule", churchId ?? "all"],
+    queryFn: () => Radio.getRadioWeeklySchedule(supabase, churchId ?? null),
+    staleTime: 60 * 1000,
+  });

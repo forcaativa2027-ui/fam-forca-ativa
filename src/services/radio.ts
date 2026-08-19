@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { RadioConfig, RadioProgram, RadioEpisode, Weekday, RadioPlaylist, RadioPlaylistItem, RadioStudioInvite, RadioInviteValidation, RadioRecording, RadioProgramGuest, RadioPlaySource, RadioEpisodePlayStats, RadioAnalyticsSummary } from "@/types/domain";
+import type { RadioConfig, RadioProgram, RadioEpisode, Weekday, RadioPlaylist, RadioPlaylistItem, RadioStudioInvite, RadioInviteValidation, RadioRecording, RadioProgramGuest, RadioPlaySource, RadioEpisodePlayStats, RadioAnalyticsSummary, RadioWeeklySchedule, RadioScheduleItem } from "@/types/domain";
 import { radioProgramSchema, type RadioProgramInput } from "@/schemas/radioProgramSchema";
 
 export async function getRadioConfig(sb: SupabaseClient, churchId?: string | null): Promise<RadioConfig | null> {
@@ -508,4 +508,92 @@ export async function createProgramGuest(sb: SupabaseClient, data: {
 export async function deleteProgramGuest(sb: SupabaseClient, id: string): Promise<void> {
   const { error } = await sb.from("radio_program_guests").delete().eq("id", id);
   if (error) throw error;
+}
+
+// ── Ciclo 4: Grade semanal (agenda visual) ──
+
+const WEEKDAY_LABEL: Record<Weekday, string> = {
+  domingo: "Domingo", segunda: "Segunda", terca: "Terça",
+  quarta: "Quarta", quinta: "Quinta", sexta: "Sexta", sabado: "Sábado",
+};
+
+const WEEKDAY_ORDER: Weekday[] = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+
+function scheduleMinutes(time: string | null | undefined): number {
+  if (!time) return 0;
+  const [h, m] = time.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+function isoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function startOfWeek(reference: Date): Date {
+  const d = new Date(reference);
+  d.setDate(d.getDate() - d.getDay());
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function toScheduleItem(p: RadioProgram, weekday: Weekday, date: string | null, isSpecial: boolean): RadioScheduleItem {
+  return {
+    program_id: p.id,
+    title: p.title,
+    description: p.description ?? null,
+    host_name: p.host_name ?? null,
+    cover_url: p.cover_url ?? null,
+    mode: p.mode ?? null,
+    weekday,
+    start_time: p.start_time ?? null,
+    end_time: p.end_time ?? null,
+    is_recurring: p.is_recurring,
+    is_special: isSpecial,
+    date,
+  };
+}
+
+export async function getRadioWeeklySchedule(
+  sb: SupabaseClient,
+  churchId?: string | null,
+  reference?: Date
+): Promise<RadioWeeklySchedule> {
+  const ref = reference ?? new Date();
+  let q = sb.from("radio_programs").select("*").eq("is_active", true).order("sort_order");
+  if (churchId) q = q.or(`church_id.eq.${churchId},church_id.is.null`);
+  const { data, error } = await q;
+  if (error) return { days: [], today: WEEKDAY_ORDER[ref.getDay()], week_start: isoDate(ref), week_end: isoDate(ref) };
+
+  const programs = (data ?? []) as RadioProgram[];
+  const weekStart = startOfWeek(ref);
+  const days = WEEKDAY_ORDER.map((weekday, i) => {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + i);
+    const dateKey = isoDate(date);
+    const items = programs.flatMap((p): RadioScheduleItem[] => {
+      if (p.is_special) {
+        const start = p.special_start_date ?? null;
+        const end = p.special_end_date ?? null;
+        if (start && dateKey >= start && (!end || dateKey <= end)) {
+          return [toScheduleItem(p, weekday, dateKey, true)];
+        }
+        return [];
+      }
+      if (p.weekday === weekday) {
+        return [toScheduleItem(p, weekday, null, false)];
+      }
+      return [];
+    }).sort((a, b) => scheduleMinutes(a.start_time) - scheduleMinutes(b.start_time));
+    return { weekday, label: WEEKDAY_LABEL[weekday], items };
+  });
+
+  return {
+    days,
+    today: WEEKDAY_ORDER[ref.getDay()],
+    week_start: isoDate(weekStart),
+    week_end: isoDate(new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000)),
+  };
 }

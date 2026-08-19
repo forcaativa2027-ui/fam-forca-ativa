@@ -1892,3 +1892,34 @@ export interface RadioAnalyticsSummary {
   episode_plays: number;
   last_7d_plays: number;
 }
+
+// ============================================================
+// Rádio Web — Ciclo 4 (RADIO-004 agenda): grade semanal visual
+// ============================================================
+export interface RadioScheduleItem {
+  program_id: string;
+  title: string;
+  description: string | null;
+  host_name: string | null;
+  cover_url: string | null;
+  mode: RadioProgramMode | null;
+  weekday: Weekday;
+  start_time: string | null;
+  end_time: string | null;
+  is_recurring: boolean;
+  is_special: boolean;
+  date: string | null;
+}
+
+export interface RadioScheduleDay {
+  weekday: Weekday;
+  label: string;
+  items: RadioScheduleItem[];
+}
+
+export interface RadioWeeklySchedule {
+  days: RadioScheduleDay[];
+  today: Weekday;
+  week_start: string;
+  week_end: string;
+}

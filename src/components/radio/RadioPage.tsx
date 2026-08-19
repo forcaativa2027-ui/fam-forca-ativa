@@ -120,6 +120,13 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
     return null;
   }, [programs]);
 
+  const todayPrograms = useMemo(() => {
+    const today = WEEKDAY_KEYS[new Date().getDay()];
+    return programs
+      .filter((p) => p.weekday === today && p.start_time)
+      .sort((a, b) => toMinutes(a.start_time!) - toMinutes(b.start_time!));
+  }, [programs]);
+
   async function handleShare() {
     const url = window.location.href;
     try {
@@ -224,6 +231,26 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
                     <p className="mt-1 text-xs text-muted">{nextProgram.start_time?.slice(0, 5)}</p>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Hoje na Rádio — destaque + link para a grade completa */}
+            {todayPrograms.length > 0 && (
+              <div className="rounded-xl border border-gold/30 bg-gold/5 p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold uppercase tracking-wide text-gold">Hoje na Rádio</p>
+                  <a href="/radio/programacao" className="text-xs font-semibold text-navy underline">
+                    Ver grade completa
+                  </a>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {todayPrograms.map((p) => (
+                    <span key={p.id} className="rounded-full border border-gold/30 bg-background px-3 py-1 text-xs text-navy">
+                      {p.start_time?.slice(0, 5)} · {p.title}
+                      {p.host_name ? ` · ${p.host_name}` : ""}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
 
