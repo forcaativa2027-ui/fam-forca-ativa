@@ -6,6 +6,7 @@ import { useRadioConfig, useRadioPrograms, useRadioEpisodes, useWhatsOnAir, useP
 import { supabase } from "@/lib/supabase/client";
 import { InstallRadioButton } from "@/components/public/InstallRadioButton";
 import { RadioSubscribe } from "./RadioSubscribe";
+import { ShareButtons, radioBaseUrl } from "./ShareButtons";
 import { Share2, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Program {
@@ -381,6 +382,9 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
                           Ouvir podcast
                         </button>
                       )}
+                      <div className="mt-2">
+                        <ShareButtons title={e.title} url={`${radioBaseUrl()}/radio/episode/${e.id}`} compact />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -484,6 +488,9 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
                       Tocar
                     </button>
                   )}
+                  <div className="mt-2">
+                    <ShareButtons title={e.title} url={`${radioBaseUrl()}/radio/episode/${e.id}`} compact />
+                  </div>
                 </div>
               ))}
             </div>

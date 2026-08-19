@@ -66,6 +66,7 @@ export function RadioAdmin() {
 
   const [listeners, setListeners] = useState<RadioListenerWithPrograms[]>([]);
   const [listenersLoading, setListenersLoading] = useState(false);
+  const [embedCopied, setEmbedCopied] = useState(false);
 
   const [cfg, setCfg] = useState({
     is_enabled: config?.is_enabled ?? false,
@@ -110,6 +111,18 @@ export function RadioAdmin() {
       setListeners((prev) => prev.filter((l) => l.id !== id));
     } catch {
       setErr("Não foi possível remover o ouvinte.");
+    }
+  }
+
+  const embedCode = `<iframe src="${process.env.NEXT_PUBLIC_SITE_URL ?? "https://cec-painel.vercel.app"}/radio/embed" width="360" height="360" style="border:0;border-radius:16px" allow="autoplay" loading="lazy"></iframe>`;
+
+  async function copyEmbed() {
+    try {
+      await navigator.clipboard.writeText(embedCode);
+      setEmbedCopied(true);
+      setTimeout(() => setEmbedCopied(false), 2000);
+    } catch {
+      setErr("Não foi possível copiar o código.");
     }
   }
 
@@ -636,6 +649,29 @@ export function RadioAdmin() {
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-xl border border-border p-6">
+          <CardHeader>
+            <CardTitle>Player incorporável (embed)</CardTitle>
+            <CardDescription>Copie o código e cole em qualquer site para exibir o player da rádio</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Input readOnly value={embedCode} className="font-mono text-xs" />
+            <div className="mt-3 flex items-center gap-2">
+              <Button type="button" onClick={copyEmbed}>
+                {embedCopied ? "Copiado!" : "Copiar código"}
+              </Button>
+              <a
+                href="/radio/embed"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold text-gold underline"
+              >
+                Ver prévia
+              </a>
+            </div>
           </CardContent>
         </Card>
       ) : section === "programas" ? (
