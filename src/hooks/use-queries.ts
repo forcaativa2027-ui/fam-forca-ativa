@@ -1067,3 +1067,31 @@ export const useRadioRecordings = (churchId?: string | null) =>
     queryFn: () => Radio.listRadioRecordings(supabase, churchId),
     staleTime: 15 * 1000,
   });
+
+export const usePodcastEpisodes = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-podcasts", churchId ?? "all"],
+    queryFn: () => Radio.listPodcastEpisodes(supabase, churchId),
+    staleTime: 60 * 1000,
+  });
+
+export const useRadioAnalytics = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-analytics", churchId ?? "all"],
+    queryFn: () => Radio.getRadioAnalytics(supabase, churchId),
+    staleTime: 30 * 1000,
+  });
+
+export const useEpisodePlayStats = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-episode-play-stats", churchId ?? "all"],
+    queryFn: () => Radio.listEpisodePlayStats(supabase, churchId),
+    staleTime: 30 * 1000,
+  });
+
+export const useProgramGuests = (programId: string) =>
+  useQuery({
+    queryKey: ["radio-program-guests", programId],
+    queryFn: () => Radio.listProgramGuests(supabase, programId),
+    enabled: !!programId,
+  });
