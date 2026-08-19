@@ -1,8 +1,8 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRadioPlayer } from "./RadioPlayerContext";
 import { listRadioPrograms, listRadioEpisodes, getRadioConfig } from "@/services/radio";
-import { useRadioConfig, useRadioPrograms, useRadioEpisodes } from "@/hooks/use-queries";
+import { useRadioConfig, useRadioPrograms, useRadioEpisodes, useWhatsOnAir } from "@/hooks/use-queries";
 import { InstallRadioButton } from "@/components/public/InstallRadioButton";
 import { Share2 } from "lucide-react";
 
@@ -43,8 +43,33 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
   const { data: config = null } = useRadioConfig(churchId);
   const { data: programs = [] } = useRadioPrograms(churchId);
   const { data: episodes = [], isLoading } = useRadioEpisodes(churchId, category);
+  const { data: onAir } = useWhatsOnAir(churchId ?? null);
 
   const player = useRadioPlayer();
+  const autoPlayedRef = useRef(false);
+
+  // Broadcast Engine — decide o que está no ar agora (seção 5 do RADIO-002)
+  useEffect(() => {
+    if (!config || autoPlayedRef.current) return;
+    if (!onAir) {
+      // Sem programa vigente: mantém a stream configurada (fallback global)
+      if (config.stream_url) player.playStream(config.stream_url, config.display_name ?? "Rádio Web", config.logo_url ?? undefined);
+      autoPlayedRef.current = true;
+      return;
+    }
+    // AO VIVO / HÍBRIDO → stream ao vivo
+    if ((onAir.mode === "ao_vivo" || onAir.mode === "hibrido") && (onAir.stream_url || config.stream_url)) {
+      player.playStream(onAir.stream_url ?? config.stream_url ?? "", onAir.title, config.logo_url ?? undefined);
+      autoPlayedRef.current = true;
+      return;
+    }
+    // AUTOMÁTICO / GRAVADO → fallback_url ou stream configurada
+    const source = onAir.fallback_url || config.stream_url;
+    if (source) {
+      player.playStream(source, onAir.title, config.logo_url ?? undefined);
+      autoPlayedRef.current = true;
+    }
+  }, [config, onAir, player]);
 
   const liveProgram = useMemo(() => {
     const today = WEEKDAY_KEYS[new Date().getDay()];
@@ -91,12 +116,6 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
       // compartilhamento cancelado ou indisponível — ignora
     }
   }
-
-  useEffect(() => {
-    if (config?.stream_url) {
-      player.playStream(config.stream_url ?? "", config.display_name ?? "Rádio Web", config.logo_url ?? undefined);
-    }
-  }, [config, player]);
 
   return (
     <div className="min-h-screen bg-background py-8">
@@ -149,21 +168,31 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
               </div>
             )}
 
-            {/* Ao Vivo / Próximo */}
-            {(liveProgram || nextProgram) && (
+            {/* Agora no Ar / Próximo */}
+            {((onAir && onAir.title) || liveProgram || nextProgram) && (
               <div className="space-y-3">
-                {liveProgram && (
+                {(onAir || liveProgram) && (
                   <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4">
                     <div className="flex items-center gap-2">
                       <span className="flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white uppercase">
-                        <span className="h-2 w-2 rounded-full bg-white animate-pulse" /> Ao vivo
+                        <span className="h-2 w-2 rounded-full bg-white animate-pulse" /> Agora no ar
                       </span>
+                      {onAir?.mode && (
+                        <span className="rounded-full bg-navy/10 px-2 py-0.5 text-[10px] font-bold uppercase text-navy">
+                          {MODE_LABELS[onAir.mode]}
+                        </span>
+                      )}
                     </div>
-                    <h3 className="mt-2 font-display text-lg font-bold text-navy">{liveProgram.title}</h3>
-                    {liveProgram.host_name && <p className="text-sm text-muted">com {liveProgram.host_name}</p>}
-                    {liveProgram.description && <p className="mt-1 text-sm text-muted line-clamp-2">{liveProgram.description}</p>}
+                    <h3 className="mt-2 font-display text-lg font-bold text-navy">{onAir?.title ?? liveProgram?.title}</h3>
+                    {(onAir?.host_name || liveProgram?.host_name) && (
+                      <p className="text-sm text-muted">com {onAir?.host_name ?? liveProgram?.host_name}</p>
+                    )}
+                    {(onAir?.description || liveProgram?.description) && (
+                      <p className="mt-1 text-sm text-muted line-clamp-2">{onAir?.description ?? liveProgram?.description}</p>
+                    )}
                     <div className="mt-2 text-xs text-muted">
-                      {WEEKDAY_LABELS[liveProgram.weekday as keyof typeof WEEKDAY_LABELS]}, {liveProgram.start_time?.slice(0, 5)} – {liveProgram.end_time?.slice(0, 5) || "—"}
+                      {onAir?.weekday ? `${WEEKDAY_LABELS[onAir.weekday as keyof typeof WEEKDAY_LABELS]}, ` : ""}
+                      {onAir?.start_time?.slice(0, 5) ?? liveProgram?.start_time?.slice(0, 5)} – {onAir?.end_time?.slice(0, 5) ?? liveProgram?.end_time?.slice(0, 5) ?? "—"}
                     </div>
                   </div>
                 )}
@@ -267,6 +296,10 @@ const WEEKDAY_LABELS: Record<string, string> = {
 };
 
 const WEEKDAY_KEYS = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+
+const MODE_LABELS: Record<string, string> = {
+  automatico: "Automático", gravado: "Gravado", ao_vivo: "Ao vivo", hibrido: "Híbrido",
+};
 
 function toMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
