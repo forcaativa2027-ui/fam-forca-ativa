@@ -1185,6 +1185,8 @@ export interface RadioConfig {
   description: string | null;
 }
 
+export type RadioProgramMode = "automatico" | "gravado" | "ao_vivo" | "hibrido";
+
 export interface RadioProgram {
   id: string;
   church_id: string | null;
@@ -1197,6 +1199,29 @@ export interface RadioProgram {
   end_time: string | null;
   is_recurring: boolean;
   is_active: boolean;
+  sort_order: number;
+  mode?: RadioProgramMode | null;
+  fallback_url?: string | null;
+  playlist_id?: string | null;
+  is_special?: boolean;
+  special_start_date?: string | null;
+  special_end_date?: string | null;
+}
+
+export interface RadioPlaylist {
+  id: string;
+  church_id: string | null;
+  name: string;
+  description: string | null;
+  mode: "ordered" | "shuffle" | "thematic";
+  is_active: boolean;
+  sort_order: number;
+}
+
+export interface RadioPlaylistItem {
+  id: string;
+  playlist_id: string;
+  episode_id: string | null;
   sort_order: number;
 }
 
@@ -1223,6 +1248,7 @@ export interface RadioEpisode {
   published_at: string | null;
   status: "draft" | "published" | "archived";
   is_featured: boolean;
+  is_podcast?: boolean;
   sort_order: number;
 }
 
@@ -1745,4 +1771,195 @@ export interface KidsCredential {
 export interface CredentialValidationRow {
   credential_id: string | null; status: string; pin_required: boolean; pin_ok: boolean;
   custody_record_id: string | null; dependent_name: string | null; scope_consumed: boolean;
+}
+
+// ============================================================
+// Rádio Web — Studio (convites do apresentador) e Gravações (RADIO-004)
+// ============================================================
+export type RadioStudioInviteStatus = "ativo" | "revogado" | "expirado" | "usado";
+
+export interface RadioStudioInvite {
+  id: string;
+  church_id: string | null;
+  program_id: string | null;
+  token: string;
+  presenter_name: string | null;
+  presenter_email: string | null;
+  role: string;
+  status: RadioStudioInviteStatus;
+  waitroom_at: string | null;
+  techcheck_at: string | null;
+  starts_at: string;
+  ends_at: string;
+  access_ends_at: string | null;
+  used_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  revoked_at: string | null;
+  revoke_reason: string | null;
+}
+
+export interface RadioInviteValidation {
+  valid: boolean;
+  reason: string | null;
+  invite_id: string | null;
+  program_id: string | null;
+  program_title: string | null;
+  presenter_name: string | null;
+  role: string | null;
+  church_id: string | null;
+  waitroom_at: string | null;
+  techcheck_at: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  access_ends_at: string | null;
+}
+
+export type RadioRecordingStatus =
+  | "gravando" | "processando" | "revisao" | "publicada" | "reprovada" | "erro";
+
+export interface RadioRecording {
+  id: string;
+  church_id: string | null;
+  program_id: string | null;
+  episode_id: string | null;
+  title: string;
+  presenter_name: string | null;
+  category: string | null;
+  storage_path: string;
+  audio_url: string | null;
+  duration_seconds: number | null;
+  status: RadioRecordingStatus;
+  cover_url?: string | null;
+  cover_storage_path?: string | null;
+  recorded_at: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  review_notes: string | null;
+  is_reprise: boolean;
+  created_at: string;
+}
+
+// ============================================================
+// Rádio Web — Ciclo 2 (RADIO-005): podcasts, analytics, multi-convidados
+// ============================================================
+export type RadioGuestRole = "convidado" | "especial" | "co-apresentador" | "musica";
+
+export interface RadioProgramGuest {
+  id: string;
+  program_id: string;
+  guest_name: string;
+  guest_email: string | null;
+  guest_role: RadioGuestRole;
+  sort_order: number;
+  created_at: string;
+}
+
+export type RadioPlaySource = "episode" | "podcast" | "live" | "recording" | "reprise";
+
+export interface RadioPlayEvent {
+  id: string;
+  church_id: string | null;
+  profile_id: string | null;
+  episode_id: string | null;
+  recording_id: string | null;
+  program_id: string | null;
+  source: RadioPlaySource;
+  started_at: string;
+  listened_seconds: number;
+  ip_hash: string | null;
+  user_agent: string | null;
+}
+
+export interface RadioEpisodePlayStats {
+  episode_id: string;
+  title: string;
+  church_id: string | null;
+  category: string | null;
+  is_podcast: boolean | null;
+  total_plays: number;
+  total_listened_seconds: number;
+  unique_listeners: number;
+  last_play_at: string | null;
+}
+
+export interface RadioAnalyticsSummary {
+  total_plays: number;
+  total_listened_seconds: number;
+  unique_listeners: number;
+  live_plays: number;
+  podcast_plays: number;
+  episode_plays: number;
+  last_7d_plays: number;
+}
+
+// ============================================================
+// Rádio Web — Ciclo 4 (RADIO-004 agenda): grade semanal visual
+// ============================================================
+export interface RadioScheduleItem {
+  program_id: string;
+  title: string;
+  description: string | null;
+  host_name: string | null;
+  cover_url: string | null;
+  mode: RadioProgramMode | null;
+  weekday: Weekday;
+  start_time: string | null;
+  end_time: string | null;
+  is_recurring: boolean;
+  is_special: boolean;
+  date: string | null;
+}
+
+export interface RadioScheduleDay {
+  weekday: Weekday;
+  label: string;
+  items: RadioScheduleItem[];
+}
+
+export interface RadioWeeklySchedule {
+  days: RadioScheduleDay[];
+  today: Weekday;
+  week_start: string;
+  week_end: string;
+}
+
+// ============================================================
+// Rádio Web — Ciclo 5 (RADIO-008): ouvintes e notificações
+// ============================================================
+export type RadioListenerStatus = "ativo" | "pausado" | "cancelado";
+
+export interface RadioListener {
+  id: string;
+  church_id: string | null;
+  name: string;
+  email: string;
+  phone: string | null;
+  token: string;
+  status: RadioListenerStatus;
+  source: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RadioListenerWithPrograms extends RadioListener {
+  program_ids: string[];
+}
+
+export interface RadioRegisterResult {
+  id: string;
+  token: string;
+  status: string;
+  email: string;
+}
+
+export interface RadioNotificationLog {
+  id: string;
+  listener_id: string | null;
+  program_id: string | null;
+  church_id: string | null;
+  channel: string;
+  status: string;
+  error: string | null;
+  sent_at: string;
 }
