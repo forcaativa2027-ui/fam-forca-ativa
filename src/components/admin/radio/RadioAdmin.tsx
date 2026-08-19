@@ -320,19 +320,6 @@ export function RadioAdmin() {
     } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
   }
 
-  async function saveItem() {
-    if (!activePlaylist || !itemEpisode) return;
-    setErr("");
-    try {
-      await addPlaylistItem(supabase, activePlaylist.id, itemEpisode);
-      setItemEpisode("");
-      qc.invalidateQueries({ queryKey: ["radio-playlist-items", activePlaylist.id] });
-    } catch (e2: unknown) {
-      const msg = e2 instanceof Error ? e2.message : "Erro ao adicionar item";
-      setErr(msg);
-    }
-  }
-
   async function removeItem(id: string) {
     if (!activePlaylist) return;
     if (!confirm("Remover este item da playlist?")) return;
