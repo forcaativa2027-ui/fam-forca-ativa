@@ -322,7 +322,7 @@ export function StudioRemoto({ supabase, churchId }: { supabase: SupabaseClient;
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button onClick={publish} disabled={status === "saving"} className="flex-1">
+                <Button onClick={publish} className="flex-1">
                   <Check className="mr-1 h-4 w-4" /> Publicar
                 </Button>
                 <Button onClick={discard} variant="outline" className="flex-1">
