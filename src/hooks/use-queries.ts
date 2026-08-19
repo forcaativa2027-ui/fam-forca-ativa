@@ -1045,3 +1045,25 @@ export const usePlaylistItems = (playlistId: string) =>
     queryFn: () => Radio.listPlaylistItems(supabase, playlistId),
     enabled: !!playlistId,
   });
+
+export const useStudioInvites = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-studio-invites", churchId ?? "all"],
+    queryFn: () => Radio.listStudioInvites(supabase, churchId),
+    staleTime: 15 * 1000,
+  });
+
+export const useValidatedInvite = (token: string) =>
+  useQuery({
+    queryKey: ["radio-invite-validation", token],
+    queryFn: () => Radio.validateInviteToken(supabase, token),
+    enabled: !!token,
+    retry: false,
+  });
+
+export const useRadioRecordings = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-recordings", churchId ?? "all"],
+    queryFn: () => Radio.listRadioRecordings(supabase, churchId),
+    staleTime: 15 * 1000,
+  });
