@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { RadioConfig, RadioProgram, RadioEpisode, Weekday, RadioPlaylist, RadioPlaylistItem } from "@/types/domain";
+import type { RadioConfig, RadioProgram, RadioEpisode, Weekday, RadioPlaylist, RadioPlaylistItem, RadioStudioInvite, RadioInviteValidation, RadioRecording } from "@/types/domain";
 import { radioProgramSchema, type RadioProgramInput } from "@/schemas/radioProgramSchema";
 
 export async function getRadioConfig(sb: SupabaseClient, churchId?: string | null): Promise<RadioConfig | null> {
@@ -267,4 +267,99 @@ export async function uploadRadioRecording(sb: SupabaseClient, blob: Blob, churc
   if (error) throw error;
   const { data } = sb.storage.from(RADIO_BUCKET).getPublicUrl(path);
   return { path, publicUrl: data.publicUrl };
+}
+
+// ── Convites do apresentador (Studio) ──
+
+export interface RadioStudioInviteInput {
+  church_id: string | null;
+  program_id: string | null;
+  presenter_name: string | null;
+  presenter_email: string | null;
+  starts_at: string;
+  ends_at: string;
+  access_ends_at?: string | null;
+}
+
+export async function listStudioInvites(sb: SupabaseClient, churchId?: string | null): Promise<RadioStudioInvite[]> {
+  let q = sb.from("radio_studio_invites").select("*").order("created_at", { ascending: false });
+  if (churchId) q = q.eq("church_id", churchId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as RadioStudioInvite[];
+}
+
+export async function createStudioInvite(sb: SupabaseClient, data: RadioStudioInviteInput): Promise<RadioStudioInvite> {
+  const token = crypto.randomUUID().replace(/-/g, "") + Date.now().toString(36);
+  const { data: created, error } = await sb
+    .from("radio_studio_invites")
+    .insert({ ...data, token })
+    .select()
+    .single();
+  if (error) throw error;
+  return created as RadioStudioInvite;
+}
+
+export async function revokeStudioInvite(sb: SupabaseClient, id: string, reason?: string): Promise<void> {
+  const { error } = await sb
+    .from("radio_studio_invites")
+    .update({ status: "revogado", revoked_at: new Date().toISOString(), revoke_reason: reason ?? null })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function validateInviteToken(sb: SupabaseClient, token: string): Promise<RadioInviteValidation | null> {
+  const { data, error } = await sb.rpc("radio_validate_invite", { p_token: token });
+  if (error) return null;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  return row as RadioInviteValidation;
+}
+
+export async function useInviteToken(sb: SupabaseClient, token: string): Promise<boolean> {
+  const { data, error } = await sb.rpc("radio_use_invite", { p_token: token });
+  if (error) return false;
+  return !!data;
+}
+
+// ── Gravações automáticas e reprise ──
+
+export async function listRadioRecordings(sb: SupabaseClient, churchId?: string | null): Promise<RadioRecording[]> {
+  let q = sb.from("radio_recordings").select("*").order("recorded_at", { ascending: false });
+  if (churchId) q = q.eq("church_id", churchId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as RadioRecording[];
+}
+
+export async function createRadioRecording(sb: SupabaseClient, data: {
+  church_id: string | null;
+  program_id: string | null;
+  presenter_name: string | null;
+  title: string;
+}): Promise<RadioRecording> {
+  const { data: row, error } = await sb.rpc("radio_start_recording", {
+    p_church_id: data.church_id,
+    p_program_id: data.program_id,
+    p_presenter_name: data.presenter_name,
+    p_title: data.title,
+  });
+  if (error) throw error;
+  const { data: created, error: e2 } = await sb.from("radio_recordings").select("*").eq("id", row as string).single();
+  if (e2) throw e2;
+  return created as RadioRecording;
+}
+
+export async function updateRadioRecording(sb: SupabaseClient, id: string, data: Partial<{
+  status: RadioRecording["status"];
+  audio_url: string | null;
+  storage_path: string;
+  duration_seconds: number | null;
+  episode_id: string | null;
+  is_reprise: boolean;
+  review_notes: string | null;
+}>): Promise<RadioRecording> {
+  const { data: updated, error } = await sb.from("radio_recordings").update(data).eq("id", id).select().single();
+  if (error) throw error;
+  return updated as RadioRecording;
 }
