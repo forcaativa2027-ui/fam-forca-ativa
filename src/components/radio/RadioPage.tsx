@@ -4,7 +4,7 @@ import { useRadioPlayer } from "./RadioPlayerContext";
 import { listRadioPrograms, listRadioEpisodes, getRadioConfig } from "@/services/radio";
 import { useRadioConfig, useRadioPrograms, useRadioEpisodes, useWhatsOnAir } from "@/hooks/use-queries";
 import { InstallRadioButton } from "@/components/public/InstallRadioButton";
-import { Share2 } from "lucide-react";
+import { Share2, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Program {
   id: string;
@@ -39,6 +39,7 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
   const [churchId] = useState<string | undefined>(initialChurchId ?? undefined);
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [gradeDay, setGradeDay] = useState<number>(new Date().getDay());
 
   const { data: config = null } = useRadioConfig(churchId);
   const { data: programs = [] } = useRadioPrograms(churchId);
@@ -213,35 +214,123 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
 
             {/* Programação */}
             <div>
-              <h2 className="font-display text-2xl font-bold text-navy">Programação</h2>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="font-display text-2xl font-bold text-navy">Programação</h2>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setGradeDay((d) => (d === 0 ? 6 : d - 1))}
+                    aria-label="Dia anterior"
+                    className="p-2 rounded-lg border border-gold/30 text-navy hover:bg-gold/10 transition"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="min-w-[9rem] text-center text-sm font-semibold text-navy">
+                    {gradeDay === new Date().getDay() ? "Hoje · " : ""}
+                    {WEEKDAY_LABELS[WEEKDAY_KEYS[gradeDay] as keyof typeof WEEKDAY_LABELS]}
+                  </span>
+                  <button
+                    onClick={() => setGradeDay((d) => (d === 6 ? 0 : d + 1))}
+                    aria-label="Próximo dia"
+                    className="p-2 rounded-lg border border-gold/30 text-navy hover:bg-gold/10 transition"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
               {programs.length === 0 && (
                 <p className="text-muted">Nenhum programa cadastrado.</p>
               )}
-              <div className="space-y-3">
-                {programs.map((p) => (
-                  <div key={p.id} className="p-4 rounded-xl border border-gold/30 hover:border-gold">
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-navy">{p.title}</span>
-                      {p.is_recurring && (
-                        <span className="text-xs bg-gold/10 text-gold px-2 py-1 rounded">Recorrente</span>
-                      )}
-                    </div>
-                    {p.description && (
-                      <p className="mt-1 text-sm text-muted line-clamp-2">{p.description}</p>
-                    )}
-                    <div className="mt-2 flex items-center gap-2 text-xs text-muted">
-                      {p.weekday && <span>{WEEKDAY_LABELS[p.weekday as keyof typeof WEEKDAY_LABELS]}:</span>}
-      <span>{p.start_time?.slice(0, 5) || "—"} – {p.end_time?.slice(0, 5) || "—"}</span>
-                    </div>
+              {(() => {
+                const dayKey = WEEKDAY_KEYS[gradeDay];
+                const dayPrograms = programs
+                  .filter((p) => p.weekday === dayKey)
+                  .sort((a, b) => toMinutes(a.start_time ?? "") - toMinutes(b.start_time ?? ""));
+                if (dayPrograms.length === 0) {
+                  return <p className="mt-2 text-sm text-muted">Nenhum programa neste dia.</p>;
+                }
+                return (
+                  <div className="mt-3 space-y-3">
+                    {dayPrograms.map((p) => (
+                      <div key={p.id} className="p-4 rounded-xl border border-gold/30 hover:border-gold">
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-navy">{p.title}</span>
+                          {p.is_recurring && (
+                            <span className="text-xs bg-gold/10 text-gold px-2 py-1 rounded">Recorrente</span>
+                          )}
+                          {p.mode && (
+                            <span className="text-xs bg-navy/10 text-navy px-2 py-1 rounded">{MODE_LABELS[p.mode]}</span>
+                          )}
+                        </div>
+                        {p.description && (
+                          <p className="mt-1 text-sm text-muted line-clamp-2">{p.description}</p>
+                        )}
+                        <div className="mt-2 flex items-center gap-2 text-xs text-muted">
+                          <span>{p.start_time?.slice(0, 5) || "—"} – {p.end_time?.slice(0, 5) || "—"}</span>
+                          {p.host_name && <span>· {p.host_name}</span>}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
             </div>
           </div>
 
           {/* Episódios (direita) */}
           <div>
             <h2 className="font-display text-2xl font-bold text-navy">Episódios</h2>
+
+            {/* Destaques */}
+            {(() => {
+              const featured = episodes.filter((e) => e.is_featured);
+              if (featured.length === 0) return null;
+              return (
+                <div className="mt-4 space-y-3">
+                  <p className="text-xs font-bold uppercase tracking-wide text-gold">Destaques</p>
+                  {featured.slice(0, 3).map((e) => (
+                    <div key={e.id} className="p-4 rounded-xl bg-gradient-to-r from-gold/20 to-gold/5 border border-gold/40">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-semibold text-navy">{e.title}</span>
+                      </div>
+                      {e.description && (
+                        <p className="mt-1 text-sm text-muted line-clamp-2">{e.description}</p>
+                      )}
+                      {e.audio_url && (
+                        <button
+                          onClick={() => {
+                            player.playEpisode(e.audio_url, e.title, e.cover_url ?? undefined);
+                            setShowPlayer(true);
+                          }}
+                          className="mt-2 w-full py-2 rounded bg-gold text-navy font-semibold text-sm"
+                        >
+                          Tocar
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {/* Filtro por categoria */}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                onClick={() => setCategory(undefined)}
+                className={`px-3 py-1 rounded-full text-xs font-semibold ${!category ? "bg-gold text-navy" : "border border-gold/30 text-navy"}`}
+              >
+                Todos
+              </button>
+              {EPISODE_CATEGORIES.map((c) => (
+                <button
+                  key={c.value}
+                  onClick={() => setCategory(c.value)}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${category === c.value ? "bg-gold text-navy" : "border border-gold/30 text-navy"}`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+
             {isLoading && (
               <p className="text-muted py-4">Carregando...</p>
             )}
@@ -300,6 +389,16 @@ const WEEKDAY_KEYS = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta"
 const MODE_LABELS: Record<string, string> = {
   automatico: "Automático", gravado: "Gravado", ao_vivo: "Ao vivo", hibrido: "Híbrido",
 };
+
+const EPISODE_CATEGORIES = [
+  { value: "pregacao", label: "Pregação" },
+  { value: "louvor", label: "Louvor" },
+  { value: "noticia", label: "Notícia" },
+  { value: "devocional", label: "Devocional" },
+  { value: "entrevista", label: "Entrevista" },
+  { value: "estudo", label: "Estudo" },
+  { value: "especial", label: "Especial" },
+];
 
 function toMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
