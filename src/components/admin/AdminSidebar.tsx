@@ -25,7 +25,7 @@ export type TabKey =
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao" | "conhecimento-biblico" | "biblioteca-conhecimento" | "biblia-referencias" | "kids-admin" | "org-terminology"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
-  | "news" | "banners" | "sermons" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
+  | "news" | "banners" | "sermons" | "radio" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "invites" | "audit"
   | "export";
@@ -127,6 +127,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "news",    label: "Notícias",     icon: <Megaphone size={15} /> },
         { key: "banners", label: "Banners",      icon: <Image size={15} /> },
         { key: "sermons", label: "Pregações",    icon: <Mic2 size={15} /> },
+        { key: "radio",   label: "Rádio Web",    icon: <Radio size={15} /> },
         { key: "events",  label: "Agenda",       icon: <CalendarDays size={15} />, sectionLabel: "Programação" },
         { key: "registration-events", label: "Eventos", icon: <ClipboardList size={15} /> },
         { key: "news-videos", label: "CEC News Vídeos", icon: <Video size={15} /> },

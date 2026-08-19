@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   Play, Calendar, Music, MapPin, Church as ChurchIcon, Sun, Sparkles,
   Clock, ArrowRight, ExternalLink, LayoutDashboard, FileDown,
-  Home, Newspaper, Video, MessageCircle, HeartHandshake, LogIn, Users2,
+  Home, Newspaper, Video, MessageCircle, HeartHandshake, LogIn, Users2, Radio,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { BottomNav, BottomNavSpacer, type BottomNavItem } from "@/components/sha
 import {
   usePublicSermons, usePublicEvents, useChurches, useCells, usePublicNews, useChurchGivingInfo,
   useServiceTimes, useTodaysWord, useActiveBanners, useActiveCommunity, useMyProfile,
-  usePublicRegistrationEvents,
+  usePublicRegistrationEvents, useRadioConfig,
 } from "@/hooks/use-queries";
 import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import { youtubeThumb } from "@/services/content";
@@ -25,8 +25,9 @@ import { PublicContactForms } from "./PublicContactForms";
 import { PublicParticipateSection } from "./PublicParticipateSection";
 import { HeroCarousel } from "./HeroCarousel";
 import type { EventItem, Church, Cell } from "@/types/domain";
-import { RadioPage } from "@/components/radio/RadioPage";
+import RadioPage from "@/components/radio/RadioPage";
 import { RadioMiniPlayer } from "@/components/radio/RadioMiniPlayer";
+import { useRadioEnabled } from "@/hooks/use-radio-enabled";
 
 const STATUS_LABELS: Record<EventItem["status"], string> = {
   abertas: "Inscrições abertas", encerradas: "Encerradas", esgotado: "Esgotado", em_breve: "Em breve",
@@ -66,6 +67,11 @@ export default function PublicHome() {
   const sede = community ?? churches.find((c) => c.type === "sede") ?? churches[0] ?? null;
   const { data: dbServices = [] } = useServiceTimes(sede?.id ?? null);
   const { data: dbWord } = useTodaysWord(communityId);
+  const { data: radioEnabled } = useRadioEnabled(communityId);
+  const { data: radioConfig } = useRadioConfig(communityId);
+
+  // Rádio visível por padrão; ocultada apenas se desabilitada explicitamente (seção 25 do spec)
+  const showRadio = radioEnabled?.is_enabled !== false;
 
   // Fallback inteligente: se o banco tem dados use-os; senao mostra defaults.
   const services = dbServices.length > 0 ? dbServices : defaultServiceTimes(sede);
@@ -74,7 +80,8 @@ export default function PublicHome() {
   const navItems: BottomNavItem[] = [
     { key: "inicio", label: "Início", icon: <Home size={18} />, onClick: () => setTab("inicio") },
     { key: "noticias", label: "Notícias", icon: <Newspaper size={18} />, onClick: () => setTab("noticias") },
-    { key: "radio", label: "Radio", icon: <Music size={18} />, onClick: () => setTab("radio") },
+    ...(showRadio ? [{ key: "radio", label: "Rádio Web", icon: <Radio size={18} />, onClick: () => setTab("radio") }] : []),
+
     { key: "videos", label: "Vídeos", icon: <Video size={18} />, onClick: () => setTab("videos") },
     { key: "cultos", label: "Cultos", icon: <ChurchIcon size={18} />, onClick: () => setTab("cultos") },
     { key: "agenda", label: "Agenda", icon: <Calendar size={18} />, onClick: () => setTab("agenda") },
@@ -183,6 +190,31 @@ export default function PublicHome() {
                     </div>
                   </button>
                 ))}
+              </div>
+            </section>
+          )}
+
+          {/* Rádio Web */}
+          {showRadio && radioConfig?.is_enabled && (
+            <section>
+              <div className="rounded-2xl border border-gold/30 bg-navy p-5 text-white">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="font-display text-xl font-bold">Rádio Web</h2>
+                    <p className="mt-1 text-sm text-white/70">{radioConfig.display_name || "Sua comunidade, sempre ouvindo"}</p>
+                  </div>
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gold/20 text-gold"><Radio className="h-6 w-6" /></span>
+                </div>
+                {radioConfig.stream_url && (
+                  <Button onClick={() => setTab("radio")} className="mt-4 w-full gap-2 bg-gold text-navy hover:bg-gold/90">
+                    <Play className="h-4 w-4" /> Ouvir agora
+                  </Button>
+                )}
+                {!radioConfig.stream_url && (
+                  <Button variant="outline" onClick={() => setTab("radio")} className="mt-4 w-full gap-2 border-white/30 text-white hover:bg-white/10">
+                    Acessar a Rádio
+                  </Button>
+                )}
               </div>
             </section>
           )}

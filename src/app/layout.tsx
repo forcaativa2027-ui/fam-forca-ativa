@@ -9,7 +9,18 @@ import { AccessibilityOnboarding } from "@/components/shared/AccessibilityOnboar
 export const metadata: Metadata = {
   title: "CEC Family",
   description: "Plataforma apostólica da CEC Manaus — discipulado, células e gestão pastoral",
+  manifest: "/manifest.json",
 };
+
+function ServiceWorkerRegistration() {
+  return (
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js").catch(function () {}); }); }`,
+      }}
+    />
+  );
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,6 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <RadioPlayerProvider>
             <AccessibilityProvider>
               {children}
+              <ServiceWorkerRegistration />
               <AccessibilityButton />
               <AccessibilityOnboarding />
             </AccessibilityProvider>

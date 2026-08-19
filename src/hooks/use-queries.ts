@@ -996,3 +996,109 @@ export const useRadioPrograms = (churchId?: string | null) =>
 
 export const useRadioEpisodes = (churchId?: string | null, category?: string) =>
   useQuery({ queryKey: ["radio-episodes", churchId ?? "all", category ?? "all"], queryFn: () => Radio.listRadioEpisodes(supabase, churchId, category) });
+
+export const useRadioConfigAdmin = (churchId: string | null) =>
+  useQuery({ queryKey: ["radio-config-admin", churchId], queryFn: () => Radio.getRadioConfigByChurch(supabase, churchId), enabled: !!churchId });
+
+
+// Rádio Programas (CRUD)
+export const useAllRadioPrograms = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["all-radio-programs", churchId],
+    queryFn: () => Radio.getAllPrograms(supabase, churchId),
+    staleTime: 30 * 1000,
+  });
+
+export const useRadioProgram = (programId: string) =>
+  useQuery({
+    queryKey: ["radio-program", programId],
+    queryFn: () => Radio.getProgramById(supabase, programId),
+    enabled: !!programId,
+  });
+
+export const useAllRadioEpisodes = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["all-radio-episodes", churchId],
+    queryFn: () => Radio.listAllRadioEpisodes(supabase, churchId),
+    staleTime: 30 * 1000,
+  });
+
+export const useWhatsOnAir = (churchId: string | null) =>
+  useQuery({
+    queryKey: ["radio-whats-on-air", churchId],
+    queryFn: () => Radio.whatsOnAir(supabase, churchId as string),
+    enabled: !!churchId,
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+  });
+
+export const useRadioPlaylists = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-playlists", churchId ?? "all"],
+    queryFn: () => Radio.listRadioPlaylists(supabase, churchId),
+    staleTime: 30 * 1000,
+  });
+
+export const usePlaylistItems = (playlistId: string) =>
+  useQuery({
+    queryKey: ["radio-playlist-items", playlistId],
+    queryFn: () => Radio.listPlaylistItems(supabase, playlistId),
+    enabled: !!playlistId,
+  });
+
+export const useStudioInvites = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-studio-invites", churchId ?? "all"],
+    queryFn: () => Radio.listStudioInvites(supabase, churchId),
+    staleTime: 15 * 1000,
+  });
+
+export const useValidatedInvite = (token: string) =>
+  useQuery({
+    queryKey: ["radio-invite-validation", token],
+    queryFn: () => Radio.validateInviteToken(supabase, token),
+    enabled: !!token,
+    retry: false,
+  });
+
+export const useRadioRecordings = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-recordings", churchId ?? "all"],
+    queryFn: () => Radio.listRadioRecordings(supabase, churchId),
+    staleTime: 15 * 1000,
+  });
+
+export const usePodcastEpisodes = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-podcasts", churchId ?? "all"],
+    queryFn: () => Radio.listPodcastEpisodes(supabase, churchId),
+    staleTime: 60 * 1000,
+  });
+
+export const useRadioAnalytics = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-analytics", churchId ?? "all"],
+    queryFn: () => Radio.getRadioAnalytics(supabase, churchId),
+    staleTime: 30 * 1000,
+  });
+
+export const useEpisodePlayStats = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-episode-play-stats", churchId ?? "all"],
+    queryFn: () => Radio.listEpisodePlayStats(supabase, churchId),
+    staleTime: 30 * 1000,
+  });
+
+export const useProgramGuests = (programId: string) =>
+  useQuery({
+    queryKey: ["radio-program-guests", programId],
+    queryFn: () => Radio.listProgramGuests(supabase, programId),
+    enabled: !!programId,
+  });
+
+export const useRadioSchedule = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["radio-schedule", churchId ?? "all"],
+    queryFn: () => Radio.getRadioWeeklySchedule(supabase, churchId ?? null),
+    staleTime: 60 * 1000,
+  });

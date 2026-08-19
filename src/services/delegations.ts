@@ -257,7 +257,7 @@ export const DELEGATION_TAB_MAP: Record<DelegationModule, string[]> = {
   control_tower: ["control-tower"],
   audit: ["audit"],
   supervisao: ["relmda-supervisao", "relmda-consolidacao", "relmda-dashboard", "relmda-prazos", "relmda-area", "weekly", "monthly", "supervision", "ministerial-reports"],
-  comunicacao: ["news", "banners", "sermons", "events", "registration-events", "news-videos", "services", "word", "giving", "editorial-dashboard", "content-library", "categories-tags"],
+  comunicacao: ["news", "banners", "sermons", "radio", "events", "registration-events", "news-videos", "services", "word", "giving", "editorial-dashboard", "content-library", "categories-tags"],
   documentacao: [],
 };
 
