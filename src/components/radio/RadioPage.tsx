@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRadioPlayer } from "./RadioPlayerContext";
-import { listRadioPrograms, listRadioEpisodes, getRadioConfig } from "@/services/radio";
-import { useRadioConfig, useRadioPrograms, useRadioEpisodes, useWhatsOnAir } from "@/hooks/use-queries";
+import { listRadioPrograms, listRadioEpisodes, getRadioConfig, registerRadioPlay } from "@/services/radio";
+import { useRadioConfig, useRadioPrograms, useRadioEpisodes, useWhatsOnAir, usePodcastEpisodes, useRadioRecordings } from "@/hooks/use-queries";
+import { supabase } from "@/lib/supabase/client";
 import { InstallRadioButton } from "@/components/public/InstallRadioButton";
 import { Share2, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -45,6 +46,9 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
   const { data: programs = [] } = useRadioPrograms(churchId);
   const { data: episodes = [], isLoading } = useRadioEpisodes(churchId, category);
   const { data: onAir } = useWhatsOnAir(churchId ?? null);
+  const { data: podcasts = [] } = usePodcastEpisodes(churchId);
+  const { data: recordings = [] } = useRadioRecordings(churchId);
+  const [podcastView, setPodcastView] = useState(false);
 
   const player = useRadioPlayer();
   const autoPlayedRef = useRef(false);
@@ -61,6 +65,7 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
     // AO VIVO / HÍBRIDO → stream ao vivo
     if ((onAir.mode === "ao_vivo" || onAir.mode === "hibrido") && (onAir.stream_url || config.stream_url)) {
       player.playStream(onAir.stream_url ?? config.stream_url ?? "", onAir.title, config.logo_url ?? undefined);
+      registerRadioPlay(supabase, { church_id: churchId ?? null, program_id: onAir.program_id, source: "live" });
       autoPlayedRef.current = true;
       return;
     }
@@ -68,9 +73,19 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
     const source = onAir.fallback_url || config.stream_url;
     if (source) {
       player.playStream(source, onAir.title, config.logo_url ?? undefined);
+      registerRadioPlay(supabase, { church_id: churchId ?? null, program_id: onAir.program_id, source: "live" });
       autoPlayedRef.current = true;
     }
-  }, [config, onAir, player]);
+  }, [config, onAir, player, churchId]);
+
+  // Híbrido real — se a stream ao vivo falhar, troca para a gravação publicada do programa
+  useEffect(() => {
+    if (!player.hasError || !player.isLive || !onAir) return;
+    const rec = recordings.find((r) => r.program_id === onAir.program_id && r.status === "publicada" && r.audio_url);
+    if (!rec?.audio_url) return;
+    player.playEpisode(rec.audio_url, `Gravado — ${onAir.title}`, config?.logo_url ?? undefined);
+    registerRadioPlay(supabase, { church_id: churchId ?? null, program_id: onAir.program_id, episode_id: rec.episode_id ?? null, recording_id: rec.id, source: "recording" });
+  }, [player.hasError, player.isLive, onAir, recordings, player, config, churchId]);
 
   const liveProgram = useMemo(() => {
     const today = WEEKDAY_KEYS[new Date().getDay()];
@@ -276,9 +291,76 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
             </div>
           </div>
 
-          {/* Episódios (direita) */}
+          {/* Episódios / Podcasts (direita) */}
           <div>
-            <h2 className="font-display text-2xl font-bold text-navy">Episódios</h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-display text-2xl font-bold text-navy">Episódios</h2>
+              <div className="flex gap-1 rounded-lg border border-gold/30 p-1">
+                <button
+                  onClick={() => setPodcastView(false)}
+                  className={`px-3 py-1 rounded-md text-xs font-semibold ${!podcastView ? "bg-gold text-navy" : "text-navy hover:bg-gold/10"}`}
+                >
+                  Episódios
+                </button>
+                <button
+                  onClick={() => setPodcastView(true)}
+                  className={`px-3 py-1 rounded-md text-xs font-semibold ${podcastView ? "bg-gold text-navy" : "text-navy hover:bg-gold/10"}`}
+                >
+                  Podcasts
+                </button>
+              </div>
+            </div>
+
+            {podcastView ? (
+              /* Podcasts */
+              <div className="mt-4">
+                {podcasts.length === 0 && (
+                  <p className="text-muted py-4">Nenhum podcast publicado ainda.</p>
+                )}
+                <div className="space-y-3">
+                  {podcasts.map((e) => (
+                    <div key={e.id} className="p-4 rounded-xl border border-gold/30 hover:border-gold transition-colors">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-semibold text-navy">{e.title}</span>
+                        {e.is_podcast && (
+                          <span className="text-xs bg-gold/10 text-gold px-2 py-1 rounded">Podcast</span>
+                        )}
+                      </div>
+                      {e.description && (
+                        <p className="mt-1 text-sm text-muted line-clamp-2">{e.description}</p>
+                      )}
+                      <div className="mt-2 flex items-center gap-2 text-xs text-muted">
+                        {e.speaker && <span>{e.speaker}</span>}
+                        {e.published_at && (
+                          <span>{new Date(e.published_at).toLocaleDateString("pt-BR")}</span>
+                        )}
+                        {e.duration_seconds != null && (
+                          <span>· {fmtDuration(e.duration_seconds)}</span>
+                        )}
+                      </div>
+                      {e.audio_url && (
+                        <button
+                          onClick={() => {
+                            registerRadioPlay(supabase, { church_id: churchId ?? null, episode_id: e.id, source: "podcast" });
+                            player.playEpisode(e.audio_url, e.title, e.cover_url ?? undefined);
+                            setShowPlayer(true);
+                          }}
+                          className="mt-2 w-full py-2 rounded bg-gold text-navy font-semibold text-sm"
+                        >
+                          Ouvir podcast
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <a
+                  href={`/radio/feed.xml`}
+                  className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-gold underline"
+                >
+                  Assinar feed RSS
+                </a>
+              </div>
+            ) : (
 
             {/* Destaques */}
             {(() => {
@@ -298,6 +380,7 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
                       {e.audio_url && (
                         <button
                           onClick={() => {
+                            registerRadioPlay(supabase, { church_id: churchId ?? null, episode_id: e.id, source: "episode" });
                             player.playEpisode(e.audio_url, e.title, e.cover_url ?? undefined);
                             setShowPlayer(true);
                           }}
@@ -361,6 +444,7 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
                   {e.audio_url && (
                     <button
                       onClick={() => {
+                        registerRadioPlay(supabase, { church_id: churchId ?? null, episode_id: e.id, source: "episode" });
                         player.playEpisode(e.audio_url, e.title, e.cover_url ?? undefined);
                         setShowPlayer(true);
                       }}
@@ -372,6 +456,7 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
                 </div>
               ))}
             </div>
+            )}
           </div>
         </div>
       </div>
@@ -403,6 +488,12 @@ const EPISODE_CATEGORIES = [
 function toMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
   return (h || 0) * 60 + (m || 0);
+}
+
+function fmtDuration(totalSeconds: number): string {
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = Math.round(totalSeconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
 export default RadioPage;
