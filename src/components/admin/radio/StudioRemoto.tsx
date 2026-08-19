@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { uploadRadioRecording } from "@/services/radio";
+import { uploadRadioRecording, createRadioRecording, updateRadioRecording } from "@/services/radio";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { useMyProfile } from "@/hooks/use-queries";
 
 export function StudioRemoto({ supabase, churchId }: { supabase: SupabaseClient; churchId: string | null }) {
+  const { data: profile } = useMyProfile();
   const [recording, setRecording] = useState(false);
   const [status, setStatus] = useState<"idle" | "preparing" | "recording" | "saving" | "done" | "error">("idle");
   const [elapsed, setElapsed] = useState(0);
@@ -22,6 +24,7 @@ export function StudioRemoto({ supabase, churchId }: { supabase: SupabaseClient;
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<number | null>(null);
+  const durationRef = useRef(0);
 
   useEffect(() => {
     return () => {
@@ -47,7 +50,11 @@ export function StudioRemoto({ supabase, churchId }: { supabase: SupabaseClient;
       setRecording(true);
       setStatus("recording");
       setElapsed(0);
-      timerRef.current = window.setInterval(() => setElapsed((s) => s + 1), 1000);
+      durationRef.current = 0;
+      timerRef.current = window.setInterval(() => {
+        durationRef.current += 1;
+        setElapsed((s) => s + 1);
+      }, 1000);
     } catch (e: unknown) {
       setStatus("error");
       setError(e instanceof Error && e.name === "NotAllowedError"
@@ -71,8 +78,21 @@ export function StudioRemoto({ supabase, churchId }: { supabase: SupabaseClient;
     }
     setStatus("saving");
     try {
-      const { publicUrl: url } = await uploadRadioRecording(supabase, blob, churchId);
+      const { publicUrl: url, path } = await uploadRadioRecording(supabase, blob, churchId);
       setPublicUrl(url);
+      const finalTitle = title.trim() || `Gravação de ${new Date().toLocaleString("pt-BR")}`;
+      const created = await createRadioRecording(supabase, {
+        church_id: churchId,
+        program_id: null,
+        presenter_name: speaker.trim() || profile?.full_name || null,
+        title: finalTitle,
+      });
+      await updateRadioRecording(supabase, created.id, {
+        status: "revisao",
+        audio_url: url,
+        duration_seconds: durationRef.current,
+        storage_path: path,
+      });
       setStatus("done");
     } catch (e: unknown) {
       setStatus("error");
