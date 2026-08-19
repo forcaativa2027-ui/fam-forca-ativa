@@ -7,3 +7,5 @@
 do $$ begin
   alter type delegation_module add value if not exists 'live360';
 exception when duplicate_object then null; end $$;
+
+-- Commit de forçagem de deploy (Vercel).
