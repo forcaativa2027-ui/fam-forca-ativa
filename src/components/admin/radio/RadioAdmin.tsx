@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { radioProgramSchema, type RadioProgramInput } from "@/schemas/radioProgramSchema";
-import { useAllRadioPrograms, useAllRadioEpisodes, useMyProfile, useRadioConfigAdmin } from "@/hooks/use-queries";
+import { useAllRadioPrograms, useAllRadioEpisodes, useMyProfile, useRadioConfigAdmin, useWhatsOnAir, useRadioPlaylists } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import {
   createRadioProgram, updateRadioProgram, deleteRadioProgram,
@@ -45,6 +45,8 @@ export function RadioAdmin() {
   const { data: programs = [] } = useAllRadioPrograms(churchId);
   const { data: episodes = [] } = useAllRadioEpisodes(churchId);
   const { data: config } = useRadioConfigAdmin(churchId);
+  const { data: onAir } = useWhatsOnAir(churchId);
+  const { data: playlists = [] } = useRadioPlaylists(churchId);
   const qc = useQueryClient();
   const [section, setSection] = useState<"config" | "programas" | "episodios">("programas");
   const [editing, setEditing] = useState<RadioProgram | null>(null);
@@ -108,10 +110,10 @@ export function RadioAdmin() {
     }
   }
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
+  const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } =
     useForm<RadioProgramInput>({
       resolver: zodResolver(radioProgramSchema),
-      defaultValues: { title: "", is_recurring: true, is_active: true, sort_order: 0 },
+      defaultValues: { title: "", is_recurring: true, is_active: true, sort_order: 0, mode: "automatico", is_special: false },
     });
 
   function startEdit(p: RadioProgram) {
@@ -130,6 +132,12 @@ export function RadioAdmin() {
       is_recurring: p.is_recurring,
       is_active: p.is_active,
       sort_order: p.sort_order,
+      mode: p.mode ?? "automatico",
+      fallback_url: p.fallback_url ?? "",
+      playlist_id: p.playlist_id ?? "",
+      is_special: p.is_special ?? false,
+      special_start_date: p.special_start_date ?? "",
+      special_end_date: p.special_end_date ?? "",
     });
   }
   function cancelEdit() {
@@ -261,6 +269,51 @@ export function RadioAdmin() {
       </div>
 
       {err && <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{err}</p>}
+
+      {/* Agora no Ar — Broadcast Engine */}
+      <Card className="rounded-xl border border-border p-6">
+        <CardHeader>
+          <CardTitle>Agora no Ar</CardTitle>
+          <CardDescription>Programa vigente definido pelo Broadcast Engine a partir da grade</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!onAir ? (
+            <p className="text-sm text-muted-foreground">Nenhum programa vigente neste horário. A rádio usa a stream configurada como fallback.</p>
+          ) : (
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+              <div>
+                <span className="block text-xs text-muted-foreground">Programa</span>
+                <span className="font-semibold text-navy">{onAir.title}</span>
+              </div>
+              {onAir.host_name && (
+                <div>
+                  <span className="block text-xs text-muted-foreground">Apresentador</span>
+                  <span>{onAir.host_name}</span>
+                </div>
+              )}
+              <div>
+                <span className="block text-xs text-muted-foreground">Horário</span>
+                <span>{onAir.start_time?.slice(0, 5)} – {onAir.end_time?.slice(0, 5) || "—"}</span>
+              </div>
+              <div>
+                <span className="block text-xs text-muted-foreground">Modo</span>
+                <span className="rounded-full bg-navy/10 px-2 py-0.5 text-xs font-bold uppercase text-navy">
+                  {onAir.mode === "ao_vivo" ? "Ao vivo" : onAir.mode === "hibrido" ? "Híbrido" : onAir.mode === "gravado" ? "Gravado" : "Automático"}
+                </span>
+              </div>
+              {onAir.is_special && (
+                <span className="rounded-full bg-gold/20 px-2 py-0.5 text-xs font-bold uppercase text-gold">Especial</span>
+              )}
+              {onAir.fallback_url && (
+                <div>
+                  <span className="block text-xs text-muted-foreground">Fallback</span>
+                  <span className="text-xs">Playlist/áudio de contingência ativo</span>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {section === "config" ? (
         <Card className="rounded-xl border border-border p-6">
@@ -428,6 +481,46 @@ export function RadioAdmin() {
                   <Input {...register("cover_url")} placeholder="https://exemplo.com/capa.jpg" />
                   {errors.cover_url && <p className="mt-1 text-xs text-destructive">{errors.cover_url.message}</p>}
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Modo de programação</Label>
+                    <select {...register("mode")} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                      <option value="automatico">Automático</option>
+                      <option value="gravado">Gravado</option>
+                      <option value="ao_vivo">Ao vivo</option>
+                      <option value="hibrido">Híbrido</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Playlist</Label>
+                    <select {...register("playlist_id")} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                      <option value="">— Sem playlist —</option>
+                      {playlists.map((pl) => (
+                        <option key={pl.id} value={pl.id}>{pl.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <Label>Fallback (contingência contra silêncio)</Label>
+                  <Input {...register("fallback_url")} type="url" placeholder="https://.../fallback.mp3 ou stream" />
+                  {errors.fallback_url && <p className="mt-1 text-xs text-destructive">{errors.fallback_url.message}</p>}
+                </div>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" {...register("is_special")} /> Programação especial (sobrescreve a grade)
+                </label>
+                {watch("is_special") && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Início da vigência</Label>
+                      <Input {...register("special_start_date")} type="date" />
+                    </div>
+                    <div>
+                      <Label>Fim da vigência</Label>
+                      <Input {...register("special_end_date")} type="date" />
+                    </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Ordem de exibição</Label>
