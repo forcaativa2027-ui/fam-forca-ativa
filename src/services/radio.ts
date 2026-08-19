@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { RadioConfig, RadioProgram, RadioEpisode, Weekday, RadioPlaylist, RadioPlaylistItem, RadioStudioInvite, RadioInviteValidation, RadioRecording } from "@/types/domain";
+import type { RadioConfig, RadioProgram, RadioEpisode, Weekday, RadioPlaylist, RadioPlaylistItem, RadioStudioInvite, RadioInviteValidation, RadioRecording, RadioProgramGuest, RadioPlaySource, RadioEpisodePlayStats, RadioAnalyticsSummary } from "@/types/domain";
 import { radioProgramSchema, type RadioProgramInput } from "@/schemas/radioProgramSchema";
 
 export async function getRadioConfig(sb: SupabaseClient, churchId?: string | null): Promise<RadioConfig | null> {
@@ -109,6 +109,7 @@ export interface RadioEpisodeInput {
   published_at?: string | null;
   status?: RadioEpisode["status"];
   is_featured?: boolean;
+  is_podcast?: boolean;
   sort_order?: number;
 }
 
@@ -362,4 +363,116 @@ export async function updateRadioRecording(sb: SupabaseClient, id: string, data:
   const { data: updated, error } = await sb.from("radio_recordings").update(data).eq("id", id).select().single();
   if (error) throw error;
   return updated as RadioRecording;
+}
+
+// ── Ciclo 2: Podcasts ──
+
+export async function listPodcastEpisodes(sb: SupabaseClient, churchId?: string | null, limit = 50): Promise<RadioEpisode[]> {
+  let q = sb.from("radio_episodes")
+    .select("*")
+    .eq("status", "published")
+    .eq("is_podcast", true)
+    .lte("published_at", new Date().toISOString())
+    .order("published_at", { ascending: false })
+    .limit(limit);
+  if (churchId) q = q.or(`church_id.eq.${churchId},church_id.is.null`);
+  const { data, error } = await q;
+  if (error) return [];
+  return (data ?? []) as RadioEpisode[];
+}
+
+// ── Ciclo 2: Analytics de audiência ──
+
+export async function registerRadioPlay(sb: SupabaseClient, data: {
+  church_id: string | null;
+  profile_id?: string | null;
+  episode_id?: string | null;
+  recording_id?: string | null;
+  program_id?: string | null;
+  source: RadioPlaySource;
+}): Promise<string | null> {
+  const { data: id, error } = await sb.rpc("radio_register_play", {
+    p_church_id: data.church_id,
+    p_profile_id: data.profile_id ?? null,
+    p_episode_id: data.episode_id ?? null,
+    p_recording_id: data.recording_id ?? null,
+    p_program_id: data.program_id ?? null,
+    p_source: data.source,
+  });
+  if (error) return null;
+  return id as string | null;
+}
+
+export async function updateListenedSeconds(sb: SupabaseClient, eventId: string, seconds: number): Promise<boolean> {
+  const { data, error } = await sb.rpc("radio_update_listened_seconds", { p_event_id: eventId, p_seconds: seconds });
+  if (error) return false;
+  return !!data;
+}
+
+export async function listEpisodePlayStats(sb: SupabaseClient, churchId?: string | null): Promise<RadioEpisodePlayStats[]> {
+  let q = sb.from("radio_episode_play_stats").select("*").order("total_plays", { ascending: false }).limit(100);
+  if (churchId) q = q.eq("church_id", churchId);
+  const { data, error } = await q;
+  if (error) return [];
+  return (data ?? []) as RadioEpisodePlayStats[];
+}
+
+export async function getRadioAnalytics(sb: SupabaseClient, churchId?: string | null): Promise<RadioAnalyticsSummary> {
+  let q = sb.from("radio_play_events").select("id, source, listened_seconds, started_at, profile_id");
+  if (churchId) q = q.eq("church_id", churchId);
+  const { data, error } = await q;
+  if (error || !data) {
+    return { total_plays: 0, total_listened_seconds: 0, unique_listeners: 0, live_plays: 0, podcast_plays: 0, episode_plays: 0, last_7d_plays: 0 };
+  }
+  const now = Date.now();
+  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+  let total_listened_seconds = 0;
+  let live_plays = 0, podcast_plays = 0, episode_plays = 0, last_7d_plays = 0;
+  const listeners = new Set<string | null>();
+  for (const row of data) {
+    total_listened_seconds += row.listened_seconds ?? 0;
+    if (row.source === "live") live_plays++;
+    if (row.source === "podcast") podcast_plays++;
+    if (row.source === "episode" || row.source === "reprise") episode_plays++;
+    if (row.profile_id) listeners.add(row.profile_id);
+    if (new Date(row.started_at).getTime() >= sevenDaysAgo) last_7d_plays++;
+  }
+  return {
+    total_plays: data.length,
+    total_listened_seconds,
+    unique_listeners: listeners.size,
+    live_plays,
+    podcast_plays,
+    episode_plays,
+    last_7d_plays,
+  };
+}
+
+// ── Ciclo 2: Multi-convidados ──
+
+export async function listProgramGuests(sb: SupabaseClient, programId: string): Promise<RadioProgramGuest[]> {
+  const { data, error } = await sb.from("radio_program_guests").select("*").eq("program_id", programId).order("sort_order");
+  if (error) return [];
+  return (data ?? []) as RadioProgramGuest[];
+}
+
+export async function createProgramGuest(sb: SupabaseClient, data: {
+  program_id: string;
+  guest_name: string;
+  guest_email?: string | null;
+  guest_role?: RadioProgramGuest["guest_role"];
+  sort_order?: number;
+}): Promise<RadioProgramGuest> {
+  const { data: created, error } = await sb
+    .from("radio_program_guests")
+    .insert({ ...data, guest_role: data.guest_role ?? "convidado", sort_order: data.sort_order ?? 0 })
+    .select()
+    .single();
+  if (error) throw error;
+  return created as RadioProgramGuest;
+}
+
+export async function deleteProgramGuest(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("radio_program_guests").delete().eq("id", id);
+  if (error) throw error;
 }
