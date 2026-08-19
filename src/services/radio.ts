@@ -255,3 +255,16 @@ export async function removePlaylistItem(sb: SupabaseClient, id: string): Promis
   const { error } = await sb.from("radio_playlist_items").delete().eq("id", id);
   if (error) throw error;
 }
+
+// ── Studio remoto (gravação) ──
+
+const RADIO_BUCKET = "radio-audio";
+
+export async function uploadRadioRecording(sb: SupabaseClient, blob: Blob, churchId: string | null): Promise<{ path: string; publicUrl: string }> {
+  const slug = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webm`;
+  const path = `${churchId ?? "geral"}/${slug}`;
+  const { error } = await sb.storage.from(RADIO_BUCKET).upload(path, blob, { contentType: "audio/webm" });
+  if (error) throw error;
+  const { data } = sb.storage.from(RADIO_BUCKET).getPublicUrl(path);
+  return { path, publicUrl: data.publicUrl };
+}
