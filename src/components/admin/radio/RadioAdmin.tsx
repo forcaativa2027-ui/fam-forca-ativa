@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, X, Music, Settings, ListMusic } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Music, Settings, ListMusic, Link2, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { radioProgramSchema, type RadioProgramInput } from "@/schemas/radioProgramSchema";
-import { useAllRadioPrograms, useAllRadioEpisodes, useMyProfile, useRadioConfigAdmin, useWhatsOnAir, useRadioPlaylists } from "@/hooks/use-queries";
+import { useAllRadioPrograms, useAllRadioEpisodes, useMyProfile, useRadioConfigAdmin, useWhatsOnAir, useRadioPlaylists, useStudioInvites, useRadioRecordings, usePlaylistItems } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { StudioRemoto } from "./StudioRemoto";
 import {
@@ -19,9 +19,10 @@ import {
   upsertRadioConfig,
   createRadioPlaylist, updateRadioPlaylist, deleteRadioPlaylist,
   addPlaylistItem, removePlaylistItem,
+  createStudioInvite, revokeStudioInvite,
+  updateRadioRecording,
 } from "@/services/radio";
-import { usePlaylistItems } from "@/hooks/use-queries";
-import type { RadioProgram, RadioEpisode, RadioPlaylist, Weekday } from "@/types/domain";
+import type { RadioProgram, RadioEpisode, RadioPlaylist, Weekday, RadioRecording } from "@/types/domain";
 
 const WEEKDAYS: { value: Weekday; label: string }[] = [
   { value: "domingo", label: "Domingo" },
@@ -52,7 +53,7 @@ export function RadioAdmin() {
   const { data: onAir } = useWhatsOnAir(churchId);
   const { data: playlists = [] } = useRadioPlaylists(churchId);
   const qc = useQueryClient();
-  const [section, setSection] = useState<"config" | "programas" | "episodios" | "playlists">("programas");
+  const [section, setSection] = useState<"config" | "programas" | "episodios" | "playlists" | "convites" | "gravacoes">("programas");
   const [editing, setEditing] = useState<RadioProgram | null>(null);
   const [editingEp, setEditingEp] = useState<RadioEpisode | null>(null);
   const [err, setErr] = useState("");
@@ -329,6 +330,92 @@ export function RadioAdmin() {
     } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
   }
 
+  // ── Convites do apresentador (Studio) ──
+  const { data: invites = [] } = useStudioInvites(churchId);
+  const { data: recordings = [] } = useRadioRecordings(churchId);
+  const [invFormOpen, setInvFormOpen] = useState(false);
+  const [invProgramId, setInvProgramId] = useState("");
+  const [invPresenter, setInvPresenter] = useState("");
+  const [invEmail, setInvPresenterEmail] = useState("");
+  const [invStartsAt, setInvStartsAt] = useState("");
+  const [invEndsAt, setInvEndsAt] = useState("");
+  const [invSaving, setInvSaving] = useState(false);
+  const [lastInviteUrl, setLastInviteUrl] = useState("");
+
+  function openNewInvite() {
+    setErr("");
+    setInvProgramId(""); setInvPresenter(""); setInvPresenterEmail("");
+    setInvStartsAt(""); setInvEndsAt(""); setLastInviteUrl("");
+    setInvFormOpen(true);
+  }
+
+  async function saveInvite(e: React.FormEvent) {
+    e.preventDefault();
+    if (!invProgramId || !invStartsAt || !invEndsAt) return;
+    setErr("");
+    setInvSaving(true);
+    try {
+      const created = await createStudioInvite(supabase, {
+        church_id: churchId,
+        program_id: invProgramId,
+        presenter_name: invPresenter || null,
+        presenter_email: invEmail || null,
+        starts_at: new Date(invStartsAt).toISOString(),
+        ends_at: new Date(invEndsAt).toISOString(),
+        access_ends_at: new Date(new Date(invEndsAt).getTime() + 10 * 60000).toISOString(),
+      });
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      setLastInviteUrl(`${origin}/radio/studio/invite/${created.token}`);
+      qc.invalidateQueries({ queryKey: ["radio-studio-invites"] });
+    } catch (e2: unknown) {
+      const msg = e2 instanceof Error ? e2.message : "Erro ao criar convite";
+      setErr(msg);
+    } finally {
+      setInvSaving(false);
+    }
+  }
+
+  async function doRevokeInvite(id: string) {
+    if (!confirm("Revogar este convite? O link deixará de funcionar imediatamente.")) return;
+    try {
+      await revokeStudioInvite(supabase, id);
+      qc.invalidateQueries({ queryKey: ["radio-studio-invites"] });
+    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
+  }
+
+  // ── Gravações / Reprise ──
+  async function markRecordingPublished(r: RadioRecording) {
+    if (!confirm(`Publicar a gravação "${r.title}" como conteúdo da biblioteca?`)) return;
+    try {
+      await updateRadioRecording(supabase, r.id, { status: "publicada" });
+      qc.invalidateQueries({ queryKey: ["radio-recordings"] });
+      qc.invalidateQueries({ queryKey: ["all-radio-episodes"] });
+    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
+  }
+
+  async function markRecordingReprise(r: RadioRecording) {
+    if (!confirm(`Marcar "${r.title}" como reprise na grade?`)) return;
+    try {
+      if (r.audio_url) {
+        await createRadioEpisode(supabase, {
+          church_id: r.church_id,
+          program_id: r.program_id,
+          title: r.title,
+          description: r.review_notes ?? `Reprise da gravação de ${new Date(r.recorded_at).toLocaleString("pt-BR")}.`,
+          audio_url: r.audio_url,
+          duration_seconds: r.duration_seconds,
+          category: (r.category as RadioEpisode["category"]) ?? "especial",
+          speaker: r.presenter_name,
+          published_at: new Date().toISOString(),
+          status: "published",
+        });
+      }
+      await updateRadioRecording(supabase, r.id, { is_reprise: true, status: "publicada" });
+      qc.invalidateQueries({ queryKey: ["radio-recordings"] });
+      qc.invalidateQueries({ queryKey: ["all-radio-episodes"] });
+    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
+  }
+
   return (
     <div className="space-y-6">
       {/* Alternador de seção */}
@@ -346,6 +433,12 @@ export function RadioAdmin() {
           <Button variant={section === "playlists" ? "default" : "outline"} onClick={() => setSection("playlists")}>
             <ListMusic className="mr-1 h-4 w-4" /> Playlists
           </Button>
+          <Button variant={section === "convites" ? "default" : "outline"} onClick={() => setSection("convites")}>
+            <Link2 className="mr-1 h-4 w-4" /> Convites
+          </Button>
+          <Button variant={section === "gravacoes" ? "default" : "outline"} onClick={() => setSection("gravacoes")}>
+            <Mic className="mr-1 h-4 w-4" /> Gravações
+          </Button>
         </div>
         {section === "programas" ? (
           <Button onClick={() => { setErr(""); setFormOpen(true); }} className="flex items-center gap-2">
@@ -358,6 +451,10 @@ export function RadioAdmin() {
         ) : section === "playlists" ? (
           <Button onClick={openNewPlaylist} className="flex items-center gap-2">
             <Plus className="h-4 w-4" /> Adicionar Playlist
+          </Button>
+        ) : section === "convites" ? (
+          <Button onClick={openNewInvite} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" /> Novo Convite
           </Button>
         ) : null}
       </div>
@@ -530,6 +627,155 @@ export function RadioAdmin() {
           </Card>
 
           {activePlaylist && <PlaylistItemsEditor playlistId={activePlaylist.id} episodes={episodes} onAdd={saveItem} onRemove={removeItem} />}
+        </div>
+      ) : section === "convites" ? (
+        <div className="space-y-4">
+          <Card className="rounded-xl border border-border p-6">
+            <CardHeader>
+              <CardTitle>Convites do Apresentador</CardTitle>
+              <CardDescription>Links temporários para o apresentador entrar no estúdio remoto dentro da janela autorizada</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {invites.length === 0 && (
+                <p className="text-center text-muted-foreground py-12">
+                  Nenhum convite gerado ainda.
+                </p>
+              )}
+              <div className="space-y-2">
+                {invites.map((inv) => {
+                  const p = programs.find((x) => x.id === inv.program_id);
+                  const active = inv.status === "ativo";
+                  return (
+                    <div key={inv.id} className="flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/50">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-sm text-navy truncate">
+                          {p?.title ?? "Programa"} {inv.presenter_name ? ` · ${inv.presenter_name}` : ""}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(inv.starts_at).toLocaleString("pt-BR")} – {new Date(inv.ends_at).toLocaleString("pt-BR")}
+                          {" · "}{inv.status}
+                        </p>
+                        {inv.status === "usado" && inv.used_at && (
+                          <p className="text-xs text-emerald-600">Usado em {new Date(inv.used_at).toLocaleString("pt-BR")}</p>
+                        )}
+                      </div>
+                      {active && (
+                        <Button variant="ghost" size="sm" className="text-xs" onClick={() => {
+                          const origin = typeof window !== "undefined" ? window.location.origin : "";
+                          navigator.clipboard?.writeText(`${origin}/radio/studio/invite/${inv.token}`);
+                          alert("Link copiado!");
+                        }}>
+                          Copiar link
+                        </Button>
+                      )}
+                      {active && (
+                        <Button variant="ghost" size="icon" className="p-1 rounded text-destructive" onClick={() => doRevokeInvite(inv.id)} title="Revogar">
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {invFormOpen && (
+            <Card className="rounded-xl border border-border p-6">
+              <CardHeader>
+                <CardTitle>Novo Convite</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={saveInvite} className="space-y-4">
+                  <div>
+                    <Label>Programa <span className="text-destructive">*</span></Label>
+                    <select value={invProgramId} onChange={(e) => setInvProgramId(e.target.value)} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                      <option value="">—</option>
+                      {programs.map((p) => (
+                        <option key={p.id} value={p.id}>{p.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Apresentador</Label>
+                      <Input value={invPresenter} onChange={(e) => setInvPresenter(e.target.value)} placeholder="Nome" />
+                    </div>
+                    <div>
+                      <Label>E-mail</Label>
+                      <Input value={invEmail} onChange={(e) => setInvPresenterEmail(e.target.value)} type="email" placeholder="email@exemplo.com" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Início da janela <span className="text-destructive">*</span></Label>
+                      <Input value={invStartsAt} onChange={(e) => setInvStartsAt(e.target.value)} type="datetime-local" />
+                    </div>
+                    <div>
+                      <Label>Fim da transmissão <span className="text-destructive">*</span></Label>
+                      <Input value={invEndsAt} onChange={(e) => setInvEndsAt(e.target.value)} type="datetime-local" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Button type="submit" disabled={invSaving}>
+                      {invSaving ? "Gerando..." : "Gerar convite"}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setInvFormOpen(false)}>Cancelar</Button>
+                  </div>
+                  {lastInviteUrl && (
+                    <div className="rounded-md bg-muted p-3">
+                      <p className="text-xs font-semibold text-muted-foreground">Link do convite:</p>
+                      <p className="text-xs break-all text-navy">{lastInviteUrl}</p>
+                    </div>
+                  )}
+                </form>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      ) : section === "gravacoes" ? (
+        <div className="space-y-4">
+          <Card className="rounded-xl border border-border p-6">
+            <CardHeader>
+              <CardTitle>Gravações do Studio</CardTitle>
+              <CardDescription>Aprovar para a biblioteca ou marcar como reprise na grade</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {recordings.length === 0 && (
+                <p className="text-center text-muted-foreground py-12">
+                  Nenhuma gravação ainda. Convide um apresentador e use o estúdio remoto.
+                </p>
+              )}
+              <div className="space-y-2">
+                {recordings.map((r) => (
+                  <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/50">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-sm text-navy truncate">{r.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(r.recorded_at).toLocaleString("pt-BR")}
+                        {r.presenter_name ? ` · ${r.presenter_name}` : ""}
+                        {r.is_reprise ? " · Reprise" : ""}
+                        {" · "}{r.status}
+                      </p>
+                    </div>
+                    {r.audio_url && (
+                      <audio controls src={r.audio_url} className="h-8 max-w-[200px]" preload="none" />
+                    )}
+                    {r.status === "revisao" || r.status === "processando" ? (
+                      <>
+                        <Button variant="ghost" size="sm" className="text-xs" onClick={() => markRecordingPublished(r)}>
+                          Publicar na biblioteca
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-xs" onClick={() => markRecordingReprise(r)}>
+                          Marcar reprise
+                        </Button>
+                      </>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       ) : (
         <Card className="rounded-xl border border-border p-6">
