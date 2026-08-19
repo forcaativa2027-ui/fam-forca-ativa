@@ -361,7 +361,7 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
                 </a>
               </div>
             ) : (
-
+            <>
             {/* Destaques */}
             {(() => {
               const featured = episodes.filter((e) => e.is_featured);
@@ -456,6 +456,7 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
                 </div>
               ))}
             </div>
+            </>
             )}
           </div>
         </div>
