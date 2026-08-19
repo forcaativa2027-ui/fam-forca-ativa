@@ -236,6 +236,7 @@ export const DELEGATION_MODULE_LABELS: Record<DelegationModule, string> = {
   administrativo: "⚙️ Administrativo", comunicacao: "📣 Comunicação",
   documentacao: "🗂️ Documentação", supervisao: "🧭 Supervisão Ministerial",
   usuarios: "👤 Administração de Usuários", kids: "🧸 Ministério de Crianças",
+  live360: "🎬 Live-360",
 };
 
 export const DELEGATION_TAB_MAP: Record<DelegationModule, string[]> = {
@@ -259,6 +260,7 @@ export const DELEGATION_TAB_MAP: Record<DelegationModule, string[]> = {
   supervisao: ["relmda-supervisao", "relmda-consolidacao", "relmda-dashboard", "relmda-prazos", "relmda-area", "weekly", "monthly", "supervision", "ministerial-reports"],
   comunicacao: ["news", "banners", "sermons", "radio", "events", "registration-events", "news-videos", "services", "word", "giving", "editorial-dashboard", "content-library", "categories-tags"],
   documentacao: [],
+  live360: ["live360"],
 };
 
 // ── Permissões atômicas (evolução pro modelo de 4 camadas) ───

@@ -641,7 +641,7 @@ export interface ControlTowerSummary {
 }
 
 // C19 — Governança por Delegação
-export type DelegationModule = "intelligence"|"reports"|"control_tower"|"finance"|"patrimony"|"audit"|"administrativo"|"comunicacao"|"documentacao"|"supervisao"|"usuarios"|"kids";
+export type DelegationModule = "intelligence"|"reports"|"control_tower"|"finance"|"patrimony"|"audit"|"administrativo"|"comunicacao"|"documentacao"|"supervisao"|"usuarios"|"kids"|"live360";
 
 export interface Permission {
   key: string; module: DelegationModule; label: string; description: string | null; is_write: boolean;
@@ -1968,4 +1968,41 @@ export interface RadioNotificationLog {
   status: string;
   error: string | null;
   sent_at: string;
+}
+
+// ============================================================
+// Live-360 (S360-LIVE-000) — apresentação ao vivo
+// ============================================================
+export type LiveSessionStatus = "offline" | "preview" | "live" | "frozen";
+export type LiveItemKind = "bible" | "lyric" | "media" | "blank" | "logo";
+export type LiveTokenRole = "operator" | "viewer";
+
+export interface LiveSession {
+  id: string;
+  church_id: string | null;
+  title: string;
+  status: LiveSessionStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LiveCurrentItem {
+  session_id: string;
+  kind: LiveItemKind;
+  ref: string | null;
+  payload: Record<string, unknown> | null;
+  seq: number;
+  updated_at: string;
+}
+
+export interface LiveControlTokenResult {
+  raw_token: string;
+  expires_at: string;
+}
+
+export interface LiveTokenValidation {
+  valid: boolean;
+  role: LiveTokenRole | null;
+  session_title: string | null;
 }

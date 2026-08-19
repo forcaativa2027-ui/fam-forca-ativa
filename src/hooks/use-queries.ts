@@ -21,6 +21,7 @@ import * as CL from "@/services/contentLibrary";
 import * as Tx from "@/services/taxonomy";
 import * as Wf from "@/services/editorialWorkflow";
 import * as Radio from "@/services/radio";
+import * as Live360 from "@/services/live360";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
@@ -1131,4 +1132,21 @@ export const useRadioPlaysBySource = (churchId: string | null, days: number) =>
     queryKey: ["radio-plays-by-source", churchId ?? "all", days],
     queryFn: () => Radio.getRadioPlaysBySource(supabase, churchId, days),
     staleTime: 30 * 1000,
+  });
+
+// ── Live-360 (S360-LIVE-000) ────
+export const useLiveSessions = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["live-sessions", churchId],
+    queryFn: () => Live360.listLiveSessions(supabase, churchId as string),
+    enabled: !!churchId,
+    staleTime: 30 * 1000,
+  });
+
+export const useLiveCurrent = (sessionId?: string | null) =>
+  useQuery({
+    queryKey: ["live-current", sessionId],
+    queryFn: () => Live360.getLiveCurrent(supabase, sessionId as string),
+    enabled: !!sessionId,
+    refetchInterval: 5000,
   });

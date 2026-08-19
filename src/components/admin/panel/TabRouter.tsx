@@ -21,6 +21,7 @@ import { CecIdPortariaAdmin } from "../CecIdPortariaAdmin";
 import { FinanceAdmin } from "../FinanceAdmin";
 import { NewsAdmin } from "../NewsAdmin";
 import { RadioAdmin } from "../radio/RadioAdmin";
+import { Live360Admin } from "../Live360Admin";
 import { PublicPrayerRequestsAdmin, VisitRequestsAdmin } from "../ContactRequestsAdmin";
 import { BannersAdmin } from "../BannersAdmin";
 import { CommunitiesAdmin } from "../CommunitiesAdmin";
@@ -140,6 +141,7 @@ export function TabContent({ activeTab, onNavigate, prefillEventId }: { activeTa
     case "cec-id-portaria":     return <CecIdPortariaAdmin />;
     case "news":                return <NewsAdmin />;
     case "radio":               return <RadioAdmin />;
+    case "live360":             return <Live360Admin />;
     case "banners":             return <BannersAdmin />;
     case "sermons":             return <SermonsAdmin />;
     case "giving":               return <GivingAdmin />;

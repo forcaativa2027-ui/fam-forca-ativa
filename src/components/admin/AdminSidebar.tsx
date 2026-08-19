@@ -10,7 +10,7 @@ import {
   Download, Search, Bell, Video, Compass,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins, QrCode, Library, FolderTree, Baby, Tags,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins, QrCode, Library, FolderTree, Baby, Tags, ScreenShare,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ export type TabKey =
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao" | "conhecimento-biblico" | "biblioteca-conhecimento" | "biblia-referencias" | "kids-admin" | "org-terminology"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
-  | "news" | "banners" | "sermons" | "radio" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
+  | "news" | "banners" | "sermons" | "radio" | "live360" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "invites" | "audit"
   | "export";
@@ -128,6 +128,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "banners", label: "Banners",      icon: <Image size={15} /> },
         { key: "sermons", label: "Pregações",    icon: <Mic2 size={15} /> },
         { key: "radio",   label: "Rádio Web",    icon: <Radio size={15} /> },
+        { key: "live360", label: "Live-360",     icon: <ScreenShare size={15} /> },
         { key: "events",  label: "Agenda",       icon: <CalendarDays size={15} />, sectionLabel: "Programação" },
         { key: "registration-events", label: "Eventos", icon: <ClipboardList size={15} /> },
         { key: "news-videos", label: "CEC News Vídeos", icon: <Video size={15} /> },
