@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, X, Music, Settings, ListMusic, Link2, Mic } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Music, Settings, ListMusic, Link2, Mic, Podcast, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { radioProgramSchema, type RadioProgramInput } from "@/schemas/radioProgramSchema";
-import { useAllRadioPrograms, useAllRadioEpisodes, useMyProfile, useRadioConfigAdmin, useWhatsOnAir, useRadioPlaylists, useStudioInvites, useRadioRecordings, usePlaylistItems } from "@/hooks/use-queries";
+import { useAllRadioPrograms, useAllRadioEpisodes, useMyProfile, useRadioConfigAdmin, useWhatsOnAir, useRadioPlaylists, useStudioInvites, useRadioRecordings, usePlaylistItems, usePodcastEpisodes, useRadioAnalytics, useEpisodePlayStats, useProgramGuests } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { StudioRemoto } from "./StudioRemoto";
 import {
@@ -21,8 +21,9 @@ import {
   addPlaylistItem, removePlaylistItem,
   createStudioInvite, revokeStudioInvite,
   updateRadioRecording,
+  createProgramGuest, deleteProgramGuest,
 } from "@/services/radio";
-import type { RadioProgram, RadioEpisode, RadioPlaylist, Weekday, RadioRecording } from "@/types/domain";
+import type { RadioProgram, RadioEpisode, RadioPlaylist, Weekday, RadioRecording, RadioProgramGuest } from "@/types/domain";
 
 const WEEKDAYS: { value: Weekday; label: string }[] = [
   { value: "domingo", label: "Domingo" },
@@ -52,8 +53,11 @@ export function RadioAdmin() {
   const { data: config } = useRadioConfigAdmin(churchId);
   const { data: onAir } = useWhatsOnAir(churchId);
   const { data: playlists = [] } = useRadioPlaylists(churchId);
+  const { data: podcastEpisodes = [] } = usePodcastEpisodes(churchId);
+  const { data: analytics } = useRadioAnalytics(churchId);
+  const { data: episodeStats = [] } = useEpisodePlayStats(churchId);
   const qc = useQueryClient();
-  const [section, setSection] = useState<"config" | "programas" | "episodios" | "playlists" | "convites" | "gravacoes">("programas");
+  const [section, setSection] = useState<"config" | "programas" | "episodios" | "playlists" | "convites" | "gravacoes" | "podcasts" | "analytics">("programas");
   const [editing, setEditing] = useState<RadioProgram | null>(null);
   const [editingEp, setEditingEp] = useState<RadioEpisode | null>(null);
   const [err, setErr] = useState("");
@@ -439,6 +443,12 @@ export function RadioAdmin() {
           <Button variant={section === "gravacoes" ? "default" : "outline"} onClick={() => setSection("gravacoes")}>
             <Mic className="mr-1 h-4 w-4" /> Gravações
           </Button>
+          <Button variant={section === "podcasts" ? "default" : "outline"} onClick={() => setSection("podcasts")}>
+            <Podcast className="mr-1 h-4 w-4" /> Podcasts
+          </Button>
+          <Button variant={section === "analytics" ? "default" : "outline"} onClick={() => setSection("analytics")}>
+            <BarChart3 className="mr-1 h-4 w-4" /> Analytics
+          </Button>
         </div>
         {section === "programas" ? (
           <Button onClick={() => { setErr(""); setFormOpen(true); }} className="flex items-center gap-2">
@@ -470,7 +480,119 @@ export function RadioAdmin() {
         <CardContent>
           {!onAir ? (
             <p className="text-sm text-muted-foreground">Nenhum programa vigente neste horário. A rádio usa a stream configurada como fallback.</p>
-          ) : (
+) : section === "podcasts" ? (
+        <div className="space-y-4">
+          <Card className="rounded-xl border border-border p-6">
+            <CardHeader>
+              <CardTitle>Podcasts</CardTitle>
+              <CardDescription>Episódios publicados e marcados como podcast — exibidos na aba Podcasts do player e no feed RSS</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Marque um conteúdo como podcast na aba Conteúdos para ele aparecer aqui e no feed RSS.
+              </p>
+              {podcastEpisodes.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">Nenhum podcast publicado ainda.</p>
+              )}
+              <div className="space-y-2">
+                {podcastEpisodes.map((e) => (
+                  <div key={e.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/50">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-sm text-navy truncate">{e.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {e.speaker ? `${e.speaker} · ` : ""}
+                        {e.published_at ? new Date(e.published_at).toLocaleDateString("pt-BR") : "sem data"}
+                      </p>
+                    </div>
+                    <a
+                      href={`/radio/feed.xml`}
+                      className="text-xs font-semibold text-gold underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Ver feed RSS
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : section === "analytics" ? (
+        <div className="space-y-4">
+          <Card className="rounded-xl border border-border p-6">
+            <CardHeader>
+              <CardTitle>Analytics de Audiência</CardTitle>
+              <CardDescription>Plays registrados pela biblioteca, podcasts, transmissões e reprises</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!analytics ? (
+                <p className="text-center text-muted-foreground py-8">Carregando métricas...</p>
+              ) : analytics.total_plays === 0 ? (
+                <p className="text-center text-muted-foreground py-8">Nenhum play registrado ainda.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  <div className="rounded-lg border border-border p-4">
+                    <p className="text-2xl font-bold text-navy">{analytics.total_plays}</p>
+                    <p className="text-xs text-muted-foreground">Total de plays</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4">
+                    <p className="text-2xl font-bold text-navy">{analytics.unique_listeners}</p>
+                    <p className="text-xs text-muted-foreground">Ouvintes únicos</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4">
+                    <p className="text-2xl font-bold text-navy">
+                      {Math.round(analytics.total_listened_seconds / 60)} min
+                    </p>
+                    <p className="text-xs text-muted-foreground">Tempo escutado</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4">
+                    <p className="text-2xl font-bold text-navy">{analytics.live_plays}</p>
+                    <p className="text-xs text-muted-foreground">Ao vivo</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4">
+                    <p className="text-2xl font-bold text-navy">{analytics.podcast_plays}</p>
+                    <p className="text-xs text-muted-foreground">Podcasts</p>
+                  </div>
+                  <div className="rounded-lg border border-border p-4">
+                    <p className="text-2xl font-bold text-navy">{analytics.last_7d_plays}</p>
+                    <p className="text-xs text-muted-foreground">Plays (7 dias)</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-xl border border-border p-6">
+            <CardHeader>
+              <CardTitle>Ranking por Conteúdo</CardTitle>
+              <CardDescription>Os conteúdos mais ouvidos</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {episodeStats.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">Sem dados ainda.</p>
+              ) : (
+                <div className="space-y-2">
+                  {episodeStats.slice(0, 10).map((s) => (
+                    <div key={s.episode_id} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-navy">{s.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {s.total_plays} plays · {Math.round((s.total_listened_seconds ?? 0) / 60)} min
+                          {s.is_podcast ? " · Podcast" : ""}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-navy/10 px-2 py-0.5 text-xs font-bold text-navy">
+                        #{s.total_plays}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
               <div>
                 <span className="block text-xs text-muted-foreground">Programa</span>
@@ -576,6 +698,9 @@ export function RadioAdmin() {
                       {p.host_name ? ` · ${p.host_name}` : ""}
                     </p>
                   </div>
+                  <Button variant="outline" size="sm" className="text-xs" onClick={() => setGuestsForProgram(p)} title="Gerenciar convidados">
+                    <Plus className="mr-1 h-3 w-3" /> Convidados
+                  </Button>
                   <Button variant="ghost" size="icon" className="p-1 rounded" onClick={() => startEdit(p)} title="Editar">
                     <Pencil className="h-3 w-3" />
                   </Button>
@@ -645,7 +770,46 @@ export function RadioAdmin() {
                 {invites.map((inv) => {
                   const p = programs.find((x) => x.id === inv.program_id);
                   const active = inv.status === "ativo";
-                  return (
+// ── Ciclo 2: Podcasts ──
+  async function togglePodcast(e: RadioEpisode) {
+    try {
+      await updateRadioEpisode(supabase, e.id, { is_podcast: !e.is_podcast });
+      qc.invalidateQueries({ queryKey: ["all-radio-episodes"] });
+      qc.invalidateQueries({ queryKey: ["radio-podcasts"] });
+    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
+  }
+
+  // ── Ciclo 2: Convidados por programa ──
+  const [guestsForProgram, setGuestsForProgram] = useState<RadioProgram | null>(null);
+  const [guestName, setGuestName] = useState("");
+  const [guestRole, setGuestRole] = useState<RadioProgramGuest["guest_role"]>("convidado");
+  const [guestSaving, setGuestSaving] = useState(false);
+  const { data: programGuests = [] } = useProgramGuests(guestsForProgram?.id ?? "");
+
+  async function addGuest() {
+    if (!guestsForProgram || !guestName.trim()) return;
+    setGuestSaving(true);
+    try {
+      await createProgramGuest(supabase, {
+        program_id: guestsForProgram.id,
+        guest_name: guestName.trim(),
+        guest_role: guestRole,
+      });
+      setGuestName("");
+      qc.invalidateQueries({ queryKey: ["radio-program-guests"] });
+    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
+    finally { setGuestSaving(false); }
+  }
+
+  async function removeGuest(id: string) {
+    if (!confirm("Remover este convidado?")) return;
+    try {
+      await deleteProgramGuest(supabase, id);
+      qc.invalidateQueries({ queryKey: ["radio-program-guests"] });
+    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
+  }
+
+  return (
                     <div key={inv.id} className="flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/50">
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-sm text-navy truncate">
@@ -800,6 +964,16 @@ export function RadioAdmin() {
                       {e.status === "published" ? " · Publicado" : " · Rascunho"}
                     </p>
                   </div>
+                  <Button
+                    variant={e.is_podcast ? "default" : "outline"}
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => togglePodcast(e)}
+                    title={e.is_podcast ? "Remover do podcast" : "Marcar como podcast"}
+                  >
+                    <Podcast className="mr-1 h-3 w-3" />
+                    {e.is_podcast ? "É Podcast" : "Podcast?"}
+                  </Button>
                   <Button variant="ghost" size="icon" className="p-1 rounded" onClick={() => openEditEpisode(e)} title="Editar">
                     <Pencil className="h-3 w-3" />
                   </Button>
@@ -1021,6 +1195,54 @@ export function RadioAdmin() {
                   </Button>
                 </div>
               </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Modal de Convidados do Programa */}
+      {guestsForProgram && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-lg rounded-xl border border-border p-6">
+            <CardHeader>
+              <CardTitle>Convidados — {guestsForProgram.title}</CardTitle>
+              <CardDescription>Roteirize os participantes do programa</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Input value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Nome do convidado" />
+                <select value={guestRole} onChange={(e) => setGuestRole(e.target.value as RadioProgramGuest["guest_role"])} className="w-36 rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  <option value="convidado">Convidado</option>
+                  <option value="especial">Especial</option>
+                  <option value="co-apresentador">Co-apresentador</option>
+                  <option value="musica">Música</option>
+                </select>
+                <Button type="button" onClick={addGuest} disabled={guestSaving || !guestName.trim()}>
+                  Adicionar
+                </Button>
+              </div>
+              {programGuests.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum convidado roteirizado ainda.</p>
+              ) : (
+                <div className="space-y-2">
+                  {programGuests.map((g) => (
+                    <div key={g.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-navy">{g.guest_name}</p>
+                        <p className="text-xs text-muted-foreground">{g.guest_role}</p>
+                      </div>
+                      <Button variant="ghost" size="icon" className="p-1 rounded text-destructive" onClick={() => removeGuest(g.id)} title="Remover">
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center justify-end">
+                <Button variant="outline" onClick={() => setGuestsForProgram(null)}>
+                  <X className="h-4 w-4" /> Fechar
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
