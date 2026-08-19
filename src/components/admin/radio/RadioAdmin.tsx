@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, X, Music, Settings, ListMusic, Link2, Mic, Podcast, BarChart3 } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Music, Settings, ListMusic, Link2, Mic, Podcast, BarChart3, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,8 +22,9 @@ import {
   createStudioInvite, revokeStudioInvite,
   updateRadioRecording,
   createProgramGuest, deleteProgramGuest,
+  listRadioListeners, deleteRadioListener,
 } from "@/services/radio";
-import type { RadioProgram, RadioEpisode, RadioPlaylist, Weekday, RadioRecording, RadioProgramGuest } from "@/types/domain";
+import type { RadioProgram, RadioEpisode, RadioPlaylist, Weekday, RadioRecording, RadioProgramGuest, RadioListenerWithPrograms } from "@/types/domain";
 
 const WEEKDAYS: { value: Weekday; label: string }[] = [
   { value: "domingo", label: "Domingo" },
@@ -57,11 +58,14 @@ export function RadioAdmin() {
   const { data: analytics } = useRadioAnalytics(churchId);
   const { data: episodeStats = [] } = useEpisodePlayStats(churchId);
   const qc = useQueryClient();
-  const [section, setSection] = useState<"config" | "programas" | "episodios" | "playlists" | "convites" | "gravacoes" | "podcasts" | "analytics">("programas");
+  const [section, setSection] = useState<"config" | "programas" | "episodios" | "playlists" | "convites" | "gravacoes" | "podcasts" | "analytics" | "ouvintes">("programas");
   const [editing, setEditing] = useState<RadioProgram | null>(null);
   const [editingEp, setEditingEp] = useState<RadioEpisode | null>(null);
   const [err, setErr] = useState("");
   const [formOpen, setFormOpen] = useState(false);
+
+  const [listeners, setListeners] = useState<RadioListenerWithPrograms[]>([]);
+  const [listenersLoading, setListenersLoading] = useState(false);
 
   const [cfg, setCfg] = useState({
     is_enabled: config?.is_enabled ?? false,
@@ -79,6 +83,35 @@ export function RadioAdmin() {
     if (config && section === "config") syncConfig();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
+
+  useEffect(() => {
+    if (section !== "ouvintes") return;
+    let cancelled = false;
+    setListenersLoading(true);
+    listRadioListeners(supabase, churchId)
+      .then((rows) => {
+        if (!cancelled) setListeners(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setErr("Não foi possível carregar os ouvintes.");
+      })
+      .finally(() => {
+        if (!cancelled) setListenersLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [section, churchId]);
+
+  async function removeListener(id: string) {
+    setErr("");
+    try {
+      await deleteRadioListener(supabase, id);
+      setListeners((prev) => prev.filter((l) => l.id !== id));
+    } catch {
+      setErr("Não foi possível remover o ouvinte.");
+    }
+  }
 
   function syncConfig() {
     setCfg({
@@ -487,6 +520,9 @@ export function RadioAdmin() {
           </Button>
           <Button variant={section === "analytics" ? "default" : "outline"} onClick={() => setSection("analytics")}>
             <BarChart3 className="mr-1 h-4 w-4" /> Analytics
+          </Button>
+          <Button variant={section === "ouvintes" ? "default" : "outline"} onClick={() => setSection("ouvintes")}>
+            <Users className="mr-1 h-4 w-4" /> Ouvintes
           </Button>
         </div>
         {section === "programas" ? (
@@ -945,6 +981,62 @@ export function RadioAdmin() {
             </CardContent>
           </Card>
         </div>
+      ) : section === "ouvintes" ? (
+        <Card className="rounded-xl border border-border p-6">
+          <CardHeader>
+            <CardTitle>Ouvintes</CardTitle>
+            <CardDescription>
+              Pessoas inscritas para receber aviso quando um programa entra no ar
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {listenersLoading ? (
+              <p className="text-center text-muted-foreground py-8">Carregando...</p>
+            ) : listeners.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                Nenhum ouvinte inscrito ainda.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {listeners.map((l) => {
+                  const programCount = (l.program_ids ?? []).length;
+                  return (
+                    <div key={l.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-semibold text-navy">{l.name}</p>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                              l.status === "ativo"
+                                ? "bg-green-100 text-green-700"
+                                : l.status === "pausado"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {l.status}
+                          </span>
+                        </div>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {l.email} · {programCount > 0 ? `${programCount} programa(s)` : "todos os programas"} ·{" "}
+                          {new Date(l.created_at).toLocaleDateString("pt-BR")}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeListener(l.id)}
+                        className="text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       ) : (
         <Card className="rounded-xl border border-border p-6">
           <CardHeader>

@@ -5,6 +5,7 @@ import { listRadioPrograms, listRadioEpisodes, getRadioConfig, registerRadioPlay
 import { useRadioConfig, useRadioPrograms, useRadioEpisodes, useWhatsOnAir, usePodcastEpisodes, useRadioRecordings } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { InstallRadioButton } from "@/components/public/InstallRadioButton";
+import { RadioSubscribe } from "./RadioSubscribe";
 import { Share2, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Program {
@@ -316,6 +317,9 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
                 );
               })()}
             </div>
+
+            {/* Inscrição de ouvintes */}
+            <RadioSubscribe churchId={churchId ?? null} programs={programs} />
           </div>
 
           {/* Episódios / Podcasts (direita) */}

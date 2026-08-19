@@ -1923,3 +1923,43 @@ export interface RadioWeeklySchedule {
   week_start: string;
   week_end: string;
 }
+
+// ============================================================
+// Rádio Web — Ciclo 5 (RADIO-008): ouvintes e notificações
+// ============================================================
+export type RadioListenerStatus = "ativo" | "pausado" | "cancelado";
+
+export interface RadioListener {
+  id: string;
+  church_id: string | null;
+  name: string;
+  email: string;
+  phone: string | null;
+  token: string;
+  status: RadioListenerStatus;
+  source: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RadioListenerWithPrograms extends RadioListener {
+  program_ids: string[];
+}
+
+export interface RadioRegisterResult {
+  id: string;
+  token: string;
+  status: string;
+  email: string;
+}
+
+export interface RadioNotificationLog {
+  id: string;
+  listener_id: string | null;
+  program_id: string | null;
+  church_id: string | null;
+  channel: string;
+  status: string;
+  error: string | null;
+  sent_at: string;
+}

@@ -597,3 +597,61 @@ export async function getRadioWeeklySchedule(
     week_end: isoDate(new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000)),
   };
 }
+
+// ── Ciclo 5: Ouvintes e Notificações ──
+
+export interface RadioRegisterInput {
+  church_id: string | null;
+  name: string;
+  email: string;
+  program_ids?: string[];
+}
+
+export async function registerRadioListener(
+  sb: SupabaseClient,
+  input: RadioRegisterInput
+): Promise<RadioRegisterResult> {
+  const { data, error } = await sb.rpc("radio_register_listener", {
+    p_church_id: input.church_id,
+    p_name: input.name,
+    p_email: input.email,
+    p_program_ids: input.program_ids ?? null,
+  });
+  if (error) throw error;
+  const row = (data ?? [])[0];
+  if (!row) throw new Error("Não foi possível registrar o ouvinte.");
+  return row as RadioRegisterResult;
+}
+
+export async function unsubscribeRadioListener(sb: SupabaseClient, token: string): Promise<boolean> {
+  const { data, error } = await sb.rpc("radio_unsubscribe_listener", { p_token: token });
+  if (error) throw error;
+  return !!data;
+}
+
+export async function getRadioListenerByToken(
+  sb: SupabaseClient,
+  token: string
+): Promise<RadioListenerWithPrograms | null> {
+  const { data, error } = await sb.rpc("radio_listener_by_token", { p_token: token });
+  if (error) throw error;
+  const row = (data ?? [])[0];
+  if (!row) return null;
+  return row as RadioListenerWithPrograms;
+}
+
+export async function listRadioListeners(
+  sb: SupabaseClient,
+  churchId?: string | null
+): Promise<RadioListenerWithPrograms[]> {
+  const { data, error } = await sb.rpc("radio_list_all_listeners", {
+    p_church_id: churchId ?? null,
+  });
+  if (error) throw error;
+  return (data ?? []) as RadioListenerWithPrograms[];
+}
+
+export async function deleteRadioListener(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.from("radio_listeners").delete().eq("id", id);
+  if (error) throw error;
+}
