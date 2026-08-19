@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Pencil, X, Music, Settings } from "lucide-react";
+import { Plus, Trash2, Pencil, X, Music, Settings, ListMusic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,12 +12,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { radioProgramSchema, type RadioProgramInput } from "@/schemas/radioProgramSchema";
 import { useAllRadioPrograms, useAllRadioEpisodes, useMyProfile, useRadioConfigAdmin, useWhatsOnAir, useRadioPlaylists } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
+import { StudioRemoto } from "./StudioRemoto";
 import {
   createRadioProgram, updateRadioProgram, deleteRadioProgram,
   createRadioEpisode, updateRadioEpisode, deleteRadioEpisode,
   upsertRadioConfig,
+  createRadioPlaylist, updateRadioPlaylist, deleteRadioPlaylist,
+  addPlaylistItem, removePlaylistItem,
 } from "@/services/radio";
-import type { RadioProgram, RadioEpisode, Weekday } from "@/types/domain";
+import { usePlaylistItems } from "@/hooks/use-queries";
+import type { RadioProgram, RadioEpisode, RadioPlaylist, Weekday } from "@/types/domain";
 
 const WEEKDAYS: { value: Weekday; label: string }[] = [
   { value: "domingo", label: "Domingo" },
@@ -48,7 +52,7 @@ export function RadioAdmin() {
   const { data: onAir } = useWhatsOnAir(churchId);
   const { data: playlists = [] } = useRadioPlaylists(churchId);
   const qc = useQueryClient();
-  const [section, setSection] = useState<"config" | "programas" | "episodios">("programas");
+  const [section, setSection] = useState<"config" | "programas" | "episodios" | "playlists">("programas");
   const [editing, setEditing] = useState<RadioProgram | null>(null);
   const [editingEp, setEditingEp] = useState<RadioEpisode | null>(null);
   const [err, setErr] = useState("");
@@ -242,6 +246,102 @@ export function RadioAdmin() {
     } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
   }
 
+  // ── Playlists ──
+  const [plFormOpen, setPlFormOpen] = useState(false);
+  const [plEditing, setPlEditing] = useState<RadioPlaylist | null>(null);
+  const [plName, setPlName] = useState("");
+  const [plDescription, setPlDescription] = useState("");
+  const [plMode, setPlMode] = useState<RadioPlaylist["mode"]>("ordered");
+  const [plSubmitting, setPlSubmitting] = useState(false);
+  const [activePlaylist, setActivePlaylist] = useState<RadioPlaylist | null>(null);
+
+  async function saveItem(episodeId: string) {
+    if (!activePlaylist || !episodeId) return;
+    setErr("");
+    try {
+      await addPlaylistItem(supabase, activePlaylist.id, episodeId);
+      qc.invalidateQueries({ queryKey: ["radio-playlist-items", activePlaylist.id] });
+    } catch (e2: unknown) {
+      const msg = e2 instanceof Error ? e2.message : "Erro ao adicionar item";
+      setErr(msg);
+    }
+  }
+
+  function openNewPlaylist() {
+    setPlEditing(null);
+    setErr("");
+    setPlName(""); setPlDescription(""); setPlMode("ordered");
+    setPlFormOpen(true);
+  }
+  function openEditPlaylist(p: RadioPlaylist) {
+    setPlEditing(p);
+    setErr("");
+    setPlName(p.name); setPlDescription(p.description ?? ""); setPlMode(p.mode);
+    setPlFormOpen(true);
+  }
+  function closePlaylistForm() {
+    setPlFormOpen(false);
+    setPlEditing(null);
+  }
+
+  async function savePlaylist(e: React.FormEvent) {
+    e.preventDefault();
+    if (!plName.trim()) return;
+    setErr("");
+    setPlSubmitting(true);
+    try {
+      if (plEditing) {
+        await updateRadioPlaylist(supabase, plEditing.id, {
+          name: plName.trim(), description: plDescription || null, mode: plMode,
+        });
+      } else {
+        const nextOrder = playlists.length > 0 ? Math.max(...playlists.map((x) => x.sort_order)) + 1 : 0;
+        await createRadioPlaylist(supabase, {
+          church_id: churchId, name: plName.trim(), description: plDescription || null,
+          mode: plMode, is_active: true, sort_order: nextOrder,
+        });
+      }
+      closePlaylistForm();
+      qc.invalidateQueries({ queryKey: ["radio-playlists"] });
+    } catch (e2: unknown) {
+      const msg = e2 instanceof Error ? e2.message : "Erro ao salvar playlist";
+      setErr(msg);
+    } finally {
+      setPlSubmitting(false);
+    }
+  }
+
+  async function removePlaylist(p: RadioPlaylist) {
+    if (!confirm(`Apagar playlist "${p.name}"?`)) return;
+    try {
+      await deleteRadioPlaylist(supabase, p.id);
+      if (activePlaylist?.id === p.id) setActivePlaylist(null);
+      qc.invalidateQueries({ queryKey: ["radio-playlists"] });
+    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
+  }
+
+  async function saveItem() {
+    if (!activePlaylist || !itemEpisode) return;
+    setErr("");
+    try {
+      await addPlaylistItem(supabase, activePlaylist.id, itemEpisode);
+      setItemEpisode("");
+      qc.invalidateQueries({ queryKey: ["radio-playlist-items", activePlaylist.id] });
+    } catch (e2: unknown) {
+      const msg = e2 instanceof Error ? e2.message : "Erro ao adicionar item";
+      setErr(msg);
+    }
+  }
+
+  async function removeItem(id: string) {
+    if (!activePlaylist) return;
+    if (!confirm("Remover este item da playlist?")) return;
+    try {
+      await removePlaylistItem(supabase, id);
+      qc.invalidateQueries({ queryKey: ["radio-playlist-items", activePlaylist.id] });
+    } catch (e2: unknown) { alert(e2 instanceof Error ? e2.message : "Erro"); }
+  }
+
   return (
     <div className="space-y-6">
       {/* Alternador de seção */}
@@ -256,6 +356,9 @@ export function RadioAdmin() {
           <Button variant={section === "episodios" ? "default" : "outline"} onClick={() => setSection("episodios")}>
             <Music className="mr-1 h-4 w-4" /> Conteúdos / Músicas
           </Button>
+          <Button variant={section === "playlists" ? "default" : "outline"} onClick={() => setSection("playlists")}>
+            <ListMusic className="mr-1 h-4 w-4" /> Playlists
+          </Button>
         </div>
         {section === "programas" ? (
           <Button onClick={() => { setErr(""); setFormOpen(true); }} className="flex items-center gap-2">
@@ -264,6 +367,10 @@ export function RadioAdmin() {
         ) : section === "episodios" ? (
           <Button onClick={openNewEpisode} className="flex items-center gap-2">
             <Plus className="h-4 w-4" /> Adicionar Conteúdo
+          </Button>
+        ) : section === "playlists" ? (
+          <Button onClick={openNewPlaylist} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" /> Adicionar Playlist
           </Button>
         ) : null}
       </div>
@@ -396,6 +503,47 @@ export function RadioAdmin() {
             </div>
           </CardContent>
         </Card>
+      ) : section === "playlists" ? (
+        <div className="space-y-4">
+          <Card className="rounded-xl border border-border p-6">
+            <CardHeader>
+              <CardTitle>Playlists</CardTitle>
+              <CardDescription>Sequências de conteúdos para o modo automático e fallback contra silêncio</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {playlists.length === 0 && (
+                <p className="text-center text-muted-foreground py-12">
+                  Nenhuma playlist criada ainda.
+                </p>
+              )}
+              <div className="space-y-2">
+                {playlists.map((p) => (
+                  <div key={p.id} className="flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/50">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-sm text-navy truncate">{p.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {p.mode === "ordered" ? "Ordenada" : p.mode === "shuffle" ? "Embaralhada" : "Temática"}
+                        {p.description ? ` · ${p.description}` : ""}
+                        {!p.is_active && " · Inativa"}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="icon" className="p-1 rounded" onClick={() => { setActivePlaylist(p); setErr(""); }} title="Gerenciar itens">
+                      <ListMusic className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="p-1 rounded" onClick={() => openEditPlaylist(p)} title="Editar">
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="p-1 rounded text-destructive" onClick={() => removePlaylist(p)} title="Excluir">
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {activePlaylist && <PlaylistItemsEditor playlistId={activePlaylist.id} episodes={episodes} onAdd={saveItem} onRemove={removeItem} />}
+        </div>
       ) : (
         <Card className="rounded-xl border border-border p-6">
           <CardHeader>
@@ -431,6 +579,8 @@ export function RadioAdmin() {
           </CardContent>
         </Card>
       )}
+
+      <StudioRemoto supabase={supabase} churchId={churchId} />
 
       {/* Modal de Programa */}
       {formOpen && (
@@ -604,6 +754,106 @@ export function RadioAdmin() {
           </Card>
         </div>
       )}
+    {/* Modal de Playlist */}
+      {plFormOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-lg rounded-xl border border-border p-6">
+            <CardHeader>
+              <CardTitle>{plEditing ? "Editar Playlist" : "Nova Playlist"}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={savePlaylist} className="space-y-4">
+                <div>
+                  <Label>Nome <span className="text-destructive">*</span></Label>
+                  <Input value={plName} onChange={(e) => setPlName(e.target.value)} required placeholder="Ex: Louvor da manhã" />
+                </div>
+                <div>
+                  <Label>Descrição</Label>
+                  <Input value={plDescription} onChange={(e) => setPlDescription(e.target.value)} placeholder="Breve descrição" />
+                </div>
+                <div>
+                  <Label>Modo de reprodução</Label>
+                  <select value={plMode} onChange={(e) => setPlMode(e.target.value as RadioPlaylist["mode"])} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                    <option value="ordered">Ordenada</option>
+                    <option value="shuffle">Embaralhada</option>
+                    <option value="thematic">Temática</option>
+                  </select>
+                </div>
+                <div className="mt-4 flex items-center justify-end gap-2">
+                  <Button variant="outline" type="button" onClick={closePlaylistForm}>
+                    <X className="h-4 w-4" /> Cancelar
+                  </Button>
+                  <Button type="submit" disabled={plSubmitting}>
+                    {plEditing ? "Salvar Alterações" : "Criar Playlist"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
+  );
+}
+
+function PlaylistItemsEditor({ playlistId, episodes, onAdd, onRemove }: {
+  playlistId: string;
+  episodes: RadioEpisode[];
+  onAdd: (episodeId: string) => Promise<void>;
+  onRemove: (id: string) => Promise<void>;
+}) {
+  const { data: items = [] } = usePlaylistItems(playlistId);
+  const [episodeId, setEpisodeId] = useState("");
+  const available = episodes.filter((e) => e.status === "published" && !items.some((i) => i.episode_id === e.id));
+
+  return (
+    <Card className="rounded-xl border border-border p-6">
+      <CardHeader>
+        <CardTitle>Itens da Playlist</CardTitle>
+        <CardDescription>Adicione conteúdos publicados à sequência</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-2">
+          <select
+            value={episodeId}
+            onChange={(e) => setEpisodeId(e.target.value)}
+            className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">— Selecionar conteúdo —</option>
+            {available.map((e) => (
+              <option key={e.id} value={e.id}>{e.title}</option>
+            ))}
+          </select>
+          <Button type="button" onClick={() => { onAdd(episodeId); setEpisodeId(""); }} disabled={!episodeId}>
+            Adicionar
+          </Button>
+        </div>
+        {items.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Playlist vazia.</p>
+        ) : (
+          <div className="space-y-2">
+            {items.map((it, idx) => {
+              const ep = episodes.find((e) => e.id === it.episode_id);
+              return (
+                <div key={it.id} className="flex items-center gap-3 rounded-lg border border-border p-3">
+                  <span className="w-6 text-xs font-bold text-muted-foreground">{idx + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-navy truncate">{ep?.title ?? "Conteúdo removido"}</p>
+                    {ep && (
+                      <p className="text-xs text-muted-foreground">
+                        {EPISODE_CATEGORIES.find((c) => c.value === ep.category)?.label ?? ep.category}
+                      </p>
+                    )}
+                  </div>
+                  <Button variant="ghost" size="icon" className="p-1 rounded text-destructive" onClick={() => onRemove(it.id)} title="Remover">
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
