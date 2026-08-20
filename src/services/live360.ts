@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   LiveSession, LiveCurrentItem, LiveControlTokenResult, LiveTokenValidation,
+  LiveLyric, LiveOnairLyric, LiveLyricBlock,
 } from "@/types/domain";
 
 export async function startLiveSession(sb: SupabaseClient, churchId: string, title?: string): Promise<LiveSession> {
@@ -75,4 +76,58 @@ export async function validateLiveToken(sb: SupabaseClient, sessionId: string, t
 export async function freezeLiveSession(sb: SupabaseClient, sessionId: string, frozen: boolean): Promise<void> {
   const { error } = await sb.rpc("live_freeze", { p_session_id: sessionId, p_frozen: frozen });
   if (error) throw error;
+}
+
+// ── Repertório de louvor (Slice 2) ──
+export async function listLiveLyrics(sb: SupabaseClient, churchId: string, search?: string): Promise<LiveLyric[]> {
+  const { data, error } = await sb.rpc("live_list_lyrics", {
+    p_church_id: churchId,
+    p_search: search ?? null,
+  });
+  if (error) throw error;
+  return (data ?? []) as LiveLyric[];
+}
+
+export async function saveLiveLyric(
+  sb: SupabaseClient,
+  params: {
+    id?: string | null;
+    churchId: string;
+    title: string;
+    author?: string | null;
+    lyrics: LiveLyricBlock[];
+    tags?: string[];
+  }
+): Promise<LiveLyric> {
+  const { data, error } = await sb.rpc("live_save_lyric", {
+    p_id: params.id ?? null,
+    p_church_id: params.churchId,
+    p_title: params.title,
+    p_author: params.author ?? null,
+    p_lyrics: params.lyrics,
+    p_tags: params.tags ?? [],
+  });
+  if (error) throw error;
+  return (Array.isArray(data) ? data[0] : data) as LiveLyric;
+}
+
+export async function deleteLiveLyric(sb: SupabaseClient, id: string): Promise<void> {
+  const { error } = await sb.rpc("live_delete_lyric", { p_id: id });
+  if (error) throw error;
+}
+
+export async function getLiveOnairLyric(sb: SupabaseClient, sessionId: string): Promise<LiveOnairLyric | null> {
+  const { data, error } = await sb.rpc("live_get_onair_lyric", { p_session_id: sessionId });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  return (row ?? null) as LiveOnairLyric | null;
+}
+
+export async function listLiveLyricsByToken(sb: SupabaseClient, sessionId: string, token: string): Promise<LiveLyric[]> {
+  const { data, error } = await sb.rpc("live_list_lyrics_by_token", {
+    p_session_id: sessionId,
+    p_token: token,
+  });
+  if (error) throw error;
+  return (data ?? []) as LiveLyric[];
 }

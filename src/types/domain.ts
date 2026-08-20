@@ -2006,3 +2006,30 @@ export interface LiveTokenValidation {
   role: LiveTokenRole | null;
   session_title: string | null;
 }
+
+// ── Repertório de louvor (Slice 2) ──
+export type LiveLyricBlockType = "verse" | "chorus" | "bridge" | "ending";
+
+export interface LiveLyricBlock {
+  type: LiveLyricBlockType;
+  lines: string[];
+}
+
+export interface LiveLyric {
+  id: string;
+  church_id: string | null;
+  title: string;
+  author: string | null;
+  lyrics: LiveLyricBlock[];
+  tags: string[];
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LiveOnairLyric {
+  id: string;
+  title: string;
+  author: string | null;
+  lyrics: LiveLyricBlock[];
+}

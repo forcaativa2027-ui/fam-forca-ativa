@@ -1150,3 +1150,27 @@ export const useLiveCurrent = (sessionId?: string | null) =>
     enabled: !!sessionId,
     refetchInterval: 5000,
   });
+
+export const useLiveLyrics = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["live-lyrics", churchId],
+    queryFn: () => Live360.listLiveLyrics(supabase, churchId as string),
+    enabled: !!churchId,
+    staleTime: 30 * 1000,
+  });
+
+export const useLiveOnairLyric = (sessionId?: string | null, enabled = true) =>
+  useQuery({
+    queryKey: ["live-onair-lyric", sessionId],
+    queryFn: () => Live360.getLiveOnairLyric(supabase, sessionId as string),
+    enabled: !!sessionId && enabled,
+    refetchInterval: 5000,
+  });
+
+export const useLiveLyricsByToken = (sessionId?: string | null, token?: string | null) =>
+  useQuery({
+    queryKey: ["live-lyrics-token", sessionId, token],
+    queryFn: () => Live360.listLiveLyricsByToken(supabase, sessionId as string, token as string),
+    enabled: !!sessionId && !!token,
+    staleTime: 30 * 1000,
+  });

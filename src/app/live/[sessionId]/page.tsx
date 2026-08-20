@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { useLiveCurrent } from "@/hooks/use-queries";
+import { useLiveCurrent, useLiveOnairLyric } from "@/hooks/use-queries";
 import { getChapter } from "@/services/bibleReader";
 
 const DEFAULT_VERSION = "acf";
@@ -11,6 +11,7 @@ export default function LiveProjectionPage() {
   const params = useParams<{ sessionId: string }>();
   const sessionId = params?.sessionId ?? "";
   const { data: current } = useLiveCurrent(sessionId);
+  const onairLyric = useLiveOnairLyric(sessionId, current?.kind === "lyric");
   const [bible, setBible] = useState<{ book: string; chapter: number; verses: { number: number; text: string }[] } | null>(null);
   const [bibleErr, setBibleErr] = useState(false);
 
@@ -68,6 +69,34 @@ export default function LiveProjectionPage() {
           </div>
         </div>
       )}
+      {kind === "lyric" && !onairLyric?.data && (
+        <p className="text-xl text-white/50">Carregando letra...</p>
+      )}
+      {kind === "lyric" && onairLyric?.data && (
+        <LyricProjection lyric={onairLyric.data} slide={typeof current?.payload?.slide === "number" ? current.payload.slide : 0} />
+      )}
     </main>
+  );
+}
+
+function LyricProjection({ lyric, slide }: { lyric: { title: string; author: string | null; lyrics: { type: string; lines: string[] }[] }; slide: number }) {
+  const blocks = lyric.lyrics;
+  const safeSlide = blocks.length > 0 ? Math.min(slide, blocks.length - 1) : 0;
+  const block = blocks[safeSlide];
+
+  return (
+    <div className="max-w-4xl text-center">
+      <p className="mb-2 font-display text-3xl font-bold text-gold">{lyric.title}</p>
+      {lyric.author && <p className="mb-8 text-lg text-white/50">{lyric.author}</p>}
+      {block ? (
+        <div className="space-y-3" key={safeSlide}>
+          {block.lines.map((ln, li) => (
+            <p key={li} className="text-3xl leading-relaxed">{ln}</p>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xl text-white/60">Sem letra para este bloco.</p>
+      )}
+    </div>
   );
 }
