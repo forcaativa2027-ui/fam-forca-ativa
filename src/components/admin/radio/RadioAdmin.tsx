@@ -652,6 +652,7 @@ export function RadioAdmin() {
       </Card>
 
       {section === "config" ? (
+        <>
         <Card className="rounded-xl border border-border p-6">
           <CardHeader>
             <CardTitle>Configuração da Rádio Web</CardTitle>
@@ -721,6 +722,7 @@ export function RadioAdmin() {
             </div>
           </CardContent>
         </Card>
+        </>
       ) : section === "programas" ? (
         <Card className="rounded-xl border border-border p-6">
           <CardHeader>

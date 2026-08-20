@@ -119,7 +119,7 @@ export default async function RadioEpisodePage({ params }: PageProps) {
 
             {(episode.auto_tags ?? []).length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
-                {(episode.auto_tags ?? []).map((tag) => (
+                {(episode.auto_tags ?? []).map((tag: string) => (
                   <span key={tag} className="rounded-full border border-gold/30 bg-background px-3 py-1 text-xs text-navy">
                     {tag}
                   </span>

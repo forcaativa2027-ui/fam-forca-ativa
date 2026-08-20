@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { RadioConfig, RadioProgram, RadioEpisode, Weekday, RadioPlaylist, RadioPlaylistItem, RadioStudioInvite, RadioInviteValidation, RadioRecording, RadioProgramGuest, RadioPlaySource, RadioEpisodePlayStats, RadioAnalyticsSummary, RadioWeeklySchedule, RadioScheduleItem } from "@/types/domain";
+import type { RadioConfig, RadioProgram, RadioEpisode, Weekday, RadioPlaylist, RadioPlaylistItem, RadioStudioInvite, RadioInviteValidation, RadioRecording, RadioProgramGuest, RadioPlaySource, RadioEpisodePlayStats, RadioAnalyticsSummary, RadioWeeklySchedule, RadioScheduleItem, RadioRegisterResult, RadioListenerWithPrograms } from "@/types/domain";
 import { radioProgramSchema, type RadioProgramInput } from "@/schemas/radioProgramSchema";
 
 export async function getRadioConfig(sb: SupabaseClient, churchId?: string | null): Promise<RadioConfig | null> {

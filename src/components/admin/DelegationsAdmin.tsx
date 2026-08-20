@@ -41,6 +41,7 @@ const MODULE_LABELS: Record<DelegationModule, string> = {
   supervisao:     "🧭 Supervisão Ministerial",
   usuarios:       "👤 Administração de Usuários",
   kids:           "🧸 Ministério de Crianças",
+  live360:        "🎬 Live-360",
 };
 const SCOPE_KEYS = ["lg", "setor", "area", "distrito", "nucleo", "sede", "nacional"] as const;
 const TRUST_LABELS: Record<number, string> = {
