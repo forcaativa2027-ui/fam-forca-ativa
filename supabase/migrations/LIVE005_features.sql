@@ -23,7 +23,7 @@ create or replace function public.live_list_command_log(
 )
 language sql stable security definer set search_path = public as $$
   select l.id, l.cmd, l.payload,
-         coalesce(p.name, p.email, 'Admin') as operator_name,
+         coalesce(p.full_name, 'Admin') as operator_name,
          l.token_id, l.client_id, l.created_at
     from public.live_command_log l
     left join public.profiles p on p.id = l.operator
