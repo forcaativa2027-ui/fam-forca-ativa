@@ -1174,3 +1174,19 @@ export const useLiveLyricsByToken = (sessionId?: string | null, token?: string |
     enabled: !!sessionId && !!token,
     staleTime: 30 * 1000,
   });
+
+export const useLiveSessionTheme = (sessionId?: string | null) =>
+  useQuery({
+    queryKey: ["live-session-theme", sessionId],
+    queryFn: () => Live360.getLiveSessionTheme(supabase, sessionId as string),
+    enabled: !!sessionId,
+    staleTime: 30 * 1000,
+  });
+
+export const useLiveCommandLog = (sessionId?: string | null, limit = 50) =>
+  useQuery({
+    queryKey: ["live-command-log", sessionId, limit],
+    queryFn: () => Live360.listLiveCommandLog(supabase, sessionId as string, limit),
+    enabled: !!sessionId,
+    refetchInterval: 10000,
+  });

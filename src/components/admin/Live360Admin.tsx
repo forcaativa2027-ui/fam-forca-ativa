@@ -2,24 +2,31 @@
 
 import { useMemo, useState } from "react";
 import {
-  Plus, Play, Square, Snowflake, Link2, QrCode, Music, Trash2, ChevronLeft, ChevronRight, Pencil, Check,
+  Plus, Play, Square, Snowflake, Link2, QrCode, Music, Trash2, ChevronLeft, ChevronRight, Pencil, Check, Palette, History, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useMyProfile, useLiveSessions, useLiveCurrent, useLiveLyrics, useLiveOnairLyric } from "@/hooks/use-queries";
+import { useMyProfile, useLiveSessions, useLiveCurrent, useLiveLyrics, useLiveOnairLyric, useLiveSessionTheme, useLiveCommandLog } from "@/hooks/use-queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase/client";
 import {
   startLiveSession, createLiveControlToken, applyLiveCommand, freezeLiveSession,
-  saveLiveLyric, deleteLiveLyric,
+  saveLiveLyric, deleteLiveLyric, setLiveSessionTheme,
 } from "@/services/live360";
-import type { LiveSession, LiveCurrentItem, LiveLyric, LiveLyricBlock, LiveLyricBlockType } from "@/types/domain";
+import type { LiveSession, LiveCurrentItem, LiveLyric, LiveLyricBlock, LiveLyricBlockType, LiveTheme } from "@/types/domain";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cec-painel.vercel.app";
 const BLOCK_LABELS: Record<LiveLyricBlockType, string> = {
   verse: "Verso", chorus: "Refrão", bridge: "Ponte", ending: "Final",
 };
+const THEME_PRESETS: { label: string; theme: LiveTheme }[] = [
+  { label: "Clássico (azul marinho)", theme: { bg: "#0f172a", text: "#ffffff", accent: "#d4af37", fontDisplay: "font-display" } },
+  { label: "Escuro sutil", theme: { bg: "#111111", text: "#f5f5f5", accent: "#e8c96a", fontDisplay: "font-display" } },
+  { label: "Claro", theme: { bg: "#ffffff", text: "#1a1a2e", accent: "#b45309", fontDisplay: "font-sans" } },
+  { label: "Roxo", theme: { bg: "#2e1065", text: "#ffffff", accent: "#f0abfc", fontDisplay: "font-display" } },
+  { label: "Verde igreja", theme: { bg: "#064e3b", text: "#fefce8", accent: "#facc15", fontDisplay: "font-display" } },
+];
 
 export function Live360Admin() {
   const { data: myProfile } = useMyProfile();
@@ -423,6 +430,7 @@ function LiveControl({ session, onError, onOk }: { session: LiveSession; onError
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <ThemePicker sessionId={session.id} onError={onError} onOk={onOk} />
           <div className="flex gap-2">
             <Input
               placeholder="Referência bíblica (ex.: sl 23:1-6)"
@@ -514,7 +522,83 @@ function LiveControl({ session, onError, onOk }: { session: LiveSession; onError
           </p>
         </CardContent>
       </Card>
+
+      <CommandLog sessionId={session.id} />
     </div>
+  );
+}
+
+// ── Seletor de tema visual da projeção ──
+function ThemePicker({ sessionId, onError, onOk }: { sessionId: string; onError: (m: string) => void; onOk: (m: string) => void }) {
+  const { data: theme } = useLiveSessionTheme(sessionId);
+  const [saving, setSaving] = useState(false);
+  const qc = useQueryClient();
+
+  async function apply(sel: LiveTheme) {
+    onError(""); onOk(""); setSaving(true);
+    try {
+      await setLiveSessionTheme(supabase, sessionId, sel);
+      qc.invalidateQueries({ queryKey: ["live-session-theme"] });
+      onOk("Tema aplicado à projeção.");
+    } catch (e: unknown) {
+      onError(e instanceof Error ? e.message : "Não foi possível aplicar o tema.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Palette className="h-4 w-4 text-muted-foreground" />
+      <span className="text-sm font-medium text-muted-foreground">Tema:</span>
+      {THEME_PRESETS.map((p) => (
+        <button
+          key={p.label}
+          type="button"
+          onClick={() => apply(p.theme)}
+          disabled={saving}
+          className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs transition ${theme?.bg === p.theme.bg && theme?.accent === p.theme.accent ? "border-gold bg-gold/20 font-semibold" : "border-border hover:bg-muted"}`}
+        >
+          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: p.theme.bg }} />
+          {p.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Histórico de comandos (auditoria) ──
+function CommandLog({ sessionId }: { sessionId: string }) {
+  const { data: log = [], isLoading } = useLiveCommandLog(sessionId);
+  const [open, setOpen] = useState(false);
+
+  if (log.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <History className="h-4 w-4" /> Histórico de comandos
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {isLoading && <div className="flex items-center gap-2 text-xs text-muted"><Loader2 className="h-3 w-3 animate-spin" /> Carregando...</div>}
+        {(open ? log : log.slice(0, 5)).map((e) => (
+          <div key={e.id} className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-1.5 text-xs">
+            <div className="flex items-center gap-2">
+              <code className="rounded bg-background px-1.5 py-0.5 font-mono">{e.cmd}</code>
+              <span className="text-muted-foreground">{e.operator_name}</span>
+            </div>
+            <span className="text-muted-foreground">{new Date(e.created_at).toLocaleString("pt-BR")}</span>
+          </div>
+        ))}
+        {log.length > 5 && (
+          <Button variant="ghost" size="sm" onClick={() => setOpen((o) => !o)}>
+            {open ? "Mostrar menos" : `Mostrar todos (${log.length})`}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

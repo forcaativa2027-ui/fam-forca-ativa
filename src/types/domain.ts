@@ -2033,3 +2033,21 @@ export interface LiveOnairLyric {
   author: string | null;
   lyrics: LiveLyricBlock[];
 }
+
+// ── Slice 4/5 — tema visual da projeção e histórico de comandos ──
+export interface LiveTheme {
+  bg: string;
+  text: string;
+  accent: string;
+  fontDisplay: string;
+}
+
+export interface LiveCommandLogEntry {
+  id: number;
+  cmd: string;
+  payload: Record<string, unknown> | null;
+  operator_name: string;
+  token_id: string | null;
+  client_id: string | null;
+  created_at: string;
+}

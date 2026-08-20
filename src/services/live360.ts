@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   LiveSession, LiveCurrentItem, LiveControlTokenResult, LiveTokenValidation,
-  LiveLyric, LiveOnairLyric, LiveLyricBlock,
+  LiveLyric, LiveOnairLyric, LiveLyricBlock, LiveTheme, LiveCommandLogEntry,
 } from "@/types/domain";
 
 export async function startLiveSession(sb: SupabaseClient, churchId: string, title?: string): Promise<LiveSession> {
@@ -130,4 +130,22 @@ export async function listLiveLyricsByToken(sb: SupabaseClient, sessionId: strin
   });
   if (error) throw error;
   return (data ?? []) as LiveLyric[];
+}
+
+// ── Slice 4/5 — tema da sessão e histórico de comandos ──
+export async function getLiveSessionTheme(sb: SupabaseClient, sessionId: string): Promise<LiveTheme | null> {
+  const { data, error } = await sb.rpc("live_get_session_theme", { p_session_id: sessionId });
+  if (error) throw error;
+  return (Array.isArray(data) ? data[0] : data) as LiveTheme | null;
+}
+
+export async function setLiveSessionTheme(sb: SupabaseClient, sessionId: string, theme: LiveTheme): Promise<void> {
+  const { error } = await sb.rpc("live_set_session_theme", { p_session_id: sessionId, p_theme: theme });
+  if (error) throw error;
+}
+
+export async function listLiveCommandLog(sb: SupabaseClient, sessionId: string, limit = 50): Promise<LiveCommandLogEntry[]> {
+  const { data, error } = await sb.rpc("live_list_command_log", { p_session_id: sessionId, p_limit: limit });
+  if (error) throw error;
+  return (data ?? []) as LiveCommandLogEntry[];
 }
