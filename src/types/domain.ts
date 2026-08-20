@@ -2040,6 +2040,9 @@ export interface LiveTheme {
   text: string;
   accent: string;
   fontDisplay: string;
+  // Slice 5 — ajustes finos de projeção (segundo monitor / proporção 16:9).
+  ratio?: "16:9" | "auto";
+  scale?: number;
 }
 
 export interface LiveCommandLogEntry {

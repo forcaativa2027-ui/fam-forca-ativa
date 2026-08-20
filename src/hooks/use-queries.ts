@@ -1143,12 +1143,15 @@ export const useLiveSessions = (churchId?: string | null) =>
     staleTime: 30 * 1000,
   });
 
+const LIVE_RETRY = { retry: 5, retryDelay: (attempt: number) => Math.min(1000 * 2 ** attempt, 15000) };
+
 export const useLiveCurrent = (sessionId?: string | null) =>
   useQuery({
     queryKey: ["live-current", sessionId],
     queryFn: () => Live360.getLiveCurrent(supabase, sessionId as string),
     enabled: !!sessionId,
     refetchInterval: 5000,
+    ...LIVE_RETRY,
   });
 
 export const useLiveLyrics = (churchId?: string | null) =>
@@ -1165,7 +1168,26 @@ export const useLiveOnairLyric = (sessionId?: string | null, enabled = true) =>
     queryFn: () => Live360.getLiveOnairLyric(supabase, sessionId as string),
     enabled: !!sessionId && enabled,
     refetchInterval: 5000,
+    ...LIVE_RETRY,
   });
+
+// Slice 5 — resiliência: status de conexão do datashow/controle.
+// `isStale` é true quando o último poll falhou (sem dados recentes);
+// o componente pode exibir um aviso e o react-query continua re-sincronizando.
+export function useLiveConnectionStatus(
+  queries: { dataUpdatedAt?: number; isError?: boolean; isFetching?: boolean }[],
+  staleAfterMs = 12000,
+): "synced" | "connecting" | "stale" {
+  if (queries.length === 0) return "connecting";
+  const anyError = queries.some((q) => q.isError);
+  const oldest = Math.min(...queries.map((q) => q.dataUpdatedAt ?? 0));
+  const tooOld = Date.now() - oldest > staleAfterMs;
+  const anyFetching = queries.some((q) => q.isFetching);
+  if (anyError) return "stale";
+  if (tooOld) return "stale";
+  if (anyFetching) return "connecting";
+  return "synced";
+}
 
 export const useLiveLyricsByToken = (sessionId?: string | null, token?: string | null) =>
   useQuery({

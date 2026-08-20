@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
-  Plus, Play, Square, Snowflake, Link2, QrCode, Music, Trash2, ChevronLeft, ChevronRight, Pencil, Check, Palette, History, Loader2,
+  Plus, Play, Square, Snowflake, Link2, QrCode, Music, Trash2, ChevronLeft, ChevronRight, Pencil, Check, Palette, History, Loader2, Monitor, ZoomIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -561,6 +561,31 @@ function ThemePicker({ sessionId, onError, onOk }: { sessionId: string; onError:
         >
           <span className="h-3 w-3 rounded-full" style={{ backgroundColor: p.theme.bg }} />
           {p.label}
+        </button>
+      ))}
+      <span className="ml-2 flex items-center gap-1 text-sm text-muted-foreground">
+        <Monitor className="h-4 w-4" /> Projeção:
+      </span>
+      <button
+        type="button"
+        disabled={saving}
+        onClick={() => apply({ ...(theme ?? THEME_PRESETS[0].theme), ratio: theme?.ratio === "16:9" ? "auto" : "16:9" })}
+        className={`rounded-full border px-3 py-1 text-xs transition ${theme?.ratio === "16:9" ? "border-gold bg-gold/20 font-semibold" : "border-border hover:bg-muted"}`}
+      >
+        {theme?.ratio === "16:9" ? "16:9 (segundo monitor)" : "Automático (tela cheia)"}
+      </button>
+      <span className="ml-2 flex items-center gap-1 text-sm text-muted-foreground">
+        <ZoomIn className="h-4 w-4" /> Escala:
+      </span>
+      {[0.75, 1, 1.25, 1.5].map((s) => (
+        <button
+          key={s}
+          type="button"
+          disabled={saving}
+          onClick={() => apply({ ...(theme ?? THEME_PRESETS[0].theme), scale: s })}
+          className={`rounded-full border px-3 py-1 text-xs transition ${(theme?.scale ?? 1) === s ? "border-gold bg-gold/20 font-semibold" : "border-border hover:bg-muted"}`}
+        >
+          {s * 100}%
         </button>
       ))}
     </div>
