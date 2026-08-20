@@ -10,7 +10,7 @@ import {
   Download, Search, Bell, Video, Compass,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
   Menu, X, LogOut,
-  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins, QrCode, Library, FolderTree, Baby, Tags, ScreenShare,
+  BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins, QrCode, Library, FolderTree, Baby, Tags, ScreenShare, LayoutGrid,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,7 @@ interface NavGroup {
 export interface AdminSidebarProps {
   activeTab: TabKey;
   onNavigate: (tab: TabKey) => void;
+  onExploreGroup?: (groupId: string) => void;
   counts?: {
     prayer_pending?: number;
     visit_pending?: number;
@@ -217,7 +218,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
 }
 
 export function AdminSidebar({
-  activeTab, onNavigate, counts = {}, userName, userRole, onSearch, mobileOnly = false,
+  activeTab, onNavigate, onExploreGroup, counts = {}, userName, userRole, onSearch, mobileOnly = false,
 }: AdminSidebarProps) {
   const { data: profile } = useMyProfile();
   const { data: myChurch } = useMyChurch(profile?.church_id);
@@ -303,27 +304,39 @@ export function AdminSidebar({
           const groupBadge = group.items.reduce((s, i) => s + (i.badge ?? 0), 0);
           return (
             <div key={group.id} className="mb-0.5">
-              <button
-                onClick={() => toggleGroup(group.id)}
-                className={[
-                  "flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider transition-colors",
-                  groupHasActive ? "text-gold" : "text-white/40 hover:text-white/70",
-                ].join(" ")}
-                title={collapsed ? group.label : undefined}
-              >
-                <span className={groupHasActive ? "text-gold" : "text-white/50"}>{group.icon}</span>
-                {!collapsed && (
-                  <>
-                    <span className="flex-1 truncate">{group.label}</span>
-                    {groupBadge > 0 && (
-                      <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[10px] font-bold text-navy">
-                        {groupBadge}
-                      </span>
-                    )}
-                    {isOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-                  </>
+              <div className="flex items-center">
+                <button
+                  onClick={() => toggleGroup(group.id)}
+                  className={[
+                    "flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider transition-colors",
+                    groupHasActive ? "text-gold" : "text-white/40 hover:text-white/70",
+                  ].join(" ")}
+                  title={collapsed ? group.label : undefined}
+                >
+                  <span className={groupHasActive ? "text-gold" : "text-white/50"}>{group.icon}</span>
+                  {!collapsed && (
+                    <>
+                      <span className="flex-1 truncate">{group.label}</span>
+                      {groupBadge > 0 && (
+                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-gold px-1 text-[10px] font-bold text-navy">
+                          {groupBadge}
+                        </span>
+                      )}
+                      {isOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                    </>
+                  )}
+                </button>
+                {!collapsed && onExploreGroup && (
+                  <button
+                    onClick={() => onExploreGroup(group.id)}
+                    className="mr-1 shrink-0 rounded p-1.5 text-white/35 hover:bg-white/10 hover:text-gold transition-colors"
+                    title={`Ver ${group.label} em cards`}
+                    aria-label={`Ver ${group.label} em cards`}
+                  >
+                    <LayoutGrid size={13} />
+                  </button>
                 )}
-              </button>
+              </div>
 
               {(isOpen || collapsed) && (
                 <div className={collapsed ? "space-y-0.5 px-1.5" : "space-y-0.5 pb-1"}>

@@ -10,6 +10,7 @@ import { AdminSidebar, type TabKey } from "./AdminSidebar";
 import { GlobalSearchDialog } from "./GlobalSearchDialog";
 import { GlobalSearch } from "./GlobalSearch";
 import { TabContent } from "./panel/TabRouter";
+import { SubmenuExplorer } from "./panel/SubmenuExplorer";
 
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
@@ -28,6 +29,7 @@ export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState<TabKey>(urlTab ?? "org-dashboard");
   const [previousTab, setPreviousTab] = useState<TabKey | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [explorerGroup, setExplorerGroup] = useState<string | null>(null);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -98,6 +100,7 @@ export default function AdminPanel() {
       <AdminSidebar
         activeTab={activeTab}
         onNavigate={handleNavigate}
+        onExploreGroup={(gid) => setExplorerGroup(gid)}
         counts={{
           prayer_pending: counts?.prayer_pending ?? 0,
           visit_pending: counts?.visit_pending ?? 0,
@@ -165,6 +168,17 @@ export default function AdminPanel() {
             <TabContent activeTab={activeTab} onNavigate={handleNavigate} prefillEventId={prefillEventId} />
           </div>
         </main>
+
+        {/* Painel de exploração à direita — cards dos submenus */}
+        {explorerGroup && (
+          <div className="hidden w-[320px] shrink-0 border-l border-border bg-card md:block xl:w-[380px]">
+            <SubmenuExplorer
+              groupId={explorerGroup}
+              onNavigate={handleNavigate}
+              onClose={() => setExplorerGroup(null)}
+            />
+          </div>
+        )}
       </div>
 
       <GlobalSearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} onNavigate={handleNavigate} />
