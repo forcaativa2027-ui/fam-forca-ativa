@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, X, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Card from "@/components/ui/card";
 import type { TabKey } from "../AdminSidebar";
 import type { ExplorerItem } from "./explorerConfig";
 import { EXPLORER_GROUP_ICONS, EXPLORER_GROUP_LABELS, EXPLORER_MAP } from "./explorerConfig";
@@ -74,14 +75,12 @@ export function SubmenuExplorer({
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {level.items.map((item) => (
-            <button
+            <Card
               key={item.key}
-              type="button"
               onClick={() => (item.children ? openChildren(item.children, item.label) : (onNavigate(item.key), onClose()))}
               className={cn(
-                "group flex flex-col gap-2 rounded-xl border border-border bg-card p-4 text-left shadow-sm transition-all",
-                "hover:-translate-y-0.5 hover:border-gold/60 hover:shadow-md",
-                item.children && "cursor-pointer",
+                "rounded-xl border bg-card text-card-foreground shadow-sm hover:border-gold/40 hover:bg-gold/5 transition-colors",
+                "group cursor-pointer",
               )}
             >
               <div className="flex items-start justify-between gap-2">
@@ -98,10 +97,10 @@ export function SubmenuExplorer({
                 <p className="text-sm font-semibold text-navy">{item.label}</p>
                 <p className="mt-0.5 text-xs leading-snug text-muted">{item.description}</p>
               </div>
-              <span className="mt-auto flex items-center gap-1 text-[11px] font-medium text-gold opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="mt-auto flex items-center gap-1 text-[11px] font-medium text-gold opacity-0 group-hover:opacity-100">
                 {item.children ? "Abrir submenus" : "Abrir"} <ChevronRight size={12} />
               </span>
-            </button>
+            </Card>
           ))}
         </div>
         {level.items.length === 0 && (
