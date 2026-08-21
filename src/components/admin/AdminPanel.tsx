@@ -173,6 +173,7 @@ export default function AdminPanel() {
         {explorerGroup && (
           <div className="hidden w-[320px] shrink-0 border-l border-border bg-card md:block xl:w-[380px]">
             <SubmenuExplorer
+              key={explorerGroup}
               groupId={explorerGroup}
               onNavigate={handleNavigate}
               onClose={() => setExplorerGroup(null)}

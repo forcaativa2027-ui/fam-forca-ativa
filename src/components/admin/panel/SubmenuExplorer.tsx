@@ -73,7 +73,7 @@ export function SubmenuExplorer({
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted">
           {level.label} — {level.items.length} {level.items.length === 1 ? "opção" : "opções"}
         </p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3">
           {level.items.map((item) => (
             <Card
               key={item.key}
