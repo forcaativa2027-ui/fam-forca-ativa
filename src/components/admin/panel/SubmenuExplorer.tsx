@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, X, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Card from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import type { TabKey } from "../AdminSidebar";
 import type { ExplorerItem } from "./explorerConfig";
 import { EXPLORER_GROUP_ICONS, EXPLORER_GROUP_LABELS, EXPLORER_MAP } from "./explorerConfig";
