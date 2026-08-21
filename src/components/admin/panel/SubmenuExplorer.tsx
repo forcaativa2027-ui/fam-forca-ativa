@@ -79,20 +79,20 @@ export function SubmenuExplorer({
               key={item.key}
               onClick={() => (item.children ? openChildren(item.children, item.label) : (onNavigate(item.key), onClose()))}
               className={cn(
-                "border-l-4 border-gold hover:shadow-xl hover:-translate-y-1 hover:ring-gold/40 transition",
+                "border-l-4 border-gold hover:shadow-lg hover:-translate-y-0.5 hover:ring-gold/30 transition",
                 "group cursor-pointer",
               )}
             >
-              <div className="flex items-center gap-3 p-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-navy/5 text-navy transition-colors group-hover:bg-gold/15 group-hover:text-gold">
+              <div className="flex items-center gap-3 p-3.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy/5 text-navy transition-colors group-hover:bg-gold/15 group-hover:text-gold">
                   {item.icon}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold uppercase tracking-wider text-gold">{item.label}</p>
-                  <p className="mt-1 text-[11px] text-muted">{item.description}</p>
+                  <p className="text-sm font-medium uppercase text-gold">{item.label}</p>
+                  <p className="mt-1.5 text-[12px] leading-relaxed text-muted">{item.description}</p>
                 </div>
                 {item.children ? (
-                  <span className="text-gold text-[10px] font-semibold">
+                  <span className="text-gold text-[10px] font-medium">
                     <FolderOpen size={12} /> {item.children.length} submenus
                   </span>
                 ) : null}
