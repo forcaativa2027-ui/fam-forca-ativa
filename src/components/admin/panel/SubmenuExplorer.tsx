@@ -79,27 +79,24 @@ export function SubmenuExplorer({
               key={item.key}
               onClick={() => (item.children ? openChildren(item.children, item.label) : (onNavigate(item.key), onClose()))}
               className={cn(
-                "rounded-xl border bg-card text-card-foreground shadow-sm hover:border-gold/40 hover:bg-gold/5 transition-colors",
+                "border-l-4 border-gold hover:shadow-xl hover:-translate-y-1 hover:ring-gold/40 transition",
                 "group cursor-pointer",
               )}
             >
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-3 p-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-navy/5 text-navy transition-colors group-hover:bg-gold/15 group-hover:text-gold">
                   {item.icon}
                 </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-wider text-gold">{item.label}</p>
+                  <p className="mt-1 text-[11px] text-muted">{item.description}</p>
+                </div>
                 {item.children ? (
-                  <span className="flex items-center gap-0.5 rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-semibold text-gold">
-                    <FolderOpen size={11} /> submenus
+                  <span className="text-gold text-[10px] font-semibold">
+                    <FolderOpen size={12} /> {item.children.length} submenus
                   </span>
                 ) : null}
               </div>
-              <div>
-                <p className="text-sm font-semibold text-navy">{item.label}</p>
-                <p className="mt-0.5 text-xs leading-snug text-muted">{item.description}</p>
-              </div>
-              <span className="mt-auto flex items-center gap-1 text-[11px] font-medium text-gold opacity-0 group-hover:opacity-100">
-                {item.children ? "Abrir submenus" : "Abrir"} <ChevronRight size={12} />
-              </span>
             </Card>
           ))}
         </div>
