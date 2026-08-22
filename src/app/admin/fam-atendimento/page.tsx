@@ -139,9 +139,9 @@ export default function FamAtendimentoAdmin() {
     }
   };
 
-  const handleAssign = async (convId: string, attendantId: string) => {
+  const handleAssign = async (convId: string, attendantId: string | undefined) => {
     try {
-      await sb.from("fam_conversations").update({ assigned_attendant_id: attendantId, status: "in_progress" }).eq("id", convId);
+      await sb.from("fam_conversations").update({ assigned_attendant_id: attendantId ?? null, status: "in_progress" }).eq("id", convId);
       loadConversations();
     } catch (e) {
       console.error(e);
