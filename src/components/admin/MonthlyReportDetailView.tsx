@@ -38,7 +38,7 @@ export function MonthlyReportDetailView({ reportId }: { reportId: string }) {
   const { data: allMembers = [] } = useAllMembers();
   const { data: me } = useMyProfile();
   const { data: myChurch } = useMyChurch(me?.church_id);
-  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC FAMILY";
+  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} — FAM` : "FAM — FORÇA ATIVA DA MULHER";
 
   if (isLoading) {
     return (

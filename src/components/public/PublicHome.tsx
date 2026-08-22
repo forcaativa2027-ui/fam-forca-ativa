@@ -106,7 +106,7 @@ export default function PublicHome() {
               <Sparkles className="h-5 w-5 text-gold" />
             )}
             <span className="font-display text-lg font-bold tracking-wide">
-              {community?.name ? community.name.toUpperCase() : "CEC FAMILY"}
+              {community?.name ? community.name.toUpperCase() : "FAM — FORÇA ATIVA DA MULHER"}
             </span>
           </Link>
           <Button asChild size="sm">

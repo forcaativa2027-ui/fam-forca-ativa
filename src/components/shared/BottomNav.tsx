@@ -10,7 +10,7 @@ export interface BottomNavItem {
 
 /**
  * Barra de navegação fixa no rodapé, com rolagem horizontal —
- * arquitetura definida em "Arquitetura de Navegação — CEC FAMILY".
+ * arquitetura definida em "Arquitetura de Navegação — FAM FORÇA ATIVA DA MULHER".
  * Reutilizada nos 3 contextos: Público, Membro, Meu Painel.
  * Mantém o item ativo sempre visível na área de rolagem.
  */

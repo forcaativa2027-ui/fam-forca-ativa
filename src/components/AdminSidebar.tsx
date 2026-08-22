@@ -220,7 +220,7 @@ export function AdminSidebar({
 }: AdminSidebarProps) {
   const { data: profile } = useMyProfile();
   const { data: myChurch } = useMyChurch(profile?.church_id);
-  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC FAMILY";
+  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} — FAM` : "FAM — FORÇA ATIVA DA MULHER";
   const { data: activeModules = [] } = useMyActiveModules();
   const isApostolo = profile?.role === "apostolo";
 

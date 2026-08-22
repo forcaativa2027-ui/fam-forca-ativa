@@ -316,7 +316,7 @@ function ConfirmationScreen({ onEnter }: { onEnter: () => void }) {
         </p>
       </div>
       <PrimaryButton size="lg" onClick={onEnter} className="w-full max-w-sm text-base">
-        Entrar no CEC FAMILY
+        Entrar no FAM — FORÇA ATIVA DA MULHER
       </PrimaryButton>
     </div>
   );

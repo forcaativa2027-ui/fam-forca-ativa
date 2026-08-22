@@ -60,7 +60,7 @@ export function LivingLogo({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logoUrl} alt={alt ?? "Logo"} width={size} height={size} className={imgClass} />
         ) : (
-          <Image src="/images/cec-family-logo.png" alt={alt ?? "CEC FAMILY"} width={size} height={size} priority className={imgClass} />
+          <Image src="/images/cec-family-logo.png" alt={alt ?? "FAM — FORÇA ATIVA DA MULHER"} width={size} height={size} priority className={imgClass} />
         )}
       </div>
 

@@ -6,7 +6,8 @@ const config: Config = {
     container: { center: true, padding: "1.25rem", screens: { "2xl": "1280px" } },
     extend: {
       colors: {
-        navy: { DEFAULT:"#0E2A47", 50:"#F2F5F9", 100:"#DDE5EE", 600:"#16345A", 700:"#0E2A47", 900:"#081C30" },
+        fam: { DEFAULT: "#E91E63", 50: "#FCE4EC", 100: "#F8BBD0", 200: "#F48FB1", 300: "#F06292", 400: "#EC407A", 500: "#E91E63", 600: "#D81B60", 700: "#C2185B", 800: "#AD1457", 900: "#880E4F" },
+        famPink: { DEFAULT: "#EC407A", light: "#F8BBD0", dark: "#C2185B" },
         gold: { DEFAULT:"#C9A227", soft:"#E4CD7A", dark:"#A8841D" },
         ink: "#14213D", muted: "#6B7C93",
         border: "hsl(var(--border))", input: "hsl(var(--input))", ring: "hsl(var(--ring))",

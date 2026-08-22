@@ -33,11 +33,11 @@ function Login() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "radial-gradient(circle at 30% 20%, #16345A, #0E2A47 60%)" }}>
+    <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "radial-gradient(circle at 30% 20%, #E91E63, #C2185B 60%)" }}>
       <form onSubmit={submit} style={{ background: "#fff", padding: 36, borderRadius: 20, width: 380, boxShadow: "0 30px 80px rgba(0,0,0,.35)", animation: "rise .5s ease both" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ color: "var(--gold)", fontSize: 22 }}>✦</span>
-          <h1 style={{ color: "var(--navy)", fontSize: 26, letterSpacing: 0.5 }}>CEC FAMILY</h1>
+          <h1 style={{ color: "#E91E63", fontSize: 26, letterSpacing: 0.5 }}>FAM — FORÇA ATIVA DA MULHER</h1>
         </div>
         <div style={{ height: 3, width: 64, background: "var(--gold)", margin: "12px 0 8px", borderRadius: 2 }} />
         <p style={{ color: "var(--muted)", fontSize: 13, marginBottom: 22 }}>Governo pastoral e Life Groups</p>

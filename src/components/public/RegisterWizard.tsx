@@ -56,8 +56,8 @@ export default function RegisterWizard() {
           <div className="border-b border-white/10 bg-white/5 px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-white">
-                <img src="/images/cec-family-logo.png" alt="CEC Family" className="h-6 w-6 object-contain" />
-                <b className="font-display text-base">Cadastro CEC Family</b>
+                <img src="/images/cec-family-logo.png" alt="FAM" className="h-6 w-6 object-contain" />
+                <b className="font-display text-base">Cadastro FAM — Força Ativa da Mulher</b>
               </div>
               {s.step !== BASICO_STEP && (
                 <span className="text-xs font-bold uppercase tracking-wider text-white/60">Etapa {s.step} de {TOTAL_STEPS}</span>

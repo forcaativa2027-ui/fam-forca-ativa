@@ -12,11 +12,11 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
   onSignOut: () => void;
 }) {
   return (
-    <header className="border-b-[3px] border-gold bg-navy">
+    <header className="border-b-[3px] border-gold bg-fam-700">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2 text-white">
-          <img src="/images/cec-family-logo.png" alt="CEC Family" className="h-7 w-7 object-contain" />
-          <span className="font-display text-lg font-bold tracking-wide">CEC FAMILY</span>
+          <img src="/images/cec-family-logo.png" alt="FAM" className="h-7 w-7 object-contain" />
+          <span className="font-display text-lg font-bold tracking-wide">FAM — FORÇA ATIVA DA MULHER</span>
           <nav className="ml-3 hidden items-center gap-1 border-l border-white/20 pl-3 sm:flex">
             <Link
               href="/painel"

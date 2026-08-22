@@ -44,7 +44,7 @@ export default function Dashboard() {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span style={S.brandMark}>✦</span>
             <span style={{ fontFamily: "var(--display)", color: "#fff", fontSize: 20, fontWeight: 700, letterSpacing: 0.5 }}>
-              CEC FAMILY
+              FAM — FORÇA ATIVA DA MULHER
             </span>
             <span style={S.brandSep}>Painel Apostólico</span>
           </div>
