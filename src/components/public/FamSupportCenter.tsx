@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFamConversations, useFamMessages, useFamRiskCase } from "@/hooks/useFamSupport";
+import { FileUploader } from "@/components/ui/FileUploader";
 import { supabase } from "@/lib/supabase";
 
 const EMERGENCY_180 = "180";
@@ -349,6 +350,7 @@ export function FamRiskAnalysisPage() {
                 </div>
               </div>
             ))}
+            <FileUploader userId={userId} caseId={caseId} accept="image/*,application/pdf,audio/*,video/*" />
             <Button disabled={!complete || riskLoading} onClick={handleSubmit} className="w-full">
               {riskLoading ? "Salvando..." : "Ver orientação inicial"}
             </Button>
