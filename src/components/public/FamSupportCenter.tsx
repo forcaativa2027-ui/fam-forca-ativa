@@ -95,7 +95,7 @@ export function FamContactPage() {
 
   const handleExit = () => {
     setStarted(false);
-    setConvId(null);
+    setConvId(undefined);
     setMessage("");
     setSent(false);
   };
