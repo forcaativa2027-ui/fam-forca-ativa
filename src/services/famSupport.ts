@@ -1,9 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
 
-type FamConversation = Database["public"]["Tables"]["fam_conversations"]["Row"];
-type FamMessage = Database["public"]["Tables"]["fam_messages"]["Row"];
-type FamAttendant = Database["public"]["Tables"]["fam_attendants"]["Row"];
+export type FamConversation = Database["public"]["Tables"]["fam_conversations"]["Row"];
+export type FamMessage = Database["public"]["Tables"]["fam_messages"]["Row"];
+export type FamAttendant = Database["public"]["Tables"]["fam_attendants"]["Row"];
+export type FamConversationStatus = Database["public"]["Enums"]["fam_conversation_status"];
+export type FamAttendantStatus = Database["public"]["Enums"]["fam_attendant_status"];
+export type FamRiskAttention = Database["public"]["Enums"]["fam_risk_attention"];
 
 export async function createConversation(
   sb: SupabaseClient,
