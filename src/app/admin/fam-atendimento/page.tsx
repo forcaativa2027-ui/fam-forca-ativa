@@ -60,19 +60,19 @@ export default function FamAtendimentoAdmin() {
       .single();
 
     if (profile?.role === "apostolo" || profile?.role === "pastor") {
-      const { data } = await supabase
+      const { data: attendant } = await supabase
         .from("fam_attendants" as any)
         .select("*")
         .eq("profile_id", user.id)
         .maybeSingle();
-      if (data) setCurrentAttendantId(data.id);
+      if (attendant) setCurrentAttendantId(attendant.id);
     }
 
-    const { data } = await supabase
+    const { data: attendantsData } = await supabase
       .from("fam_attendants" as any)
       .select("*")
       .eq("status", "active");
-    setAttendants(data ?? []);
+    setAttendants(attendantsData ?? []);
   }
 
   async function loadConversations() {
