@@ -53,6 +53,7 @@ export function useFamMessages(conversationId?: string) {
     let mounted = true;
 
     async function load() {
+      if (!conversationId) { setMessages([]); setLoading(false); return; }
       setLoading(true);
       try {
         const data = await listMessages(supabase, conversationId);
