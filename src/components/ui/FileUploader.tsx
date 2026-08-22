@@ -74,10 +74,9 @@ export function FileUploader({
   return (
     <Card className="border-fam-lavender">
       <CardContent className="p-4">
-        <div className="border-2 border-dashed border-fam-lavender rounded-xl p-6 text-center"
+        <div className="border-2 border-dashed border-fam-lavender rounded-xl p-6 text-center cursor-pointer hover:bg-fam-soft-pink transition-colors"
           onDragOver={e => e.preventDefault()}
           onDrop={handleDrop}
-          className="cursor-pointer hover:bg-fam-soft-pink transition-colors"
         >
           <input type="file" multiple accept={accept} onChange={handleSelect} className="hidden" id="fam-upload" />
           <label htmlFor="fam-upload" className="cursor-pointer">
