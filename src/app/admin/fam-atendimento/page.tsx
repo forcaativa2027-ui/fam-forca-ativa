@@ -114,7 +114,7 @@ export default function FamAtendimentoAdmin() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "fam_messages", filter: `conversation_id=eq.${convId}` },
-        (payload) => setMessages((prev) => [...prev, payload.new as FamMessage])
+        (payload: { new: FamMessage }) => setMessages((prev) => [...prev, payload.new])
       )
       .subscribe();
 
