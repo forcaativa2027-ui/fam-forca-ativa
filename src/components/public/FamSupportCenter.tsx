@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useFamConversations, useFamMessages } from "@/hooks/useFamSupport";
+import { useFamConversations, useFamMessages, useFamRiskCase } from "@/hooks/useFamSupport";
 import { supabase } from "@/lib/supabase";
 
 const EMERGENCY_180 = "180";
@@ -252,7 +252,7 @@ export function FamContactPage() {
   );
 }
 
-// --- Análise de Risco (mantido) ---
+// --- Análise de Risco (com persistência no Supabase) ---
 const QUESTIONS = [
   ["danger_now", "Existe perigo ou ameaça acontecendo agora?"],
   ["injury", "Você precisa de atendimento médico ou está ferida?"],
@@ -265,10 +265,50 @@ export function FamRiskAnalysisPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [openContact, setOpenContact] = useState(false);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [caseId, setCaseId] = useState<string | undefined>(undefined);
+  const { riskCase, create, saveAnswers, submitAssessment, loading: riskLoading, error: riskError } = useFamRiskCase(userId);
   const urgent = ["danger_now", "injury", "weapon", "sexual", "children"].some(
     (key) => answers[key] === "sim"
   );
   const complete = QUESTIONS.every(([key]) => answers[key]);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id);
+    });
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!userId || !complete) return;
+    try {
+      if (!caseId) {
+        const rc = await create({ user_id: userId, contact_name: undefined });
+        setCaseId(rc.id);
+      }
+      if (caseId) {
+        await saveAnswers(caseId, answers);
+        const attention = urgent ? "immediate" : "relevant";
+        await submitAssessment(caseId, {
+          attention,
+          preliminary_summary: urgent
+            ? "Sinais de risco imediato identificados na triagem."
+            : "Sinais de risco relevantes; recomenda-se acompanhamento especializado.",
+          limitations_acknowledged_at: new Date().toISOString(),
+        });
+      }
+      setSubmitted(true);
+    } catch (e) {
+      console.error("Erro ao salvar análise:", e);
+      alert("Erro ao salvar. Tente novamente.");
+    }
+  };
+
+  const handleRestart = () => {
+    setAnswers({});
+    setSubmitted(false);
+    setCaseId(undefined);
+  };
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 py-6">
@@ -309,9 +349,10 @@ export function FamRiskAnalysisPage() {
                 </div>
               </div>
             ))}
-            <Button disabled={!complete} onClick={() => setSubmitted(true)} className="w-full">
-              Ver orientação inicial
+            <Button disabled={!complete || riskLoading} onClick={handleSubmit} className="w-full">
+              {riskLoading ? "Salvando..." : "Ver orientação inicial"}
             </Button>
+            {riskError && <p className="text-sm text-fam-danger">{riskError}</p>}
           </CardContent>
         </Card>
       ) : (
@@ -348,7 +389,7 @@ export function FamRiskAnalysisPage() {
                 <a href="tel:180"><Phone className="mr-2 h-4 w-4" /> Ligue 180</a>
               </Button>
             </div>
-            <Button variant="outline" onClick={() => setSubmitted(false)}>
+            <Button variant="outline" onClick={handleRestart}>
               Refazer análise
             </Button>
           </CardContent>

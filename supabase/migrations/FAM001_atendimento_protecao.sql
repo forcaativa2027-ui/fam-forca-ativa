@@ -1,6 +1,5 @@
 -- FAM001 — Atendimento protegido e Análise de Risco orientativa
--- Não substitui protocolo institucional, emergência, polícia ou avaliação profissional.
--- Aplicar somente após revisão da FAM e validação do schema real.
+-- Ajustado: removido FK para churches (tabela não existe ainda)
 
 do $$ begin
   create type public.fam_conversation_status as enum ('waiting', 'in_progress', 'paused_safe_contact', 'referred', 'resolved', 'closed', 'escalated');
@@ -30,7 +29,7 @@ create table if not exists public.fam_conversations (
   id uuid primary key default gen_random_uuid(),
   public_reference text not null unique default upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 10)),
   user_id uuid references auth.users(id) on delete set null,
-  community_id uuid references public.churches(id) on delete set null,
+  community_id uuid,  -- FK removida temporariamente
   status public.fam_conversation_status not null default 'waiting',
   contact_name text,
   safe_contact_note text,
@@ -57,7 +56,7 @@ create table if not exists public.fam_risk_cases (
   id uuid primary key default gen_random_uuid(),
   public_reference text not null unique default upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 10)),
   user_id uuid references auth.users(id) on delete set null,
-  community_id uuid references public.churches(id) on delete set null,
+  community_id uuid,
   contact_name text,
   consented_at timestamptz not null default now(),
   attention public.fam_risk_attention,
@@ -100,8 +99,6 @@ alter table public.fam_risk_cases enable row level security;
 alter table public.fam_risk_answers enable row level security;
 alter table public.fam_risk_attachments enable row level security;
 
--- Caso sensível: usuário vê somente o próprio caso/conversa; atendente autorizada deve
--- receber acesso por policies/RPCs revisadas pela FAM antes da produção.
 drop policy if exists fam_conversations_owner_select on public.fam_conversations;
 create policy fam_conversations_owner_select on public.fam_conversations for select to authenticated
   using (user_id = auth.uid());

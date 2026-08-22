@@ -117,3 +117,61 @@ export function useFamAttendants() {
 
   return { attendants, loading, error, assign };
 }
+
+// ===== Risk Analysis =====
+import {
+  createRiskCase,
+  saveRiskAnswers,
+  updateRiskCaseAssessment,
+  getRiskCase,
+  getRiskAnswers,
+} from "@/services/famRisk";
+import type { FamRiskCase, FamRiskAnswer } from "@/services/famRisk";
+
+export function useFamRiskCase(userId?: string) {
+  const [riskCase, setRiskCase] = useState<FamRiskCase | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const create = async (data: { user_id: string; community_id?: string; contact_name?: string }) => {
+    setLoading(true);
+    try {
+      const rc = await createRiskCase(supabase, data);
+      setRiskCase(rc);
+      return rc;
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erro ao criar caso");
+      throw e;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveAnswers = async (caseId: string, answers: Record<string, string>) => {
+    await saveRiskAnswers(supabase, caseId, answers);
+  };
+
+  const submitAssessment = async (
+    caseId: string,
+    assessment: {
+      attention: FamRiskCase["attention"];
+      preliminary_summary: string;
+      limitations_acknowledged_at: string;
+      referred_conversation_id?: string;
+    }
+  ) => {
+    setLoading(true);
+    try {
+      const updated = await updateRiskCaseAssessment(supabase, caseId, assessment);
+      setRiskCase(updated);
+      return updated;
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erro ao salvar avaliação");
+      throw e;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { riskCase, loading, error, create, saveAnswers, submitAssessment };
+}
