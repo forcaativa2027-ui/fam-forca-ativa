@@ -35,6 +35,11 @@ interface FamAttendant {
   status: string;
 }
 
+// Helper para tipar queries em tabelas não declaradas no schema
+function famTable<T = any>(table: string) {
+  return supabase.from(table) as any;
+}
+
 export default function FamAtendimentoAdmin() {
   const [conversations, setConversations] = useState<FamConversation[]>([]);
   const [selectedConv, setSelectedConv] = useState<FamConversation | null>(null);
@@ -60,20 +65,14 @@ export default function FamAtendimentoAdmin() {
       .single();
 
     if (profile?.role === "apostolo" || profile?.role === "pastor") {
-      // @ts-ignore - tabela não está nos types do Supabase
-      const { data: attendant } = await supabase
-        // @ts-ignore
-        .from("fam_attendants")
+      const { data: attendant } = await famTable<FamAttendant>("fam_attendants")
         .select("*")
         .eq("profile_id", user.id)
         .maybeSingle();
       if (attendant) setCurrentAttendantId(attendant.id);
     }
 
-    // @ts-ignore
-    const { data: attendantsData } = await supabase
-      // @ts-ignore
-        .from("fam_attendants")
+    const { data: attendantsData } = await famTable<FamAttendant>("fam_attendants")
       .select("*")
       .eq("status", "active");
     setAttendants(attendantsData ?? []);
@@ -82,10 +81,7 @@ export default function FamAtendimentoAdmin() {
   async function loadConversations() {
     setLoading(true);
     try {
-      // @ts-ignore
-      const { data, error } = await supabase
-        // @ts-ignore
-        .from("fam_conversations")
+      const { data, error } = await famTable<FamConversation>("fam_conversations")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(50);
@@ -103,10 +99,7 @@ export default function FamAtendimentoAdmin() {
     let mounted = true;
 
     async function loadMessages() {
-      // @ts-ignore
-      const { data } = await supabase
-        // @ts-ignore
-        .from("fam_messages")
+      const { data } = await famTable<FamMessage>("fam_messages")
         .select("*")
         .eq("conversation_id", selectedConv.id)
         .order("created_at", { ascending: true });
@@ -129,18 +122,14 @@ export default function FamAtendimentoAdmin() {
   const handleReply = async () => {
     if (!reply.trim() || !selectedConv || !currentAttendantId) return;
     try {
-      // @ts-ignore
-      await supabase// @ts-ignore
-        .from("fam_messages").insert({
+      await famTable("fam_messages").insert({
         conversation_id: selectedConv.id,
         sender_attendant_id: currentAttendantId,
         body: reply.trim(),
         delivered_at: new Date().toISOString(),
       });
       setReply("");
-      // @ts-ignore
-      await supabase// @ts-ignore
-        .from("fam_conversations").update({ status: "in_progress" }).eq("id", selectedConv.id);
+      await famTable("fam_conversations").update({ status: "in_progress" }).eq("id", selectedConv.id);
     } catch (e) {
       console.error(e);
       alert("Erro ao enviar resposta");
@@ -149,9 +138,7 @@ export default function FamAtendimentoAdmin() {
 
   const handleAssign = async (convId: string, attendantId: string) => {
     try {
-      // @ts-ignore
-      await supabase// @ts-ignore
-        .from("fam_conversations").update({ assigned_attendant_id: attendantId, status: "in_progress" }).eq("id", convId);
+      await famTable("fam_conversations").update({ assigned_attendant_id: attendantId, status: "in_progress" }).eq("id", convId);
       loadConversations();
     } catch (e) {
       console.error(e);
@@ -160,9 +147,7 @@ export default function FamAtendimentoAdmin() {
 
   const handleClose = async (convId: string) => {
     try {
-      // @ts-ignore
-      await supabase// @ts-ignore
-        .from("fam_conversations").update({ status: "closed" }).eq("id", convId);
+      await famTable("fam_conversations").update({ status: "closed" }).eq("id", convId);
       loadConversations();
     } catch (e) {
       console.error(e);
