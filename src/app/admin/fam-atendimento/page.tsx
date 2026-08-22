@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 
-type FamConversation = {
+interface FamConversation {
   id: string;
   public_reference: string;
   user_id: string | null;
@@ -17,23 +17,23 @@ type FamConversation = {
   contact_name: string | null;
   assigned_attendant_id: string | null;
   created_at: string;
-};
+}
 
-type FamMessage = {
+interface FamMessage {
   id: string;
   conversation_id: string;
   sender_user_id: string | null;
   sender_attendant_id: string | null;
   body: string;
   created_at: string;
-};
+}
 
-type FamAttendant = {
+interface FamAttendant {
   id: string;
   profile_id: string;
   role_label: string;
   status: string;
-};
+}
 
 export default function FamAtendimentoAdmin() {
   const [conversations, setConversations] = useState<FamConversation[]>([]);
@@ -60,16 +60,18 @@ export default function FamAtendimentoAdmin() {
       .single();
 
     if (profile?.role === "apostolo" || profile?.role === "pastor") {
+      // @ts-ignore - tabela não está nos types do Supabase
       const { data: attendant } = await supabase
-        .from("fam_attendants" as any)
+        .from("fam_attendants")
         .select("*")
         .eq("profile_id", user.id)
         .maybeSingle();
       if (attendant) setCurrentAttendantId(attendant.id);
     }
 
+    // @ts-ignore
     const { data: attendantsData } = await supabase
-      .from("fam_attendants" as any)
+      .from("fam_attendants")
       .select("*")
       .eq("status", "active");
     setAttendants(attendantsData ?? []);
@@ -78,8 +80,9 @@ export default function FamAtendimentoAdmin() {
   async function loadConversations() {
     setLoading(true);
     try {
+      // @ts-ignore
       const { data, error } = await supabase
-        .from("fam_conversations" as any)
+        .from("fam_conversations")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(50);
@@ -97,8 +100,9 @@ export default function FamAtendimentoAdmin() {
     let mounted = true;
 
     async function loadMessages() {
+      // @ts-ignore
       const { data } = await supabase
-        .from("fam_messages" as any)
+        .from("fam_messages")
         .select("*")
         .eq("conversation_id", selectedConv.id)
         .order("created_at", { ascending: true });
@@ -121,14 +125,16 @@ export default function FamAtendimentoAdmin() {
   const handleReply = async () => {
     if (!reply.trim() || !selectedConv || !currentAttendantId) return;
     try {
-      await supabase.from("fam_messages" as any).insert({
+      // @ts-ignore
+      await supabase.from("fam_messages").insert({
         conversation_id: selectedConv.id,
         sender_attendant_id: currentAttendantId,
         body: reply.trim(),
         delivered_at: new Date().toISOString(),
       });
       setReply("");
-      await supabase.from("fam_conversations" as any).update({ status: "in_progress" }).eq("id", selectedConv.id);
+      // @ts-ignore
+      await supabase.from("fam_conversations").update({ status: "in_progress" }).eq("id", selectedConv.id);
     } catch (e) {
       console.error(e);
       alert("Erro ao enviar resposta");
@@ -137,7 +143,8 @@ export default function FamAtendimentoAdmin() {
 
   const handleAssign = async (convId: string, attendantId: string) => {
     try {
-      await supabase.from("fam_conversations" as any).update({ assigned_attendant_id: attendantId, status: "in_progress" }).eq("id", convId);
+      // @ts-ignore
+      await supabase.from("fam_conversations").update({ assigned_attendant_id: attendantId, status: "in_progress" }).eq("id", convId);
       loadConversations();
     } catch (e) {
       console.error(e);
@@ -146,7 +153,8 @@ export default function FamAtendimentoAdmin() {
 
   const handleClose = async (convId: string) => {
     try {
-      await supabase.from("fam_conversations" as any).update({ status: "closed" }).eq("id", convId);
+      // @ts-ignore
+      await supabase.from("fam_conversations").update({ status: "closed" }).eq("id", convId);
       loadConversations();
     } catch (e) {
       console.error(e);
