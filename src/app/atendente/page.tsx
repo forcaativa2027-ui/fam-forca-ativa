@@ -75,16 +75,17 @@ export default function AtendenteDashboard() {
 
   useEffect(() => {
     if (!selectedConv) { setMessages([]); return; }
+    const convId = selectedConv.id;
     let mounted = true;
     async function load() {
       const { data } = await sb.from('fam_messages')
-        .select('*').eq('conversation_id', selectedConv.id).order('created_at', { ascending: true });
+        .select('*').eq('conversation_id', convId).order('created_at', { ascending: true });
       if (mounted) setMessages(data ?? []);
       await sb.from('fam_messages').update({ read_at: new Date().toISOString() })
-        .eq('conversation_id', selectedConv.id).is('read_at', null).neq('sender_attendant_id', attendantId);
+        .eq('conversation_id', convId).is('read_at', null).neq('sender_attendant_id', attendantId);
     }
-    const sub = sb.channel(`atendente_msg:${selectedConv.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'fam_messages', filter: `conversation_id=eq.${selectedConv.id}` },
+    const sub = sb.channel(`atendente_msg:${convId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'fam_messages', filter: `conversation_id=eq.${convId}` },
         (payload) => {
           setMessages(prev => [...prev, payload.new as FamMessage]);
           if (notifyPermission === 'granted' && payload.new.sender_user_id) {
