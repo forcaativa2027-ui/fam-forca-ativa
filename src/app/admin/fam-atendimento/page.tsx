@@ -35,10 +35,8 @@ interface FamAttendant {
   status: string;
 }
 
-// Helper para tipar queries em tabelas não declaradas no schema
-function famTable<T = any>(table: string) {
-  return supabase.from(table) as any;
-}
+// Cast supabase to any para acessar tabelas não tipadas
+const sb = supabase as any;
 
 export default function FamAtendimentoAdmin() {
   const [conversations, setConversations] = useState<FamConversation[]>([]);
@@ -55,24 +53,26 @@ export default function FamAtendimentoAdmin() {
   }, []);
 
   async function loadAttendants() {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await sb.auth.getUser();
     if (!user) return;
 
-    const { data: profile } = await supabase
+    const { data: profile } = await sb
       .from("profiles")
       .select("id, role")
       .eq("id", user.id)
       .single();
 
     if (profile?.role === "apostolo" || profile?.role === "pastor") {
-      const { data: attendant } = await famTable<FamAttendant>("fam_attendants")
+      const { data: attendant } = await sb
+        .from("fam_attendants")
         .select("*")
         .eq("profile_id", user.id)
         .maybeSingle();
       if (attendant) setCurrentAttendantId(attendant.id);
     }
 
-    const { data: attendantsData } = await famTable<FamAttendant>("fam_attendants")
+    const { data: attendantsData } = await sb
+      .from("fam_attendants")
       .select("*")
       .eq("status", "active");
     setAttendants(attendantsData ?? []);
@@ -81,7 +81,8 @@ export default function FamAtendimentoAdmin() {
   async function loadConversations() {
     setLoading(true);
     try {
-      const { data, error } = await famTable<FamConversation>("fam_conversations")
+      const { data, error } = await sb
+        .from("fam_conversations")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(50);
@@ -99,14 +100,15 @@ export default function FamAtendimentoAdmin() {
     let mounted = true;
 
     async function loadMessages() {
-      const { data } = await famTable<FamMessage>("fam_messages")
+      const { data } = await sb
+        .from("fam_messages")
         .select("*")
         .eq("conversation_id", selectedConv.id)
         .order("created_at", { ascending: true });
       if (mounted) setMessages(data ?? []);
     }
 
-    const sub = supabase
+    const sub = sb
       .channel(`admin_messages:${selectedConv.id}`)
       .on(
         "postgres_changes",
@@ -122,14 +124,14 @@ export default function FamAtendimentoAdmin() {
   const handleReply = async () => {
     if (!reply.trim() || !selectedConv || !currentAttendantId) return;
     try {
-      await famTable("fam_messages").insert({
+      await sb.from("fam_messages").insert({
         conversation_id: selectedConv.id,
         sender_attendant_id: currentAttendantId,
         body: reply.trim(),
         delivered_at: new Date().toISOString(),
       });
       setReply("");
-      await famTable("fam_conversations").update({ status: "in_progress" }).eq("id", selectedConv.id);
+      await sb.from("fam_conversations").update({ status: "in_progress" }).eq("id", selectedConv.id);
     } catch (e) {
       console.error(e);
       alert("Erro ao enviar resposta");
@@ -138,7 +140,7 @@ export default function FamAtendimentoAdmin() {
 
   const handleAssign = async (convId: string, attendantId: string) => {
     try {
-      await famTable("fam_conversations").update({ assigned_attendant_id: attendantId, status: "in_progress" }).eq("id", convId);
+      await sb.from("fam_conversations").update({ assigned_attendant_id: attendantId, status: "in_progress" }).eq("id", convId);
       loadConversations();
     } catch (e) {
       console.error(e);
@@ -147,7 +149,7 @@ export default function FamAtendimentoAdmin() {
 
   const handleClose = async (convId: string) => {
     try {
-      await famTable("fam_conversations").update({ status: "closed" }).eq("id", convId);
+      await sb.from("fam_conversations").update({ status: "closed" }).eq("id", convId);
       loadConversations();
     } catch (e) {
       console.error(e);
