@@ -62,6 +62,7 @@ export default function FamAtendimentoAdmin() {
     if (profile?.role === "apostolo" || profile?.role === "pastor") {
       // @ts-ignore - tabela não está nos types do Supabase
       const { data: attendant } = await supabase
+        // @ts-ignore
         .from("fam_attendants")
         .select("*")
         .eq("profile_id", user.id)
@@ -71,7 +72,8 @@ export default function FamAtendimentoAdmin() {
 
     // @ts-ignore
     const { data: attendantsData } = await supabase
-      .from("fam_attendants")
+      // @ts-ignore
+        .from("fam_attendants")
       .select("*")
       .eq("status", "active");
     setAttendants(attendantsData ?? []);
@@ -82,6 +84,7 @@ export default function FamAtendimentoAdmin() {
     try {
       // @ts-ignore
       const { data, error } = await supabase
+        // @ts-ignore
         .from("fam_conversations")
         .select("*")
         .order("created_at", { ascending: false })
@@ -102,6 +105,7 @@ export default function FamAtendimentoAdmin() {
     async function loadMessages() {
       // @ts-ignore
       const { data } = await supabase
+        // @ts-ignore
         .from("fam_messages")
         .select("*")
         .eq("conversation_id", selectedConv.id)
@@ -126,7 +130,8 @@ export default function FamAtendimentoAdmin() {
     if (!reply.trim() || !selectedConv || !currentAttendantId) return;
     try {
       // @ts-ignore
-      await supabase.from("fam_messages").insert({
+      await supabase// @ts-ignore
+        .from("fam_messages").insert({
         conversation_id: selectedConv.id,
         sender_attendant_id: currentAttendantId,
         body: reply.trim(),
@@ -134,7 +139,8 @@ export default function FamAtendimentoAdmin() {
       });
       setReply("");
       // @ts-ignore
-      await supabase.from("fam_conversations").update({ status: "in_progress" }).eq("id", selectedConv.id);
+      await supabase// @ts-ignore
+        .from("fam_conversations").update({ status: "in_progress" }).eq("id", selectedConv.id);
     } catch (e) {
       console.error(e);
       alert("Erro ao enviar resposta");
@@ -144,7 +150,8 @@ export default function FamAtendimentoAdmin() {
   const handleAssign = async (convId: string, attendantId: string) => {
     try {
       // @ts-ignore
-      await supabase.from("fam_conversations").update({ assigned_attendant_id: attendantId, status: "in_progress" }).eq("id", convId);
+      await supabase// @ts-ignore
+        .from("fam_conversations").update({ assigned_attendant_id: attendantId, status: "in_progress" }).eq("id", convId);
       loadConversations();
     } catch (e) {
       console.error(e);
@@ -154,7 +161,8 @@ export default function FamAtendimentoAdmin() {
   const handleClose = async (convId: string) => {
     try {
       // @ts-ignore
-      await supabase.from("fam_conversations").update({ status: "closed" }).eq("id", convId);
+      await supabase// @ts-ignore
+        .from("fam_conversations").update({ status: "closed" }).eq("id", convId);
       loadConversations();
     } catch (e) {
       console.error(e);
