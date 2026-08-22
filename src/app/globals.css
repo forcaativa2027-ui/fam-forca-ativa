@@ -6,21 +6,21 @@
 
 @layer base {
   :root {
-    --background: 350 50% 99%;
-    --foreground: 330 30% 15%;
+    --background: 210 33% 97%;
+    --foreground: 220 47% 16%;
     --card: 0 0% 100%;
-    --card-foreground: 330 30% 15%;
+    --card-foreground: 220 47% 16%;
     --popover: 0 0% 100%;
-    --popover-foreground: 330 30% 15%;
-    --primary: 330 55% 43%;
+    --popover-foreground: 220 47% 16%;
+    --primary: 213 67% 17%;
     --primary-foreground: 0 0% 100%;
-    --accent: 330 30% 95%;
-    --accent-foreground: 330 30% 15%;
-    --destructive: 345 55% 45%;
+    --accent: 213 30% 92%;
+    --accent-foreground: 220 47% 16%;
+    --destructive: 0 84% 56%;
     --destructive-foreground: 0 0% 100%;
-    --border: 330 20% 90%;
-    --input: 330 20% 90%;
-    --ring: 330 55% 43%;
+    --border: 215 25% 90%;
+    --input: 215 25% 90%;
+    --ring: 213 67% 17%;
     --radius: 0.75rem;
   }
   * { @apply border-border; }
@@ -49,28 +49,28 @@
   plataforma (painel administrativo incluso), igual o CT-017 pede.
 */
 html.cec-dark {
-  --background: 330 30% 8%;
-  --foreground: 330 15% 96%;
-  --card: 330 25% 12%;
-  --card-foreground: 330 15% 96%;
-  --popover: 330 25% 12%;
-  --popover-foreground: 330 15% 96%;
-  --primary: 330 55% 55%;
-  --primary-foreground: 330 30% 8%;
-  --accent: 330 20% 18%;
-  --accent-foreground: 330 15% 96%;
-  --destructive: 345 55% 50%;
+  --background: 222 47% 8%;
+  --foreground: 0 0% 96%;
+  --card: 222 40% 13%;
+  --card-foreground: 0 0% 96%;
+  --popover: 222 40% 13%;
+  --popover-foreground: 0 0% 96%;
+  --primary: 213 67% 55%;
+  --primary-foreground: 222 47% 8%;
+  --accent: 222 30% 20%;
+  --accent-foreground: 0 0% 96%;
+  --destructive: 0 70% 55%;
   --destructive-foreground: 0 0% 100%;
-  --border: 330 15% 22%;
-  --input: 330 15% 22%;
-  --ring: 330 55% 55%;
+  --border: 222 25% 22%;
+  --input: 222 25% 22%;
+  --ring: 45 74% 49%;
 }
-html.cec-dark .text-fam-plum,
-html.cec-dark .text-fam-deep-plum,
-html.cec-dark .text-fam-muted {
+html.cec-dark .text-navy,
+html.cec-dark .text-navy-600,
+html.cec-dark .text-ink {
   color: #f5f5f5;
 }
-html.cec-dark .text-fam-muted,
+html.cec-dark .text-muted,
 html.cec-dark .text-muted-foreground {
   color: rgba(255, 255, 255, 0.65) !important;
 }
@@ -355,13 +355,13 @@ html[data-icon-style="minimalistas"] svg {
    html.cec-dark (o real usado nesta plataforma).
    ============================================================ */
 :root{
---s360-press-distance:3px;--s360-card-bg:#fff;--s360-card-fg:#3F193B;
---s360-card-muted:#6F596B;--s360-card-border:rgba(107,40,95,.14);
---s360-card-focus:#A73582;--s360-elevation-1:0 4px 0 rgba(107,40,95,.12),0 8px 18px rgba(107,40,95,.08);
---s360-elevation-2:0 7px 0 rgba(107,40,95,.13),0 14px 26px rgba(107,40,95,.10);
---s360-elevation-3:0 10px 0 rgba(107,40,95,.15),0 20px 36px rgba(107,40,95,.12);
---s360-pressed-shadow:0 2px 0 rgba(107,40,95,.12),0 5px 12px rgba(107,40,95,.08)}
-html.cec-dark{--s360-card-bg:#2d1b28;--s360-card-fg:#f8fafc;--s360-card-muted:#cbd5e1;
+--s360-press-distance:3px;--s360-card-bg:#fff;--s360-card-fg:#10263f;
+--s360-card-muted:#64748b;--s360-card-border:rgba(15,46,78,.14);
+--s360-card-focus:#2563eb;--s360-elevation-1:0 4px 0 rgba(15,46,78,.12),0 8px 18px rgba(15,46,78,.08);
+--s360-elevation-2:0 7px 0 rgba(15,46,78,.13),0 14px 26px rgba(15,46,78,.10);
+--s360-elevation-3:0 10px 0 rgba(15,46,78,.15),0 20px 36px rgba(15,46,78,.12);
+--s360-pressed-shadow:0 2px 0 rgba(15,46,78,.12),0 5px 12px rgba(15,46,78,.08)}
+html.cec-dark{--s360-card-bg:#163555;--s360-card-fg:#f8fafc;--s360-card-muted:#cbd5e1;
 --s360-card-border:rgba(255,255,255,.13);--s360-elevation-1:0 4px 0 rgba(0,0,0,.34),0 8px 18px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.08);
 --s360-elevation-2:0 7px 0 rgba(0,0,0,.38),0 14px 26px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.10);
 --s360-elevation-3:0 10px 0 rgba(0,0,0,.42),0 20px 36px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.12);
