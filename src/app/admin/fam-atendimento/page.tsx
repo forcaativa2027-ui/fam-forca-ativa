@@ -61,7 +61,7 @@ export default function FamAtendimentoAdmin() {
 
     if (profile?.role === "apostolo" || profile?.role === "pastor") {
       const { data } = await supabase
-        .from("fam_attendants")
+        .from("fam_attendants" as any)
         .select("*")
         .eq("profile_id", user.id)
         .maybeSingle();
@@ -69,7 +69,7 @@ export default function FamAtendimentoAdmin() {
     }
 
     const { data } = await supabase
-      .from("fam_attendants")
+      .from("fam_attendants" as any)
       .select("*")
       .eq("status", "active");
     setAttendants(data ?? []);
@@ -79,7 +79,7 @@ export default function FamAtendimentoAdmin() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("fam_conversations")
+        .from("fam_conversations" as any)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(50);
@@ -98,7 +98,7 @@ export default function FamAtendimentoAdmin() {
 
     async function loadMessages() {
       const { data } = await supabase
-        .from("fam_messages")
+        .from("fam_messages" as any)
         .select("*")
         .eq("conversation_id", selectedConv.id)
         .order("created_at", { ascending: true });
@@ -121,14 +121,14 @@ export default function FamAtendimentoAdmin() {
   const handleReply = async () => {
     if (!reply.trim() || !selectedConv || !currentAttendantId) return;
     try {
-      await supabase.from("fam_messages").insert({
+      await supabase.from("fam_messages" as any).insert({
         conversation_id: selectedConv.id,
         sender_attendant_id: currentAttendantId,
         body: reply.trim(),
         delivered_at: new Date().toISOString(),
       });
       setReply("");
-      await supabase.from("fam_conversations").update({ status: "in_progress" }).eq("id", selectedConv.id);
+      await supabase.from("fam_conversations" as any).update({ status: "in_progress" }).eq("id", selectedConv.id);
     } catch (e) {
       console.error(e);
       alert("Erro ao enviar resposta");
@@ -137,7 +137,7 @@ export default function FamAtendimentoAdmin() {
 
   const handleAssign = async (convId: string, attendantId: string) => {
     try {
-      await supabase.from("fam_conversations").update({ assigned_attendant_id: attendantId, status: "in_progress" }).eq("id", convId);
+      await supabase.from("fam_conversations" as any).update({ assigned_attendant_id: attendantId, status: "in_progress" }).eq("id", convId);
       loadConversations();
     } catch (e) {
       console.error(e);
@@ -146,7 +146,7 @@ export default function FamAtendimentoAdmin() {
 
   const handleClose = async (convId: string) => {
     try {
-      await supabase.from("fam_conversations").update({ status: "closed" }).eq("id", convId);
+      await supabase.from("fam_conversations" as any).update({ status: "closed" }).eq("id", convId);
       loadConversations();
     } catch (e) {
       console.error(e);
