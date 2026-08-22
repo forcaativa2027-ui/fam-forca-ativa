@@ -45,7 +45,7 @@ export function FamContactPage() {
   const [sent, setSent] = useState(false);
   const [name, setName] = useState("");
   const [safe, setSafe] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | undefined>(undefined);
   const [convId, setConvId] = useState<string | null>(null);
 
   const { conversations, startConversation, loading: convLoading } = useFamConversations(userId);
