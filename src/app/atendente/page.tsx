@@ -86,7 +86,7 @@ export default function AtendenteDashboard() {
     }
     const sub = sb.channel(`atendente_msg:${convId}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'fam_messages', filter: `conversation_id=eq.${convId}` },
-        (payload) => {
+        (payload: { new: FamMessage }) => {
           setMessages(prev => [...prev, payload.new as FamMessage]);
           if (notifyPermission === 'granted' && payload.new.sender_user_id) {
             new Notification('Nova mensagem FAM', { body: payload.new.body.slice(0, 100), icon: '/favicon.ico' });
