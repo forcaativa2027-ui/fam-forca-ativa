@@ -97,22 +97,23 @@ export default function FamAtendimentoAdmin() {
 
   useEffect(() => {
     if (!selectedConv) { setMessages([]); return; }
+    const convId = selectedConv.id;
     let mounted = true;
 
     async function loadMessages() {
       const { data } = await sb
         .from("fam_messages")
         .select("*")
-        .eq("conversation_id", selectedConv.id)
+        .eq("conversation_id", convId)
         .order("created_at", { ascending: true });
       if (mounted) setMessages(data ?? []);
     }
 
     const sub = sb
-      .channel(`admin_messages:${selectedConv.id}`)
+      .channel(`admin_messages:${convId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "fam_messages", filter: `conversation_id=eq.${selectedConv.id}` },
+        { event: "INSERT", schema: "public", table: "fam_messages", filter: `conversation_id=eq.${convId}` },
         (payload) => setMessages((prev) => [...prev, payload.new as FamMessage])
       )
       .subscribe();
