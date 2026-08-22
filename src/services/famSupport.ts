@@ -1,12 +1,41 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/supabase";
 
-export type FamConversation = Database["public"]["Tables"]["fam_conversations"]["Row"];
-export type FamMessage = Database["public"]["Tables"]["fam_messages"]["Row"];
-export type FamAttendant = Database["public"]["Tables"]["fam_attendants"]["Row"];
-export type FamConversationStatus = Database["public"]["Enums"]["fam_conversation_status"];
-export type FamAttendantStatus = Database["public"]["Enums"]["fam_attendant_status"];
-export type FamRiskAttention = Database["public"]["Enums"]["fam_risk_attention"];
+export interface FamConversation {
+  id: string;
+  public_reference: string;
+  user_id: string | null;
+  community_id: string | null;
+  status: 'waiting' | 'in_progress' | 'paused_safe_contact' | 'referred' | 'resolved' | 'closed' | 'escalated';
+  contact_name: string | null;
+  safe_contact_note: string | null;
+  assigned_attendant_id: string | null;
+  emergency_acknowledged: boolean;
+  consented_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FamMessage {
+  id: string;
+  conversation_id: string;
+  sender_user_id: string | null;
+  sender_attendant_id: string | null;
+  body: string;
+  delivered_at: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface FamAttendant {
+  id: string;
+  profile_id: string;
+  role_label: string;
+  status: 'pending_training' | 'active' | 'paused' | 'suspended' | 'revoked';
+  training_accepted_at: string | null;
+  supervisor_profile_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export async function createConversation(
   sb: SupabaseClient,
@@ -24,7 +53,7 @@ export async function createConversation(
     .select("*")
     .single();
   if (error) throw error;
-  return conv;
+  return conv as FamConversation;
 }
 
 export async function getConversation(
@@ -37,7 +66,7 @@ export async function getConversation(
     .eq("id", conversationId)
     .maybeSingle();
   if (error) throw error;
-  return data;
+  return data as FamConversation | null;
 }
 
 export async function listUserConversations(
@@ -50,7 +79,7 @@ export async function listUserConversations(
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as FamConversation[];
 }
 
 export async function createMessage(
@@ -69,7 +98,7 @@ export async function createMessage(
     .select("*")
     .single();
   if (error) throw error;
-  return msg;
+  return msg as FamMessage;
 }
 
 export async function listMessages(
@@ -82,7 +111,7 @@ export async function listMessages(
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as FamMessage[];
 }
 
 export async function subscribeToMessages(
@@ -114,7 +143,7 @@ export async function getAvailableAttendants(
     .eq("status", "active")
     .order("created_at");
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as FamAttendant[];
 }
 
 export async function assignAttendant(
