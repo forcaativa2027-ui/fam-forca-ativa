@@ -58,7 +58,7 @@ export function RelmdaReportPrintView({ reportId }: { reportId: string }) {
         <header className="mb-6 border-b pb-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-widest text-gold">FAM — FORÇA ATIVA DA MULHER · Relatório Semanal RELMDA</p>
+              <p className="text-[11px] uppercase tracking-widest text-gold">CEC FAMILY · Relatório Semanal RELMDA</p>
               <h1 className="mt-1 font-display text-2xl text-navy">{cell?.name ?? report.life_group_id}</h1>
               <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Calendar className="h-3.5 w-3.5" />{report.week_number}ª semana de {MONTH_NAMES[report.month - 1]}/{report.year}
@@ -126,7 +126,7 @@ export function RelmdaReportPrintView({ reportId }: { reportId: string }) {
         )}
 
         <footer className="mt-8 flex items-center gap-1.5 border-t pt-3 text-[10px] text-muted-foreground">
-          <Users className="h-3 w-3" />Relatório gerado pelo FAM — FORÇA ATIVA DA MULHER em {new Date().toLocaleString("pt-BR")}
+          <Users className="h-3 w-3" />Relatório gerado pelo CEC FAMILY em {new Date().toLocaleString("pt-BR")}
         </footer>
       </article>
     </main>

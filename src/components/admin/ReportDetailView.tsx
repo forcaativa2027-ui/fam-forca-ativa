@@ -17,7 +17,7 @@ export function ReportDetailView({ reportId }: { reportId: string }) {
   const { data, isLoading, error } = useReportFull(reportId);
   const { data: me } = useMyProfile();
   const { data: myChurch } = useMyChurch(me?.church_id);
-  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} — FAM` : "FAM — FORÇA ATIVA DA MULHER";
+  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC FAMILY";
 
   if (isLoading) {
     return (

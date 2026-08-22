@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   Play, Calendar, Music, MapPin, Church as ChurchIcon, Sun, Sparkles,
   Clock, ArrowRight, ExternalLink, LayoutDashboard, FileDown,
-  Home, Newspaper, Video, MessageCircle, HeartHandshake, LogIn, Users2, Radio,
+  Home, Newspaper, Video, MessageCircle, HeartHandshake, LogIn, Users2, Radio, ShieldAlert,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -88,7 +88,8 @@ export default function PublicHome() {
     { key: "igrejas", label: "Igrejas", icon: <MapPin size={18} />, onClick: () => setTab("igrejas") },
     ...(profile ? [{ key: "celulas", label: "Mapa de LGs", icon: <Users2 size={18} />, onClick: () => setTab("celulas") }] : []),
     { key: "participar", label: "Participar", icon: <Sparkles size={18} />, onClick: () => setTab("participar") },
-    { key: "contato", label: "Conversar", icon: <MessageCircle size={18} />, onClick: () => setTab("contato") },
+    { key: "contato", label: "Fale Conosco", icon: <MessageCircle size={18} />, onClick: () => setTab("contato") },
+    { key: "risco", label: "Análise de Risco", icon: <ShieldAlert size={18} />, onClick: () => { window.location.href = "/analise-risco"; } },
     { key: "ofertar", label: "Doação", icon: <HeartHandshake size={18} />, onClick: () => setTab("ofertar") },
     profile
       ? { key: "meu-painel", label: "Meu Painel", icon: <LayoutDashboard size={18} />, onClick: () => { window.location.href = "/painel"; } }
@@ -106,7 +107,7 @@ export default function PublicHome() {
               <Sparkles className="h-5 w-5 text-gold" />
             )}
             <span className="font-display text-lg font-bold tracking-wide">
-              {community?.name ? community.name.toUpperCase() : "FAM — FORÇA ATIVA DA MULHER"}
+              {community?.name ? community.name.toUpperCase() : "CEC FAMILY"}
             </span>
           </Link>
           <Button asChild size="sm">
@@ -397,6 +398,17 @@ export default function PublicHome() {
         {/* === QUERO CONVERSAR === */}
         <TabsContent value="contato">
           <PublicContactForms churchId={communityId} />
+        </TabsContent>
+
+        {/* === FAM — ACOLHIMENTO E PROTEÇÃO === */}
+        <TabsContent value="risco">
+          <div className="mx-auto max-w-3xl py-6">
+            <div className="rounded-xl border border-gold/30 bg-gold/5 p-5">
+              <h2 className="font-display text-2xl text-navy">Análise de Risco</h2>
+              <p className="mt-2 text-sm text-muted">Orientação inicial para mulheres em situação de vulnerabilidade. A ferramenta não substitui emergência, polícia, saúde ou avaliação profissional.</p>
+              <Button asChild className="mt-4"><Link href="/analise-risco">Iniciar análise orientativa</Link></Button>
+            </div>
+          </div>
         </TabsContent>
 
         {/* === DÍZIMOS E OFERTAS === */}

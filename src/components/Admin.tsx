@@ -284,7 +284,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <div style={S.topin}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ color: "var(--gold)", fontSize: 18 }}>✦</span>
-            <span style={{ fontFamily: "var(--display)", color: "#fff", fontWeight: 700, fontSize: 19 }}>FAM — FORÇA ATIVA DA MULHER</span>
+            <span style={{ fontFamily: "var(--display)", color: "#fff", fontWeight: 700, fontSize: 19 }}>CEC FAMILY</span>
             <span style={S.sep}>Administração</span>
           </div>
           <a href="/" style={S.signout}>← Painel</a>
