@@ -350,7 +350,7 @@ export function FamRiskAnalysisPage() {
                 </div>
               </div>
             ))}
-            <FileUploader userId={userId} caseId={caseId} accept="image/*,application/pdf,audio/*,video/*" />
+            <FileUploader userId={userId ?? ""} caseId={caseId} accept="image/*,application/pdf,audio/*,video/*" />
             <Button disabled={!complete || riskLoading} onClick={handleSubmit} className="w-full">
               {riskLoading ? "Salvando..." : "Ver orientação inicial"}
             </Button>
