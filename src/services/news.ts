@@ -22,6 +22,17 @@ export async function getNewsBySlug(sb: SupabaseClient, slug: string): Promise<N
   if (error) return null;
   return (data as News) ?? null;
 }
+
+/** Notícia pública por slug, sem permitir que rascunhos sejam abertos por URL. */
+export async function getPublicNewsBySlug(sb: SupabaseClient, slug: string): Promise<News | null> {
+  const { data, error } = await sb.from("news").select("*")
+    .eq("slug", slug)
+    .eq("is_published", true)
+    .lte("published_at", new Date().toISOString())
+    .maybeSingle();
+  if (error) return null;
+  return (data as News) ?? null;
+}
 export async function createNews(sb: SupabaseClient, input: Partial<News>): Promise<News> {
   const { data, error } = await sb.from("news").insert(input).select().single();
   if (error) throw error;

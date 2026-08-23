@@ -213,9 +213,12 @@ export type DailyWordInput = z.infer<typeof dailyWordSchema>;
 export const newsSchema = z.object({
   title: reqText("Titulo", 3),
   category: z.enum(["minha_comunidade","cec_manaus","cec_brasilia","geral"]).default("geral"),
+  subtitle: optionalText,
   summary: optionalText,
   body: optionalText,
   cover_url: z.string().url("URL invalida").optional().or(z.literal("")),
+  video_url: z.string().url("URL invalida").refine((u) => !u || /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)[A-Za-z0-9_-]{11}/.test(u), "Informe um link válido do YouTube").optional().or(z.literal("")),
+  source: optionalText,
   author_name: optionalText,
   is_published: z.boolean().default(false),
   meta_title: optionalText,

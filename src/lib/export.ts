@@ -92,7 +92,7 @@ export async function exportToPDF(opts: {
 
   doc.setFontSize(8);
   doc.setTextColor(160, 160, 160);
-  doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")} · Servo360`, 14, opts.subtitle ? 32 : 26);
+  doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")} · CEC Family`, 14, opts.subtitle ? 32 : 26);
 
   // Linha divisória
   doc.setDrawColor(201, 162, 39); // gold

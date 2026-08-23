@@ -21,7 +21,7 @@ export async function generateEventCertificate(opts: {
 
   doc.setTextColor(...GOLD);
   doc.setFontSize(11);
-  doc.text("Servo360", w / 2, 30, { align: "center" });
+  doc.text("CEC FAMILY", w / 2, 30, { align: "center" });
 
   doc.setTextColor(...NAVY);
   doc.setFontSize(26);

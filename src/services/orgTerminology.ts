@@ -2,8 +2,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Rótulos padrão da plataforma — usados como fallback instantâneo antes
- * da consulta carregar e quando um termo não estiver configurado no tenant.
+ * Rótulos padrão (o que já era usado fixo em todo lugar) — usados
+ * como fallback instantâneo antes da consulta carregar, e caso um
+ * termo não esteja configurado no banco.
  */
 export const ORG_TERM_DEFAULTS: Record<string, string> = {
   lg: "Life Group", setor: "Setor", area: "Área", distrito: "Distrito",
@@ -12,7 +13,7 @@ export const ORG_TERM_DEFAULTS: Record<string, string> = {
 
 export type OrgTerminologyMap = Record<string, string>;
 
-/** Busca terminologia global legada e sobrescrita por tenant quando informada. */
+/** Busca a terminologia configurada (hoje global; por igreja quando o multi-tenant for retomado). */
 export async function getOrgTerminology(sb: SupabaseClient, churchId?: string | null): Promise<OrgTerminologyMap> {
   const { data, error } = await sb.from("org_terminology").select("*").is("church_id", null);
   if (error) { console.error("[org-terminology]", error); return { ...ORG_TERM_DEFAULTS }; }

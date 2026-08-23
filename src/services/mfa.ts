@@ -30,7 +30,7 @@ export async function getAssuranceLevel(sb: SupabaseClient): Promise<{ current: 
 
 /** Inicia o cadastro de um novo fator TOTP — devolve o QR Code (SVG) e o segredo, pra digitação manual. */
 export async function enrollTotp(sb: SupabaseClient): Promise<{ factorId: string; qrCodeSvg: string; secret: string }> {
-  const { data, error } = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: "Servo360" });
+  const { data, error } = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: "CEC Family" });
   if (error) throw error;
   return { factorId: data.id, qrCodeSvg: data.totp.qr_code, secret: data.totp.secret };
 }
