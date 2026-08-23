@@ -3,8 +3,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Church } from "@/types/domain";
 
-/** Slug padrao quando nao houver subdominio (localhost, preview, ou dominio raiz). */
-const DEFAULT_SLUG = "manaus";
+/** Fallback configurável para instalações legadas sem domínio próprio. */
+const DEFAULT_SLUG = process.env.NEXT_PUBLIC_DEFAULT_TENANT_SLUG ?? "manaus";
+const TENANT_BASE_DOMAIN = process.env.NEXT_PUBLIC_TENANT_BASE_DOMAIN ?? "cecfamily.com.br";
 
 /** Lista de hosts que NAO sao subdominios de comunidade (deve usar default). */
 const NON_COMMUNITY_HOSTS = new Set([
@@ -13,33 +14,41 @@ const NON_COMMUNITY_HOSTS = new Set([
 ]);
 
 /**
- * Detecta o slug da comunidade a partir do hostname:
- *  - brasilia.cecfamily.com.br -> "brasilia"
- *  - manaus.cecfamily.com.br -> "manaus"
- *  - localhost -> DEFAULT_SLUG
- *  - cecfamily.com.br (sem sub) -> DEFAULT_SLUG
- *  - cec-painel.vercel.app -> DEFAULT_SLUG
- * Roda apenas no cliente (window).
+ * Detecta o slug do tenant por query string ou hostname.
+ * Query string é útil para preview e links compartilhados; subdomínios usam
+ * NEXT_PUBLIC_TENANT_BASE_DOMAIN. O fallback mantém instalações legadas.
  */
 export function detectCommunitySlug(): string {
   if (typeof window === "undefined") return DEFAULT_SLUG;
+  const params = new URLSearchParams(window.location.search);
+  const requested = params.get("tenant") ?? params.get("tenant_slug");
+  if (requested && /^[a-z0-9-]+$/i.test(requested)) return requested.toLowerCase();
+
   const host = window.location.hostname.toLowerCase();
-  // IP puro
   if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return DEFAULT_SLUG;
-  const parts = host.split(".");
-  if (parts.length < 3) return DEFAULT_SLUG; // ex.com, ex.com.br => sem subdominio
-  const sub = parts[0];
-  if (NON_COMMUNITY_HOSTS.has(sub)) return DEFAULT_SLUG;
-  // Vercel preview: <something>.vercel.app -> usa default
   if (host.endsWith(".vercel.app")) return DEFAULT_SLUG;
-  return sub;
+  if (host === TENANT_BASE_DOMAIN || host.endsWith(`.${TENANT_BASE_DOMAIN}`)) {
+    const sub = host.slice(0, -(`.${TENANT_BASE_DOMAIN}`).length).split(".").pop();
+    if (sub && !NON_COMMUNITY_HOSTS.has(sub)) return sub;
+  }
+  return DEFAULT_SLUG;
+}
+
+export function detectCommunityId(): string | null {
+  if (typeof window === "undefined") return null;
+  const value = new URLSearchParams(window.location.search).get("church");
+  return value && /^[0-9a-f-]{20,}$/i.test(value) ? value : null;
 }
 
 /** Busca a comunidade ativa pelo slug. Retorna fallback se nao achar. */
 export async function resolveCommunity(sb: SupabaseClient): Promise<Church | null> {
+  const requestedId = detectCommunityId();
   const slug = detectCommunitySlug();
   try {
-    // Tenta pelo slug detectado
+    if (requestedId) {
+      const { data, error } = await sb.from("churches").select("*").eq("id", requestedId).maybeSingle();
+      if (!error && data) return data as Church;
+    }
     const { data, error } = await sb.from("churches").select("*").eq("slug", slug).maybeSingle();
     if (!error && data) return data as Church;
   } catch { /* ignore */ }
@@ -54,7 +63,7 @@ export async function resolveCommunity(sb: SupabaseClient): Promise<Church | nul
 export function fallbackCommunity(): Church {
   return {
     id: "",
-    name: "CEC",
+    name: "Organização",
     type: "sede",
     parent_id: null,
     sector_id: null,

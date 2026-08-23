@@ -1,6 +1,6 @@
 // Conteudo institucional vindo do Supabase (cultos e palavra do dia).
-// Fallback inteligente: se a tabela ainda nao existir (migration nao aplicada)
-// ou se vier vazia, mostra placeholders sensatos para o caso CEC Manaus.
+// Fallback inteligente: se a tabela ainda não existir ou estiver vazia,
+// a experiência usa placeholders neutros até o tenant configurar seu conteúdo.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ChurchInfo, ServiceTime, DailyWord, Church } from "@/types/domain";
@@ -55,18 +55,18 @@ export async function listDailyWords(sb: SupabaseClient, limit = 30): Promise<Da
 
 // ---------- FALLBACKS ----------
 
-/** Cultos default da CEC Manaus (conforme caderno tecnico). */
+/** Horários genéricos de fallback para qualquer tenant sem programação configurada. */
 export function defaultServiceTimes(church: Church | null): ServiceTime[] {
-  if (!church || church.name === "CEC Manaus - Sede") {
+  if (!church) return [];
+  {
     const cid = church?.id ?? "";
     return [
-      { id:"d1", church_id:cid, weekday:"domingo", time:"08:00", description:"Culto da manhã",  is_active:true, sort_order:1 },
-      { id:"d2", church_id:cid, weekday:"domingo", time:"16:00", description:"Culto da tarde",  is_active:true, sort_order:2 },
-      { id:"d3", church_id:cid, weekday:"domingo", time:"18:00", description:"Culto da noite",  is_active:true, sort_order:3 },
-      { id:"d4", church_id:cid, weekday:"quarta",  time:"19:30", description:"Culto de oração e ensino", is_active:true, sort_order:4 },
+      { id:"d1", church_id:cid, weekday:"domingo", time:"08:00", description:"Encontro principal",  is_active:true, sort_order:1 },
+      { id:"d2", church_id:cid, weekday:"domingo", time:"16:00", description:"Encontro da tarde",  is_active:true, sort_order:2 },
+      { id:"d3", church_id:cid, weekday:"domingo", time:"18:00", description:"Encontro noturno",  is_active:true, sort_order:3 },
+      { id:"d4", church_id:cid, weekday:"quarta",  time:"19:30", description:"Encontro de oração e ensino", is_active:true, sort_order:4 },
     ];
   }
-  return [];
 }
 
 export function defaultWord(): DailyWord {

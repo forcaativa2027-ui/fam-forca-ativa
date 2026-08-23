@@ -83,3 +83,14 @@ do Supabase e rode. É idempotente.
 - Cores: navy `#0E2A47` + gold `#C9A227`
 - Fontes: Fraunces (display) + Archivo (corpo)
 - Tema implementado em `tailwind.config.ts` + `globals.css`
+
+
+## Arquitetura Servo360 — CORE-001
+
+A base agora opera como uma plataforma **Servo360** configurável para múltiplas organizações. `public.churches` permanece como a entidade de tenant compatível com o schema existente; a configuração complementar é persistida em `tenant_branding`, `tenant_modules`, `tenant_menu_items`, `tenant_labels`, `tenant_settings`, `tenant_admins` e no catálogo global `platform_modules`.
+
+A regra estrutural é: **chaves internas estáveis, labels parametrizáveis**. A experiência pode renomear `community.life_group` para “Célula”, `education.academy` para “Formação” ou `content.radio` para outro nome sem alterar rotas, APIs ou serviços.
+
+Para habilitar o núcleo, aplique `supabase/migrations/CORE001_white_label_multitenant.sql` no Supabase. Em seguida, um usuário com papel legado `apostolo` ou registro ativo em `platform_admins` acessa `/plataforma` para provisionar organizações, escolher templates, configurar branding, módulos, Menu Builder, nomenclaturas e administradores locais.
+
+O contexto global está em `src/contexts/TenantContext.tsx` e o serviço central em `src/services/tenantConfig.ts`. Componentes devem preferir `useTenant().label(chave, fallback)` e `useTenant().isModuleEnabled(chave)` em vez de condicionais por nome de igreja. A resolução pública aceita subdomínio configurado, `?tenant=slug` e `?church=uuid`, com fallback controlado por `NEXT_PUBLIC_DEFAULT_TENANT_SLUG`.

@@ -16,6 +16,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useMyProfile, useMyActiveModules, useMyChurch } from "@/hooks/use-queries";
 import { DELEGATION_TAB_MAP } from "@/services/delegations";
+import { useTenant } from "@/contexts/TenantContext";
+import { moduleForAdminTab } from "@/config/modules";
 
 export type TabKey =
   | "supervision" | "org-dashboard" | "pendencias" | "agenda" | "notificacoes" | "usuarios-painel" | "pesquisa-avancada"
@@ -222,12 +224,29 @@ export function AdminSidebar({
 }: AdminSidebarProps) {
   const { data: profile } = useMyProfile();
   const { data: myChurch } = useMyChurch(profile?.church_id);
-  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC FAMILY";
+  const tenantContext = useTenant();
+  const brandName = tenantContext.branding.short_name || tenantContext.branding.display_name || tenantContext.tenant?.short_name || tenantContext.tenant?.name || myChurch?.short_name || tenantContext.platform.name;
+  const brandLabel = brandName === tenantContext.platform.name ? brandName : `${tenantContext.platform.name} · ${brandName}`;
   const { data: activeModules = [] } = useMyActiveModules();
   const isApostolo = profile?.role === "apostolo";
+  const isPlatformAdmin = tenantContext.isPlatformAdmin || isApostolo;
 
-  let groups = buildGroups(counts);
-  if (!isApostolo) {
+  let groups = buildGroups(counts)
+    .map((g) => ({
+      ...g,
+      label: tenantContext.label(`menu.group.${g.id}`, g.label),
+      items: g.items
+        .filter((item) => {
+          const moduleItem = moduleForAdminTab(item.key);
+          return !moduleItem || tenantContext.isModuleEnabled(moduleItem.module_key);
+        })
+        .map((item) => {
+          const moduleItem = moduleForAdminTab(item.key);
+          return moduleItem ? { ...item, label: tenantContext.label(moduleItem.module_key, item.label) } : item;
+        }),
+    }))
+    .filter((g) => g.items.length > 0);
+  if (!isPlatformAdmin) {
     const allowedTabKeys = new Set(activeModules.flatMap((m) => DELEGATION_TAB_MAP[m] ?? []));
     groups = groups
       .map((g) => ({ ...g, items: g.items.filter((i) => allowedTabKeys.has(i.key)) }))

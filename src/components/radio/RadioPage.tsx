@@ -8,6 +8,7 @@ import { InstallRadioButton } from "@/components/public/InstallRadioButton";
 import { RadioSubscribe } from "./RadioSubscribe";
 import { ShareButtons, radioBaseUrl } from "./ShareButtons";
 import { Share2, ChevronLeft, ChevronRight } from "lucide-react";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface Program {
   id: string;
@@ -39,7 +40,8 @@ interface Episode {
 }
 
 export function RadioPage({ churchId: initialChurchId }: { churchId?: string } = {}) {
-  const [churchId] = useState<string | undefined>(initialChurchId ?? undefined);
+  const tenant = useTenant();
+  const churchId = initialChurchId ?? tenant.tenant?.id ?? undefined;
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [showPlayer, setShowPlayer] = useState(false);
   const [gradeDay, setGradeDay] = useState<number>(new Date().getDay());
@@ -133,7 +135,7 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
     const url = window.location.href;
     try {
       if (navigator.share) {
-        await navigator.share({ title: "Rádio Web", text: "Ouça a rádio da nossa comunidade", url });
+        await navigator.share({ title: tenant.label("content.radio", "Rádio Web"), text: `Ouça ${tenant.branding.display_name || "a rádio da nossa comunidade"}`, url });
       } else {
         await navigator.clipboard.writeText(url);
       }
@@ -148,9 +150,10 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
         <header className="mb-8">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h1 className="font-display text-3xl font-bold text-navy">Rádio Web</h1>
+                              <h1 className="font-display text-3xl font-bold text-navy">{tenant.label("content.radio", "Rádio Web")}</h1>
+
               {config && (
-                <p className="mt-2 text-muted">{config.display_name || "Rádio Web"}</p>
+                <p className="mt-2 text-muted">{config.display_name || tenant.branding.display_name || tenant.label("content.radio", "Rádio Web")}</p>
               )}
             </div>
             <button

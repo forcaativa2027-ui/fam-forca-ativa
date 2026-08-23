@@ -1,13 +1,14 @@
 {
-  "name": "Rádio Web — CEC Family",
-  "short_name": "Rádio CEC",
-  "description": "Rádio Web da Comunidade Evangélica de Campinas",
-  "start_url": "/radio",
+  "name": "Servo360",
+  "short_name": "Servo360",
+  "description": "Plataforma configurável para igrejas, comunidades e organizações.",
+  "start_url": "/",
   "scope": "/",
   "id": "/radio",
   "display": "standalone",
-  "background_color": "#1a3a5c",
-  "theme_color": "#1a3a5c",
+  "background_color": "#0E2A47",
+  "theme_color": "#0E2A47",
+  "lang": "pt-BR",
   "icons": [
     {
       "src": "/assets/servo360/icons/app/web-radio-app-192.png",

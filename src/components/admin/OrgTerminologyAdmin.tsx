@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase/client";
 import { useMyProfile, useOrgTerminology } from "@/hooks/use-queries";
+import { useTenant } from "@/contexts/TenantContext";
 import * as OrgTerm from "@/services/orgTerminology";
 
 const CONCEPT_LABELS: Record<string, string> = {
@@ -24,8 +25,10 @@ const CONCEPT_LABELS: Record<string, string> = {
  */
 export function OrgTerminologyAdmin() {
   const { data: me } = useMyProfile();
+  const tenantContext = useTenant();
+  const tenantId = tenantContext.tenant?.id ?? null;
   const qc = useQueryClient();
-  const { data: terms = {} } = useOrgTerminology();
+  const { data: terms = {} } = useOrgTerminology(tenantId);
   const [edited, setEdited] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -34,7 +37,7 @@ export function OrgTerminologyAdmin() {
     if (!value) return;
     setBusy(key);
     try {
-      await OrgTerm.setOrgTerm(supabase, key, value, me?.id);
+      await OrgTerm.setOrgTerm(supabase, key, value, me?.id, tenantId);
       qc.invalidateQueries({ queryKey: ["org-terminology"] });
       setEdited((prev) => { const n = { ...prev }; delete n[key]; return n; });
     } finally { setBusy(null); }
@@ -50,7 +53,7 @@ export function OrgTerminologyAdmin() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Níveis hierárquicos</CardTitle>
-          <CardDescription>Válido pra toda a plataforma, por enquanto (configuração por igreja/instituto chega numa fase futura).</CardDescription>
+          <CardDescription>Configuração da organização atual. A chave técnica continua estável e só o nome exibido é alterado.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           {Object.entries(CONCEPT_LABELS).map(([key, description]) => (

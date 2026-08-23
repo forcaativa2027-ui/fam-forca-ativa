@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   Play, Calendar, Music, MapPin, Church as ChurchIcon, Sun, Sparkles,
   Clock, ArrowRight, ExternalLink, LayoutDashboard, FileDown,
-  Home, Newspaper, Video, MessageCircle, HeartHandshake, LogIn, Users2, Radio, ShieldAlert,
+  Home, Newspaper, Video, MessageCircle, HeartHandshake, LogIn, Users2, Radio,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import type { EventItem, Church, Cell } from "@/types/domain";
 import RadioPage from "@/components/radio/RadioPage";
 import { RadioMiniPlayer } from "@/components/radio/RadioMiniPlayer";
 import { useRadioEnabled } from "@/hooks/use-radio-enabled";
+import { useTenant } from "@/contexts/TenantContext";
 
 const STATUS_LABELS: Record<EventItem["status"], string> = {
   abertas: "Inscrições abertas", encerradas: "Encerradas", esgotado: "Esgotado", em_breve: "Em breve",
@@ -55,6 +56,7 @@ export default function PublicHome() {
   const [tab, setTab] = useState(initialTab);
   const [regEventCategory, setRegEventCategory] = useState<string>("todos");
   const { data: profile } = useMyProfile();
+  const tenantConfig = useTenant();
   const { data: community } = useActiveCommunity();
   const communityId = community?.id ?? null;
   const { data: sermons = [] } = usePublicSermons(communityId);
@@ -70,29 +72,27 @@ export default function PublicHome() {
   const { data: radioEnabled } = useRadioEnabled(communityId);
   const { data: radioConfig } = useRadioConfig(communityId);
 
-  // Rádio visível por padrão; ocultada apenas se desabilitada explicitamente (seção 25 do spec)
-  const showRadio = radioEnabled?.is_enabled !== false;
+  // A feature pública depende do módulo do tenant e da configuração própria da Rádio.
+  const showRadio = tenantConfig.isModuleEnabled("content.radio") && radioEnabled?.is_enabled !== false;
 
   // Fallback inteligente: se o banco tem dados use-os; senao mostra defaults.
   const services = dbServices.length > 0 ? dbServices : defaultServiceTimes(sede);
   const word = dbWord ?? defaultWord();
 
   const navItems: BottomNavItem[] = [
-    { key: "inicio", label: "Início", icon: <Home size={18} />, onClick: () => setTab("inicio") },
-    { key: "noticias", label: "Notícias", icon: <Newspaper size={18} />, onClick: () => setTab("noticias") },
-    ...(showRadio ? [{ key: "radio", label: "Rádio Web", icon: <Radio size={18} />, onClick: () => setTab("radio") }] : []),
-
-    { key: "videos", label: "Vídeos", icon: <Video size={18} />, onClick: () => setTab("videos") },
-    { key: "cultos", label: "Cultos", icon: <ChurchIcon size={18} />, onClick: () => setTab("cultos") },
-    { key: "agenda", label: "Agenda", icon: <Calendar size={18} />, onClick: () => setTab("agenda") },
-    { key: "igrejas", label: "Igrejas", icon: <MapPin size={18} />, onClick: () => setTab("igrejas") },
-    ...(profile ? [{ key: "celulas", label: "Mapa de LGs", icon: <Users2 size={18} />, onClick: () => setTab("celulas") }] : []),
+    { key: "inicio", label: tenantConfig.label("core.home", "Início"), icon: <Home size={18} />, onClick: () => setTab("inicio") },
+    { key: "noticias", label: tenantConfig.label("content.news", "Notícias"), icon: <Newspaper size={18} />, onClick: () => setTab("noticias") },
+    ...(showRadio ? [{ key: "radio", label: tenantConfig.label("content.radio", "Rádio Web"), icon: <Radio size={18} />, onClick: () => setTab("radio") }] : []),
+    { key: "videos", label: tenantConfig.label("content.videos", "Vídeos"), icon: <Video size={18} />, onClick: () => setTab("videos") },
+    { key: "cultos", label: tenantConfig.label("services", "Cultos"), icon: <ChurchIcon size={18} />, onClick: () => setTab("cultos") },
+    { key: "agenda", label: tenantConfig.label("content.agenda", "Agenda"), icon: <Calendar size={18} />, onClick: () => setTab("agenda") },
+    { key: "igrejas", label: tenantConfig.label("community.churches", "Organizações"), icon: <MapPin size={18} />, onClick: () => setTab("igrejas") },
+    ...(profile && tenantConfig.isModuleEnabled("community.life_group") ? [{ key: "celulas", label: tenantConfig.label("community.life_group", "Life Groups"), icon: <Users2 size={18} />, onClick: () => setTab("celulas") }] : []),
     { key: "participar", label: "Participar", icon: <Sparkles size={18} />, onClick: () => setTab("participar") },
-    { key: "contato", label: "Fale Conosco", icon: <MessageCircle size={18} />, onClick: () => setTab("contato") },
-    { key: "risco", label: "Análise de Risco", icon: <ShieldAlert size={18} />, onClick: () => { window.location.href = "/analise-risco"; } },
-    { key: "ofertar", label: "Doação", icon: <HeartHandshake size={18} />, onClick: () => setTab("ofertar") },
+    { key: "contato", label: tenantConfig.label("support.talk_to_someone", "Conversar"), icon: <MessageCircle size={18} />, onClick: () => setTab("contato") },
+    { key: "ofertar", label: tenantConfig.label("finance.giving", "Doação"), icon: <HeartHandshake size={18} />, onClick: () => setTab("ofertar") },
     profile
-      ? { key: "meu-painel", label: "Meu Painel", icon: <LayoutDashboard size={18} />, onClick: () => { window.location.href = "/painel"; } }
+      ? { key: "meu-painel", label: tenantConfig.label("core.profile", "Meu Painel"), icon: <LayoutDashboard size={18} />, onClick: () => { window.location.href = "/painel"; } }
       : { key: "entrar", label: "Entrar", icon: <LogIn size={18} />, onClick: () => { window.location.href = "/entrar"; } },
   ];
 
@@ -101,13 +101,13 @@ export default function PublicHome() {
       <header className="sticky top-0 z-20 border-b-[3px] border-gold bg-navy">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-white">
-            {community?.logo_url ? (
-              <img src={community.logo_url} alt={community.name} className="h-8 w-8 rounded-full object-cover" />
+            {(tenantConfig.branding.logo_primary || community?.logo_url) ? (
+              <img src={tenantConfig.branding.logo_primary || community?.logo_url || ""} alt={tenantConfig.branding.display_name || community?.name || tenantConfig.platform.name} className="h-8 w-8 rounded-full object-cover" />
             ) : (
               <Sparkles className="h-5 w-5 text-gold" />
             )}
             <span className="font-display text-lg font-bold tracking-wide">
-              {community?.name ? community.name.toUpperCase() : "CEC FAMILY"}
+              {tenantConfig.branding.display_name || community?.display_name || community?.name || tenantConfig.platform.name}
             </span>
           </Link>
           <Button asChild size="sm">
@@ -201,8 +201,8 @@ export default function PublicHome() {
               <div className="rounded-2xl border border-gold/30 bg-navy p-5 text-white">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h2 className="font-display text-xl font-bold">Rádio Web</h2>
-                    <p className="mt-1 text-sm text-white/70">{radioConfig.display_name || "Sua comunidade, sempre ouvindo"}</p>
+                    <h2 className="font-display text-xl font-bold">{tenantConfig.label("content.radio", "Rádio Web")}</h2>
+                    <p className="mt-1 text-sm text-white/70">{radioConfig.display_name || tenantConfig.branding.display_name || "Sua comunidade, sempre ouvindo"}</p>
                   </div>
                   <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gold/20 text-gold"><Radio className="h-6 w-6" /></span>
                 </div>
@@ -398,17 +398,6 @@ export default function PublicHome() {
         {/* === QUERO CONVERSAR === */}
         <TabsContent value="contato">
           <PublicContactForms churchId={communityId} />
-        </TabsContent>
-
-        {/* === FAM — ACOLHIMENTO E PROTEÇÃO === */}
-        <TabsContent value="risco">
-          <div className="mx-auto max-w-3xl py-6">
-            <div className="rounded-xl border border-gold/30 bg-gold/5 p-5">
-              <h2 className="font-display text-2xl text-navy">Análise de Risco</h2>
-              <p className="mt-2 text-sm text-muted">Orientação inicial para mulheres em situação de vulnerabilidade. A ferramenta não substitui emergência, polícia, saúde ou avaliação profissional.</p>
-              <Button asChild className="mt-4"><Link href="/analise-risco">Iniciar análise orientativa</Link></Button>
-            </div>
-          </div>
         </TabsContent>
 
         {/* === DÍZIMOS E OFERTAS === */}

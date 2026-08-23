@@ -4,6 +4,7 @@ import { LogOut, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Mais } from "@/components/shared/CECmaisBrand";
 import { Servo360Icon } from "@/components/servo360/Servo360Icon";
+import { useTenant } from "@/contexts/TenantContext";
 
 export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
   active: "dashboard" | "carteira" | "academy" | "cecmais" | "kids";
@@ -11,12 +12,15 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
   cardReady?: boolean;
   onSignOut: () => void;
 }) {
+  const tenant = useTenant();
+  const brandName = tenant.branding.display_name || tenant.tenant?.name || tenant.platform.name;
+  const logoUrl = tenant.branding.logo_primary || tenant.branding.logo_light;
   return (
     <header className="border-b-[3px] border-gold bg-navy">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2 text-white">
-          <img src="/images/cec-family-logo.png" alt="CEC Family" className="h-7 w-7 object-contain" />
-          <span className="font-display text-lg font-bold tracking-wide">CEC FAMILY</span>
+          {logoUrl ? <img src={logoUrl} alt={brandName} className="h-7 w-7 rounded-full object-cover" /> : <Servo360Icon iconKey="s360-icon-home" size={22} />}
+          <span className="font-display text-lg font-bold tracking-wide">{brandName}</span>
           <nav className="ml-3 hidden items-center gap-1 border-l border-white/20 pl-3 sm:flex">
             <Link
               href="/painel"
@@ -25,7 +29,7 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
               }`}
             >
               <Servo360Icon iconKey="s360-icon-home" size={16} />
-              Área do membro
+              {tenant.label("core.profile", "Área do membro")}
             </Link>
             <Link
               href="/painel/carteira"
@@ -34,7 +38,7 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
               }`}
             >
               <Servo360Icon iconKey="s360-icon-wallet" size={16} />
-              Carteira Digital
+              {tenant.label("core.wallet", "Carteira Digital")}
             </Link>
             <Link
               href="/painel?tab=academy"
@@ -43,7 +47,7 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
               }`}
             >
               <Servo360Icon iconKey="s360-icon-academy" size={16} />
-              Academy
+              {tenant.label("education.academy", "Academy")}
             </Link>
             <Link
               href="/painel?tab=kids"
@@ -52,7 +56,7 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
               }`}
             >
               <Baby className="h-4 w-4 text-pink-300" />
-              Kids
+              {tenant.label("education.kids", "Kids")}
             </Link>
             <Link
               href="/painel/cecmais/explorar"

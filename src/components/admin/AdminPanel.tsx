@@ -11,11 +11,14 @@ import { GlobalSearchDialog } from "./GlobalSearchDialog";
 import { GlobalSearch } from "./GlobalSearch";
 import { TabContent } from "./panel/TabRouter";
 import { SubmenuExplorer } from "./panel/SubmenuExplorer";
+import { useTenant } from "@/contexts/TenantContext";
 
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
   const { data: myChurch } = useMyChurch(me?.church_id);
-  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC Family";
+  const tenantContext = useTenant();
+  const brandName = tenantContext.branding.short_name || tenantContext.branding.display_name || myChurch?.short_name || myChurch?.name || tenantContext.platform.name;
+  const brandLabel = brandName === tenantContext.platform.name ? brandName : `${tenantContext.platform.name} · ${brandName}`;
   const { data: counts } = usePendingCounts();
   const { data: myModules = [] } = useMyActiveModules();
   const isAdmin = me && (me.role === "apostolo" || myModules.length > 0);
@@ -133,16 +136,12 @@ export default function AdminPanel() {
               />
               <span className="font-display text-sm font-semibold text-white/70">{brandLabel}</span>
             </div>
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
-            >
-              <Link href="/painel">
-                <ArrowLeft className="mr-1 h-3.5 w-3.5" /> Painel
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              {(tenantContext.isPlatformAdmin || me?.role === "apostolo") && <Button asChild variant="outline" size="sm" className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"><Link href="/plataforma">Plataforma</Link></Button>}
+              <Button asChild variant="outline" size="sm" className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white">
+                <Link href="/painel"><ArrowLeft className="mr-1 h-3.5 w-3.5" /> Painel</Link>
+              </Button>
+            </div>
           </div>
         </header>
 
