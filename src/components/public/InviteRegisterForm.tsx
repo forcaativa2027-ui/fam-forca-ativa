@@ -14,17 +14,15 @@ import { Turnstile } from "@marsidev/react-turnstile";
 import type { InviteTokenValidation } from "@/types/domain";
 
 // Seção 9 do script de melhoria — mensagens específicas por motivo,
-// citando o nome da comunidade quando disponível (expirado).
+// usando linguagem institucional e segura.
 function reasonMessage(reason: string | null, churchName: string | null): string {
   switch (reason) {
     case "nao_encontrado":
-      return "Não foi possível localizar este convite. Solicite um novo link ao responsável pela comunidade.";
+      return "Não foi possível localizar este convite. Solicite um novo link à equipe FAM.";
     case "revogado":
       return "Este link de convite foi revogado por quem o gerou. Solicite um novo link.";
     case "expirado":
-      return churchName
-        ? `Este convite expirou. Entre em contato com ${churchName} para solicitar um novo convite.`
-        : "Este convite expirou. Peça um novo link a quem te convidou.";
+      return "Este convite expirou. Entre em contato com a equipe FAM para solicitar um novo convite.";
     case "esgotado":
       return "Este convite já foi utilizado. Caso o cadastro tenha sido concluído, acesse sua conta usando o e-mail informado.";
     default:
@@ -60,7 +58,7 @@ export function InviteRegisterForm({ token, validation }: Props) {
 
   if (!validation.valid) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_30%_20%,#16345A,#0E2A47_60%)] grid place-items-center p-4">
+      <main className="min-h-screen bg-[radial-gradient(circle_at_30%_20%,#6B214F,#3A1236_65%)] grid place-items-center p-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center space-y-3">
             <XCircle className="mx-auto text-destructive" size={40} />
@@ -75,12 +73,12 @@ export function InviteRegisterForm({ token, validation }: Props) {
 
   if (done) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_30%_20%,#16345A,#0E2A47_60%)] grid place-items-center p-4">
+      <main className="min-h-screen bg-[radial-gradient(circle_at_30%_20%,#6B214F,#3A1236_65%)] grid place-items-center p-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center space-y-4">
             <CommunityIdentity
               variant="registration"
-              communityName={validation.church_name ?? "CEC Family"}
+              communityName={validation.church_name ?? "FAM — Força Ativa da Mulher"}
               logoUrl={validation.church_logo_url}
               organizationalUnitName={validation.org_unit_name}
             />
@@ -90,14 +88,14 @@ export function InviteRegisterForm({ token, validation }: Props) {
               <p className="text-sm text-muted-foreground">
                 {fullName} · {email}
                 <br />
-                Perfil: {roleName ?? "Membro"} · {validation.church_name}
+                Perfil: {roleName ?? "Participante"} · FAM
                 {validation.life_group_name ? ` — ${validation.life_group_name}` : ""}
               </p>
             </div>
             {hasSession ? (
               <div className="space-y-2">
                 <Button asChild className="w-full gap-1.5">
-                  <Link href="/painel"><LogIn size={16} /> Acessar o CEC Family</Link>
+                  <Link href="/painel"><LogIn size={16} /> Acessar a plataforma FAM</Link>
                 </Button>
                 <p className="text-xs text-muted-foreground">Redirecionando automaticamente em {countdown}s…</p>
               </div>
@@ -108,7 +106,7 @@ export function InviteRegisterForm({ token, validation }: Props) {
                   link enviado para concluir a ativação da conta.
                 </p>
                 <Button asChild variant="outline" className="w-full gap-1.5">
-                  <Link href={`/entrar?email=${encodeURIComponent(email)}`}><LogIn size={16} /> Acessar o CEC Family</Link>
+                  <Link href={`/entrar?email=${encodeURIComponent(email)}`}><LogIn size={16} /> Acessar a plataforma FAM</Link>
                 </Button>
                 <p className="text-xs text-muted-foreground">Redirecionando para o login em {countdown}s…</p>
               </div>
@@ -145,18 +143,18 @@ export function InviteRegisterForm({ token, validation }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_30%_20%,#16345A,#0E2A47_60%)] grid place-items-center p-4">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_30%_20%,#6B214F,#3A1236_65%)] grid place-items-center p-4">
       <Card className="max-w-md w-full">
         <CardContent className="pt-6 space-y-4">
           <CommunityIdentity
             variant="registration"
-            communityName={validation.church_name ?? "CEC Family"}
+            communityName={validation.church_name ?? "FAM — Força Ativa da Mulher"}
             logoUrl={validation.church_logo_url}
             organizationalUnitName={validation.org_unit_name}
             roleName={roleName}
           />
           <p className="text-center text-sm text-muted-foreground">
-            Você foi convidado(a) para fazer parte desta comunidade. Preencha os dados abaixo para concluir seu cadastro.
+            Você foi convidado(a) para fazer parte da rede FAM. Preencha os dados abaixo para concluir seu cadastro.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-3">

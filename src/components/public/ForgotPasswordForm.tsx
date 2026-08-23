@@ -30,17 +30,17 @@ export default function ForgotPasswordForm() {
   }
 
   return (
-    <main className="relative grid min-h-screen place-items-center bg-[radial-gradient(circle_at_30%_20%,#16345A,#0E2A47_60%)] p-5">
+    <main className="relative grid min-h-screen place-items-center bg-[radial-gradient(circle_at_30%_20%,#6B214F,#3A1236_65%)] p-5">
       <Link href="/entrar" className="absolute left-5 top-5 flex items-center gap-2 text-sm font-semibold text-white/80 hover:text-white">
         <ArrowLeft className="h-4 w-4" /> Voltar ao login
       </Link>
       <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-2xl">
-        <div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-[#C9A227]"/><h1 className="font-display text-2xl text-[#0E2A47]">Recuperar senha</h1></div>
-        <div className="my-3 h-[3px] w-16 rounded bg-[#C9A227]"/>
+        <div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-fam-gold"/><h1 className="font-display text-2xl text-fam-plum">Recuperar senha</h1></div>
+        <div className="my-3 h-[3px] w-16 rounded bg-fam-gold"/>
         {sent ? (
           <div className="space-y-4 text-center">
             <CheckCircle2 className="mx-auto h-12 w-12 text-green-500"/>
-            <p className="font-semibold text-[#0E2A47]">E-mail enviado!</p>
+            <p className="font-semibold text-fam-plum">E-mail enviado!</p>
             <p className="text-sm text-muted-foreground">Verifique sua caixa de entrada e o spam. O link expira em <strong>1 hora</strong>.</p>
             <Link href="/entrar"><Button variant="outline" className="w-full mt-2">Voltar ao login</Button></Link>
           </div>
@@ -65,7 +65,7 @@ export default function ForgotPasswordForm() {
               </div>
             )}
             <Button type="submit" disabled={busy} className="w-full">{busy?"Enviando…":"Enviar link de recuperação"}</Button>
-            <p className="text-center text-xs text-muted-foreground">Lembrou a senha? <Link href="/entrar" className="font-semibold text-[#0E2A47] hover:underline">Entrar</Link></p>
+            <p className="text-center text-xs text-muted-foreground">Lembrou a senha? <Link href="/entrar" className="font-semibold text-fam-plum hover:underline">Entrar</Link></p>
           </form>
         )}
       </div>

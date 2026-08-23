@@ -32,10 +32,10 @@ export function StepTipoCadastro({ s, onBack, onBasico, onCompleto }: {
               <li>• Acessar a Home do Usuário</li>
               <li>• Inscrever-se em eventos</li>
               <li>• Receber notificações</li>
-              <li>• Conhecer melhor nossa igreja</li>
+              <li>• Conhecer melhor o Instituto FAM e seus projetos</li>
             </ul>
             <p className="mt-2 text-xs text-muted">
-              Caso futuramente deseje se tornar membro ou participar de um Life Group, será necessário concluir o Cadastro Completo.
+              Caso futuramente deseje se associar, participar de projetos ou acessar benefícios exclusivos, será necessário concluir o Cadastro Completo.
             </p>
           </div>
         </div>
@@ -50,9 +50,9 @@ export function StepTipoCadastro({ s, onBack, onBasico, onCompleto }: {
           <div className="flex-1">
             <b className="text-navy">Continuar Cadastro Completo</b>
             <p className="mt-1 text-sm text-muted">
-              Quanto mais informações conhecermos sobre você, melhor poderemos acolhê-lo, acompanhá-lo e oferecer uma experiência personalizada dentro da igreja.
+              Quanto mais informações você compartilhar, melhor poderemos apresentar oportunidades de participação, comunicação e benefícios do Instituto.
             </p>
-            <p className="mt-2 text-xs text-muted">Obrigatório para: membros efetivos, emissão da Carteira de Membro, Life Groups, discipulado e acompanhamento pastoral.</p>
+            <p className="mt-2 text-xs text-muted">Necessário para: associação, emissão do Member ID, acesso a comunicações exclusivas e participação em programas do Instituto.</p>
           </div>
         </div>
         <Button type="button" onClick={onCompleto} className="mt-3 h-14 w-full gap-2 rounded-xl text-base shadow-md transition hover:shadow-lg active:scale-95">

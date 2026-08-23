@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Envolve qualquer trecho da árvore em duas tonalidades de azul,
+ * Envolve qualquer trecho da árvore com a identidade institucional FAM,
  * sobrescrevendo as MESMAS variáveis CSS que os componentes shadcn
  * (Card, Input, Select, Button...) já usam (--card, --background,
  * --border, --foreground etc.) — então tudo que já existe (Card,
@@ -9,40 +9,37 @@
  * editar cada componente um por um.
  *
  * Isso é escopado (só afeta o que está DENTRO desta div) — o painel
- * administrativo e os componentes de admin continuam exatamente
- * como estão, já que eles não ficam dentro deste wrapper.
+ * administrativo e os componentes de admin continuam independentes deste wrapper.
  *
- * Ainda assim, classes "fixas" como `text-navy`, `text-ink` e
- * `text-muted` (cores hexadecimais fixas do Tailwind, não variáveis
- * CSS) não são afetadas por este wrapper — cada tela precisa trocar
- * essas classes manualmente por `text-white`/`text-white/70` etc.
+ * Classes fixas usam os aliases FAM definidos no Tailwind e permanecem
+ * compatíveis com os componentes existentes.
  */
 export function DarkBlueTheme({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <div
-      className={`dark-blue-theme min-h-screen ${className}`}
+      className={`fam-institutional-theme min-h-screen ${className}`}
       style={{
         // Pinta o PRÓPRIO fundo (não basta definir a variável --background:
         // se nenhum elemento filho tiver bg-background/bg-card explícito,
         // sem isso aparece o branco da página por trás do texto branco).
-        backgroundColor: "hsl(213, 67%, 15%)",
+        backgroundColor: "#4A173F",
         color: "#ffffff",
-        // Fundo da página (azul mais escuro) e texto padrão (branco)
-        "--background": "213 67% 15%",
+        // Fundo ameixa e texto padrão branco
+        "--background": "313 52% 19%",
         "--foreground": "0 0% 100%",
-        // Cards (azul um pouco mais claro que o fundo)
-        "--card": "212 61% 22%",
+        // Cards em roxo institucional
+        "--card": "313 42% 25%",
         "--card-foreground": "0 0% 100%",
-        "--popover": "212 61% 22%",
+        "--popover": "313 42% 25%",
         "--popover-foreground": "0 0% 100%",
-        // Botão/realce primário continua o mesmo azul da marca
-        "--primary": "213 67% 17%",
+        // Botão e realce primário FAM
+        "--primary": "330 66% 54%",
         "--primary-foreground": "0 0% 100%",
-        "--accent": "212 45% 30%",
+        "--accent": "313 35% 32%",
         "--accent-foreground": "0 0% 100%",
-        // Bordas e inputs — azul médio, visível contra o fundo escuro
-        "--border": "213 40% 32%",
-        "--input": "213 40% 32%",
+        // Bordas e inputs em roxo suave
+        "--border": "313 30% 38%",
+        "--input": "313 30% 38%",
         "--ring": "45 74% 49%",
       } as React.CSSProperties}
     >

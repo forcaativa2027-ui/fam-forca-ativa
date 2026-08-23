@@ -9,9 +9,8 @@ import { useMyProfile, useMyChurch } from "@/hooks/use-queries";
 /**
  * Shell do grupo (workspaces). Navegação entre workspaces é provisória —
  * lista só os que já foram migrados. A navegação definitiva dos 7 workspaces
- * (Executivo, Organizacional, Pessoas, Operacional, Comunicação, Recursos,
- * Governança) é uma decisão de design em aberto — ver
- * CONTEXTO_NOVO_CHAT_CEC_FAMILY_V3.md.
+ * (Executivo, Organizacional, Pessoas, Operacional, Comunicação, Recursos
+ * e Governança) permanecem organizados por área institucional.
  */
 const MIGRATED_WORKSPACES = [
   { href: "/executivo", label: "Executivo" },
@@ -33,7 +32,9 @@ export function WorkspaceShell({
   const pathname = usePathname();
   const { data: me } = useMyProfile();
   const { data: myChurch } = useMyChurch(me?.church_id);
-  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC Family";
+  const brandLabel = myChurch?.short_name?.toUpperCase() === "FAM" || !myChurch?.short_name
+    ? "FAM · FORÇA ATIVA DA MULHER"
+    : myChurch.short_name.toUpperCase();
 
   async function handleSignOut() {
     await supabase.auth.signOut();

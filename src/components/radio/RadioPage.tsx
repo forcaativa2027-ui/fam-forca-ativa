@@ -8,7 +8,6 @@ import { InstallRadioButton } from "@/components/public/InstallRadioButton";
 import { RadioSubscribe } from "./RadioSubscribe";
 import { ShareButtons, radioBaseUrl } from "./ShareButtons";
 import { Share2, ChevronLeft, ChevronRight } from "lucide-react";
-import { useTenant } from "@/contexts/TenantContext";
 
 interface Program {
   id: string;
@@ -40,8 +39,7 @@ interface Episode {
 }
 
 export function RadioPage({ churchId: initialChurchId }: { churchId?: string } = {}) {
-  const tenant = useTenant();
-  const churchId = initialChurchId ?? tenant.tenant?.id ?? undefined;
+  const [churchId] = useState<string | undefined>(initialChurchId ?? undefined);
   const [category, setCategory] = useState<string | undefined>(undefined);
   const [showPlayer, setShowPlayer] = useState(false);
   const [gradeDay, setGradeDay] = useState<number>(new Date().getDay());
@@ -135,7 +133,7 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
     const url = window.location.href;
     try {
       if (navigator.share) {
-        await navigator.share({ title: tenant.label("content.radio", "Rádio Web"), text: `Ouça ${tenant.branding.display_name || "a rádio da nossa comunidade"}`, url });
+        await navigator.share({ title: "Rádio Web", text: "Ouça a rádio da nossa comunidade", url });
       } else {
         await navigator.clipboard.writeText(url);
       }
@@ -145,35 +143,35 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
+    <div className="min-h-screen bg-fam-background py-6 sm:py-8">
       <div className="container mx-auto max-w-7xl">
-        <header className="mb-8">
+        <header className="mb-6 rounded-3xl border border-fam-gold/25 bg-gradient-to-r from-fam-plum via-fam-magenta to-fam-plum p-5 text-white shadow-lg sm:p-7">
           <div className="flex items-center justify-between gap-4">
             <div>
-                              <h1 className="font-display text-3xl font-bold text-navy">{tenant.label("content.radio", "Rádio Web")}</h1>
-
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-fam-gold-soft">FAM · Comunicação e informação</p>
+              <h1 className="mt-1 font-display text-3xl font-bold text-white">Rádio Web</h1>
               {config && (
-                <p className="mt-2 text-muted">{config.display_name || tenant.branding.display_name || tenant.label("content.radio", "Rádio Web")}</p>
+                <p className="mt-2 text-sm text-white/75">{config.display_name || "Rádio Web institucional FAM"}</p>
               )}
             </div>
             <button
               onClick={handleShare}
               aria-label="Compartilhar Rádio Web"
-              className="p-3 rounded-xl border border-gold/30 text-navy hover:bg-gold/10 transition"
+              className="rounded-xl border border-white/30 p-3 text-white transition hover:bg-white/10"
             >
               <Share2 className="h-5 w-5" />
             </button>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.65fr)]">
 
           {/* Configuração e Programação (esquerda) */}
           <div className="lg:col-span-2 space-y-6">
 
             {/* Config da rádio */}
             {config && (
-              <div className="bg-card p-6 rounded-xl border border-gold/30">
+              <div className="rounded-3xl border border-fam-gold/30 bg-white p-6 shadow-sm">
                 <div className="flex items-center gap-4">
                   {config.logo_url && (
                     <img src={config.logo_url} alt={config.display_name} className="h-12 w-12 rounded object-cover" />
@@ -200,7 +198,7 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
             {((onAir && onAir.title) || liveProgram || nextProgram) && (
               <div className="space-y-3">
                 {(onAir || liveProgram) && (
-                  <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4">
+                  <div className="rounded-2xl border-2 border-fam-coral/35 bg-fam-coral/10 p-4 shadow-sm">
                     <div className="flex items-center gap-2">
                       <span className="flex items-center gap-1.5 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white uppercase">
                         <span className="h-2 w-2 rounded-full bg-white animate-pulse" /> Agora no ar
@@ -225,8 +223,8 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
                   </div>
                 )}
                 {nextProgram && (
-                  <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-                    <p className="text-xs font-bold uppercase text-blue-600">Próximo</p>
+                  <div className="rounded-xl border border-fam-lilac/40 bg-fam-lilac/15 p-4">
+                    <p className="text-xs font-bold uppercase text-fam-magenta">Próximo</p>
                     <div className="mt-1 flex items-center gap-2">
                       <span className="text-sm font-semibold text-navy">{nextProgram.title}</span>
                       {nextProgram.weekday !== WEEKDAY_KEYS[new Date().getDay()] && (
@@ -241,7 +239,7 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
 
             {/* Hoje na Rádio — destaque + link para a grade completa */}
             {todayPrograms.length > 0 && (
-              <div className="rounded-xl border border-gold/30 bg-gold/5 p-4">
+              <div className="rounded-2xl border border-fam-gold/30 bg-fam-gold/10 p-4 shadow-sm">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-bold uppercase tracking-wide text-gold">Hoje na Rádio</p>
                   <a href="/radio/programacao" className="text-xs font-semibold text-navy underline">
@@ -296,9 +294,9 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
                   return <p className="mt-2 text-sm text-muted">Nenhum programa neste dia.</p>;
                 }
                 return (
-                  <div className="mt-3 space-y-3">
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {dayPrograms.map((p) => (
-                      <div key={p.id} className="p-4 rounded-xl border border-gold/30 hover:border-gold">
+                      <div key={p.id} className="rounded-2xl border border-fam-gold/25 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-fam-gold hover:shadow-md">
                         <div className="flex items-center gap-3">
                           <span className="text-sm font-medium text-navy">{p.title}</span>
                           {p.is_recurring && (
@@ -332,16 +330,22 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
               <h2 className="font-display text-2xl font-bold text-navy">Episódios</h2>
               <div className="flex gap-1 rounded-lg border border-gold/30 p-1">
                 <button
-                  onClick={() => setPodcastView(false)}
+                  onClick={() => { setPodcastView(false); setCategory(undefined); }}
                   className={`px-3 py-1 rounded-md text-xs font-semibold ${!podcastView ? "bg-gold text-navy" : "text-navy hover:bg-gold/10"}`}
                 >
                   Episódios
                 </button>
                 <button
-                  onClick={() => setPodcastView(true)}
+                  onClick={() => { setPodcastView(true); setCategory(undefined); }}
                   className={`px-3 py-1 rounded-md text-xs font-semibold ${podcastView ? "bg-gold text-navy" : "text-navy hover:bg-gold/10"}`}
                 >
                   Podcasts
+                </button>
+                <button
+                  onClick={() => { setPodcastView(false); setCategory("politica"); }}
+                  className={`px-3 py-1 rounded-md text-xs font-semibold ${category === "politica" ? "bg-gold text-navy" : "text-navy hover:bg-gold/10"}`}
+                >
+                  Política
                 </button>
               </div>
             </div>
@@ -458,9 +462,9 @@ export function RadioPage({ churchId: initialChurchId }: { churchId?: string } =
             {episodes.length === 0 && (
               <p className="text-muted py-4">Nenhum episódio disponível.</p>
             )}
-            <div className="space-y-3">
+            <div className="grid gap-4 sm:grid-cols-2">
               {episodes.map((e) => (
-                <div key={e.id} className="p-4 rounded-xl border border-gray-200 hover:border-gold transition-colors">
+                <div key={e.id} className="rounded-2xl border border-fam-gold/25 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-fam-gold hover:shadow-md">
                   <div className="flex items-center gap-3">
                     {e.is_featured && (
                       <span className="text-xs bg-gold/10 text-gold px-2 py-1 rounded">Destacado</span>
@@ -518,13 +522,15 @@ const MODE_LABELS: Record<string, string> = {
 };
 
 const EPISODE_CATEGORIES = [
-  { value: "pregacao", label: "Pregação" },
+  { value: "noticia", label: "Notícias" },
+  { value: "politica", label: "Política" },
   { value: "louvor", label: "Louvor" },
-  { value: "noticia", label: "Notícia" },
-  { value: "devocional", label: "Devocional" },
-  { value: "entrevista", label: "Entrevista" },
-  { value: "estudo", label: "Estudo" },
-  { value: "especial", label: "Especial" },
+  { value: "empreendedorismo", label: "Empreendedorismo" },
+  { value: "pregacao", label: "Pregações" },
+  { value: "entrevista", label: "Entrevistas" },
+  { value: "projetos", label: "Projetos" },
+  { value: "direitos_mulher", label: "Direitos da Mulher" },
+  { value: "especial", label: "Especiais" },
 ];
 
 function toMinutes(time: string): number {

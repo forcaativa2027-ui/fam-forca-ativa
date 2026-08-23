@@ -1,14 +1,13 @@
 {
-  "name": "Servo360",
-  "short_name": "Servo360",
-  "description": "Plataforma configurável para igrejas, comunidades e organizações.",
-  "start_url": "/",
+  "name": "Rádio Web — FAM",
+  "short_name": "Rádio FAM",
+  "description": "Rádio Web institucional da FAM — Força Ativa da Mulher",
+  "start_url": "/radio",
   "scope": "/",
   "id": "/radio",
   "display": "standalone",
-  "background_color": "#0E2A47",
-  "theme_color": "#0E2A47",
-  "lang": "pt-BR",
+  "background_color": "#32132D",
+  "theme_color": "#4A173F",
   "icons": [
     {
       "src": "/assets/servo360/icons/app/web-radio-app-192.png",

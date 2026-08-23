@@ -4,7 +4,7 @@ import { LeadershipAdmin } from "../LeadershipAdmin";
 import { CECmaisOfertasAdmin } from "../CECmaisOfertasAdmin";
 import { MdaStructureAdmin } from "../MdaStructureAdmin";
 import { EvangelismGroupsAdmin } from "../EvangelismGroupsAdmin";
-import { useMyProfile, useMyActiveModules, usePendingCounts } from "@/hooks/use-queries";
+import { useMyProfile, useMyActiveModules, usePendingCounts, useMyChurch } from "@/hooks/use-queries";
 import { DELEGATION_TAB_MAP } from "@/services/delegations";
 import { MembersAdmin } from "../MembersAdmin";
 import { DiscipleshipAdmin } from "../DiscipleshipAdmin";
@@ -78,9 +78,23 @@ function AuditView() {
 
 export function TabContent({ activeTab, onNavigate, prefillEventId }: { activeTab: TabKey; onNavigate: (tab: TabKey) => void; prefillEventId?: string | null }) {
   const { data: profile } = useMyProfile();
+  const { data: myChurch } = useMyChurch(profile?.church_id);
   const { data: activeModules = [] } = useMyActiveModules();
   const { data: counts } = usePendingCounts();
   const isApostolo = profile?.role === "apostolo";
+  const isFam = process.env.NEXT_PUBLIC_TENANT_TEMPLATE === "third_sector" || myChurch?.short_name?.toUpperCase() === "FAM";
+
+  // Bloqueio de conteúdo, além do filtro visual do sidebar: no tenant FAM,
+  // links antigos ou URLs salvas não podem reabrir módulos religiosos.
+  const famBlockedTabs = new Set<TabKey>([
+    "cecmais-ofertas", "formacao", "conhecimento-biblico", "biblioteca-conhecimento", "biblia-referencias",
+    "kids-admin", "genealogy", "ministerios", "life-groups", "mda", "mda-health", "expansion-map",
+    "weekly", "monthly", "relmda-supervisao", "relmda-consolidacao", "relmda-dashboard", "relmda-prazos", "relmda-area",
+    "sermons", "services", "word", "cec-id-portaria", "discipleship", "prayer-requests", "visit-requests",
+  ]);
+  if (isFam && famBlockedTabs.has(activeTab)) {
+    return <MeuPainel profile={profile} allowedTabKeys={new Set(activeModules.flatMap((m) => DELEGATION_TAB_MAP[m] ?? []))} counts={counts} onNavigate={onNavigate} />;
+  }
 
   if (!isApostolo) {
     const allowedTabKeys = new Set(activeModules.flatMap((m) => DELEGATION_TAB_MAP[m] ?? []));

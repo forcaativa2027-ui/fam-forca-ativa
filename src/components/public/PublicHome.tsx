@@ -3,9 +3,9 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  Play, Calendar, Music, MapPin, Church as ChurchIcon, Sun, Sparkles,
-  Clock, ArrowRight, ExternalLink, LayoutDashboard, FileDown,
-  Home, Newspaper, Video, MessageCircle, HeartHandshake, LogIn, Users2, Radio,
+  Play, Calendar, Music, MapPin, Church as ChurchIcon, Sparkles,
+  Clock, ArrowRight, ArrowLeft, ExternalLink, LayoutDashboard, FileDown,
+  Home, Newspaper, Video, MessageCircle, HeartHandshake, LogIn, Users2, Radio, ShieldAlert,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,11 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { BottomNav, BottomNavSpacer, type BottomNavItem } from "@/components/shared/BottomNav";
 import {
   usePublicSermons, usePublicEvents, useChurches, useCells, usePublicNews, useChurchGivingInfo,
-  useServiceTimes, useTodaysWord, useActiveBanners, useActiveCommunity, useMyProfile,
-  usePublicRegistrationEvents, useRadioConfig,
+  useActiveBanners, useActiveCommunity, useMyProfile,
+  usePublicRegistrationEvents, useRadioConfig, useMyMember,
 } from "@/hooks/use-queries";
 import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import { youtubeThumb } from "@/services/content";
-import { defaultServiceTimes, defaultWord } from "@/services/institutional";
 import { PublicNewsSection } from "./PublicNewsSection";
 import { PublicContactForms } from "./PublicContactForms";
 import { PublicParticipateSection } from "./PublicParticipateSection";
@@ -28,21 +27,20 @@ import type { EventItem, Church, Cell } from "@/types/domain";
 import RadioPage from "@/components/radio/RadioPage";
 import { RadioMiniPlayer } from "@/components/radio/RadioMiniPlayer";
 import { useRadioEnabled } from "@/hooks/use-radio-enabled";
-import { useTenant } from "@/contexts/TenantContext";
 
 const STATUS_LABELS: Record<EventItem["status"], string> = {
   abertas: "Inscrições abertas", encerradas: "Encerradas", esgotado: "Esgotado", em_breve: "Em breve",
 };
 const EVENT_TYPE_LABELS: Record<string, string> = {
-  culto: "Culto", congresso: "Congresso", conferencia: "Conferência",
-  encontro: "Encontro", ebd: "Escola Bíblica", outro: "Outro",
+  culto: "Evento", congresso: "Congresso", conferencia: "Conferência",
+  encontro: "Encontro", ebd: "Formação", outro: "Outro",
 };
 const EVENT_TYPE_COLORS: Record<string, string> = {
-  culto: "bg-navy/15 text-navy border-navy/30",
-  congresso: "bg-gold/15 text-gold border-gold/30",
-  conferencia: "bg-purple-100 text-purple-700 border-purple-200",
-  encontro: "bg-blue-100 text-blue-700 border-blue-200",
-  ebd: "bg-green-100 text-green-700 border-green-200",
+  culto: "bg-fam-plum/10 text-fam-plum border-fam-plum/25",
+  congresso: "bg-fam-gold/15 text-fam-plum border-fam-gold/30",
+  conferencia: "bg-fam-lilac/20 text-fam-plum border-fam-lilac/40",
+  encontro: "bg-fam-coral/15 text-fam-plum border-fam-coral/30",
+  ebd: "bg-fam-pink/10 text-fam-magenta border-fam-pink/30",
   outro: "bg-muted/20 text-muted border-border",
 };
 const WEEKDAY_LABELS: Record<string, string> = {
@@ -55,8 +53,12 @@ export default function PublicHome() {
   const initialTab = searchParams.get("tab") ?? "inicio";
   const [tab, setTab] = useState(initialTab);
   const [regEventCategory, setRegEventCategory] = useState<string>("todos");
+  const goToPreviousPage = () => {
+    if (window.history.length > 1) window.history.back();
+    else setTab("inicio");
+  };
   const { data: profile } = useMyProfile();
-  const tenantConfig = useTenant();
+  const { data: myMember } = useMyMember();
   const { data: community } = useActiveCommunity();
   const communityId = community?.id ?? null;
   const { data: sermons = [] } = usePublicSermons(communityId);
@@ -67,33 +69,28 @@ export default function PublicHome() {
   const { data: cells = [] } = useCells();
   const { data: banners = [] } = useActiveBanners(communityId);
   const sede = community ?? churches.find((c) => c.type === "sede") ?? churches[0] ?? null;
-  const { data: dbServices = [] } = useServiceTimes(sede?.id ?? null);
-  const { data: dbWord } = useTodaysWord(communityId);
   const { data: radioEnabled } = useRadioEnabled(communityId);
   const { data: radioConfig } = useRadioConfig(communityId);
 
-  // A feature pública depende do módulo do tenant e da configuração própria da Rádio.
-  const showRadio = tenantConfig.isModuleEnabled("content.radio") && radioEnabled?.is_enabled !== false;
+  // Rádio visível por padrão; ocultada apenas se desabilitada explicitamente (seção 25 do spec)
+  const showRadio = radioEnabled?.is_enabled !== false;
 
-  // Fallback inteligente: se o banco tem dados use-os; senao mostra defaults.
-  const services = dbServices.length > 0 ? dbServices : defaultServiceTimes(sede);
-  const word = dbWord ?? defaultWord();
 
-  const navItems: BottomNavItem[] = [
-    { key: "inicio", label: tenantConfig.label("core.home", "Início"), icon: <Home size={18} />, onClick: () => setTab("inicio") },
-    { key: "noticias", label: tenantConfig.label("content.news", "Notícias"), icon: <Newspaper size={18} />, onClick: () => setTab("noticias") },
-    ...(showRadio ? [{ key: "radio", label: tenantConfig.label("content.radio", "Rádio Web"), icon: <Radio size={18} />, onClick: () => setTab("radio") }] : []),
-    { key: "videos", label: tenantConfig.label("content.videos", "Vídeos"), icon: <Video size={18} />, onClick: () => setTab("videos") },
-    { key: "cultos", label: tenantConfig.label("services", "Cultos"), icon: <ChurchIcon size={18} />, onClick: () => setTab("cultos") },
-    { key: "agenda", label: tenantConfig.label("content.agenda", "Agenda"), icon: <Calendar size={18} />, onClick: () => setTab("agenda") },
-    { key: "igrejas", label: tenantConfig.label("community.churches", "Organizações"), icon: <MapPin size={18} />, onClick: () => setTab("igrejas") },
-    ...(profile && tenantConfig.isModuleEnabled("community.life_group") ? [{ key: "celulas", label: tenantConfig.label("community.life_group", "Life Groups"), icon: <Users2 size={18} />, onClick: () => setTab("celulas") }] : []),
+  const navItems: (BottomNavItem | null)[] = [
+    { key: "inicio", label: "Início", icon: <Home size={18} />, onClick: () => setTab("inicio") },
+    { key: "noticias", label: "Notícias", icon: <Newspaper size={18} />, onClick: () => setTab("noticias") },
+    ...(showRadio ? [{ key: "radio", label: "Rádio Web", icon: <Radio size={18} />, onClick: () => setTab("radio") }] : []),
+
+    { key: "videos", label: "FAM Vídeos", icon: <Video size={18} />, onClick: () => setTab("videos") },
+    { key: "agenda", label: "Agenda", icon: <Calendar size={18} />, onClick: () => setTab("agenda") },
     { key: "participar", label: "Participar", icon: <Sparkles size={18} />, onClick: () => setTab("participar") },
-    { key: "contato", label: tenantConfig.label("support.talk_to_someone", "Conversar"), icon: <MessageCircle size={18} />, onClick: () => setTab("contato") },
-    { key: "ofertar", label: tenantConfig.label("finance.giving", "Doação"), icon: <HeartHandshake size={18} />, onClick: () => setTab("ofertar") },
-    profile
-      ? { key: "meu-painel", label: tenantConfig.label("core.profile", "Meu Painel"), icon: <LayoutDashboard size={18} />, onClick: () => { window.location.href = "/painel"; } }
-      : { key: "entrar", label: "Entrar", icon: <LogIn size={18} />, onClick: () => { window.location.href = "/entrar"; } },
+    { key: "contato", label: "Fale Conosco", icon: <MessageCircle size={18} />, onClick: () => setTab("contato") },
+    { key: "risco", label: "Análise de Risco", icon: <ShieldAlert size={18} />, onClick: () => { window.location.href = "/analise-risco"; } },
+    { key: "ofertar", label: "Doação", icon: <HeartHandshake size={18} />, onClick: () => setTab("ofertar") },
+    ...(profile && myMember ? [{ key: "member-id", label: "Member ID", icon: <LayoutDashboard size={18} />, onClick: () => { window.location.href = "/painel/carteira"; } }] : []),
+    !profile
+      ? { key: "entrar", label: "Entrar", icon: <LogIn size={18} />, onClick: () => { window.location.href = "/entrar"; } }
+      : null,
   ];
 
   return (
@@ -101,20 +98,27 @@ export default function PublicHome() {
       <header className="sticky top-0 z-20 border-b-[3px] border-gold bg-navy">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-white">
-            {(tenantConfig.branding.logo_primary || community?.logo_url) ? (
-              <img src={tenantConfig.branding.logo_primary || community?.logo_url || ""} alt={tenantConfig.branding.display_name || community?.name || tenantConfig.platform.name} className="h-8 w-8 rounded-full object-cover" />
-            ) : (
-              <Sparkles className="h-5 w-5 text-gold" />
-            )}
-            <span className="font-display text-lg font-bold tracking-wide">
-              {tenantConfig.branding.display_name || community?.display_name || community?.name || tenantConfig.platform.name}
-            </span>
+            <img src="/brand/fam-logo.jpg" alt="Logo do Instituto FAM — Força Ativa da Mulher" className="h-9 w-9 rounded-full bg-white object-contain p-0.5" />
+            <span className="font-display text-lg font-bold tracking-wide">FAM · FORÇA ATIVA DA MULHER</span>
           </Link>
-          <Button asChild size="sm">
-            <Link href={profile ? "/painel" : "/entrar"}>{profile ? "Meu Painel" : "Área do membro"}</Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm" className="hidden border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white sm:inline-flex">
+              <Link href="/instituto">Conheça a FAM</Link>
+            </Button>
+            <Button asChild size="sm" className="bg-fam-pink text-white hover:bg-fam-rose">
+              <Link href={profile ? "/painel" : "/entrar"}>{profile ? "Meu Painel" : "Área do membro"}</Link>
+            </Button>
+          </div>
         </div>
       </header>
+
+      {tab !== "inicio" && (
+        <div className="container pt-3">
+          <Button onClick={goToPreviousPage} variant="outline" size="sm" className="gap-2 border-fam-gold/40 text-fam-plum hover:bg-fam-soft-pink">
+            <ArrowLeft className="h-4 w-4" /> Voltar à página anterior
+          </Button>
+        </div>
+      )}
 
       <Tabs value={tab} onValueChange={setTab} className="container py-4">
 
@@ -123,34 +127,15 @@ export default function PublicHome() {
           {/* Hero rotativo (carousel) — fallback para hero estático se sem banners */}
           <HeroCarousel banners={banners}
             onSeeVideos={() => setTab("videos")}
-            onSeeServices={() => setTab("cultos")}
+            onSeeServices={() => setTab("agenda")}
           />
 
-          {/* Palavra do dia */}
-          <section>
-            <Card className="bg-gradient-to-br from-gold/10 to-gold/0 border-gold/30">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-navy"><Sun className="h-5 w-5 text-gold" />{word.title}</CardTitle>
-                {word.verse_ref && <CardDescription className="text-base font-semibold text-gold">{word.verse_ref}</CardDescription>}
-              </CardHeader>
-              <CardContent>
-                {word.verse_text && <p className="font-display text-lg italic text-ink leading-relaxed">"{word.verse_text}"</p>}
-                {word.reflection && <p className="mt-3 text-sm text-muted">{word.reflection}</p>}
-                {word.prayer && (
-                  <div className="mt-4 rounded-md border border-gold/30 bg-gold/5 p-3">
-                    <p className="text-[10px] font-extrabold uppercase tracking-widest text-gold">Oração</p>
-                    <p className="mt-1 font-display italic text-sm text-ink">{word.prayer}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </section>
 
           {/* Últimos Vídeos */}
           {sermons.length > 0 && (
             <section>
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="font-display text-xl text-navy">Últimos vídeos</h2>
+                        <h2 className="font-display text-xl text-navy">FAM Vídeos</h2>
                 <Button variant="ghost" onClick={() => setTab("videos")} className="gap-2">Mais vídeos... <ArrowRight className="h-4 w-4" /></Button>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -181,15 +166,18 @@ export default function PublicHome() {
                 <h2 className="font-display text-xl text-navy">Últimas notícias</h2>
                 <Button variant="ghost" onClick={() => setTab("noticias")} className="gap-2">Ver todas <ArrowRight className="h-4 w-4" /></Button>
               </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {news.slice(0, 3).map((n) => (
-                  <button key={n.id} onClick={() => setTab("noticias")} className="block overflow-hidden rounded-xl border bg-card text-left transition-shadow hover:shadow-md">
-                    {n.cover_url && <img src={n.cover_url} alt="" className="aspect-[16/9] w-full object-cover" />}
-                    <div className="p-3">
-                      <b className="line-clamp-2 text-sm text-ink">{n.title}</b>
-                      {n.published_at && <p className="mt-1 text-xs text-muted">{new Date(n.published_at).toLocaleDateString("pt-BR")}</p>}
+              <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-3">
+                {news.map((n) => (
+                  <Link key={n.id} href={`/noticias/${n.slug}`} className="group w-[min(82vw,360px)] shrink-0 snap-start overflow-hidden rounded-2xl border border-fam-gold/30 bg-card text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+                    {n.cover_url ? <img src={n.cover_url} alt="" className="aspect-[16/9] w-full object-cover transition group-hover:scale-[1.02]" /> : <div className="aspect-[16/9] bg-gradient-to-br from-fam-plum to-fam-magenta" />}
+                    <div className="p-4">
+                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-fam-gold">{n.category === "cec_brasilia" ? "FAM — Brasília" : n.category === "geral" ? "Institucional" : "FAM — Nacional"}</span>
+                      <b className="mt-1 block line-clamp-2 font-display text-base text-fam-plum">{n.title}</b>
+                      {n.summary && <p className="mt-1 line-clamp-2 text-sm text-muted">{n.summary}</p>}
+                      {n.published_at && <p className="mt-3 text-xs text-muted">{new Date(n.published_at).toLocaleDateString("pt-BR")}</p>}
+                      <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-fam-magenta">Ler informação <ArrowRight className="h-3.5 w-3.5" /></span>
                     </div>
-                  </button>
+                  </Link>
                 ))}
               </div>
             </section>
@@ -201,8 +189,8 @@ export default function PublicHome() {
               <div className="rounded-2xl border border-gold/30 bg-navy p-5 text-white">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h2 className="font-display text-xl font-bold">{tenantConfig.label("content.radio", "Rádio Web")}</h2>
-                    <p className="mt-1 text-sm text-white/70">{radioConfig.display_name || tenantConfig.branding.display_name || "Sua comunidade, sempre ouvindo"}</p>
+                    <h2 className="font-display text-xl font-bold">Rádio Web</h2>
+                    <p className="mt-1 text-sm text-white/70">{radioConfig.display_name || "Sua comunidade, sempre ouvindo"}</p>
                   </div>
                   <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gold/20 text-gold"><Radio className="h-6 w-6" /></span>
                 </div>
@@ -229,28 +217,7 @@ export default function PublicHome() {
             </section>
           )}
 
-          {/* Próximos Cultos */}
-          {services.length > 0 && (
-            <section>
-              <h2 className="mb-4 font-display text-xl text-navy">Próximos cultos</h2>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {services.slice(0, 4).map((s) => (
-                  <Card key={s.id} className="border-l-4 border-l-gold">
-                    <CardContent className="flex items-center gap-4 pt-6">
-                      <div className="text-center">
-                        <b className="block font-display text-xl text-navy">{s.time.slice(0, 5)}</b>
-                        <span className="text-[10px] font-bold uppercase tracking-wide text-muted">{WEEKDAY_LABELS[s.weekday]}</span>
-                      </div>
-                      <div className="flex-1 border-l border-border pl-4">
-                        <b className="text-ink">{s.description ?? "Culto"}</b>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              <Button variant="ghost" onClick={() => setTab("cultos")} className="mt-4 gap-2">Ver todos os cultos <ArrowRight className="h-4 w-4" /></Button>
-            </section>
-          )}
+
         </TabsContent>
 
         {/* === NOTÍCIAS === */}
@@ -263,33 +230,12 @@ export default function PublicHome() {
           <RadioPage />
         </TabsContent>
 
-        {/* === CULTOS === */}
-        <TabsContent value="cultos">
-          <h2 className="mb-2 font-display text-2xl text-navy">Cultos e encontros</h2>
-          <p className="mb-6 text-sm text-muted">Horários e dias das celebrações na {sede?.name ?? "Sede"}.</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {services.map((s) => (
-              <Card key={s.id} className="border-l-4 border-l-gold">
-                <CardContent className="flex items-center gap-4 pt-6">
-                  <div className="text-center">
-                    <b className="block font-display text-xl text-navy">{s.time.slice(0,5)}</b>
-                    <span className="text-[10px] font-bold uppercase tracking-wide text-muted">{WEEKDAY_LABELS[s.weekday]}</span>
-                  </div>
-                  <div className="flex-1 border-l border-border pl-4">
-                    <b className="text-ink">{s.description ?? "Culto"}</b>
-                    {sede?.address && <p className="mt-1 flex items-center gap-1 text-xs text-muted"><MapPin className="h-3 w-3" />{sede.address}</p>}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
+          {/* Área de eventos removida da navegação pública */}
         {/* === VÍDEOS === */}
         <TabsContent value="videos">
-          <h2 className="mb-4 font-display text-2xl text-navy">Pregações</h2>
+          <h2 className="mb-4 font-display text-2xl text-navy">FAM Vídeos</h2>
           {sermons.length === 0 ? (
-            <p className="py-8 text-center italic text-muted">Em breve novas pregações por aqui.</p>
+            <p className="py-8 text-center italic text-muted">Em breve novos conteúdos da FAM por aqui.</p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {sermons.map((s) => (
@@ -304,7 +250,7 @@ export default function PublicHome() {
                     {s.description && <p className="mt-1 text-xs text-muted line-clamp-2">{s.description}</p>}
                     {s.pdf_url && (
                       <a href={s.pdf_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-gold hover:underline">
-                        <FileDown className="h-3.5 w-3.5" /> Baixar PDF da palavra
+                        <FileDown className="h-3.5 w-3.5" /> Baixar material
                       </a>
                     )}
                   </div>
@@ -316,7 +262,7 @@ export default function PublicHome() {
 
         {/* === AGENDA === */}
         <TabsContent value="agenda">
-          <h2 className="mb-4 font-display text-2xl text-navy">Agenda</h2>
+          <h2 className="mb-4 font-display text-2xl text-navy">Agenda de ações e eventos</h2>
           {registrationEvents.length > 0 && (
             <div className="mb-6 space-y-2">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Eventos com inscrição</h3>
@@ -371,25 +317,6 @@ export default function PublicHome() {
           <AgendaList events={events} />
         </TabsContent>
 
-        {/* === IGREJAS === */}
-        <TabsContent value="igrejas">
-          <h2 className="mb-4 font-display text-2xl text-navy">Nossas igrejas</h2>
-          {churches.length === 0 ? (
-            <p className="py-8 text-center italic text-muted">Nenhuma igreja cadastrada.</p>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {churches.map((c) => <ChurchCard key={c.id} church={c} />)}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* === MAPA DAS CÉLULAS === */}
-        <TabsContent value="celulas">
-          <h2 className="mb-2 font-display text-2xl text-navy">Mapa de Life Groups</h2>
-          <p className="mb-6 text-sm text-muted">Encontre a célula (Life Group) mais próxima de você.</p>
-          <CellsSearch cells={cells} />
-        </TabsContent>
-
         {/* === QUERO PARTICIPAR === */}
         <TabsContent value="participar">
           <PublicParticipateSection />
@@ -398,6 +325,17 @@ export default function PublicHome() {
         {/* === QUERO CONVERSAR === */}
         <TabsContent value="contato">
           <PublicContactForms churchId={communityId} />
+        </TabsContent>
+
+        {/* === FAM — ACOLHIMENTO E PROTEÇÃO === */}
+        <TabsContent value="risco">
+          <div className="mx-auto max-w-3xl py-6">
+            <div className="rounded-xl border border-gold/30 bg-gold/5 p-5">
+              <h2 className="font-display text-2xl text-navy">Análise de Risco</h2>
+              <p className="mt-2 text-sm text-muted">Orientação inicial para mulheres em situação de vulnerabilidade. A ferramenta não substitui emergência, polícia, saúde ou avaliação profissional.</p>
+              <Button asChild className="mt-4"><Link href="/analise-risco">Iniciar análise orientativa</Link></Button>
+            </div>
+          </div>
         </TabsContent>
 
         {/* === DÍZIMOS E OFERTAS === */}
@@ -411,13 +349,13 @@ export default function PublicHome() {
 
       <footer className="container flex flex-wrap items-center justify-between gap-3 border-t py-6">
         <p className="text-xs text-muted">
-          {community?.name ?? "CEC Manaus"} · Comunidade Evangélica Cristã
+          Instituto FAM · Força Ativa da Mulher
           {community?.whatsapp_phone && <> · WhatsApp: <a href={`https://wa.me/${community.whatsapp_phone.replace(/\D/g, '')}`} className="hover:underline">{community.whatsapp_phone}</a></>}
         </p>
         <Link href={profile ? "/painel" : "/entrar"} className="text-xs font-bold text-gold hover:underline">{profile ? "Meu Painel" : "Área do membro"} →</Link>
       </footer>
 
-      <BottomNav items={navItems} activeKey={tab} />
+      <BottomNav items={navItems.filter((item): item is BottomNavItem => item !== null)} activeKey={tab} />
     </div>
   );
 }

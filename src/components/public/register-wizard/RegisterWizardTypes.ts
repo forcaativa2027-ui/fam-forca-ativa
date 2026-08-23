@@ -4,13 +4,13 @@ import {
 } from "lucide-react";
 
 export const INTENT_LABELS: Record<PipelineIntent, { label: string; description: string; icon: React.ComponentType<{className?:string}> }> = {
-  lifegroup:                { label: "Quero um Life Group",         description: "Participar de uma célula próxima de mim", icon: Users },
-  discipulado:              { label: "Quero discipulado",            description: "Ser discipulado por um líder",            icon: Heart },
-  acompanhamento_pastoral:  { label: "Acompanhamento pastoral",      description: "Conversar com um pastor",                 icon: MessageCircleHeart },
-  visita:                   { label: "Quero ser visitado",           description: "Receber um líder em casa",                icon: HomeIcon },
-  conhecer:                 { label: "Quero conhecer a igreja",      description: "Conhecer melhor a comunidade",            icon: Eye },
-  batismo:                  { label: "Quero me batizar",             description: "Iniciar o processo de batismo",           icon: Droplets },
-  servir:                   { label: "Quero servir",                 description: "Servir em algum ministério",              icon: Hand },
+  lifegroup:                { label: "Quero ser voluntária",          description: "Participar de ações e projetos da FAM",     icon: Users },
+  discipulado:              { label: "Quero participar de projetos",  description: "Conhecer oportunidades de atuação social",  icon: Heart },
+  acompanhamento_pastoral:  { label: "Quero compartilhar minha experiência", description: "Apresentar conhecimentos e experiências sociais", icon: MessageCircleHeart },
+  visita:                   { label: "Quero receber um contato",      description: "Solicitar retorno da equipe FAM",             icon: HomeIcon },
+  conhecer:                 { label: "Quero conhecer a FAM",           description: "Conhecer melhor o Instituto e seus projetos", icon: Eye },
+  batismo:                  { label: "Preciso de orientação",          description: "Conversar com a equipe sobre uma necessidade", icon: Droplets },
+  servir:                   { label: "Quero apoiar a FAM",             description: "Contribuir como voluntária ou apoiadora",   icon: Hand },
   outro:                    { label: "Outro",                        description: "Conte-nos como podemos ajudar",           icon: HelpCircle },
 };
 
@@ -27,12 +27,12 @@ export interface RegisterState {
   marital_status: string; birth_date: string; gender: string;
   // Localização
   country: string; cep: string; state: string; city: string; address: string; number: string; complemento: string; neighborhood: string;
-  // Comunidade
+  // Vínculo institucional e participação
   community_id: string; life_group_id: string;
-  // História de fé
+  // Histórico social (campos legados preservados para compatibilidade)
   baptized: boolean | null; baptism_date: string; last_church: string;
   holy_spirit_baptized: boolean | null; holy_spirit_baptism_date: string;
-  // Jornada (opcionais)
+  // Jornada, contexto e participação (opcionais)
   seeking_reason: string; life_before_church: string; testimony: string;
   belongs_to_group: boolean | null; group_name: string;
   intent: PipelineIntent;

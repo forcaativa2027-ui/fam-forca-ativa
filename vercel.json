@@ -1,8 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/radio-notify",
-      "schedule": "0 9 * * *"
-    }
-  ]
-}

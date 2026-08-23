@@ -4,10 +4,10 @@ import { Users, Heart, MessageCircleHeart, Home as HomeIcon, ArrowRight, Sparkle
 import { Card, CardContent } from "@/components/ui/card";
 
 const CTAS = [
-  { intent: "lifegroup",                label: "Quero um Life Group",         description: "Participar de uma célula próxima de mim",       icon: Users,             accent: "from-gold/15 to-gold/5"   },
-  { intent: "discipulado",              label: "Quero discipulado",            description: "Caminhar com um discipulador na fé",            icon: Heart,             accent: "from-purple-100 to-purple-50" },
-  { intent: "acompanhamento_pastoral",  label: "Acompanhamento pastoral",     description: "Conversar com um pastor da liderança",          icon: MessageCircleHeart, accent: "from-blue-100 to-blue-50" },
-  { intent: "visita",                   label: "Quero ser visitado",          description: "Receber um líder da igreja em casa",            icon: HomeIcon,          accent: "from-green-100 to-green-50" },
+  { intent: "lifegroup",                label: "Quero ser voluntária",          description: "Participar de ações e projetos da FAM",          icon: Users,             accent: "from-fam-gold-soft/25 to-fam-gold-soft/5"   },
+  { intent: "discipulado",              label: "Quero participar de projetos",  description: "Conhecer oportunidades de apoio e atuação social", icon: Heart,             accent: "from-fam-lilac/25 to-fam-lilac/5" },
+  { intent: "acompanhamento_pastoral",  label: "Quero compartilhar minha experiência", description: "Apresentar conhecimentos e experiências sociais", icon: MessageCircleHeart, accent: "from-fam-coral/20 to-fam-coral/5" },
+  { intent: "visita",                   label: "Quero receber um contato",      description: "Solicitar retorno da equipe FAM", icon: HomeIcon,          accent: "from-fam-soft-pink to-white" },
 ] as const;
 
 export function PublicParticipateSection() {
@@ -19,8 +19,8 @@ export function PublicParticipateSection() {
           <h2 className="font-display text-2xl">Quero participar</h2>
         </div>
         <p className="mt-2 text-sm text-muted max-w-xl">
-          Quando você quiser dar um passo adiante na caminhada, criamos sua conta e a liderança entra em contato.
-          Escolha o que melhor descreve o que você procura agora.
+          Encontre uma forma de se aproximar da FAM, participar de projetos ou compartilhar sua experiência.
+          Escolha a opção que melhor descreve o que você procura agora.
         </p>
       </div>
 
@@ -49,7 +49,7 @@ export function PublicParticipateSection() {
       </div>
 
       <p className="text-xs text-muted">
-        Já tem conta? <Link href="/entrar" className="font-bold text-gold hover:underline">Acesse a área do membro</Link>.
+        Já tem cadastro? <Link href="/entrar" className="font-bold text-gold hover:underline">Acesse sua área privada</Link>.
       </p>
     </div>
   );

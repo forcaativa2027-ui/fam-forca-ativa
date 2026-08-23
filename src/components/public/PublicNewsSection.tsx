@@ -8,31 +8,31 @@ import { usePublicNews, useVisibleNewsVideos, useMyProfile } from "@/hooks/use-q
 import type { News, NewsCategory, VisibleNewsVideo } from "@/types/domain";
 import Link from "next/link";
 
-const CATEGORIES: { value: NewsCategory; label: string }[] = [
-  { value: "minha_comunidade", label: "Minha comunidade" },
-  { value: "cec_manaus",       label: "CEC Manaus" },
-  { value: "cec_brasilia",     label: "CEC Brasília" },
-  { value: "geral",            label: "Gerais" },
+const CATEGORIES: { value: NewsCategory | "nacional"; label: string }[] = [
+  { value: "cec_brasilia", label: "FAM — Brasília" },
+  { value: "nacional", label: "FAM — Nacional" },
+  { value: "geral", label: "Institucional" },
 ];
 
 export function PublicNewsSection({ churchId }: { churchId?: string | null } = {}) {
-  const [cat, setCat] = useState<NewsCategory | "todas">("todas");
+  const [cat, setCat] = useState<NewsCategory | "nacional">("nacional");
   const { data: all = [] } = usePublicNews(undefined, churchId);
-  const filtered = cat === "todas" ? all : all.filter((n) => n.category === cat);
+  const filtered = cat === "nacional"
+    ? all.filter((n) => n.category === "minha_comunidade" || n.category === "cec_manaus")
+    : all.filter((n) => n.category === cat);
 
   return (
     <div className="space-y-6">
-      <CecNewsVideosHero />
+      <FamNewsVideosHero />
 
       <div className="flex items-center gap-2 text-navy">
         <Newspaper className="h-5 w-5 text-gold" />
         <h2 className="font-display text-2xl">Notícias</h2>
       </div>
 
-      <Tabs value={cat} onValueChange={(v) => setCat(v as NewsCategory | "todas")}>
+      <Tabs value={cat} onValueChange={(v) => setCat(v as NewsCategory | "nacional")}>
         <div className="overflow-x-auto">
           <TabsList className="min-w-max">
-            <TabsTrigger value="todas">Todas</TabsTrigger>
             {CATEGORIES.map((c) => <TabsTrigger key={c.value} value={c.value}>{c.label}</TabsTrigger>)}
           </TabsList>
         </div>
@@ -56,7 +56,7 @@ function extractYoutubeId(url: string): string | null {
   return m ? m[1] : null;
 }
 
-function CecNewsVideosHero() {
+function FamNewsVideosHero() {
   const { data: me } = useMyProfile();
   const { data: videos = [] } = useVisibleNewsVideos(me?.id ?? null);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -70,7 +70,7 @@ function CecNewsVideosHero() {
     <div className="space-y-3">
       <div className="flex items-center gap-2 text-navy">
         <Play className="h-5 w-5 text-gold" />
-        <h2 className="font-display text-2xl">CEC News Vídeos</h2>
+        <h2 className="font-display text-2xl">FAM em ação</h2>
       </div>
 
       <Card className="overflow-hidden border-2 border-gold/30">
@@ -135,10 +135,11 @@ function CecNewsVideosHero() {
 }
 
 function NewsCard({ news: n }: { news: News }) {
-  const cat = CATEGORIES.find((c) => c.value === n.category)?.label ?? n.category;
+  const cat = n.category === "cec_brasilia" ? "FAM — Brasília" : n.category === "geral" ? "Institucional" : "FAM — Nacional";
   return (
-    <Card className="overflow-hidden">
-      {n.cover_url && <img src={n.cover_url} alt="" className="aspect-video w-full object-cover" />}
+    <Link href={`/noticias/${n.slug}`} className="group block">
+    <Card className="h-full overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg">
+      {n.cover_url && <img src={n.cover_url} alt="" className="aspect-video w-full object-cover transition group-hover:scale-[1.02]" />}
       <CardHeader>
         <span className="text-[10px] font-extrabold tracking-widest text-gold">{cat.toUpperCase()}</span>
         <CardTitle className="text-base leading-snug">{n.title}</CardTitle>
@@ -151,7 +152,9 @@ function NewsCard({ news: n }: { news: News }) {
       </CardHeader>
       <CardContent>
         {n.summary && <p className="text-sm text-muted">{n.summary}</p>}
+        <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-fam-magenta">Ler informação <ExternalLink className="h-3.5 w-3.5" /></span>
       </CardContent>
     </Card>
+    </Link>
   );
 }

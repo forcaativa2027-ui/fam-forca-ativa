@@ -8,15 +8,14 @@ export type LivingLogoProps = {
   showSlogan?: boolean;
   compact?: boolean;
   className?: string;
-  logoUrl?: string | null;   // personalização por igreja/instituto — cai no padrão CEC se vazio
+  logoUrl?: string | null;   // personalização por tenant — cai no padrão FAM se vazio
   alt?: string;
 };
 
 /**
  * DS-003 §4/§6 — Living Logo (Fase 1).
- * Usa o PNG transparente único que já existe hoje (`/images/cec-family-logo.png`)
- * como padrão — mas aceita `logoUrl` pra igrejas/institutos com marca própria
- * (campo `churches.logo_url`, que já existia e não estava conectado a nada).
+ * Usa a logo institucional FAM (`/brand/fam-logo.jpg`) como padrão — mas aceita
+ * `logoUrl` para tenants com marca própria.
  * Aplica, respeitando `prefers-reduced-motion`:
  *   - entrada com fade + leve ampliação de 96% → 100%;
  *   - "respiração" discreta contínua da logo inteira;
@@ -52,7 +51,7 @@ export function LivingLogo({
         {breathing && (
           <div
             aria-hidden="true"
-            className="animate-living-glow absolute rounded-full bg-[#FBBF24] blur-2xl"
+            className="animate-living-glow absolute rounded-full bg-fam-gold blur-2xl"
             style={{ width: size * 0.85, height: size * 0.5, top: -size * 0.08 }}
           />
         )}
@@ -60,16 +59,16 @@ export function LivingLogo({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logoUrl} alt={alt ?? "Logo"} width={size} height={size} className={imgClass} />
         ) : (
-          <Image src="/images/cec-family-logo.png" alt={alt ?? "CEC FAMILY"} width={size} height={size} priority className={imgClass} />
+          <Image src="/brand/fam-logo.jpg" alt={alt ?? "FAM — Força Ativa da Mulher"} width={size} height={size} priority className={imgClass} />
         )}
       </div>
 
       {showSlogan && !compact && (
         <p
-          className={`text-center text-sm font-semibold leading-snug text-[#0F172A] transition-opacity duration-700 ${entered ? "opacity-100" : "opacity-0"}`}
+          className={`text-center text-sm font-semibold leading-snug text-fam-plum transition-opacity duration-700 ${entered ? "opacity-100" : "opacity-0"}`}
           style={{ transitionDelay: entered ? "250ms" : "0ms" }}
         >
-          Conectando pessoas.<br />Fortalecendo a fé.<br />Desenvolvendo líderes.
+          Acolhendo mulheres.<br />Fortalecendo redes.<br />Transformando realidades.
         </p>
       )}
     </div>

@@ -17,15 +17,14 @@ import { EditorialWorkflowPanel } from "@/components/shared/EditorialWorkflowPan
 import type { News, NewsCategory } from "@/types/domain";
 
 const ROLE_LABELS: Record<string, string> = {
-  apostolo: "Apóstolo", pastor: "Pastor", supervisor: "Supervisor",
-  lider: "Líder", anfitriao: "Anfitrião", discipulador: "Discipulador", membro: "Membro",
+  administrador_geral: "Administrador geral", administrador_instituto: "Administrador do instituto",
+  supervisor: "Supervisão", lider: "Coordenação", membro: "Associado",
 };
 
 const CATEGORIES: { value: NewsCategory; label: string }[] = [
-  { value: "minha_comunidade", label: "Minha comunidade" },
-  { value: "cec_manaus",       label: "CEC Manaus" },
-  { value: "cec_brasilia",     label: "CEC Brasília" },
-  { value: "geral",            label: "Gerais" },
+  { value: "minha_comunidade", label: "FAM — Nacional" },
+  { value: "cec_brasilia", label: "FAM — Brasília" },
+  { value: "geral", label: "Institucional" },
 ];
 
 export function NewsAdmin() {
@@ -50,8 +49,8 @@ export function NewsAdmin() {
     setScheduledAt(n.published_at && new Date(n.published_at) > new Date() ? n.published_at.slice(0, 16) : "");
     reset({
       title: n.title, category: n.category,
-      summary: n.summary ?? "", body: n.body ?? "",
-      cover_url: n.cover_url ?? "", author_name: n.author_name ?? "",
+      subtitle: n.subtitle ?? "", summary: n.summary ?? "", body: n.body ?? "",
+      cover_url: n.cover_url ?? "", video_url: n.video_url ?? "", source: n.source ?? "", author_name: n.author_name ?? "",
       is_published: n.is_published,
       meta_title: n.meta_title ?? "", meta_description: n.meta_description ?? "",
     });
@@ -65,13 +64,13 @@ export function NewsAdmin() {
       const authorLabel = myProfile
         ? `${myProfile.full_name}${ROLE_LABELS[myProfile.role] ? ` (${ROLE_LABELS[myProfile.role]})` : ""}`
         : (v.author_name || null);
-      const churchName = churches.find((c) => c.id === (churchId || myProfile?.church_id))?.name;
       const payload: Partial<News> = {
         slug: slugify(v.title),
         title: v.title, category: v.category,
-        summary: v.summary || null, body: v.body || null,
-        cover_url: v.cover_url || null,
-        author_name: authorLabel ? `${authorLabel}${churchName ? ` — ${churchName}` : ""}` : null,
+        subtitle: v.subtitle || null, summary: v.summary || null, body: v.body || null,
+        cover_url: v.cover_url || null, video_url: v.video_url || null,
+        source: v.source || null,
+        author_name: authorLabel || null,
         is_published: v.is_published,
         published_at: v.is_published ? (scheduledAt ? new Date(scheduledAt).toISOString() : new Date().toISOString()) : null,
         meta_title: v.meta_title || v.title,
@@ -142,7 +141,7 @@ export function NewsAdmin() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-            <Field label="Publicar para qual comunidade?">
+            <Field label="Publicar para qual unidade ou público?">
               <select value={churchId} onChange={(e) => setChurchId(e.target.value)}
                 className="h-10 w-full rounded-md border bg-background px-3 text-sm">
                 <option value="">— Global (todas as comunidades) —</option>
@@ -150,7 +149,7 @@ export function NewsAdmin() {
               </select>
             </Field>
             <Field label="Título" error={errors.title?.message}>
-              <Input {...register("title")} placeholder="Ex: Conferência de Avivamento 2026" />
+              <Input {...register("title")} placeholder="Ex: FAM amplia ações de acolhimento em 2026" />
             </Field>
             {title && <p className="text-xs text-muted">URL amigável: <code className="rounded bg-navy-50 px-1 py-0.5">/{slugify(title)}</code></p>}
             <div className="grid gap-3 sm:grid-cols-2">
@@ -163,13 +162,24 @@ export function NewsAdmin() {
                 <Input disabled value={myProfile ? `${myProfile.full_name}${ROLE_LABELS[myProfile.role] ? ` (${ROLE_LABELS[myProfile.role]})` : ""}` : "Carregando…"} />
               </Field>
             </div>
+            <Field label="Subtítulo (linha de apoio)">
+              <Input {...register("subtitle")} placeholder="Complemento informativo do título" />
+            </Field>
             <Field label="Resumo (chamada da home)" error={errors.summary?.message}>
               <textarea {...register("summary")} rows={2}
                 className="w-full rounded-md border bg-background p-3 text-sm" maxLength={200}
                 placeholder="Frase curta que aparece no card (até 200 caracteres)" />
             </Field>
-            <Field label="Imagem de capa (URL)" error={errors.cover_url?.message}>
-              <Input {...register("cover_url")} placeholder="https://..." />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Imagem de capa (URL)" error={errors.cover_url?.message}>
+                <Input {...register("cover_url")} placeholder="https://..." />
+              </Field>
+              <Field label="Fonte">
+                <Input {...register("source")} placeholder="Ex.: FAM, órgão público ou parceiro" />
+              </Field>
+            </div>
+            <Field label="Link do vídeo no YouTube" error={errors.video_url?.message}>
+              <Input {...register("video_url")} placeholder="https://www.youtube.com/watch?v=..." />
             </Field>
             <Field label="Conteúdo">
               <textarea {...register("body")} rows={5}

@@ -17,7 +17,7 @@ import { qrCodeImageUrl, CARD_STATUS_LABELS } from "@/services/cecId";
 import { logAudit } from "@/services/audit";
 import type { CardStatus } from "@/types/domain";
 
-const DEFAULT_LOGO = "/images/cec-family-logo.png";
+const DEFAULT_LOGO = "/brand/fam-logo.jpg";
 
 function maskDoc(value: string | null | undefined, keepEnd = 2): string {
   if (!value) return "—";
@@ -66,8 +66,10 @@ export default function CarteiraPage() {
 
   const isAdmin = profile?.role && profile.role !== "membro" && profile.role !== "visitante";
   const church = churches.find((c) => c.id === member?.church_id);
+  const displayUnitName = /cec|igreja|comunidade evangélica/i.test(church?.name ?? "") ? "Unidade FAM" : (church?.name ?? "—");
   const { data: territorialStateName } = useChurchStateName(member?.church_id ?? null);
   const lg = cells.find((c) => c.id === member?.life_group_id);
+  const displayGroupName = /life\s*group|discipul/i.test(lg?.name ?? "") ? "Grupo de participação" : (lg?.name ?? "Aguardando alocação");
 
   async function signOut() {
     if (profile) await logAudit(supabase, "logout", "auth", profile.id);
@@ -79,7 +81,7 @@ export default function CarteiraPage() {
     const url = card ? `${window.location.origin}/cec-id/${card.qr_token}` : window.location.href;
     try {
       if (navigator.share) {
-        await navigator.share({ title: "Minha Carteira CEC ID", text: `${member?.full_name} — ${card?.categoria ?? ""}`, url });
+        await navigator.share({ title: "Minha Carteira FAM", text: `${member?.full_name} — ${card?.categoria ?? ""}`, url });
       } else {
         await navigator.clipboard.writeText(url);
         setShared(true); setTimeout(() => setShared(false), 2000);
@@ -100,7 +102,8 @@ export default function CarteiraPage() {
   const situacao = situacaoLabel(member.status, card.card_status);
   const elegibilidade = elegibilidadeLabel(card.card_status);
   const carteirinha = carteirinhaLabel(card.card_status);
-  const logoUrl = church?.logo_url || DEFAULT_LOGO;
+  const legacyLogoUrl = /cec[-_\s]*(family|manaus)|cec-family-logo/i.test(church?.logo_url ?? "");
+  const logoUrl = legacyLogoUrl ? DEFAULT_LOGO : (church?.logo_url || DEFAULT_LOGO);
 
   return (
     <div className="min-h-screen bg-background">
@@ -113,7 +116,7 @@ export default function CarteiraPage() {
             <Button asChild variant="ghost" size="sm" className="gap-1">
               <Link href="/painel"><ArrowLeft className="h-4 w-4" /></Link>
             </Button>
-            <h1 className="font-display text-xl text-navy">Carteira de Membro</h1>
+            <h1 className="font-display text-xl text-navy">Carteira de Associado</h1>
             <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold ${situacao.tone}`}>{situacao.label.toUpperCase()}</span>
           </div>
           <Button onClick={share} variant="outline" size="sm" className="gap-1.5">
@@ -124,7 +127,7 @@ export default function CarteiraPage() {
         {!isReady && <CompleteProfileCard member={member} />}
 
         {/* Card principal */}
-        <div className="relative overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_15%_10%,#1a3d66,#0E2A47_65%)] p-6 text-white shadow-xl sm:p-8">
+        <div className="relative overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_15%_10%,#6D2C68,#32132D_65%)] p-6 text-white shadow-xl sm:p-8">
           <div className="pointer-events-none absolute -right-10 -top-10 h-52 w-52 rounded-full bg-gold/10" />
           <div className="pointer-events-none absolute -bottom-16 -left-10 h-56 w-56 rounded-full bg-white/5" />
 
@@ -148,8 +151,8 @@ export default function CarteiraPage() {
               <div className="flex items-center gap-2.5">
                 <img src={logoUrl} alt="Logo" className="h-9 w-9 object-contain" />
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-widest text-white/70">Comunidade Evangélica Cristã</p>
-                  <p className="font-display text-base font-bold text-gold">{church?.name ?? "—"}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-white/70">FAM — Força Ativa da Mulher</p>
+                  <p className="font-display text-base font-bold text-gold">{displayUnitName}</p>
                   {territorialStateName && <p className="text-[11px] uppercase tracking-wide text-white/60">{territorialStateName}</p>}
                 </div>
               </div>
@@ -180,12 +183,12 @@ export default function CarteiraPage() {
               <p className="text-sm font-semibold">{member.member_since ? new Date(member.member_since).toLocaleDateString("pt-BR") : "—"}</p>
             </div>
             <div>
-              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/60"><Church className="h-3 w-3" /> Igreja</p>
-              <p className="text-sm font-semibold">{church?.name ?? "—"}</p>
+              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/60"><Church className="h-3 w-3" /> Unidade</p>
+              <p className="text-sm font-semibold">{displayUnitName}</p>
             </div>
             <div>
-              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/60"><Users2 className="h-3 w-3" /> Life Group</p>
-              <p className="text-sm font-semibold">{lg?.name ?? "Aguardando alocação"}</p>
+              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/60"><Users2 className="h-3 w-3" /> Grupo de participação</p>
+              <p className="text-sm font-semibold">{displayGroupName}</p>
             </div>
             <div>
               <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/60"><CalendarCheck className="h-3 w-3" /> Emissão</p>
@@ -260,7 +263,7 @@ export default function CarteiraPage() {
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
               {isReady
-                ? "Seu cadastro está completo e validado pela liderança."
+                ? "Seu cadastro está completo e validado pela equipe FAM."
                 : `Status atual: ${CARD_STATUS_LABELS[card.card_status]}.`}
             </p>
           </CardContent>
@@ -273,8 +276,8 @@ export default function CarteiraPage() {
             <div className="flex flex-wrap gap-4 text-xs">
               {[
                 { icon: <User className="h-4 w-4" />, label: "Meus dados", href: "/painel?tab=perfil" },
-                { icon: <FileText className="h-4 w-4" />, label: "Discipulado", href: "/painel?tab=discipulado" },
-                { icon: <Heart className="h-4 w-4" />, label: "Ministérios", href: "/painel?tab=ministerio" },
+                { icon: <FileText className="h-4 w-4" />, label: "Comunicados", href: "/painel?tab=noticias" },
+                { icon: <Heart className="h-4 w-4" />, label: "Projetos FAM", href: "/painel?tab=eventos" },
               ].map((a) => (
                 <Link key={a.label} href={a.href} className="flex flex-col items-center gap-1 rounded-md px-3 py-2 text-navy hover:bg-muted/40">
                   {a.icon} {a.label}

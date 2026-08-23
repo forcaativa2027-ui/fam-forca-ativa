@@ -220,11 +220,78 @@ export function AdminSidebar({
 }: AdminSidebarProps) {
   const { data: profile } = useMyProfile();
   const { data: myChurch } = useMyChurch(profile?.church_id);
-  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC FAMILY";
+    const isThirdSector = process.env.NEXT_PUBLIC_TENANT_TEMPLATE === "third_sector" || myChurch?.short_name?.toUpperCase() === "FAM";
+  const brandLabel = isThirdSector ? "FAM · FORÇA ATIVA DA MULHER" : (myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "FAM · FORÇA ATIVA DA MULHER");
   const { data: activeModules = [] } = useMyActiveModules();
   const isApostolo = profile?.role === "apostolo";
-
+  const isTenantAdmin = isThirdSector && profile?.role === "pastor";
   let groups = buildGroups(counts);
+
+  // A FAM usa uma navegação institucional própria. As chaves legadas permanecem
+  // apenas por compatibilidade com módulos e dados antigos, mas não são renderizadas.
+  if (isThirdSector) {
+    const hiddenFamGroups = new Set(["cecmais", "academy", "cec-id"]);
+    const hiddenFamKeys = new Set<TabKey>([
+      "genealogy", "ministerios", "kids-admin", "life-groups", "mda", "mda-health", "expansion-map",
+      "weekly", "monthly", "relmda-supervisao", "relmda-consolidacao", "relmda-dashboard", "relmda-prazos", "relmda-area",
+      "sermons", "services", "word", "cecmais-ofertas", "conhecimento-biblico", "biblioteca-conhecimento", "biblia-referencias",
+      "cec-id-portaria", "discipleship", "prayer-requests", "visit-requests",
+    ]);
+    const famLabels: Partial<Record<TabKey, string>> = {
+      communities: "Unidades e polos", structure: "Estrutura do Instituto", "evangelism-groups": "Voluntariado",
+      news: "Notícias FAM", banners: "Banners institucionais", events: "Agenda pública",
+      "registration-events": "Inscrições e eventos", "news-videos": "FAM em ação", giving: "Doações",
+      members: "Pessoas cadastradas", leadership: "Equipe e voluntariado", acolhimento: "Acolhimento",
+      evasao: "Pessoas em acompanhamento", crm: "Relacionamento e atendimentos", "org-dashboard": "Visão geral",
+    };
+    groups = groups
+      .filter((group) => !hiddenFamGroups.has(group.id))
+      .map((group) => ({
+        ...group,
+        label: group.id === "organizacao" ? "Organização do Instituto" : group.id === "conteudo" ? "Comunicação e Conteúdo" : group.label,
+        items: group.items.filter((item) => !hiddenFamKeys.has(item.key)).map((item) => ({ ...item, label: famLabels[item.key] ?? item.label })),
+      }))
+      .filter((group) => group.items.length > 0);
+  }
+
+  if (isTenantAdmin) {
+    const dailyGroupIds = new Set(["dashboard", "organizacao", "conteudo", "usuarios", "auditoria"]);
+    const hiddenDailyKeys = new Set<TabKey>([
+      "communities", "genealogy", "expansion-map", "life-groups", "ministerios", "mda", "mda-health", "relmda-dashboard", "supervision",
+      "weekly", "monthly", "relmda-supervisao", "relmda-consolidacao", "relmda-dashboard", "relmda-prazos", "relmda-area",
+      "sermons", "services", "cecmais-ofertas", "conhecimento-biblico", "biblioteca-conhecimento", "biblia-referencias",
+      "cec-id-portaria", "permissions", "delegations", "score", "birthdays", "discipleship", "prayer-requests", "visit-requests",
+      "export", "pesquisa-avancada"
+    ]);
+    const tenantLabels: Partial<Record<TabKey, string>> = {
+      "org-dashboard": "Visão geral",
+      structure: "Estrutura de Acompanhamento",
+      "evangelism-groups": "Grupo de Voluntários",
+      "kids-admin": "KIDS",
+      news: "Notícias FAM",
+      "news-videos": "FAM Vídeos",
+      giving: "Doações",
+      events: "Agenda",
+      "registration-events": "Inscrições e Eventos",
+      "editorial-dashboard": "Central de Conteúdo",
+      "content-library": "Biblioteca de Arquivos",
+      "categories-tags": "Categorias e Tags",
+      members: "Pessoas cadastradas",
+      leadership: "Equipe e Voluntariado",
+      "usuarios-painel": "Administração de Usuários",
+      audit: "Auditoria e Segurança",
+    };
+    groups = groups
+      .filter((group) => dailyGroupIds.has(group.id))
+      .map((group) => ({
+        ...group,
+        label: group.id === "organizacao" ? "Organização do Instituto" : group.id === "conteudo" ? "Comunicação e Conteúdo" : group.label,
+        items: group.items
+          .filter((item) => !hiddenDailyKeys.has(item.key))
+          .map((item) => ({ ...item, label: tenantLabels[item.key] ?? item.label })),
+      }))
+      .filter((group) => group.items.length > 0);
+  }
   if (!isApostolo) {
     const allowedTabKeys = new Set(activeModules.flatMap((m) => DELEGATION_TAB_MAP[m] ?? []));
     groups = groups
@@ -252,7 +319,7 @@ export function AdminSidebar({
     (counts.pipeline_new ?? 0) + (counts.tower_alerts ?? 0);
 
   const roleLabel: Record<string, string> = {
-    apostolo: "Apóstolo", pastor: "Pastor", supervisor: "Supervisor", lider: "Líder",
+    apostolo: "Administrador Geral", pastor: isThirdSector ? "Administrador do Instituto" : "Pastor", supervisor: isThirdSector ? "Supervisora" : "Supervisor", lider: isThirdSector ? "Equipe FAM" : "Líder",
   };
 
   const SidebarContent = (

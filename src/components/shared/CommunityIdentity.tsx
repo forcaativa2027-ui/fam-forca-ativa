@@ -9,26 +9,30 @@ export interface CommunityIdentityProps {
   variant?: "registration" | "sidebar" | "dashboard";
 }
 
-const DEFAULT_LOGO = "/images/cec-family-logo.png";
+const DEFAULT_LOGO = "/brand/fam-logo.jpg";
 
 /**
- * Identidade visual da comunidade — reaproveitada no card de primeiro
- * acesso (registration) e no card de boas-vindas do Dashboard (dashboard).
+ * Identidade visual do tenant — reaproveitada no cadastro e no card de boas-vindas
+ * do Dashboard. O fallback institucional da FAM é aplicado quando o perfil legado
+ * ainda retorna a identificação CEC Manaus.
  * Nunca hardcoda nome/logo: vem sempre por props, resolvidas no servidor
  * a partir do convite (validate_invite_token) ou do perfil logado.
  */
 export function CommunityIdentity({
   communityName, logoUrl, organizationalUnitName, roleName, userName, variant = "dashboard",
 }: CommunityIdentityProps) {
-  const finalLogoUrl = logoUrl || DEFAULT_LOGO;
+  const legacyBrand = /cec\s*(family|manaus)|comunidade evangélica cristã/i.test(communityName ?? "");
+  const legacyLogo = /cec[-_\s]*(family|manaus)|cec-family-logo/i.test(logoUrl ?? "");
+  const displayName = legacyBrand ? "FAM — Força Ativa da Mulher" : communityName;
+  const finalLogoUrl = legacyBrand || legacyLogo ? DEFAULT_LOGO : (logoUrl || DEFAULT_LOGO);
 
   if (variant === "registration") {
     return (
       <section className="flex flex-col items-center text-center">
         <div className="relative mb-4 h-24 w-24">
-          <Image src={finalLogoUrl} alt={`Logomarca da ${communityName}`} fill priority className="object-contain" />
+          <Image src={finalLogoUrl} alt={`Logomarca da ${displayName}`} fill priority className="object-contain" />
         </div>
-        <h1 className="font-display text-xl font-bold text-navy">{communityName}</h1>
+        <h1 className="font-display text-xl font-bold text-navy">{displayName}</h1>
         {organizationalUnitName && <p className="mt-1 text-sm text-muted">{organizationalUnitName}</p>}
         {roleName && (
           <p className="mt-3 rounded-full bg-gold/10 px-4 py-1.5 text-sm font-medium text-gold">
@@ -43,9 +47,9 @@ export function CommunityIdentity({
     return (
       <div className="flex flex-col items-center gap-2 px-3 py-4 text-center text-white">
         <div className="relative h-14 w-14">
-          <Image src={finalLogoUrl} alt={`Logomarca da ${communityName}`} fill className="object-contain" />
+          <Image src={finalLogoUrl} alt={`Logomarca da ${displayName}`} fill className="object-contain" />
         </div>
-        <p className="font-display text-xs font-bold leading-tight">{communityName}</p>
+        <p className="font-display text-xs font-bold leading-tight">{displayName}</p>
         {userName && <p className="mt-1 text-[11px] text-white/70">{userName}</p>}
         {roleName && <p className="text-[10px] uppercase tracking-wider text-gold">{roleName}</p>}
       </div>
@@ -56,10 +60,10 @@ export function CommunityIdentity({
   return (
     <div className="flex items-center gap-4 rounded-xl border bg-card p-4">
       <div className="relative h-16 w-16 shrink-0">
-        <Image src={finalLogoUrl} alt={`Logomarca da ${communityName}`} fill className="object-contain" />
+        <Image src={finalLogoUrl} alt={`Logomarca da ${displayName}`} fill className="object-contain" />
       </div>
       <div className="min-w-0">
-        <p className="font-display text-lg font-bold text-navy">{communityName}</p>
+        <p className="font-display text-lg font-bold text-navy">{displayName}</p>
         {organizationalUnitName && <p className="text-xs text-muted">{organizationalUnitName}</p>}
         {(userName || roleName) && (
           <p className="mt-1 text-sm text-muted">

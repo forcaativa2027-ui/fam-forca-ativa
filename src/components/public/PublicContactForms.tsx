@@ -21,12 +21,12 @@ export function PublicContactForms({ churchId }: { churchId?: string | null } = 
         <h2 className="font-display text-2xl">Quero conversar</h2>
       </div>
       <p className="text-sm text-muted">
-        Escolha como podemos te servir. Sua mensagem chega direto na liderança pastoral.
+        Preencha seus dados e envie uma mensagem para a equipe de acolhimento da FAM.
       </p>
 
       <Tabs defaultValue="oracao">
         <TabsList>
-          <TabsTrigger value="oracao"><Heart className="mr-1 h-3.5 w-3.5" />Pedido de oração</TabsTrigger>
+          <TabsTrigger value="oracao"><Heart className="mr-1 h-3.5 w-3.5" />Preencha seus dados</TabsTrigger>
           <TabsTrigger value="visita"><HomeIcon className="mr-1 h-3.5 w-3.5" />Quero ser visitado</TabsTrigger>
         </TabsList>
         <TabsContent value="oracao"><PrayerForm churchId={churchId} /></TabsContent>
@@ -60,8 +60,8 @@ function PrayerForm({ churchId }: { churchId?: string | null }) {
     <Card className="border-gold/30 bg-gold/5">
       <CardContent className="pt-8 pb-8 text-center">
         <Check className="mx-auto h-10 w-10 text-gold" />
-        <p className="mt-3 font-display text-lg text-navy">Recebemos seu pedido</p>
-        <p className="mt-1 text-sm text-muted">A liderança está orando por você. Em breve entraremos em contato.</p>
+        <p className="mt-3 font-display text-lg text-navy">Mensagem recebida</p>
+        <p className="mt-1 text-sm text-muted">A equipe da FAM avaliará sua solicitação e entrará em contato quando possível.</p>
       </CardContent>
     </Card>
   );
@@ -69,8 +69,8 @@ function PrayerForm({ churchId }: { churchId?: string | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Pedido de oração</CardTitle>
-        <CardDescription>Conte conosco em oração — sua mensagem é confidencial.</CardDescription>
+        <CardTitle className="text-lg">Envie sua mensagem</CardTitle>
+        <CardDescription>Conte-nos como podemos orientar você. Sua mensagem deve ser tratada com cuidado.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
@@ -92,13 +92,13 @@ function PrayerForm({ churchId }: { churchId?: string | null }) {
           <Field label="Cidade" error={errors.city?.message}>
             <Input {...register("city")} placeholder="opcional" />
           </Field>
-          <Field label="Seu pedido" error={errors.request?.message}>
+          <Field label="Sua mensagem" error={errors.request?.message}>
             <textarea {...register("request")} rows={4}
               className="w-full rounded-md border bg-background p-3 text-sm"
-              placeholder="Compartilhe seu pedido de oração" />
+              placeholder="Escreva sua mensagem ou solicitação" />
           </Field>
           {err && <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{err}</p>}
-          <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Enviando…" : "Enviar pedido"}</Button>
+          <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Enviando…" : "Enviar"}</Button>
         </form>
       </CardContent>
     </Card>
@@ -139,8 +139,8 @@ function VisitForm({ churchId }: { churchId?: string | null }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Quero ser visitado</CardTitle>
-        <CardDescription>Receba um líder da igreja em sua casa.</CardDescription>
+        <CardTitle className="text-lg">Quero ser contatada</CardTitle>
+        <CardDescription>Solicite contato da equipe da FAM no melhor horário para você.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
@@ -176,7 +176,7 @@ function VisitForm({ churchId }: { churchId?: string | null }) {
               placeholder="Compartilhe brevemente" />
           </Field>
           {err && <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{err}</p>}
-          <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Enviando…" : "Solicitar visita"}</Button>
+          <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "Enviando…" : "Enviar"}</Button>
         </form>
       </CardContent>
     </Card>

@@ -103,7 +103,7 @@ export function AccessibilityOnboarding() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F172A]/35 p-4 backdrop-blur-sm animate-in fade-in duration-300"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-fam-plum/45 p-4 backdrop-blur-sm animate-in fade-in duration-300"
       role="dialog"
       aria-modal="true"
       aria-label="Assistente de boas-vindas e personalização"
@@ -111,14 +111,14 @@ export function AccessibilityOnboarding() {
       {/* DS-003 §7 — Welcome Overlay: 460-520px de largura no desktop, calc(100%-32px)
           no smartphone (dado pelo padding do wrapper), altura máxima 75vh/78vh. */}
       <div
-        className="relative flex w-full max-h-[85vh] flex-col overflow-hidden rounded-3xl bg-[#F8FAFC] shadow-2xl animate-in zoom-in-95 duration-300 sm:w-[600px] sm:max-h-[80vh]"
+        className="relative flex w-full max-h-[85vh] flex-col overflow-hidden rounded-3xl bg-fam-background shadow-2xl animate-in zoom-in-95 duration-300 sm:w-[600px] sm:max-h-[80vh]"
       >
         {/* Reaberto manualmente (não é o primeiro acesso): permite fechar sem concluir. */}
         {!isFirstAccess && step !== "aplicando" && step !== "confirmacao" && (
           <button
             onClick={closeOnboarding}
             aria-label="Fechar personalização"
-            className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-white text-[#475569] shadow-md hover:bg-[#F1F5F9]"
+            className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-white text-fam-plum shadow-md hover:bg-fam-soft-pink"
           >
             ✕
           </button>
@@ -155,16 +155,16 @@ function WelcomeScreen({ onStart, onUseDefault }: { onStart: () => void; onUseDe
     <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
       <LivingLogo size={120} animated />
       <div className="max-w-sm space-y-3">
-        <h1 className="text-[22px] font-bold leading-tight text-[#0F172A]">
+        <h1 className="text-[22px] font-bold leading-tight text-fam-plum">
           Seja muito bem-vindo(a)!
         </h1>
-        <p className="text-sm leading-relaxed text-[#475569]">
-          É uma alegria ter você conosco.
+        <p className="text-sm leading-relaxed text-fam-muted">
+          É um prazer ter você na plataforma FAM.
         </p>
-        <p className="text-sm leading-relaxed text-[#475569]">
-          Que esta plataforma seja uma ferramenta para fortalecer sua caminhada, sua comunhão e seu crescimento.
+        <p className="text-sm leading-relaxed text-fam-muted">
+          Aqui você encontra informações, projetos, atendimento e oportunidades de participação social.
         </p>
-        <p className="text-sm leading-relaxed text-[#475569]">
+        <p className="text-sm leading-relaxed text-fam-muted">
           Vamos preparar sua experiência para oferecer uma navegação mais confortável, simples e personalizada.
         </p>
       </div>
@@ -172,7 +172,7 @@ function WelcomeScreen({ onStart, onUseDefault }: { onStart: () => void; onUseDe
         <PrimaryButton size="lg" onClick={onStart} className="w-full gap-2 text-base">
           Continuar <ArrowRight className="h-4 w-4" />
         </PrimaryButton>
-        <Button variant="ghost" onClick={onUseDefault} className="h-11 w-full min-h-[44px] text-[#475569]">
+        <Button variant="ghost" onClick={onUseDefault} className="h-11 w-full min-h-[44px] text-fam-muted">
           Usar configuração padrão
         </Button>
       </div>
@@ -196,8 +196,8 @@ function ChooseProfileScreen({
     <div className="flex flex-1 flex-col gap-5 py-1">
       <div className="text-center">
         <LivingLogo size={64} animated compact />
-        <h1 className="mt-3 text-xl font-bold text-[#0F172A]">Vamos personalizar sua experiência</h1>
-        <p className="mt-1 text-sm text-[#475569]">Escolha a opção que oferece mais conforto para você.</p>
+        <h1 className="mt-3 text-xl font-bold text-fam-plum">Vamos personalizar sua experiência</h1>
+        <p className="mt-1 text-sm text-fam-muted">Escolha a opção que oferece mais conforto para você.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -237,7 +237,7 @@ function ChooseProfileScreen({
               <Icon size={44} />
               <div className="min-w-0">
                 <b style={{ color: style.text }} className="block text-sm leading-tight">{p.name}</b>
-                <p className="mt-0.5 text-xs leading-snug text-[#475569]">{p.desc}</p>
+                <p className="mt-0.5 text-xs leading-snug text-fam-muted">{p.desc}</p>
                 {isSelected && (
                   <span style={{ color: style.solid }} className="mt-1 block text-xs font-bold">Selecionado</span>
                 )}
@@ -248,8 +248,8 @@ function ChooseProfileScreen({
       </div>
 
       {preview && (
-        <div className="rounded-xl border border-dashed border-[#CBD5E1] bg-white p-3 text-xs text-[#475569]">
-          <b className="text-[#0F172A]">Prévia: </b>
+        <div className="rounded-xl border border-dashed border-fam-lilac/40 bg-white p-3 text-xs text-fam-muted">
+          <b className="text-fam-plum">Prévia: </b>
           fonte {preview.font_size.replace("_", " ")}, contraste {preview.contrast.replace("_", " ")},
           espaçamento {preview.spacing}
           {preview.sound_enabled ? ", som ativado" : ""}
@@ -258,7 +258,7 @@ function ChooseProfileScreen({
       )}
 
       {/* CT-018 §7 — "Não mostrar novamente" (independente do perfil escolhido). */}
-      <label className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm text-[#0F172A] focus-within:ring-2 focus-within:ring-[#2563EB]">
+      <label className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl border border-fam-border bg-white px-4 py-3 text-sm text-fam-plum focus-within:ring-2 focus-within:ring-fam-gold">
         <input
           type="checkbox"
           checked={!dontShowAgain}
@@ -277,7 +277,7 @@ function ChooseProfileScreen({
         >
           Continuar <ArrowRight className="h-4 w-4" />
         </PrimaryButton>
-        <Button variant="ghost" onClick={onUseDefault} className="h-11 min-h-[44px] w-full text-[#475569]">
+        <Button variant="ghost" onClick={onUseDefault} className="h-11 min-h-[44px] w-full text-fam-muted">
           Usar configuração padrão
         </Button>
       </div>
@@ -288,10 +288,10 @@ function ChooseProfileScreen({
 function ApplyingScreen() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-      <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#2563EB]/20 border-t-[#2563EB]" />
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-fam-lilac/30 border-t-fam-magenta" />
       <div>
-        <h2 className="text-xl font-semibold text-[#0F172A]">Preparando sua experiência...</h2>
-        <ul className="mt-3 space-y-1 text-sm text-[#475569]">
+        <h2 className="text-xl font-semibold text-fam-plum">Preparando sua experiência...</h2>
+        <ul className="mt-3 space-y-1 text-sm text-fam-muted">
           <li>Aplicando preferências</li>
           <li>Ajustando a interface</li>
           <li>Salvando configurações</li>
@@ -308,9 +308,9 @@ function ConfirmationScreen({ onEnter }: { onEnter: () => void }) {
         <PartyPopper className="h-11 w-11 text-[#16A34A]" />
       </div>
       <div className="max-w-md space-y-2">
-        <h1 className="text-2xl font-bold text-[#0F172A]">Tudo pronto! 🎉</h1>
-        <p className="text-base text-[#475569]">Sua experiência foi personalizada com sucesso.</p>
-        <p className="text-sm text-[#475569]">
+        <h1 className="text-2xl font-bold text-fam-plum">Tudo pronto! 🎉</h1>
+        <p className="text-base text-fam-muted">Sua experiência foi personalizada com sucesso.</p>
+        <p className="text-sm text-fam-muted">
           Você poderá alterar essas configurações a qualquer momento em{" "}
           <b>Meu Painel → Perfil → Acessibilidade e Personalização</b>.
         </p>

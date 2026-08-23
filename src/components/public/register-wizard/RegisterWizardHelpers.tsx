@@ -56,7 +56,7 @@ export function TermsCheckbox({ checked, onChange, error }: { checked: boolean; 
           <Link href="/privacidade" target="_blank" className="font-bold text-navy underline decoration-2 underline-offset-2 hover:text-gold">
             Política de Privacidade
           </Link>
-          , e autorizo o tratamento dos meus dados pessoais para fins pastorais, conforme a LGPD.
+            , e autorizo o tratamento dos meus dados pessoais para fins institucionais e de acolhimento, conforme a LGPD.
         </span>
       </label>
       {error && <p className="mt-2 pl-10 text-sm font-semibold text-destructive">{error}</p>}
@@ -99,25 +99,25 @@ export function FinishedScreen({ hasLg }: { hasLg: boolean }) {
           <Check className="mx-auto h-12 w-12 text-gold" />
           <h1 className="font-display text-2xl text-white">Cadastro recebido!</h1>
 
-          <div className="rounded-lg bg-blue-500/10 border border-blue-400/30 px-4 py-3 text-sm text-blue-100 text-left space-y-1">
+          <div className="rounded-lg bg-fam-lilac/15 border border-fam-lilac/40 px-4 py-3 text-sm text-white text-left space-y-1">
             <p className="font-semibold">📧 Verifique seu e-mail</p>
             <p>
               Enviamos um link de confirmação para o e-mail informado.
               Clique no link para ativar sua conta antes de fazer login.
             </p>
-            <p className="text-xs text-blue-200">Não recebeu? Verifique a pasta de spam.</p>
+            <p className="text-xs text-fam-gold-soft">Não recebeu? Verifique a pasta de spam.</p>
           </div>
 
           {hasLg ? (
             <p className="text-sm text-white/70">
-              Sua história foi registrada com a liderança.
-              Em breve um líder entrará em contato com você.
+              Suas informações foram registradas com a equipe FAM.
+              Em breve uma pessoa da equipe poderá entrar em contato com você.
             </p>
           ) : (
             <p className="text-sm text-white/70">
-              Sua história foi registrada com a liderança.
+              Suas informações foram registradas com a equipe FAM.
               <br /><br />
-              <b className="text-white">Um(a) pastor(a) entrará em contato em breve</b> para te indicar o Life Group ideal pra você.
+              <b className="text-white">Uma pessoa da equipe FAM poderá entrar em contato em breve</b> para orientar você sobre participação, voluntariado ou atendimento.
             </p>
           )}
           <div className="flex flex-col gap-2 pt-2">

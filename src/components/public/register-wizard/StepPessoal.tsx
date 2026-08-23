@@ -58,11 +58,11 @@ export function StepPessoal({ s, update, onBack, onNext }: { s: RegisterState; u
       <Field label="Sexo" error={err}>
         <div className="grid grid-cols-2 gap-3">
           <button type="button" onClick={() => update("gender", "masculino")}
-            className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition hover:scale-[1.02] hover:shadow-sm ${s.gender === "masculino" ? "border-blue-500 bg-blue-500/10 shadow-md" : "border-border bg-card hover:border-blue-300"}`}>
-            <div className={`relative grid aspect-square w-full max-w-[140px] place-items-center overflow-hidden rounded-2xl transition ${s.gender === "masculino" ? "ring-4 ring-blue-500" : "ring-2 ring-blue-100"}`}>
+            className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition hover:scale-[1.02] hover:shadow-sm ${s.gender === "masculino" ? "border-fam-plum bg-fam-lilac/15 shadow-md" : "border-border bg-card hover:border-fam-lilac"}`}>
+            <div className={`relative grid aspect-square w-full max-w-[140px] place-items-center overflow-hidden rounded-2xl transition ${s.gender === "masculino" ? "ring-4 ring-fam-plum" : "ring-2 ring-fam-lilac/40"}`}>
               <img src="/images/avatar-masculino.png" alt="Masculino" className="h-full w-full object-cover" />
               {s.gender === "masculino" && (
-                <span className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-blue-500 text-white shadow">
+                <span className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-fam-plum text-white shadow">
                   <Check className="h-4 w-4" strokeWidth={3} />
                 </span>
               )}

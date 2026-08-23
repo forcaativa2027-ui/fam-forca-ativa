@@ -6,21 +6,21 @@
 
 @layer base {
   :root {
-    --background: 210 33% 97%;
-    --foreground: 220 47% 16%;
+    --background: 350 100% 99%;
+    --foreground: 314 31% 15%;
     --card: 0 0% 100%;
-    --card-foreground: 220 47% 16%;
+    --card-foreground: 314 31% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 47% 16%;
-    --primary: 213 67% 17%;
+    --popover-foreground: 314 31% 15%;
+    --primary: 313 52% 19%;
     --primary-foreground: 0 0% 100%;
-    --accent: 213 30% 92%;
-    --accent-foreground: 220 47% 16%;
-    --destructive: 0 84% 56%;
+    --accent: 330 47% 95%;
+    --accent-foreground: 313 52% 19%;
+    --destructive: 350 69% 42%;
     --destructive-foreground: 0 0% 100%;
-    --border: 215 25% 90%;
-    --input: 215 25% 90%;
-    --ring: 213 67% 17%;
+    --border: 288 18% 89%;
+    --input: 288 18% 89%;
+    --ring: 43 55% 54%;
     --radius: 0.75rem;
   }
   * { @apply border-border; }
@@ -69,6 +69,15 @@ html.cec-dark .text-navy,
 html.cec-dark .text-navy-600,
 html.cec-dark .text-ink {
   color: #f5f5f5;
+}
+html.cec-dark .text-muted,
+html.cec-dark .text-muted-foreground,
+.fam-institutional-theme .text-navy,
+.fam-institutional-theme .text-navy-600,
+.fam-institutional-theme .text-ink,
+.fam-institutional-theme .text-muted,
+.fam-institutional-theme .text-muted-foreground {
+  color: rgba(255, 255, 255, 0.78) !important;
 }
 html.cec-dark .text-muted,
 html.cec-dark .text-muted-foreground {

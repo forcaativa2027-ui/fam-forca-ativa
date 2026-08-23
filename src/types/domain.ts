@@ -107,12 +107,10 @@ export interface Finance {
 export type ChurchStatus = "ativa"|"em_implantacao"|"inativa";
 export interface Church {
   id:string; name:string; type:ChurchType; parent_id:string|null; sector_id:string|null;
-  legal_name?: string | null; display_name?: string | null; organization_type?: string | null; tenant_status?: string | null;
   parent_level?: ChurchParentLevel | null; parent_territorial_id?: string | null;
   address:string|null; city:string|null; state:string|null;
   slug:string|null; pastor_id:string|null;
   logo_url:string|null; banner_url:string|null; short_name:string|null;
-  favicon_url?: string | null; app_icon_url?: string | null;
   primary_color:string|null; secondary_color:string|null;
   short_description:string|null; site_url:string|null; whatsapp_phone:string|null;
   is_active?:boolean;
@@ -344,8 +342,8 @@ export type NewsCategory = "minha_comunidade" | "cec_manaus" | "cec_brasilia" | 
 export type ContactStatus = "novo" | "em_andamento" | "concluido" | "spam";
 export interface News {
   id: string; slug: string; category: NewsCategory;
-  title: string; summary: string | null; body: string | null;
-  cover_url: string | null; author_name: string | null;
+  title: string; subtitle?: string | null; summary: string | null; body: string | null;
+  cover_url: string | null; author_name: string | null; source?: string | null; video_url?: string | null;
   church_id: string | null;
   is_published: boolean; published_at: string | null;
   meta_title: string | null; meta_description: string | null; og_image_url: string | null;

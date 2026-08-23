@@ -24,10 +24,10 @@ interface Notif {
 const KIND_CONFIG: Record<NotifKind, { icon: React.ReactNode; color: string; bg: string; label: string }> = {
   aniversario:     { icon: <CalendarDays className="h-4 w-4"/>, color:"text-pink-600",   bg:"bg-pink-50 border-pink-200",   label:"Aniversário"       },
   sem_relatorio:   { icon: <ClipboardX className="h-4 w-4"/>,  color:"text-red-600",    bg:"bg-red-50 border-red-200",     label:"Sem Relatório"     },
-  oracao_urgente:  { icon: <Heart className="h-4 w-4"/>,       color:"text-red-600",    bg:"bg-red-50 border-red-200",     label:"Oração Urgente"    },
-  visita_pastoral: { icon: <Home className="h-4 w-4"/>,        color:"text-yellow-600", bg:"bg-yellow-50 border-yellow-200",label:"Visita Pastoral"  },
+  oracao_urgente:  { icon: <Heart className="h-4 w-4"/>,       color:"text-fam-magenta", bg:"bg-fam-pink/10 border-fam-pink/30", label:"Atenção prioritária" },
+  visita_pastoral: { icon: <Home className="h-4 w-4"/>, color:"text-fam-gold", bg:"bg-fam-gold/10 border-fam-gold/30", label:"Retorno da equipe" },
   meta_atrasada:   { icon: <Target className="h-4 w-4"/>,      color:"text-orange-600", bg:"bg-orange-50 border-orange-200",label:"Meta Atrasada"    },
-  evento:          { icon: <CalendarDays className="h-4 w-4"/>, color:"text-blue-600",   bg:"bg-blue-50 border-blue-200",   label:"Eventos"           },
+  evento:          { icon: <CalendarDays className="h-4 w-4"/>, color:"text-fam-plum", bg:"bg-fam-lilac/15 border-fam-lilac/40", label:"Eventos" },
 };
 
 // ── Buscar notificações ───────────────────────────────────────
@@ -37,7 +37,7 @@ async function fetchNotifications(): Promise<Notif[]> {
   const [birthdays, reliability, ctAlerts, goals] = await Promise.allSettled([
     // Aniversariantes hoje
     supabase.from("birthday_today").select("id, full_name, idade").limit(10),
-    // LGs sem relatório
+    // Projetos sem atualização
     supabase.from("lg_reliability_index").select("id, name, dias_sem_relatorio")
       .eq("flag_sem_relatorio_recente", true).limit(10),
     // Alertas Torre de Controle
@@ -64,7 +64,7 @@ async function fetchNotifications(): Promise<Notif[]> {
     }));
   }
 
-  // LGs sem relatório
+  // Projetos sem atualização
   if (reliability.status === "fulfilled" && reliability.value.data) {
     reliability.value.data.forEach(lg => notifs.push({
       id: `rel-${lg.id}`,
@@ -77,7 +77,7 @@ async function fetchNotifications(): Promise<Notif[]> {
     }));
   }
 
-  // Alertas pastorais
+  // Alertas institucionais
   if (ctAlerts.status === "fulfilled" && ctAlerts.value.data) {
     ctAlerts.value.data.forEach((a, i) => notifs.push({
       id: `ct-${a.alert_type}-${i}`,
@@ -92,7 +92,7 @@ async function fetchNotifications(): Promise<Notif[]> {
   if (goals.status === "fulfilled" && goals.value.data) {
     const LABELS: Record<string, string> = {
       membros_ativos:"Membros Ativos", visitantes:"Visitantes", decisoes:"Decisões",
-      multiplicacoes:"Multiplicações", lgs_ativos:"LGs Ativos", disc_ativos:"Discipulados",
+      multiplicacoes:"Multiplicações", lgs_ativos:"LGs Ativos", disc_ativos:"Projetos ativos",
     };
     goals.value.data.forEach((g, i) => notifs.push({
       id: `goal-${i}`,
@@ -103,7 +103,7 @@ async function fetchNotifications(): Promise<Notif[]> {
     }));
   }
 
-  // Eventos com inscrição — Sede (rede toda) + eventos da própria igreja, excluindo os já inscritos
+  // Eventos com inscrição — rede toda + eventos da região, excluindo os já inscritos
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -177,7 +177,7 @@ export function NotificationsPanel() {
   if (visible.length === 0) return (
     <div className="flex flex-col items-center gap-3 py-12 text-center">
       <CheckCircle2 className="h-12 w-12 text-green-500"/>
-      <p className="font-semibold text-[#0E2A47]">Tudo em ordem!</p>
+      <p className="font-semibold text-fam-plum">Tudo em ordem!</p>
       <p className="text-sm text-muted-foreground">Nenhum alerta ativo no momento.</p>
     </div>
   );
@@ -198,10 +198,10 @@ export function NotificationsPanel() {
             <p className="text-xs text-muted-foreground">🟡 Atenção</p>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-blue-400">
+        <Card className="border-l-4 border-l-fam-magenta">
           <CardContent className="pt-3 pb-3 text-center">
-            <p className="text-2xl font-bold text-blue-600">{info}</p>
-            <p className="text-xs text-muted-foreground">🔵 Info</p>
+            <p className="text-2xl font-bold text-fam-magenta">{info}</p>
+            <p className="text-xs text-muted-foreground">Informativo</p>
           </CardContent>
         </Card>
       </div>
@@ -250,7 +250,7 @@ export function NotificationsPanel() {
       {dismissed.size > 0 && (
         <button
           onClick={() => setDismissed(new Set())}
-          className="w-full text-xs text-muted-foreground hover:text-[#0E2A47] py-2"
+          className="w-full text-xs text-muted-foreground hover:text-fam-plum py-2"
         >
           Restaurar {dismissed.size} alerta(s) dispensado(s)
         </button>

@@ -30,7 +30,7 @@ export function StepLocalizacao({ s, update, onBack, onNext }: { s: RegisterStat
     <div className="space-y-4">
       <div>
         <h2 className="font-display text-2xl font-bold text-navy">Onde você mora?</h2>
-        <p className="text-base text-muted">Pra encontrarmos a igreja mais próxima de você</p>
+        <p className="text-base text-muted">Para identificarmos a região de atendimento e comunicação mais adequada para você</p>
       </div>
 
       <Field label="País">

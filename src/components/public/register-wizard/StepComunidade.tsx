@@ -5,7 +5,7 @@ import { NavButtons } from "./RegisterWizardHelpers";
 import type { RegisterState, UpdateFn } from "./RegisterWizardTypes";
 
 // ============================================================
-// ETAPA 6 — Comunidade (igreja mais próxima + Life Group)
+// ETAPA 6 — Região de atendimento e grupo de apoio FAM
 // ============================================================
 export function StepComunidade({ s, update, churches, cells, onBack, onNext }: {
   s: RegisterState;
@@ -17,7 +17,7 @@ export function StepComunidade({ s, update, churches, cells, onBack, onNext }: {
   const [err, setErr] = useState("");
 
   function next() {
-    if (!s.community_id) { setErr("Selecione uma comunidade"); return; }
+    if (!s.community_id) { setErr("Selecione uma região de atendimento"); return; }
     onNext();
   }
 
@@ -34,8 +34,8 @@ export function StepComunidade({ s, update, churches, cells, onBack, onNext }: {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-display text-2xl font-bold text-navy">Igreja mais próxima</h2>
-        <p className="text-base text-muted">Onde você gostaria de ser acompanhado</p>
+        <h2 className="font-display text-2xl font-bold text-navy">Região de atendimento mais próxima</h2>
+        <p className="text-base text-muted">Onde você gostaria de receber informações e apoio da FAM</p>
       </div>
 
       <div className="space-y-2">
@@ -62,8 +62,8 @@ export function StepComunidade({ s, update, churches, cells, onBack, onNext }: {
 
       {s.community_id && lgsAll.length > 0 && (
         <div className="rounded-xl border-2 border-dashed border-gold/40 bg-gold/5 p-4">
-          <h3 className="font-display text-base text-navy">Encontre seu Life Group</h3>
-          <p className="text-xs text-muted">Opcional — você pode escolher agora ou pular e a liderança te ajuda depois</p>
+          <h3 className="font-display text-base text-navy">Encontre um grupo de apoio ou projeto FAM</h3>
+          <p className="text-xs text-muted">Opcional — você pode escolher agora ou continuar sem definir um grupo</p>
 
           {lgsSameCity.length > 0 && (
             <LgGroup label={`Em ${s.city}`} cells={lgsSameCity} selected={s.life_group_id} onSelect={(id) => update("life_group_id", id)} weekdays={WEEKDAYS} />
@@ -72,13 +72,13 @@ export function StepComunidade({ s, update, churches, cells, onBack, onNext }: {
             <LgGroup label={s.state ? `Em outras cidades de ${s.state}` : "Outras"} cells={lgsSameState} selected={s.life_group_id} onSelect={(id) => update("life_group_id", id)} weekdays={WEEKDAYS} />
           )}
           {lgsOthers.length > 0 && lgsSameCity.length === 0 && lgsSameState.length === 0 && (
-            <LgGroup label="Todos os Life Groups" cells={lgsOthers} selected={s.life_group_id} onSelect={(id) => update("life_group_id", id)} weekdays={WEEKDAYS} />
+            <LgGroup label="Todos os grupos e projetos" cells={lgsOthers} selected={s.life_group_id} onSelect={(id) => update("life_group_id", id)} weekdays={WEEKDAYS} />
           )}
 
           <button type="button" onClick={() => update("life_group_id", "")}
             className={`mt-3 w-full rounded-lg border-2 p-3 text-left text-sm transition ${!s.life_group_id ? "border-gold bg-card" : "border-border bg-card/50 hover:border-navy/30"}`}>
             <b className="text-navy">Não sei / preciso de ajuda</b>
-            <p className="text-xs text-muted">A liderança vai entrar em contato pra te indicar o LG ideal</p>
+            <p className="text-xs text-muted">A equipe FAM poderá orientar você sobre a melhor opção</p>
           </button>
         </div>
       )}
