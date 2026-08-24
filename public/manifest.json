@@ -1,26 +1,26 @@
 {
-  "name": "Rádio Web — FAM",
-  "short_name": "Rádio FAM",
-  "description": "Rádio Web institucional da FAM — Força Ativa da Mulher",
-  "start_url": "/radio",
+  "name": "FAM — Força Ativa da Mulher",
+  "short_name": "FAM",
+  "description": "Plataforma institucional da FAM — Força Ativa da Mulher",
+  "start_url": "/",
   "scope": "/",
-  "id": "/radio",
+  "id": "/",
   "display": "standalone",
-  "background_color": "#32132D",
-  "theme_color": "#4A173F",
+  "background_color": "#FFF9FC",
+  "theme_color": "#6B285F",
   "icons": [
     {
-      "src": "/assets/servo360/icons/app/web-radio-app-192.png",
+      "src": "/icons/app/web-radio-app-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/assets/servo360/icons/app/web-radio-app-512.png",
+      "src": "/icons/app/web-radio-app-512.png",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "/assets/servo360/icons/app/web-radio-app-maskable-512.png",
+      "src": "/icons/app/web-radio-app-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

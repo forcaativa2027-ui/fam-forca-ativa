@@ -22,11 +22,14 @@ function getClient(): SupabaseClient {
   return _client;
 }
 
-/** Cliente Supabase para uso no browser. Lazy: criado apenas quando consumido. */
-export const supabase: SupabaseClient = new Proxy({} as SupabaseClient, {
+/** Cliente Supabase singleton para uso no browser. */
+export const supabase = new Proxy({} as SupabaseClient, {
   get(_t, prop) {
     const c = getClient() as unknown as Record<string | symbol, unknown>;
     const v = c[prop];
     return typeof v === "function" ? (v as (...a: unknown[]) => unknown).bind(c) : v;
   }
 });
+
+// Exportação legada compatível
+export const createClientComponentClient = () => supabase;
