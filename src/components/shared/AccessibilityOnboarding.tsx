@@ -1,4 +1,5 @@
 "use client";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowRight, Check, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -72,8 +73,10 @@ export function AccessibilityOnboarding() {
   // fecha o overlay desta vez sem impedir que ele volte a abrir sozinho no próximo login.
   const [sessionDismissed, setSessionDismissed] = useState(false);
 
+  const pathname = usePathname();
+  const isAnaliseRisco = pathname === "/analise-risco";
   const isFirstAccess = !onboarded && !sessionDismissed;
-  const visible = loaded && (isFirstAccess || onboardingForceOpen);
+  const visible = loaded && (isFirstAccess || onboardingForceOpen) && !isAnaliseRisco;
 
   useEffect(() => {
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
@@ -82,242 +85,232 @@ export function AccessibilityOnboarding() {
 
   // Sempre que o assistente é (re)aberto, volta pra primeira tela.
   useEffect(() => {
-    if (visible) { setStep("boas_vindas"); setSelected(null); setDontShowAgain(true); }
-  }, [visible]);
+    if (onboardingForceOpen) {
+      setStep("boas_vindas");
+      setSelected(null);
+    }
+  }, [onboardingForceOpen]);
+
+  // Persiste preferência "não mostrar novamente" no localStorage.
+  useEffect(() => {
+    if (dontShowAgain && step === "escolha") {
+      localStorage.setItem("cec_accessibility_dont_show", "true");
+    } else {
+      localStorage.removeItem("cec_accessibility_dont_show");
+    }
+  }, [dontShowAgain, step]);
 
   if (!visible) return null;
 
-  function finish(profile: AccessibilityProfile) {
-    setStep("aplicando");
-    const delay = reducedMotion ? 0 : 900;
-    window.setTimeout(() => {
-      applyProfile(profile);
-      // CT-018 §7 — "Não mostrar novamente" e perfil de experiência são independentes:
-      // só persiste onboarded=true (suprime a tela nos próximos acessos) se marcado.
-      if (dontShowAgain) markOnboarded();
-      setSessionDismissed(true);
-      feedback("success", "success");
-      setStep("confirmacao");
-    }, delay);
-  }
+  const handleNext = () => {
+    const order: Step[] = ["boas_vindas", "escolha", "aplicando", "confirmacao"];
+    const idx = order.indexOf(step);
+    if (idx < order.length - 1) setStep(order[idx + 1]);
+  };
+
+  const handleBack = () => {
+    const order: Step[] = ["boas_vindas", "escolha", "aplicando", "confirmacao"];
+    const idx = order.indexOf(step);
+    if (idx > 0) setStep(order[idx - 1]);
+  };
+
+  const applyAndFinish = (profile: AccessibilityProfile) => {
+    applyProfile(profile);
+    markOnboarded();
+    closeOnboarding();
+  };
+
+  if (!loaded) return null;
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-fam-plum/45 p-4 backdrop-blur-sm animate-in fade-in duration-300"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label="Assistente de boas-vindas e personalização"
+      aria-labelledby="onboarding-title"
     >
-      {/* DS-003 §7 — Welcome Overlay: 460-520px de largura no desktop, calc(100%-32px)
-          no smartphone (dado pelo padding do wrapper), altura máxima 75vh/78vh. */}
-      <div
-        className="relative flex w-full max-h-[85vh] flex-col overflow-hidden rounded-3xl bg-fam-background shadow-2xl animate-in zoom-in-95 duration-300 sm:w-[600px] sm:max-h-[80vh]"
-      >
-        {/* Reaberto manualmente (não é o primeiro acesso): permite fechar sem concluir. */}
-        {!isFirstAccess && step !== "aplicando" && step !== "confirmacao" && (
-          <button
-            onClick={closeOnboarding}
-            aria-label="Fechar personalização"
-            className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center rounded-full bg-white text-fam-plum shadow-md hover:bg-fam-soft-pink"
-          >
-            ✕
-          </button>
-        )}
-        <div className="flex w-full flex-1 flex-col overflow-y-auto px-5 py-6 sm:px-7 sm:py-7">
+      <div className="relative w-full max-w-2xl mx-4 rounded-2xl bg-white shadow-xl overflow-hidden animate-fade-in">
+        {/* Header */}
+        <div className="relative border-b border-fam-lavender p-6">
+          <LivingLogo size={48} animated={true} showSlogan={false} />
+          <h1 id="onboarding-title" className="mt-4 font-display text-2xl font-bold text-fam-plum text-center">
+            Bem-vinda à FAM
+          </h1>
+          <p className="mt-2 text-center text-fam-muted">
+            Personalize sua experiência para navegar com mais conforto.
+          </p>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Step 1: Boas-vindas */}
           {step === "boas_vindas" && (
-            <WelcomeScreen
-              onStart={() => setStep("escolha")}
-              onUseDefault={() => finish("padrao")}
-            />
+            <div className="space-y-6 text-center">
+              <LivingLogo size={96} animated={true} showSlogan={true} />
+              <h2 className="font-display text-2xl font-bold text-fam-plum">
+                Bem-vinda à FAM — Força Ativa da Mulher
+              </h2>
+              <p className="text-fam-muted">
+                Antes de começar, vamos personalizar sua experiência para que
+                a navegação seja confortável e acessível para você.
+              </p>
+              <PrimaryButton onClick={handleNext} className="w-full">
+                Continuar
+              </PrimaryButton>
+            </div>
           )}
+
+          {/* Step 2: Escolha do perfil */}
           {step === "escolha" && (
-            <ChooseProfileScreen
-              selected={selected}
-              onSelect={(p) => { setSelected(p); feedback("select", "select"); }}
-              dontShowAgain={dontShowAgain}
-              onToggleDontShowAgain={setDontShowAgain}
-              onContinue={() => selected && finish(selected)}
-              onUseDefault={() => finish("padrao")}
-            />
-          )}
-          {step === "aplicando" && <ApplyingScreen />}
-          {step === "confirmacao" && (
-            <ConfirmationScreen onEnter={closeOnboarding} />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function WelcomeScreen({ onStart, onUseDefault }: { onStart: () => void; onUseDefault: () => void }) {
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-      <LivingLogo size={120} animated />
-      <div className="max-w-sm space-y-3">
-        <h1 className="text-[22px] font-bold leading-tight text-fam-plum">
-          Seja muito bem-vindo(a)!
-        </h1>
-        <p className="text-sm leading-relaxed text-fam-muted">
-          É um prazer ter você na plataforma FAM.
-        </p>
-        <p className="text-sm leading-relaxed text-fam-muted">
-          Aqui você encontra informações, projetos, atendimento e oportunidades de participação social.
-        </p>
-        <p className="text-sm leading-relaxed text-fam-muted">
-          Vamos preparar sua experiência para oferecer uma navegação mais confortável, simples e personalizada.
-        </p>
-      </div>
-      <div className="flex w-full flex-col gap-3">
-        <PrimaryButton size="lg" onClick={onStart} className="w-full gap-2 text-base">
-          Continuar <ArrowRight className="h-4 w-4" />
-        </PrimaryButton>
-        <Button variant="ghost" onClick={onUseDefault} className="h-11 w-full min-h-[44px] text-fam-muted">
-          Usar configuração padrão
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function ChooseProfileScreen({
-  selected, onSelect, dontShowAgain, onToggleDontShowAgain, onContinue, onUseDefault,
-}: {
-  selected: AccessibilityProfile | null;
-  onSelect: (p: AccessibilityProfile) => void;
-  dontShowAgain: boolean;
-  onToggleDontShowAgain: (v: boolean) => void;
-  onContinue: () => void;
-  onUseDefault: () => void;
-}) {
-  const preview = selected ? PROFILE_PRESETS[selected] : null;
-
-  return (
-    <div className="flex flex-1 flex-col gap-5 py-1">
-      <div className="text-center">
-        <LivingLogo size={64} animated compact />
-        <h1 className="mt-3 text-xl font-bold text-fam-plum">Vamos personalizar sua experiência</h1>
-        <p className="mt-1 text-sm text-fam-muted">Escolha a opção que oferece mais conforto para você.</p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        {WELCOME_PROFILES.map((p) => {
-          const style = WELCOME_PROFILE_STYLE[p.key];
-          const isSelected = selected === p.key;
-          const Icon = style.Icon;
-          return (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => onSelect(p.key)}
-              aria-pressed={isSelected}
-              style={{
-                background: style.soft,
-                borderColor: isSelected ? style.solid : style.border,
-                borderWidth: isSelected ? 3 : 1,
-              }}
-              className="relative flex flex-col items-start gap-2 rounded-2xl p-3 text-left shadow-sm transition-all duration-150 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-            >
-              {isSelected && (
-                <span
-                  className="absolute right-2.5 top-2.5 grid h-5 w-5 place-items-center rounded-full text-white"
-                  style={{ background: style.solid }}
-                >
-                  <Check className="h-3.5 w-3.5" />
-                </span>
-              )}
-              {p.badge && (
-                <span
-                  className="w-fit rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wide text-white"
-                  style={{ background: style.solid }}
-                >
-                  {p.badge}
-                </span>
-              )}
-              <Icon size={44} />
-              <div className="min-w-0">
-                <b style={{ color: style.text }} className="block text-sm leading-tight">{p.name}</b>
-                <p className="mt-0.5 text-xs leading-snug text-fam-muted">{p.desc}</p>
-                {isSelected && (
-                  <span style={{ color: style.solid }} className="mt-1 block text-xs font-bold">Selecionado</span>
-                )}
+            <div className="space-y-4">
+              <h2 className="font-display text-xl font-bold text-fam-plum text-center">
+                Como você prefere navegar?
+              </h2>
+              <p className="text-sm text-fam-muted text-center">
+                Escolha um perfil pré-definido ou personalize depois.
+              </p>
+              <div className="grid gap-3">
+                {WELCOME_PROFILES.map((profile) => (
+                  <button
+                    key={profile.key}
+                    onClick={() => setSelected(profile.key)}
+                    className={`relative p-4 rounded-xl border-2 text-left transition-all ${
+                      selected === profile.key
+                        ? "border-fam-magenta bg-fam-magenta/5 ring-2 ring-fam-magenta/20"
+                        : "border-fam-lavender hover:border-fam-magenta/50 hover:bg-fam-ivory-pink"
+                    }`}
+                  >
+                    {selected === profile.key && (
+                      <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-fam-magenta flex items-center justify-center">
+                        <Check className="w-4 h-4 text-white" />
+                      </span>
+                    )}
+                    {profile.badge && (
+                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 text-xs font-bold bg-fam-gold text-fam-deep-plum rounded-full">
+                        {profile.badge}
+                      </span>
+                    )}
+                    <div className="flex items-start gap-3">
+                      <LivingLogo
+                        size={48}
+                        animated={false}
+                        showSlogan={false}
+                        className="shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-fam-deep-plum">{profile.name}</h3>
+                        {profile.badge && (
+                          <span className="inline-block mt-1 px-2 py-0.5 text-xs font-bold bg-fam-gold text-fam-deep-plum rounded-full">
+                            {profile.badge}
+                          </span>
+                        )}
+                        <p className="mt-1 text-sm text-fam-muted">{profile.desc}</p>
+                        <ul className="mt-2 space-y-1">
+                          {profile.traits.map((trait, i) => (
+                            <li key={i} className="text-xs text-fam-muted flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-fam-magenta/50" />
+                              {trait}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </button>
+                ))}
               </div>
-            </button>
-          );
-        })}
-      </div>
+              <label className="flex items-center gap-2 text-sm text-fam-muted mt-4">
+                <input
+                  type="checkbox"
+                  checked={dontShowAgain}
+                  onChange={(e) => setDontShowAgain(e.target.checked)}
+                  className="w-4 h-4 rounded border-fam-lavender text-fam-magenta focus:ring-fam-magenta"
+                />
+                <span>Não mostrar novamente</span>
+              </label>
+              <PrimaryButton
+                onClick={handleNext}
+                disabled={!selected}
+                className="w-full"
+              >
+                Continuar
+              </PrimaryButton>
+            </div>
+          )}
 
-      {preview && (
-        <div className="rounded-xl border border-dashed border-fam-lilac/40 bg-white p-3 text-xs text-fam-muted">
-          <b className="text-fam-plum">Prévia: </b>
-          fonte {preview.font_size.replace("_", " ")}, contraste {preview.contrast.replace("_", " ")},
-          espaçamento {preview.spacing}
-          {preview.sound_enabled ? ", som ativado" : ""}
-          {preview.haptic_enabled ? ", vibração ativada" : ""}.
+          {/* Step 3: Aplicando */}
+          {step === "aplicando" && selected && (
+            <div className="space-y-6 text-center">
+              <div className="relative w-24 h-24 mx-auto">
+                <div className="absolute inset-0 border-4 border-fam-magenta/20 rounded-full animate-pulse" />
+                <div className="relative w-full h-full rounded-full bg-fam-magenta/10 flex items-center justify-center">
+                  <PartyPopper className="w-12 h-12 text-fam-magenta animate-bounce" />
+                </div>
+              </div>
+              <h2 className="font-display text-xl font-bold text-fam-plum">
+                Aplicando seu perfil…
+              </h2>
+              <p className="text-fam-muted">
+                Estamos configurando tudo para você.
+              </p>
+            </div>
+          )}
+
+          {/* Step 4: Confirmação */}
+          {step === "confirmacao" && (
+            <div className="space-y-6 text-center">
+              <div className="w-20 h-20 mx-auto rounded-full bg-fam-success/10 flex items-center justify-center">
+                <Check className="w-10 h-10 text-fam-success" />
+              </div>
+              <h2 className="font-display text-2xl font-bold text-fam-plum">
+                Tudo pronto! 🎉
+              </h2>
+              <p className="text-base text-fam-muted">
+                Sua experiência foi personalizada com sucesso.
+              </p>
+              <p className="text-sm text-fam-muted">
+                Você poderá alterar essas configurações a qualquer momento em{" "}
+                <b>Meu Painel → Perfil → Acessibilidade e Personalização</b>.
+              </p>
+              <PrimaryButton size="lg" onClick={() => { markOnboarded(); closeOnboarding(); }} className="w-full max-w-sm text-base">
+                Entrar na FAM — FORÇA ATIVA DA MULHER
+              </PrimaryButton>
+            </div>
+          )}
+
+          {/* Navegação inferior (passos) */}
+          <div className="mt-6 flex items-center justify-center gap-1">
+            {["boas_vindas", "escolha", "aplicando", "confirmacao"].map((s, i) => (
+              <button
+                key={s}
+                disabled
+                className={`w-8 h-2 rounded-full transition-colors ${
+                  ["boas_vindas", "escolha", "aplicando", "confirmacao"].indexOf(step) >= i
+                    ? "bg-fam-magenta"
+                    : "bg-fam-lavender"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Botão voltar (exceto na primeira tela) */}
+          {step !== "boas_vindas" && (
+            <Button variant="ghost" onClick={handleBack} className="w-full mt-4">
+              <ArrowRight className="h-4 w-4 rotate-180 mr-2" />
+              Voltar
+            </Button>
+          )}
+
+          {/* Fechar no canto (permite pular) */}
+          <button
+            onClick={() => { markOnboarded(); closeOnboarding(); }}
+            className="absolute top-4 right-4 p-1 rounded-lg hover:bg-fam-lavender text-fam-muted transition-colors"
+            aria-label="Pular e fechar"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-      )}
-
-      {/* CT-018 §7 — "Não mostrar novamente" (independente do perfil escolhido). */}
-      <label className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl border border-fam-border bg-white px-4 py-3 text-sm text-fam-plum focus-within:ring-2 focus-within:ring-fam-gold">
-        <input
-          type="checkbox"
-          checked={!dontShowAgain}
-          onChange={(e) => onToggleDontShowAgain(!e.target.checked)}
-          className="h-5 w-5 shrink-0 rounded border-2 border-[#94A3B8] accent-[#2563EB]"
-        />
-        Não mostrar esta tela novamente
-      </label>
-
-      <div className="mt-auto flex flex-col gap-3 pt-1">
-        <PrimaryButton
-          size="lg"
-          disabled={!selected}
-          onClick={onContinue}
-          className="w-full gap-2 text-base"
-        >
-          Continuar <ArrowRight className="h-4 w-4" />
-        </PrimaryButton>
-        <Button variant="ghost" onClick={onUseDefault} className="h-11 min-h-[44px] w-full text-fam-muted">
-          Usar configuração padrão
-        </Button>
       </div>
-    </div>
-  );
-}
-
-function ApplyingScreen() {
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-      <div className="h-12 w-12 animate-spin rounded-full border-4 border-fam-lilac/30 border-t-fam-magenta" />
-      <div>
-        <h2 className="text-xl font-semibold text-fam-plum">Preparando sua experiência...</h2>
-        <ul className="mt-3 space-y-1 text-sm text-fam-muted">
-          <li>Aplicando preferências</li>
-          <li>Ajustando a interface</li>
-          <li>Salvando configurações</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-function ConfirmationScreen({ onEnter }: { onEnter: () => void }) {
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-      <div className="grid h-24 w-24 place-items-center rounded-full bg-[#F0FDF4]">
-        <PartyPopper className="h-11 w-11 text-[#16A34A]" />
-      </div>
-      <div className="max-w-md space-y-2">
-        <h1 className="text-2xl font-bold text-fam-plum">Tudo pronto! 🎉</h1>
-        <p className="text-base text-fam-muted">Sua experiência foi personalizada com sucesso.</p>
-        <p className="text-sm text-fam-muted">
-          Você poderá alterar essas configurações a qualquer momento em{" "}
-          <b>Meu Painel → Perfil → Acessibilidade e Personalização</b>.
-        </p>
-      </div>
-      <PrimaryButton size="lg" onClick={onEnter} className="w-full max-w-sm text-base">
-        Entrar no CEC FAMILY
-      </PrimaryButton>
     </div>
   );
 }
