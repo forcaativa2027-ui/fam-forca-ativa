@@ -1,7 +1,7 @@
 "use client";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowRight, Check, PartyPopper } from "lucide-react";
+import { ArrowRight, Check, PartyPopper, X, Settings, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAccessibility, PROFILE_PRESETS } from "./AccessibilityProvider";
 import { WELCOME_PROFILE_STYLE } from "./onboarding/ProfileIcons";
@@ -59,9 +59,7 @@ function PrimaryButton(props: React.ComponentProps<typeof Button>) {
 
 /**
  * CT-018 (v1.1 consolidada) — Assistente de Boas-vindas e Personalização
- * da Experiência. Página dedicada de tela cheia com quatro telas:
- * boas-vindas (com logo oficial) → escolha do perfil (com checkbox
- * "Não mostrar novamente") → aplicação → confirmação.
+ * da Experiência. Card compacto com opções de fechar, configurações ou padrão.
  */
 export function AccessibilityOnboarding() {
   const { onboarded, loaded, onboardingForceOpen, applyProfile, markOnboarded, closeOnboarding } = useAccessibility();
@@ -69,8 +67,6 @@ export function AccessibilityOnboarding() {
   const [selected, setSelected] = useState<AccessibilityProfile | null>(null);
   const [dontShowAgain, setDontShowAgain] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
-  // Primeiro acesso já concluído nesta aba, mas ainda não persistido (checkbox desmarcado) —
-  // fecha o overlay desta vez sem impedir que ele volte a abrir sozinho no próximo login.
   const [sessionDismissed, setSessionDismissed] = useState(false);
 
   const pathname = usePathname();
@@ -120,38 +116,60 @@ export function AccessibilityOnboarding() {
     closeOnboarding();
   };
 
+  const useDefaultAndClose = () => {
+    applyProfile("padrao");
+    markOnboarded();
+    closeOnboarding();
+  };
+
+  const openSettings = () => {
+    closeOnboarding();
+    // Navega para a página de configurações de acessibilidade
+    window.location.href = "/configuracoes?tab=acessibilidade";
+  };
+
   if (!loaded) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed bottom-4 right-4 z-50"
       role="dialog"
       aria-modal="true"
       aria-labelledby="onboarding-title"
     >
-      <div className="relative w-full max-w-2xl mx-4 rounded-2xl bg-white shadow-xl overflow-hidden animate-fade-in">
-        {/* Header */}
-        <div className="relative border-b border-fam-lavender p-6">
-          <LivingLogo size={48} animated={true} showSlogan={false} />
-          <h1 id="onboarding-title" className="mt-4 font-display text-2xl font-bold text-fam-plum text-center">
-            Bem-vinda à FAM
-          </h1>
-          <p className="mt-2 text-center text-fam-muted">
-            Personalize sua experiência para navegar com mais conforto.
-          </p>
+      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-fam-lavender overflow-hidden animate-slide-up">
+        {/* Header compacto */}
+        <div className="flex items-center justify-between p-4 border-b border-fam-lavender">
+          <div className="flex items-center gap-3">
+            <LivingLogo size={36} animated={true} showSlogan={false} />
+            <div>
+              <h1 id="onboarding-title" className="font-display text-lg font-bold text-fam-plum">
+                Boas-vindas à FAM
+              </h1>
+              <p className="text-xs text-fam-muted">
+                Personalize sua experiência
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => { markOnboarded(); closeOnboarding(); }}
+            className="p-1 rounded-lg hover:bg-fam-lavender text-fam-muted transition-colors"
+            aria-label="Fechar e usar padrão"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Step 1: Boas-vindas */}
           {step === "boas_vindas" && (
-            <div className="space-y-6 text-center">
-              <LivingLogo size={96} animated={true} showSlogan={true} />
-              <h2 className="font-display text-2xl font-bold text-fam-plum">
-                Bem-vinda à FAM — Força Ativa da Mulher
+            <div className="space-y-4 text-center">
+              <LivingLogo size={64} animated={true} showSlogan={true} />
+              <h2 className="font-display text-xl font-bold text-fam-plum">
+                Bem-vinda à FAM
               </h2>
-              <p className="text-fam-muted">
-                Antes de começar, vamos personalizar sua experiência para que
-                a navegação seja confortável e acessível para você.
+              <p className="text-sm text-fam-muted">
+                Personalize sua experiência para navegar com mais conforto.
               </p>
               <PrimaryButton onClick={handleNext} className="w-full">
                 Continuar
@@ -161,53 +179,48 @@ export function AccessibilityOnboarding() {
 
           {/* Step 2: Escolha do perfil */}
           {step === "escolha" && (
-            <div className="space-y-4">
-              <h2 className="font-display text-xl font-bold text-fam-plum text-center">
+            <div className="space-y-3">
+              <h2 className="font-display text-lg font-bold text-fam-plum text-center">
                 Como você prefere navegar?
               </h2>
-              <p className="text-sm text-fam-muted text-center">
-                Escolha um perfil pré-definido ou personalize depois.
+              <p className="text-xs text-fam-muted text-center">
+                Escolha um perfil ou use o padrão
               </p>
-              <div className="grid gap-3">
+              <div className="grid gap-2">
                 {WELCOME_PROFILES.map((profile) => (
                   <button
                     key={profile.key}
                     onClick={() => setSelected(profile.key)}
-                    className={`relative p-4 rounded-xl border-2 text-left transition-all ${
+                    className={`relative p-3 rounded-xl border-2 text-left transition-all ${
                       selected === profile.key
                         ? "border-fam-magenta bg-fam-magenta/5 ring-2 ring-fam-magenta/20"
                         : "border-fam-lavender hover:border-fam-magenta/50 hover:bg-fam-ivory-pink"
                     }`}
                   >
                     {selected === profile.key && (
-                      <span className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-fam-magenta flex items-center justify-center">
-                        <Check className="w-4 h-4 text-white" />
+                      <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-fam-magenta flex items-center justify-center">
+                        <Check className="w-3.5 h-3.5 text-white" />
                       </span>
                     )}
                     {profile.badge && (
-                      <span className="absolute -top-2 left-1/2 -translate-x-1/2 px-2 py-0.5 text-xs font-bold bg-fam-gold text-fam-deep-plum rounded-full">
+                      <span className="absolute -top-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[10px] font-bold bg-fam-gold text-fam-deep-plum rounded-full">
                         {profile.badge}
                       </span>
                     )}
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-2">
                       <LivingLogo
-                        size={48}
+                        size={36}
                         animated={false}
                         showSlogan={false}
                         className="shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-fam-deep-plum">{profile.name}</h3>
-                        {profile.badge && (
-                          <span className="inline-block mt-1 px-2 py-0.5 text-xs font-bold bg-fam-gold text-fam-deep-plum rounded-full">
-                            {profile.badge}
-                          </span>
-                        )}
-                        <p className="mt-1 text-sm text-fam-muted">{profile.desc}</p>
-                        <ul className="mt-2 space-y-1">
+                        <h3 className="font-semibold text-fam-deep-plum text-sm">{profile.name}</h3>
+                        <p className="text-xs text-fam-muted mt-0.5">{profile.desc}</p>
+                        <ul className="mt-1.5 space-y-0.5">
                           {profile.traits.map((trait, i) => (
-                            <li key={i} className="text-xs text-fam-muted flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-fam-magenta/50" />
+                            <li key={i} className="text-[11px] text-fam-muted flex items-center gap-1">
+                              <span className="w-1 h-1 rounded-full bg-fam-magenta/50" />
                               {trait}
                             </li>
                           ))}
@@ -217,38 +230,48 @@ export function AccessibilityOnboarding() {
                   </button>
                 ))}
               </div>
-              <label className="flex items-center gap-2 text-sm text-fam-muted mt-4">
+              <label className="flex items-center gap-2 text-xs text-fam-muted mt-2">
                 <input
                   type="checkbox"
                   checked={dontShowAgain}
                   onChange={(e) => setDontShowAgain(e.target.checked)}
-                  className="w-4 h-4 rounded border-fam-lavender text-fam-magenta focus:ring-fam-magenta"
+                  className="w-3.5 h-3.5 rounded border-fam-lavender text-fam-magenta focus:ring-fam-magenta"
                 />
                 <span>Não mostrar novamente</span>
               </label>
-              <PrimaryButton
-                onClick={handleNext}
-                disabled={!selected}
-                className="w-full"
-              >
-                Continuar
-              </PrimaryButton>
+              <div className="space-y-2 pt-2">
+                <PrimaryButton
+                  onClick={handleNext}
+                  disabled={!selected}
+                  className="w-full"
+                >
+                  Continuar
+                </PrimaryButton>
+                <Button variant="ghost" onClick={openSettings} className="w-full text-xs">
+                  <Settings className="h-3.5 w-3.5 mr-1.5" />
+                  Ir para configurações
+                </Button>
+                <Button variant="ghost" onClick={useDefaultAndClose} className="w-full text-xs">
+                  <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                  Usar configuração padrão
+                </Button>
+              </div>
             </div>
           )}
 
           {/* Step 3: Aplicando */}
           {step === "aplicando" && selected && (
-            <div className="space-y-6 text-center">
-              <div className="relative w-24 h-24 mx-auto">
+            <div className="space-y-4 text-center">
+              <div className="relative w-16 h-16 mx-auto">
                 <div className="absolute inset-0 border-4 border-fam-magenta/20 rounded-full animate-pulse" />
                 <div className="relative w-full h-full rounded-full bg-fam-magenta/10 flex items-center justify-center">
-                  <PartyPopper className="w-12 h-12 text-fam-magenta animate-bounce" />
+                  <PartyPopper className="w-8 h-8 text-fam-magenta animate-bounce" />
                 </div>
               </div>
-              <h2 className="font-display text-xl font-bold text-fam-plum">
+              <h2 className="font-display text-lg font-bold text-fam-plum">
                 Aplicando seu perfil…
               </h2>
-              <p className="text-fam-muted">
+              <p className="text-sm text-fam-muted">
                 Estamos configurando tudo para você.
               </p>
             </div>
@@ -256,33 +279,33 @@ export function AccessibilityOnboarding() {
 
           {/* Step 4: Confirmação */}
           {step === "confirmacao" && (
-            <div className="space-y-6 text-center">
-              <div className="w-20 h-20 mx-auto rounded-full bg-fam-success/10 flex items-center justify-center">
-                <Check className="w-10 h-10 text-fam-success" />
+            <div className="space-y-4 text-center">
+              <div className="w-14 h-14 mx-auto rounded-full bg-fam-success/10 flex items-center justify-center">
+                <CheckCircle2 className="w-7 h-7 text-fam-success" />
               </div>
-              <h2 className="font-display text-2xl font-bold text-fam-plum">
+              <h2 className="font-display text-xl font-bold text-fam-plum">
                 Tudo pronto! 🎉
               </h2>
-              <p className="text-base text-fam-muted">
+              <p className="text-sm text-fam-muted">
                 Sua experiência foi personalizada com sucesso.
               </p>
-              <p className="text-sm text-fam-muted">
+              <p className="text-xs text-fam-muted">
                 Você poderá alterar essas configurações a qualquer momento em{" "}
-                <b>Meu Painel → Perfil → Acessibilidade e Personalização</b>.
+                <b>Configurações → Acessibilidade</b>.
               </p>
-              <PrimaryButton size="lg" onClick={() => { markOnboarded(); closeOnboarding(); }} className="w-full max-w-sm text-base">
+              <PrimaryButton size="lg" onClick={() => { markOnboarded(); closeOnboarding(); }} className="w-full">
                 Entrar na FAM — FORÇA ATIVA DA MULHER
               </PrimaryButton>
             </div>
           )}
 
           {/* Navegação inferior (passos) */}
-          <div className="mt-6 flex items-center justify-center gap-1">
+          <div className="flex items-center justify-center gap-1">
             {["boas_vindas", "escolha", "aplicando", "confirmacao"].map((s, i) => (
               <button
                 key={s}
                 disabled
-                className={`w-8 h-2 rounded-full transition-colors ${
+                className={`w-6 h-1.5 rounded-full transition-colors ${
                   ["boas_vindas", "escolha", "aplicando", "confirmacao"].indexOf(step) >= i
                     ? "bg-fam-magenta"
                     : "bg-fam-lavender"
@@ -293,22 +316,27 @@ export function AccessibilityOnboarding() {
 
           {/* Botão voltar (exceto na primeira tela) */}
           {step !== "boas_vindas" && (
-            <Button variant="ghost" onClick={handleBack} className="w-full mt-4">
+            <Button variant="ghost" onClick={handleBack} className="w-full mt-2">
               <ArrowRight className="h-4 w-4 rotate-180 mr-2" />
               Voltar
             </Button>
           )}
 
-          {/* Fechar no canto (permite pular) */}
-          <button
-            onClick={() => { markOnboarded(); closeOnboarding(); }}
-            className="absolute top-4 right-4 p-1 rounded-lg hover:bg-fam-lavender text-fam-muted transition-colors"
-            aria-label="Pular e fechar"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          {/* Botões de ação rápida no rodapé */}
+          <div className="flex gap-2 pt-2 border-t border-fam-lavender">
+            <Button variant="ghost" size="sm" onClick={useDefaultAndClose} className="flex-1" aria-label="Usar configuração padrão">
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+              Padrão
+            </Button>
+            <Button variant="outline" size="sm" onClick={openSettings} className="flex-1" aria-label="Ir para configurações">
+              <Settings className="h-3.5 w-3.5 mr-1.5" />
+              Configurações
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => { markOnboarded(); closeOnboarding(); }} className="flex-1" aria-label="Fechar e usar padrão">
+              <X className="h-3.5 w-3.5 mr-1.5" />
+              Fechar
+            </Button>
+          </div>
         </div>
       </div>
     </div>
