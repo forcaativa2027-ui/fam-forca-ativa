@@ -153,6 +153,10 @@ export function FamContactPage() {
               <MessageCircle className="h-4 w-4" />
               {convLoading ? "Conectando..." : "Entrar na fila de atendimento"}
             </Button>
+          
+            <Link href="/" className="flex items-center gap-2 text-fam-plum font-medium hover:underline">
+              <ChevronLeft className="h-4 w-4" /> Voltar
+            </Link>
           </CardContent>
         </Card>
       ) : (
@@ -405,6 +409,10 @@ export function FamRiskAnalysisPage() {
             <Button variant="outline" onClick={handleRestart}>
               Refazer análise
             </Button>
+            
+            <Link href="/" className="flex items-center gap-2 text-fam-plum font-medium hover:underline">
+              <ChevronLeft className="h-4 w-4" /> Voltar
+            </Link>
           </CardContent>
         </Card>
       )}
