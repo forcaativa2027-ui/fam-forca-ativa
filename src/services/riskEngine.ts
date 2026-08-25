@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { JSONLogic } from "json-logic-js";
 import jsonLogic from "json-logic-js";
+type JSONLogic = unknown;
 
 export interface FamRiskRule {
   id: string;
@@ -82,10 +82,7 @@ export interface RiskEngineResult {
   triggered_rules: Array<{ code: string; name: string; priority: number }>;
   signals: Array<{ code: string; name: string; priority: number; rule_code: string }>;
   special_flows: string[];
-  emergency_flag: boolean;
-  attention: 'immediate' | 'relevant' | 'specialized' | 'insufficient_information' | null;
   preliminary_summary: string;
-  special_flows: string[];
 }
 
 export interface RiskEngineContext {
@@ -336,9 +333,6 @@ export class RiskEngine {
       signals,
       special_flows: [...new Set(specialFlows)],
       preliminary_summary: preliminarySummary,
-      emergency_flag: emergencyFlag,
-      attention,
-      special_flows: [...new Set(specialFlows)]
     };
   }
 
