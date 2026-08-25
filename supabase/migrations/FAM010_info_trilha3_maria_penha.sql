@@ -1,0 +1,39 @@
+-- FAM010 — INFO Trilha 3: Entendendo a Lei Maria da Penha (8 conteúdos progressivos)
+-- Progressão: entenda → situações → direitos → proteção → fonte oficial
+
+-- Trilha 3
+insert into public.knowledge_tracks (slug, title, description, sort_order) values
+  ('entendendo-a-lei-maria-da-penha', 'Entendendo a Lei Maria da Penha', 'Jornada progressiva: para que existe, quem protege, tipos de violência, medidas protetivas, rede e onde ler a lei. Sem juridiquês.', 3)
+on conflict (slug) do nothing;
+
+-- Conteúdos (8) — todos publicados como MVP
+insert into public.knowledge_contents (slug, title, summary, content, level, topic_id, estimated_minutes, status, published_at) values
+  ('maria-penha-para-que-existe', 'Para que existe a Lei Maria da Penha?', 'A lei cria mecanismos para coibir e prevenir violência doméstica e familiar contra a mulher.', 'Entenda em 2 min: A Lei nº 11.340/2006 existe para proteger mulheres da violência doméstica e familiar, criar medidas de proteção e organizar a rede de atendimento. Ela não depende apenas de agressão física — inclui psicológica, sexual, patrimonial e moral. Por que ela surgiu? Para reconhecer a gravidade da violência contra mulheres e dar resposta rápida do Estado. O que ela garante? Medidas protetivas, atendimento humanizado e integração entre saúde, assistência, segurança e justiça. Você não precisa entender todos os artigos para ter seus direitos respeitados.', 'entenda_2min', (select id from public.knowledge_topics where slug='maria-da-penha'), 2, 'published', now()),
+  ('maria-penha-quem-protege', 'A quem a lei protege?', 'Mulheres, independentemente de orientação sexual, identidade, classe, raça, idade, religião ou deficiência, em contexto doméstico, familiar ou íntimo.', 'Aprenda: A lei protege mulheres em 3 contextos: unidade doméstica (quem vive junto), família (vínculo por sangue, afeto ou afinidade) e relação íntima de afeto (namoro, casamento, ex). Não precisa morar junto nem ter dependência financeira. Inclui mulheres trans e travestis conforme entendimento jurisprudencial e serviços. Se você tem dúvida se seu caso se enquadra, busque orientação — a dúvida já é motivo para conversar.', 'aprenda', (select id from public.knowledge_topics where slug='maria-da-penha'), 5, 'published', now()),
+  ('maria-penha-o-que-e-violencia-domestica', 'O que é violência doméstica e familiar?', 'Qualquer ação ou omissão baseada no gênero que cause morte, lesão, sofrimento físico, sexual ou psicológico, dano moral ou patrimonial.', 'Aprofunde: Definição legal (art. 5º). Contexto + gênero + relação são os elementos-chave. Não é “briga de casal” isolada. Envolve padrão de poder e controle. Exemplos cotidianos e como registrar sinais sem se expor. Diferença entre conflito eventual e violência sistemática.', 'aprofunde', (select id from public.knowledge_topics where slug='maria-da-penha'), 8, 'published', now()),
+  ('maria-penha-formas-violencia', 'Quais formas de violência existem?', 'Física, psicológica, sexual, patrimonial e moral — todas previstas no art. 7º, com exemplos.', 'Aprenda com tabela: 1) Física: empurrar, socar, chutar, queimar, estrangular. 2) Psicológica: humilhar, ameaçar, manipular, isolar, perseguir. 3) Sexual: forçar sexo, coerção, impedir anticoncepcção. 4) Patrimonial: reter dinheiro/documentos, destruir bens. 5) Moral: caluniar, difamar, injuriar. Vicária e digital são formas de manifestação dessas. Se reconhecer 1, já merece atenção — não precisa esperar acumular.', 'aprenda', (select id from public.knowledge_topics where slug='violencia-tipos'), 7, 'published', now()),
+  ('maria-penha-medidas-protetivas', 'O que são medidas protetivas?', 'Ordens judiciais urgentes para proteger a mulher: afastamento do agressor, proibição de contato, entrega de bens, etc.', 'Entenda: Medidas protetivas de urgência (arts. 22-24) são ordens que o juiz pode dar em até 48h após pedido na delegacia/MP/Defensoria. Exemplos: afastamento do lar, distância mínima, proibição de contato por qualquer meio, suspensão de porte de arma, restituição de bens, alimentos provisórios. Não precisa de advogado para pedir, mas pode ter. Descumprir é crime. Onde pedir? Delegacia da Mulher, DEAM, Polícia Civil, MP, Defensoria.', 'entenda_2min', (select id from public.knowledge_topics where slug='maria-da-penha'), 4, 'published', now()),
+  ('maria-penha-rede-protecao', 'Como funciona a rede de proteção?', 'Saúde + assistência + segurança + justiça + FAM + canais 180/190/100.', 'Aprofunde: Fluxo integrado (Programa Mulher Viver sem Violência): saúde acolhe e notifica, assistência (CRAS/CREAS) apoia, segurança registra e investiga, justiça decide medidas, MP fiscaliza, Defensoria defende. A FAM orienta e conecta, não substitui. O que esperar em cada órgão, tempo médio e documentos. Mapa interativo em /recurso (futuro: /info/rede).', 'aprofunde', (select id from public.knowledge_topics where slug='rede-protecao'), 10, 'published', now()),
+  ('maria-penha-onde-procurar', 'Onde procurar orientação?', 'Canais imediatos, sem login, com opção de anonimato e saída rápida.', 'Aprenda: 180 (24h, gratuito, orientação + encaminhamento, WhatsApp (61) 9610-0180), 190 (emergência policial), Disque 100 (violações de direitos humanos), DEAM/Delegacia, CRAS, Defensoria, Saúde (UBS), e FAM (Fale Conosco / Análise de Risco). Todos listados com o que é, para que serve, como acessar e quando procurar — sem jogar lista indiscriminada.', 'aprenda', (select id from public.knowledge_topics where slug='rede-protecao'), 5, 'published', now()),
+  ('maria-penha-leia-legislacao', 'Leia a legislação', 'Acesse o texto integral da Lei Maria da Penha e materiais oficiais.', 'Fonte oficial: link para Planalto e Ministério das Mulheres, data da publicação (07/08/2006), última verificação, versão vigente, e como citar. Este conteúdo é “fonte_oficial” — distinção clara: acima foi explicação FAM, aqui é documento original. Recomenda-se leitura com apoio se necessário.', 'fonte_oficial', (select id from public.knowledge_topics where slug='maria-da-penha'), 15, 'published', now())
+on conflict (slug) do nothing;
+
+-- Vincular à trilha 3 na ordem pedagógica 1..8
+insert into public.knowledge_track_items (track_id, content_id, position)
+  select t.id, c.id, row_number() over (order by array_position(array['maria-penha-para-que-existe','maria-penha-quem-protege','maria-penha-o-que-e-violencia-domestica','maria-penha-formas-violencia','maria-penha-medidas-protetivas','maria-penha-rede-protecao','maria-penha-onde-procurar','maria-penha-leia-legislacao'], c.slug))
+  from public.knowledge_tracks t, public.knowledge_contents c
+  where t.slug = 'entendendo-a-lei-maria-da-penha' and c.slug in ('maria-penha-para-que-existe','maria-penha-quem-protege','maria-penha-o-que-e-violencia-domestica','maria-penha-formas-violencia','maria-penha-medidas-protetivas','maria-penha-rede-protecao','maria-penha-onde-procurar','maria-penha-leia-legislacao')
+on conflict (track_id, content_id) do nothing;
+
+-- Fontes
+insert into public.knowledge_content_sources (content_id, source_id, is_primary)
+  select c.id, s.id, true from public.knowledge_contents c, public.knowledge_sources s where c.slug = 'maria-penha-leia-legislacao' and s.title like '%Maria da Penha%' on conflict do nothing;
+insert into public.knowledge_content_sources (content_id, source_id, is_primary)
+  select c.id, s.id, false from public.knowledge_contents c, public.knowledge_sources s where c.slug = 'maria-penha-medidas-protetivas' and s.title like '%FONAR%' on conflict do nothing;
+
+-- Rastreabilidade
+insert into public.fam_document_sources (document_code, source_id)
+  select 'TEC-01', s.id from public.knowledge_sources s where s.title like '%Maria da Penha%' on conflict do nothing;
+insert into public.fam_document_sources (document_code, source_id)
+  select 'JUR-02', s.id from public.knowledge_sources s where s.title like '%Maria da Penha%' on conflict do nothing;
+
