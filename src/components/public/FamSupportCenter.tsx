@@ -299,7 +299,7 @@ function LegalBasisNotice({ purpose, category }: { purpose: string; category: st
   if (!base) return null;
   return (
     <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-      <p className="font-semibold">Base jurídica aplicável (JUR-02): {LEGAL_BASIS_LABELS[base.legal_basis as any] ?? base.legal_basis}</p>
+      <p className="font-semibold">Base jurídica aplicável (JUR-02): {(LEGAL_BASIS_LABELS as any)[base.legal_basis] ?? base.legal_basis}</p>
       <p className="mt-1">{base.legal_basis_description ?? ""} • Retenção {base.retention_class} • v{base.version}</p>
     </div>
   );
