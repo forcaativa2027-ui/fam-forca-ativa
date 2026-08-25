@@ -258,14 +258,38 @@ export function FamContactPage() {
   );
 }
 
-// --- Análise de Risco (com persistência no Supabase) ---
+// --- Análise de Risco (com persistência no Supabase + Fluxos Especiais JUR-01 / REV-02) ---
 const QUESTIONS = [
   ["danger_now", "Existe perigo ou ameaça acontecendo agora?"],
   ["injury", "Você precisa de atendimento médico ou está ferida?"],
   ["weapon", "A pessoa que ameaça você tem acesso a arma?"],
   ["sexual", "Houve violência sexual ou coerção?"],
   ["children", "Há crianças ou adolescentes em situação de risco?"],
+  ["elderly", "Há alguma pessoa idosa que pode estar sofrendo violência, abuso, negligência ou exploração?"],
+  ["disability", "A situação envolve uma pessoa com deficiência que pode estar em risco ou precisando de proteção?"],
 ] as const;
+
+function SpecialFlowsPanel({ answers }: { answers: Record<string, string> }) {
+  const has = (k: string) => answers[k] === "sim";
+  const flows: { key: string; title: string; desc: string; icon: any }[] = [];
+  if (has("children")) flows.push({ key: "children", title: "Proteção de criança/adolescente", desc: "Você informou que há criança ou adolescente em situação de risco. A FAM não realiza investigação, não confirma crimes e não substitui os órgãos da rede de proteção. Se houver perigo imediato, procure um local seguro e acione o serviço de emergência adequado. Em situações de violência, a orientação poderá indicar serviços oficiais de proteção, como Conselho Tutelar ou autoridade policial. Você não precisa enviar fotos, vídeos, áudios ou documentos para receber esta orientação.", icon: "👧" });
+  if (has("sexual")) flows.push({ key: "sexual", title: "Violência sexual / coerção", desc: "Situações envolvendo violência sexual ou coerção podem exigir atendimento de saúde, proteção e orientação especializada. Você não precisa descrever o que aconteceu para receber orientação inicial. Se estiver em perigo agora ou precisar de atendimento médico, informe. O envio de arquivos é opcional e não valida autenticidade.", icon: "🛡️" });
+  if (has("elderly")) flows.push({ key: "elderly", title: "Pessoa idosa em possível situação de risco", desc: "Você informou que há pessoa idosa que pode estar em situação de risco. A pessoa idosa deve ser tratada como titular de direitos, sem presumir incapacidade. Você pode pedir ajuda para preencher, mas isso não autoriza outra pessoa a ter acesso às suas informações. Procure apoio conforme a necessidade e, se houver perigo imediato, acione o serviço de emergência. Considere também a rede de proteção.", icon: "🧓" });
+  if (has("disability")) flows.push({ key: "disability", title: "Pessoa com deficiência", desc: "A deficiência não reduz autonomia, privacidade ou direito de decidir. Se precisar de forma diferente de comunicação, use a opção de acessibilidade. Apoio de pessoa de confiança é possível, mas apoio não significa autorização irrestrita para acesso aos dados.", icon: "♿" });
+  if (has("danger_now")) flows.push({ key: "emergency", title: "Sua segurança vem primeiro", desc: "Você informou que pode existir perigo ou ameaça acontecendo agora. Se estiver em perigo imediato, procure um local seguro e acione o serviço de emergência adequado à situação. Você não precisa preencher todo o formulário antes de buscar ajuda.", icon: "🚨" });
+  if (flows.length === 0) return null;
+  return (
+    <div className="space-y-3">
+      {flows.map(f => (
+        <div key={f.key} className="rounded-xl border border-fam-lavender bg-fam-ivory-pink p-4">
+          <p className="font-semibold text-fam-plum flex items-center gap-2"><span>{f.icon}</span>{f.title}</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-fam-deep-plum">{f.desc}</p>
+          <p className="mt-2 text-xs text-fam-muted">A FAM orienta, identifica sinais de atenção, protege a informação e conecta à rede competente. Não investiga, não produz laudo e não confirma crime.</p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export function FamRiskAnalysisPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -390,6 +414,7 @@ export function FamRiskAnalysisPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <SpecialFlowsPanel answers={answers} />
             <p className="rounded-lg bg-fam-lavender p-4 text-sm leading-relaxed">
               {urgent
                 ? "Se houver perigo agora, procure um local seguro quando puder e acione a emergência pelo 190. Para orientação e encaminhamento sobre violência contra a mulher, o Ligue 180 funciona 24 horas. Uma atendente especializada da FAM também pode acolher você quando houver disponibilidade."
