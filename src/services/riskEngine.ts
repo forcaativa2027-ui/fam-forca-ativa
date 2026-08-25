@@ -96,7 +96,7 @@ export interface RiskEngineContext {
  */
 function evaluateCondition(condition: unknown, data: Record<string, unknown>): boolean {
   try {
-    return jsonLogic.apply(condition, data);
+    return jsonLogic.apply(condition as any, data) as boolean;
   } catch (error) {
     console.error('Error evaluating condition:', error);
     return false;
@@ -533,7 +533,6 @@ export function createRiskEngine(sb: SupabaseClient): RiskEngine {
  * Helper to create risk engine with Supabase client from context
  */
 export async function getRiskEngine(): Promise<RiskEngine> {
-  const { createClient } = await import("@/lib/supabase/client");
-  const sb = createClient();
-  return new RiskEngine(sb);
+  const { supabase } = await import("@/lib/supabase/client");
+  return new RiskEngine(supabase as any);
 }
