@@ -1,0 +1,391 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Archivo:wght@400;500;600;700;800&family=Dancing+Script:wght@600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 330 100% 99%;
+    --foreground: 316 31% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 316 31% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 316 31% 15%;
+    --primary: 322 67% 53%;
+    --primary-foreground: 0 0% 100%;
+    --accent: 330 60% 95%;
+    --accent-foreground: 316 31% 15%;
+    --destructive: 350 66% 42%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 315 24% 89%;
+    --input: 315 24% 89%;
+    --ring: 322 67% 53%;
+    --radius: 0.75rem;
+  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground font-sans antialiased; }
+
+  /* Identidade FAM: superfícies claras, texto ameixa e acentos de beleza. */
+  ::selection { background: #F05A9D; color: #FFFFFF; }
+  .fam-menu-surface { background: #4A173F; color: #FFFFFF; }
+  .fam-menu-item { color: rgba(255,255,255,.82); transition: color .2s, background-color .2s; }
+  .fam-menu-item:hover, .fam-menu-item[data-active="true"] { color: #FFFFFF; background: rgba(201,162,74,.18); }
+  .fam-gold-line { background: linear-gradient(90deg, #C9A24A, #E8C978, #C9A24A); }
+  .fam-carousel-surface { background: linear-gradient(135deg, #6D2C68 0%, #4A173F 58%, #32132D 100%); }
+
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* ACA-UX-001 Fase B — moldura de ícone dos novos cards (FeatureCard,
+     SchoolCard, BibleToolCard, BibleCategoryCard). Só cuida de forma e
+     tamanho — a cor de fundo/ícone fica a cargo de quem usa (ex:
+     bg-gold/10 text-gold), pra caber a identidade de cada escola/área. */
+  .icon-tile { @apply grid shrink-0 place-items-center rounded-xl; }
+  .icon-tile-sm { @apply icon-tile h-9 w-9; }
+  .icon-tile-md { @apply icon-tile h-11 w-11; }
+  .icon-tile-lg { @apply icon-tile h-14 w-14; }
+}
+
+/*
+  CT-017 — Central de Acessibilidade e Personalização, Fase 1.
+  Tema escuro GLOBAL (diferente do .dark-blue-theme, que é escopado
+  só a telas públicas específicas): quando a classe "cec-dark" está
+  no <html>, sobrescreve as variáveis CSS do shadcn em toda a
+  plataforma (painel administrativo incluso), igual o CT-017 pede.
+*/
+html.cec-dark {
+  --background: 222 47% 8%;
+  --foreground: 0 0% 96%;
+  --card: 222 40% 13%;
+  --card-foreground: 0 0% 96%;
+  --popover: 222 40% 13%;
+  --popover-foreground: 0 0% 96%;
+  --primary: 213 67% 55%;
+  --primary-foreground: 222 47% 8%;
+  --accent: 222 30% 20%;
+  --accent-foreground: 0 0% 96%;
+  --destructive: 0 70% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 222 25% 22%;
+  --input: 222 25% 22%;
+  --ring: 45 74% 49%;
+}
+html.cec-dark .text-navy,
+html.cec-dark .text-navy-600,
+html.cec-dark .text-ink {
+  color: #f5f5f5;
+}
+html.cec-dark .text-muted,
+html.cec-dark .text-muted-foreground {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+html.cec-dark .bg-white {
+  background-color: hsl(var(--card));
+}
+html.cec-dark .border-border {
+  border-color: hsl(var(--border));
+}
+/* UI-002 — cobertura ampla: fundos pastéis claros (alertas/badges/tabelas/caixas de destaque)
+   ficam translúcidos em vez de quase-brancos, evitando texto escuro sobre fundo escuro.
+   Inclui as famílias de cor extras usadas em telas específicas (pink/sky/indigo/cyan/violet/fuchsia/lime/rose). */
+html.cec-dark [class*="bg-blue-50"], html.cec-dark [class*="bg-blue-100"],
+html.cec-dark [class*="bg-red-50"], html.cec-dark [class*="bg-red-100"],
+html.cec-dark [class*="bg-green-50"], html.cec-dark [class*="bg-green-100"],
+html.cec-dark [class*="bg-emerald-50"], html.cec-dark [class*="bg-emerald-100"],
+html.cec-dark [class*="bg-amber-50"], html.cec-dark [class*="bg-amber-100"],
+html.cec-dark [class*="bg-yellow-50"], html.cec-dark [class*="bg-yellow-100"],
+html.cec-dark [class*="bg-purple-50"], html.cec-dark [class*="bg-purple-100"],
+html.cec-dark [class*="bg-orange-50"], html.cec-dark [class*="bg-orange-100"],
+html.cec-dark [class*="bg-gray-50"], html.cec-dark [class*="bg-gray-100"],
+html.cec-dark [class*="bg-slate-50"], html.cec-dark [class*="bg-slate-100"],
+html.cec-dark [class*="bg-pink-50"], html.cec-dark [class*="bg-pink-100"],
+html.cec-dark [class*="bg-sky-50"], html.cec-dark [class*="bg-sky-100"],
+html.cec-dark [class*="bg-indigo-50"], html.cec-dark [class*="bg-indigo-100"],
+html.cec-dark [class*="bg-cyan-50"], html.cec-dark [class*="bg-cyan-100"],
+html.cec-dark [class*="bg-violet-50"], html.cec-dark [class*="bg-violet-100"],
+html.cec-dark [class*="bg-fuchsia-50"], html.cec-dark [class*="bg-fuchsia-100"],
+html.cec-dark [class*="bg-lime-50"], html.cec-dark [class*="bg-lime-100"],
+html.cec-dark [class*="bg-rose-50"], html.cec-dark [class*="bg-rose-100"],
+html.cec-dark [class*="bg-muted"] {
+  background-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+/* ACA-UX-001 Fase G (QA) — as cores de ícone das Escolas (SchoolCard) usam a
+   faixa -600, pensada pra fundo claro. Clareia pra -400 no modo escuro,
+   mantendo a mesma identidade de cor com contraste adequado. */
+html.cec-dark .text-amber-600 { color: #fbbf24 !important; }
+html.cec-dark .text-blue-600 { color: #60a5fa !important; }
+html.cec-dark .text-purple-600 { color: #c084fc !important; }
+html.cec-dark .text-emerald-600 { color: #34d399 !important; }
+html.cec-dark .text-rose-600 { color: #fb7185 !important; }
+html.cec-dark .text-cyan-600 { color: #22d3ee !important; }
+/* Texto escuro pareado com esses fundos pastel (ex: bg-amber-50 + text-amber-800) — sem isso,
+   fica escuro sobre fundo agora escuro. Cobre a faixa 500-900, que é o intervalo mais usado. */
+html.cec-dark [class*="text-blue-5"], html.cec-dark [class*="text-blue-6"], html.cec-dark [class*="text-blue-7"], html.cec-dark [class*="text-blue-8"], html.cec-dark [class*="text-blue-9"],
+html.cec-dark [class*="text-red-5"], html.cec-dark [class*="text-red-6"], html.cec-dark [class*="text-red-7"], html.cec-dark [class*="text-red-8"], html.cec-dark [class*="text-red-9"],
+html.cec-dark [class*="text-green-5"], html.cec-dark [class*="text-green-6"], html.cec-dark [class*="text-green-7"], html.cec-dark [class*="text-green-8"], html.cec-dark [class*="text-green-9"],
+html.cec-dark [class*="text-emerald-5"], html.cec-dark [class*="text-emerald-6"], html.cec-dark [class*="text-emerald-7"], html.cec-dark [class*="text-emerald-8"],
+html.cec-dark [class*="text-amber-5"], html.cec-dark [class*="text-amber-6"], html.cec-dark [class*="text-amber-7"], html.cec-dark [class*="text-amber-8"],
+html.cec-dark [class*="text-yellow-7"], html.cec-dark [class*="text-yellow-8"],
+html.cec-dark [class*="text-purple-5"], html.cec-dark [class*="text-purple-6"], html.cec-dark [class*="text-purple-7"], html.cec-dark [class*="text-purple-8"],
+html.cec-dark [class*="text-sky-6"], html.cec-dark [class*="text-sky-7"], html.cec-dark [class*="text-sky-8"],
+html.cec-dark [class*="text-orange-5"], html.cec-dark [class*="text-orange-6"], html.cec-dark [class*="text-orange-7"], html.cec-dark [class*="text-orange-8"],
+html.cec-dark [class*="text-gray-5"], html.cec-dark [class*="text-gray-6"], html.cec-dark [class*="text-gray-7"], html.cec-dark [class*="text-gray-8"], html.cec-dark [class*="text-gray-9"],
+html.cec-dark [class*="text-slate-6"], html.cec-dark [class*="text-slate-7"], html.cec-dark [class*="text-slate-8"],
+html.cec-dark [class*="text-pink-5"], html.cec-dark [class*="text-pink-6"], html.cec-dark [class*="text-pink-7"], html.cec-dark [class*="text-pink-8"],
+html.cec-dark [class*="text-indigo-5"], html.cec-dark [class*="text-indigo-6"], html.cec-dark [class*="text-indigo-7"], html.cec-dark [class*="text-indigo-8"],
+html.cec-dark [class*="text-cyan-5"], html.cec-dark [class*="text-cyan-6"], html.cec-dark [class*="text-cyan-7"], html.cec-dark [class*="text-cyan-8"],
+html.cec-dark [class*="text-violet-5"], html.cec-dark [class*="text-violet-6"], html.cec-dark [class*="text-violet-7"], html.cec-dark [class*="text-violet-8"],
+html.cec-dark [class*="text-fuchsia-6"], html.cec-dark [class*="text-fuchsia-7"],
+html.cec-dark [class*="text-lime-6"], html.cec-dark [class*="text-lime-7"],
+html.cec-dark [class*="text-rose-5"], html.cec-dark [class*="text-rose-6"], html.cec-dark [class*="text-rose-7"], html.cec-dark [class*="text-rose-8"] {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+/* Bordas de alerta/badge/tabela — mesma lógica, ficam translúcidas em vez de quase-invisíveis */
+html.cec-dark [class*="border-blue-200"], html.cec-dark [class*="border-blue-300"],
+html.cec-dark [class*="border-red-200"], html.cec-dark [class*="border-red-300"],
+html.cec-dark [class*="border-green-200"], html.cec-dark [class*="border-green-300"],
+html.cec-dark [class*="border-amber-200"], html.cec-dark [class*="border-amber-300"],
+html.cec-dark [class*="border-yellow-200"], html.cec-dark [class*="border-yellow-300"],
+html.cec-dark [class*="border-gray-200"], html.cec-dark [class*="border-gray-300"],
+html.cec-dark [class*="border-pink-200"], html.cec-dark [class*="border-pink-300"],
+html.cec-dark [class*="border-sky-200"], html.cec-dark [class*="border-sky-300"],
+html.cec-dark [class*="border-indigo-200"], html.cec-dark [class*="border-indigo-300"],
+html.cec-dark [class*="border-cyan-200"], html.cec-dark [class*="border-cyan-300"],
+html.cec-dark [class*="border-violet-200"], html.cec-dark [class*="border-violet-300"] {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+/* Ícones/pontos "cheios" (ring/bg sólidos usados em badges pequenos de status) */
+html.cec-dark [class*="ring-pink-"], html.cec-dark [class*="ring-blue-1"] {
+  --tw-ring-color: rgba(255, 255, 255, 0.3) !important;
+}
+html.cec-dark [class*="shadow-red-100"], html.cec-dark [class*="shadow-blue-100"] {
+  --tw-shadow-color: transparent !important;
+}
+/* Abas (Tabs) inativas — texto cinza claro sobre fundo escuro fica ilegível */
+html.cec-dark [class*="text-muted"] {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+/* Cores de marca escritas em hexadecimal direto (ex: bg-[#0E2A47]) usadas em botões
+   de telas públicas — mantém o texto branco garantido por cima delas. */
+html.cec-dark [class*="bg-[#0E2A47]"], html.cec-dark [class*="bg-[#16345A]"] {
+  color: #ffffff !important;
+}
+
+/*
+  Overrides escopados do tema azul (público + painel do membro).
+  Só afeta o que estiver DENTRO de um elemento com a classe
+  .dark-blue-theme (aplicada pelo componente DarkBlueTheme) — o
+  painel administrativo nunca usa essa classe, então continua
+  exatamente igual. Isso cobre classes de cor "fixas" do Tailwind
+  (text-navy, text-ink, text-muted, bg-white) que NÃO são variáveis
+  CSS e por isso não seriam trocadas só pelo wrapper de variáveis.
+*/
+.dark-blue-theme .text-navy,
+.dark-blue-theme .text-navy-600,
+.dark-blue-theme .text-ink {
+  color: #ffffff;
+}
+.dark-blue-theme .text-muted {
+  color: rgba(255, 255, 255, 0.65);
+}
+.dark-blue-theme .bg-white {
+  background-color: transparent;
+}
+.dark-blue-theme .border-border {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.dark-blue-theme .text-muted-foreground {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+/* Fundos pastéis claros (usados em alertas/badges) ficam translúcidos em vez de quase-brancos */
+.dark-blue-theme [class*="bg-blue-50"],
+.dark-blue-theme [class*="bg-red-50"],
+.dark-blue-theme [class*="bg-green-50"],
+.dark-blue-theme [class*="bg-amber-50"],
+.dark-blue-theme [class*="bg-yellow-50"],
+.dark-blue-theme [class*="bg-purple-50"],
+.dark-blue-theme [class*="bg-gray-50"],
+.dark-blue-theme [class*="bg-pink-50"],
+.dark-blue-theme [class*="bg-sky-50"],
+.dark-blue-theme [class*="bg-indigo-50"],
+.dark-blue-theme [class*="bg-cyan-50"],
+.dark-blue-theme [class*="bg-violet-50"],
+.dark-blue-theme [class*="bg-muted"] {
+  background-color: rgba(255, 255, 255, 0.07) !important;
+}
+/* Essas caixas pastel quase sempre vêm com texto escuro pareado (ex: bg-amber-50 + text-amber-800)
+   pensado pra fundo claro. O fundo acima já virou translúcido/escuro — sem isso, o texto continua
+   escuro/avermelhado sobre fundo escuro (baixo contraste, o bug relatado na Etapa 2 do cadastro). */
+.dark-blue-theme [class*="text-blue-7"],
+.dark-blue-theme [class*="text-blue-8"],
+.dark-blue-theme [class*="text-red-7"],
+.dark-blue-theme [class*="text-red-8"],
+.dark-blue-theme [class*="text-green-7"],
+.dark-blue-theme [class*="text-green-8"],
+.dark-blue-theme [class*="text-emerald-7"],
+.dark-blue-theme [class*="text-emerald-8"],
+.dark-blue-theme [class*="text-amber-7"],
+.dark-blue-theme [class*="text-amber-8"],
+.dark-blue-theme [class*="text-yellow-7"],
+.dark-blue-theme [class*="text-yellow-8"],
+.dark-blue-theme [class*="text-purple-7"],
+.dark-blue-theme [class*="text-purple-8"],
+.dark-blue-theme [class*="text-sky-7"],
+.dark-blue-theme [class*="text-sky-8"],
+.dark-blue-theme [class*="text-orange-7"],
+.dark-blue-theme [class*="text-orange-8"],
+.dark-blue-theme [class*="text-gray-7"],
+.dark-blue-theme [class*="text-gray-8"],
+.dark-blue-theme [class*="text-pink-6"],
+.dark-blue-theme [class*="text-pink-7"],
+.dark-blue-theme [class*="text-indigo-7"],
+.dark-blue-theme [class*="text-cyan-7"],
+.dark-blue-theme [class*="text-violet-7"] {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+.dark-blue-theme [class*="border-blue-200"],
+.dark-blue-theme [class*="border-red-300"],
+.dark-blue-theme [class*="border-green-200"],
+.dark-blue-theme [class*="border-amber-300"],
+.dark-blue-theme [class*="border-red-200"],
+.dark-blue-theme [class*="border-pink-200"],
+.dark-blue-theme [class*="border-indigo-200"] {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+.dark-blue-theme [class*="shadow-red-100"],
+.dark-blue-theme [class*="shadow-blue-100"] {
+  --tw-shadow-color: transparent !important;
+}
+/* CT-017 Fase 3 — Contraste */
+html[data-contrast="alto"] {
+  --border: 220 20% 55%;
+  --input: 220 20% 55%;
+}
+html[data-contrast="alto"] .text-muted,
+html[data-contrast="alto"] .text-muted-foreground {
+  color: rgba(20, 30, 50, 0.85) !important;
+}
+html.cec-dark[data-contrast="alto"] .text-muted,
+html.cec-dark[data-contrast="alto"] .text-muted-foreground {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+html[data-contrast="muito_alto"] {
+  --border: 220 30% 35%;
+  --input: 220 30% 35%;
+  filter: contrast(1.12) saturate(1.05);
+}
+html[data-contrast="muito_alto"] .text-muted,
+html[data-contrast="muito_alto"] .text-muted-foreground {
+  color: rgba(10, 15, 30, 0.95) !important;
+}
+
+/* CT-017 Fase 3 — Espaçamento (aplica leve ajuste de altura de linha e padding conforme o nível escolhido) */
+html[data-spacing="confortavel"] main, html[data-spacing="confortavel"] .container {
+  letter-spacing: 0.01em;
+}
+html[data-spacing="confortavel"] button, html[data-spacing="confortavel"] input, html[data-spacing="confortavel"] a {
+  padding-top: 0.15rem; padding-bottom: 0.15rem;
+}
+html[data-spacing="ampliado"] main, html[data-spacing="ampliado"] .container {
+  letter-spacing: 0.015em;
+  line-height: 1.7;
+}
+html[data-spacing="ampliado"] button, html[data-spacing="ampliado"] input, html[data-spacing="ampliado"] a {
+  padding-top: 0.3rem; padding-bottom: 0.3rem;
+}
+html[data-spacing="compacto"] main, html[data-spacing="compacto"] .container {
+  line-height: 1.3;
+}
+
+/* CT-017 Fase 3 — Animações */
+html[data-animations="reduzida"] * {
+  transition-duration: 0.08s !important;
+  animation-duration: 0.08s !important;
+}
+html[data-animations="desativada"] *,
+html[data-animations="desativada"] *::before,
+html[data-animations="desativada"] *::after {
+  transition: none !important;
+  animation: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* CT-017 Fase 3 — Navegação Simplificada: telas podem usar essa classe pra
+   ocultar recursos avançados quando o usuário ativa esse modo. */
+html[data-simplified="true"] .advanced-only {
+  display: none !important;
+}
+
+/* CT-017 Fase 4 — Tamanho dos Botões (áreas clicáveis maiores) */
+html[data-button-size="grande"] button:not(.cec-no-scale) {
+  min-height: 48px !important;
+  font-size: 1.05em;
+}
+html[data-button-size="extra_grande"] button:not(.cec-no-scale) {
+  min-height: 56px !important;
+  font-size: 1.15em;
+  padding-left: 1.15em !important;
+  padding-right: 1.15em !important;
+}
+
+/* CT-017 Fase 4 — Estilo dos Ícones */
+html[data-icon-style="monocromaticos"] svg {
+  filter: grayscale(1) !important;
+}
+html[data-icon-style="minimalistas"] svg {
+  opacity: 0.8;
+  filter: saturate(0.7);
+}
+
+/* DS-003 §4 — Living Logo: respiração suave e brilho sutil.
+   Só transform/opacity (§13 — sem GIF/vídeo, leve). */
+@keyframes living-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.025); }
+}
+@keyframes living-glow {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 0.45; }
+}
+.animate-living-breathe { animation: living-breathe 4.5s ease-in-out infinite; }
+.animate-living-glow    { animation: living-glow 5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-living-breathe, .animate-living-glow { animation: none !important; }
+}
+
+/* ============================================================
+   SERVO360-ICON-000/001 — Sistema de Cards Táteis (kit oficial).
+   Corrigido: seletor de dark mode era .dark, ajustado pra
+   html.cec-dark (o real usado nesta plataforma).
+   ============================================================ */
+:root{
+--s360-press-distance:3px;--s360-card-bg:#fff;--s360-card-fg:#10263f;
+--s360-card-muted:#64748b;--s360-card-border:rgba(15,46,78,.14);
+--s360-card-focus:#2563eb;--s360-elevation-1:0 4px 0 rgba(15,46,78,.12),0 8px 18px rgba(15,46,78,.08);
+--s360-elevation-2:0 7px 0 rgba(15,46,78,.13),0 14px 26px rgba(15,46,78,.10);
+--s360-elevation-3:0 10px 0 rgba(15,46,78,.15),0 20px 36px rgba(15,46,78,.12);
+--s360-pressed-shadow:0 2px 0 rgba(15,46,78,.12),0 5px 12px rgba(15,46,78,.08)}
+html.cec-dark{--s360-card-bg:#163555;--s360-card-fg:#f8fafc;--s360-card-muted:#cbd5e1;
+--s360-card-border:rgba(255,255,255,.13);--s360-elevation-1:0 4px 0 rgba(0,0,0,.34),0 8px 18px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.08);
+--s360-elevation-2:0 7px 0 rgba(0,0,0,.38),0 14px 26px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.10);
+--s360-elevation-3:0 10px 0 rgba(0,0,0,.42),0 20px 36px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.12);
+--s360-pressed-shadow:0 2px 0 rgba(0,0,0,.32),0 5px 12px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.06)}
+.s360-card{width:100%;display:flex;flex-direction:column;gap:.85rem;text-align:left;text-decoration:none;color:var(--s360-card-fg);background:var(--s360-card-bg);
+border:1px solid var(--s360-card-border);border-radius:1rem;padding:1rem;box-shadow:var(--s360-elevation-2);transform:translateY(0);
+transition:transform 120ms ease,box-shadow 120ms ease,border-color 120ms ease;cursor:pointer}
+.s360-card--mini{box-shadow:var(--s360-elevation-1);padding:.8rem}.s360-card--feature,.s360-card--continue{box-shadow:var(--s360-elevation-3)}
+.s360-card:hover:not(.is-disabled){transform:translateY(-1px)}.s360-card:active:not(.is-disabled){transform:translateY(var(--s360-press-distance));box-shadow:var(--s360-pressed-shadow)}
+.s360-card:focus-visible{outline:3px solid var(--s360-card-focus);outline-offset:4px}.s360-card.is-selected{border-color:var(--s360-card-focus)}
+.s360-card.is-disabled,.s360-card:disabled{cursor:not-allowed;filter:saturate(.55);opacity:.68}
+.s360-card__top{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem}.s360-icon{object-fit:contain;user-select:none}
+.s360-icon-fallback{display:inline-block;border-radius:.75rem;background:#e2e8f0}
+.s360-card__title{margin:0;font-weight:800;font-size:1.05rem;line-height:1.25}.s360-card__description{margin:.35rem 0 0;color:var(--s360-card-muted);line-height:1.45}
+.s360-card__meta{margin-top:.6rem;color:var(--s360-card-muted);font-size:.875rem}.s360-card__progress{margin-top:.8rem;display:flex;align-items:center;gap:.6rem}
+.s360-card__progress-track{height:.5rem;flex:1;overflow:hidden;border-radius:999px;background:color-mix(in srgb,var(--s360-card-fg) 12%,transparent)}
+.s360-card__progress-value{display:block;height:100%;border-radius:inherit;background:#2563eb}
+@media(prefers-reduced-motion:reduce){.s360-card{transition:none}.s360-card:hover:not(.is-disabled){transform:none}.s360-card:active:not(.is-disabled){transform:none;box-shadow:var(--s360-pressed-shadow)}}
