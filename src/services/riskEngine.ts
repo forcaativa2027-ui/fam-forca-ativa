@@ -193,7 +193,7 @@ export class RiskEngine {
    * Get questions for questionnaire with options
    */
   async getQuestionsWithOptions(questionnaireId: string) {
-    const { data: questions, error } = await this.sb
+    const { data, error } = await this.sb
       .from("fam_risk_questions")
       .select(`
         *,
