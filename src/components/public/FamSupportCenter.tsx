@@ -1,17 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, CheckCircle2, MessageCircle, Phone, ShieldAlert, Send, X, ChevronLeft, Settings, CheckCircle2 as CheckCircle2Icon } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronLeft, MessageCircle, Phone, ShieldAlert, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useFamConversations, useFamMessages, useFamRiskCase, useFamRiskEngine, useFamStateMachine } from "@/hooks/useFamSupport";
-import { supabase } from "@/lib/supabase";
+import { useFamConversations, useFamMessages, useFamRiskCase } from "@/hooks/useFamSupport";
 import { FileUploader } from "@/components/ui/FileUploader";
-import { Header } from "@/components/shared/Header";
+import { supabase } from "@/lib/supabase";
 
 const EMERGENCY_180 = "180";
 const EMERGENCY_190 = "190";
@@ -24,8 +22,8 @@ export function FamSafetyNotice() {
     </Button>
   );
   return (
-    <div className="border-fam-danger/30 bg-fam-danger/5">
-      <div className="flex items-start gap-3 p-4">
+    <Card className="border-fam-danger/30 bg-fam-danger/5">
+      <CardContent className="flex items-start gap-3 p-4">
         <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-fam-danger" />
         <div className="min-w-0 flex-1 text-sm text-fam-deep-plum">
           <p className="font-semibold">Você está em segurança para continuar?</p>
@@ -38,33 +36,10 @@ export function FamSafetyNotice() {
         <Button variant="ghost" size="icon" aria-label="Ocultar aviso" onClick={() => setHidden(true)}>
           <X className="h-4 w-4" />
         </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
-
-const QUESTIONS = [
-  ["danger_now", "Existe perigo ou ameaça acontecendo agora?"],
-  ["injury", "Você precisa de atendimento médico ou está ferida?"],
-  ["weapon", "A pessoa que ameaça você tem acesso a arma?"],
-  ["sexual", "Houve violência sexual ou coerção?"],
-  ["children", "Há crianças ou adolescentes em situação de risco?"],
-  ["control", "A pessoa que ameaça você controla sua vida diária?"],
-  ["strangulation", "A pessoa já tentou estrangular ou sufocar você?"],
-  ["death_threat", "A pessoa já ameaçou matar você ou seus filhos?"],
-  ["stalking", "A pessoa persegue ou vigia você?"],
-  ["financial_control", "A pessoa controla seu dinheiro ou documentos?"],
-  ["financial_dependency", "Há dependência financeira da pessoa que ameaça?"],
-  ["support_network", "Você tem rede de apoio (família, amigos, vizinhos)?"],
-  ["property_destruction", "A pessoa já quebrou objetos ou destruiu suas coisas?"],
-  ["custody_threat", "A pessoa ameaça tirar seus filhos?"],
-  ["fear_home", "Você tem medo de voltar para casa?"],
-  ["medical_care", "Você precisou de atendimento médico por causa da violência?"],
-  ["health_worsened", "Você tem problemas de saúde agravados pela situação?"],
-  ["digital_monitoring", "A pessoa monitora seu celular ou redes sociais?"],
-  ["sexting_threat", "A pessoa ameaça divulgar fotos ou informações íntimas?"],
-  ["digital_control", "A pessoa controla suas contas bancárias ou senhas?"],
-] as const;
 
 export function FamContactPage() {
   const [started, setStarted] = useState(false);
@@ -178,6 +153,10 @@ export function FamContactPage() {
               <MessageCircle className="h-4 w-4" />
               {convLoading ? "Conectando..." : "Entrar na fila de atendimento"}
             </Button>
+          
+            <Link href="/" className="flex items-center gap-2 text-fam-plum font-medium hover:underline">
+              <ChevronLeft className="h-4 w-4" /> Voltar
+            </Link>
           </CardContent>
         </Card>
       ) : (
@@ -279,42 +258,22 @@ export function FamContactPage() {
   );
 }
 
-// --- Análise de Risco (com Risk Engine) ---
+// --- Análise de Risco (com persistência no Supabase) ---
 const QUESTIONS = [
   ["danger_now", "Existe perigo ou ameaça acontecendo agora?"],
   ["injury", "Você precisa de atendimento médico ou está ferida?"],
   ["weapon", "A pessoa que ameaça você tem acesso a arma?"],
   ["sexual", "Houve violência sexual ou coerção?"],
   ["children", "Há crianças ou adolescentes em situação de risco?"],
-  ["control", "A pessoa que ameaça você controla sua vida diária?"],
-  ["strangulation", "A pessoa já tentou estrangular ou sufocar você?"],
-  ["death_threat", "A pessoa já ameaçou matar você ou seus filhos?"],
-  ["stalking", "A pessoa persegue ou vigia você?"],
-  ["financial_control", "A pessoa controla seu dinheiro ou documentos?"],
-  ["financial_dependency", "Há dependência financeira da pessoa que ameaça?"],
-  ["support_network", "Você tem rede de apoio (família, amigos, vizinhos)?"],
-  ["property_destruction", "A pessoa já quebrou objetos ou destruiu suas coisas?"],
-  ["custody_threat", "A pessoa ameaça tirar seus filhos?"],
-  ["fear_home", "Você tem medo de voltar para casa?"],
-  ["medical_care", "Você precisou de atendimento médico por causa da violência?"],
-  ["health_worsened", "Você tem problemas de saúde agravados pela situação?"],
-  ["digital_monitoring", "A pessoa monitora seu celular ou redes sociais?"],
-  ["sexting_threat", "A pessoa ameaça divulgar fotos ou informações íntimas?"],
-  ["digital_control", "A pessoa controla suas contas bancárias ou senhas?"],
 ] as const;
 
 export function FamRiskAnalysisPage() {
-  const pathname = usePathname();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [openContact, setOpenContact] = useState(false);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [caseId, setCaseId] = useState<string | undefined>(undefined);
-  
-  // Use new Risk Engine and State Machine hooks
   const { riskCase, create, saveAnswers, submitAssessment, loading: riskLoading, error: riskError } = useFamRiskCase(userId);
-  const { state, transition, canAnswer, canAttach, isEmergency, getAnswers, getAnsweredCount } = useFamStateMachine();
-  
   const urgent = ["danger_now", "injury", "weapon", "sexual", "children"].some(
     (key) => answers[key] === "sim"
   );
@@ -347,7 +306,7 @@ export function FamRiskAnalysisPage() {
       setSubmitted(true);
     } catch (e) {
       console.error("Erro ao salvar análise:", e);
-      alert("Erro ao salvar. Tente novamente.");
+      alert("Não foi possível registrar a análise. A orientação local continua disponível; tente novamente quando estiver em segurança.");
     }
   };
 
@@ -357,124 +316,111 @@ export function FamRiskAnalysisPage() {
     setCaseId(undefined);
   };
 
-  const handleAnswer = (key: string, value: string) => {
-    setAnswers((prev) => ({ ...prev, [key]: value }));
-  };
-
-  // Determine visible questions based on display conditions
-  const visibleQuestions = QUESTIONS.filter(([key]) => {
-    // For now, show all questions. Could add display conditions later.
-    return true;
-  });
-
   return (
     <div className="mx-auto max-w-3xl space-y-6 py-6">
       <FamSafetyNotice />
-      <Header title="Análise de Risco" showBackButton href="/" />
-      <main className="container py-6">
-        <FamSafetyNotice />
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">FAM · orientação inicial</p>
-          <h1 className="mt-2 font-display text-3xl text-fam-plum">Análise de Risco</h1>
-          <p className="mt-2 text-sm text-fam-muted">
-            Responda apenas o que puder com segurança. Esta ferramenta organiza sinais de atenção e
-            não confirma nem descarta crime, não produz laudo e não substitui polícia, emergência,
-            saúde ou atendimento profissional.
-          </p>
-        </div>
-        {!submitted ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Como você está agora?</CardTitle>
-              <CardDescription>
-                Se não souber ou não quiser responder, escolha "Prefiro não responder".
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              {QUESTIONS.map(([key, label]) => (
-                <div key={key} className="space-y-2">
-                  <p className="text-sm font-medium text-fam-deep-plum">{label}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {["sim", "não", "prefiro não responder"].map((value) => (
-                      <Button
-                        key={value}
-                        type="button"
-                        variant={answers[key] === value ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleAnswer(key, value)}
-                      >
-                        {value}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              {userId ? (
-                <FileUploader userId={userId ?? ""} caseId={caseId} accept="image/*,application/pdf,audio/*,video/*" />
-              ) : (
-                <div className="rounded-lg border border-fam-gold/30 bg-fam-gold-soft/10 p-4 text-sm text-fam-deep-plum">
-                  <p className="font-semibold">Quer enviar documentos, fotos, áudios ou vídeos?</p>
-                  <p className="mt-1">Entre na sua conta para anexar arquivos com segurança. Não é necessário ser associada à FAM.</p>
-                  <Button asChild variant="outline" size="sm" className="mt-3">
-                    <Link href="/entrar?redirect=/analise-risco">Entrar para enviar anexos</Link>
-                  </Button>
-                </div>
-              )}
-              <Button disabled={!complete || riskLoading} onClick={handleSubmit} className="w-full">
-                {riskLoading ? "Salvando..." : "Ver orientação inicial"}
-              </Button>
-              {riskError && <p className="text-sm text-fam-danger">{riskError}</p>}
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className={urgent ? "border-fam-danger/30" : "border-gold/30"}>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                {urgent ? (
-                  <AlertTriangle className="h-5 w-5 text-fam-danger" />
-                ) : (
-                  <CheckCircle2Icon className="h-5 w-5 text-gold" />
-                )}
-                <CardTitle>
-                  {urgent ? "Sinais que merecem atenção imediata" : "É importante conversar com uma atendente"}
-                </CardTitle>
-              </div>
-              <CardDescription>
-                Este resultado é orientativo e foi baseado somente nas respostas fornecidas.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="rounded-lg bg-fam-lavender p-4 text-sm leading-relaxed">
-                {urgent
-                  ? "Se houver perigo agora, procure um local seguro quando puder e acione a emergência pelo 190. Para orientação e encaminhamento sobre violência contra a mulher, o Ligue 180 funciona 24 horas. Uma atendente especializada da FAM também pode acolher você quando houver disponibilidade."
-                  : "Não foi possível concluir uma situação a partir destas respostas. Isso não significa que esteja tudo bem ou que não exista risco. Converse com uma atendente especializada para avaliar com cuidado o próximo passo."}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={() => setOpenContact(true)} className="gap-2">
-                  <MessageCircle className="h-4 w-4" /> Fale com uma atendente
-                </Button>
-                <Button variant="outline" asChild>
-                  <a href="tel:190"><Phone className="mr-2 h-4 w-4" /> Emergência 190</a>
-                </Button>
-                <Button variant="outline" asChild>
-                  <a href="tel:180"><Phone className="mr-2 h-4 w-4" /> Ligue 180</a>
-                </Button>
-              </div>
-              <Button variant="outline" onClick={handleRestart}>
-                Refazer análise
-              </Button>
-              <Link href="/" className="flex items-center gap-2 text-fam-plum font-medium hover:underline mt-4">
-                <ChevronLeft className="h-4 w-4" /> Voltar
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-        <p className="text-xs leading-relaxed text-fam-muted">
-          A triagem pode ser feita sem login. O envio de fotos, vídeos, áudios ou documentos exige apenas
-          uma conta autenticada — não é necessário ser associada à FAM — e depende de regras de segurança,
-          varredura, retenção e supervisão aprovadas pela instituição.
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">FAM · orientação inicial</p>
+        <h1 className="mt-2 font-display text-3xl text-fam-plum">Análise de Risco</h1>
+        <p className="mt-2 text-sm text-fam-muted">
+          Responda apenas o que puder com segurança. Esta ferramenta organiza sinais de atenção e
+          não confirma nem descarta crime, não produz laudo e não substitui polícia, emergência,
+          saúde ou atendimento profissional.
         </p>
-      </main>
+      </div>
+      {!submitted ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Como você está agora?</CardTitle>
+            <CardDescription>
+              Se não souber ou não quiser responder, escolha "Prefiro não responder".
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {QUESTIONS.map(([key, label]) => (
+              <div key={key} className="space-y-2">
+                <p className="text-sm font-medium text-fam-deep-plum">{label}</p>
+                <div className="flex flex-wrap gap-2">
+                  {["sim", "não", "prefiro não responder"].map((value) => (
+                    <Button
+                      key={value}
+                      type="button"
+                      variant={answers[key] === value ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setAnswers((prev) => ({ ...prev, [key]: value }))}
+                    >
+                      {value}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            {userId ? (
+              <FileUploader userId={userId} caseId={caseId} accept="image/*,application/pdf,audio/*,video/*" />
+            ) : (
+              <div className="rounded-lg border border-fam-gold/30 bg-fam-gold-soft/10 p-4 text-sm text-fam-deep-plum">
+                <p className="font-semibold">Quer enviar documentos, fotos, áudios ou vídeos?</p>
+                <p className="mt-1">Entre na sua conta para anexar arquivos com segurança. Não é necessário ser associada à FAM.</p>
+                <Button asChild variant="outline" size="sm" className="mt-3">
+                  <Link href="/entrar?redirect=/analise-risco">Entrar para enviar anexos</Link>
+                </Button>
+              </div>
+            )}
+            <Button disabled={!complete || riskLoading} onClick={handleSubmit} className="w-full">
+              {riskLoading ? "Salvando..." : "Ver orientação inicial"}
+            </Button>
+            {riskError && <p className="text-sm text-fam-danger">{riskError}</p>}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className={urgent ? "border-fam-danger/30" : "border-gold/30"}>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              {urgent ? (
+                <AlertTriangle className="h-5 w-5 text-fam-danger" />
+              ) : (
+                <CheckCircle2 className="h-5 w-5 text-gold" />
+              )}
+              <CardTitle>
+                {urgent ? "Sinais que merecem atenção imediata" : "É importante conversar com uma atendente"}
+              </CardTitle>
+            </div>
+            <CardDescription>
+              Este resultado é orientativo e foi baseado somente nas respostas fornecidas.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="rounded-lg bg-fam-lavender p-4 text-sm leading-relaxed">
+              {urgent
+                ? "Se houver perigo agora, procure um local seguro quando puder e acione a emergência pelo 190. Para orientação e encaminhamento sobre violência contra a mulher, o Ligue 180 funciona 24 horas. Uma atendente especializada da FAM também pode acolher você quando houver disponibilidade."
+                : "Não foi possível concluir uma situação a partir destas respostas. Isso não significa que esteja tudo bem ou que não exista risco. Converse com uma atendente especializada para avaliar com cuidado o próximo passo."}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => setOpenContact(true)} className="gap-2">
+                <MessageCircle className="h-4 w-4" /> Fale com uma atendente
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="tel:190"><Phone className="mr-2 h-4 w-4" /> Emergência 190</a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="tel:180"><Phone className="mr-2 h-4 w-4" /> Ligue 180</a>
+              </Button>
+            </div>
+            <Button variant="outline" onClick={handleRestart}>
+              Refazer análise
+            </Button>
+            
+            <Link href="/" className="flex items-center gap-2 text-fam-plum font-medium hover:underline">
+              <ChevronLeft className="h-4 w-4" /> Voltar
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+      <p className="text-xs leading-relaxed text-fam-muted">
+        A triagem pode ser feita sem login. O envio de fotos, vídeos, áudios ou documentos exige apenas
+        uma conta autenticada — não é necessário ser associada à FAM — e depende de regras de segurança,
+        varredura, retenção e supervisão aprovadas pela instituição.
+      </p>
     </div>
   );
 }
