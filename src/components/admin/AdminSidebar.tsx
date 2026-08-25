@@ -227,6 +227,8 @@ export function AdminSidebar({
   const isApostolo = profile?.role === "apostolo";
 
   let groups = buildGroups(counts);
+  // perfil 'apostolo' removido dos perfis FAM (COR-Uetter
+  // grupos são filtrados apenas por módulos ativos
   if (!isApostolo) {
     const allowedTabKeys = new Set(activeModules.flatMap((m) => DELEGATION_TAB_MAP[m] ?? []));
     groups = groups
