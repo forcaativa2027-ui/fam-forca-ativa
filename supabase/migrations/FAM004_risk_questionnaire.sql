@@ -129,8 +129,8 @@ alter table public.fam_risk_cases
   add column if not exists text_version text,
   add column if not exists policy_version text,
   add column if not exists state text not null default 'initial',
-  add column if not exists triggered_rules jsonb default '[]'::jsonb,
-  add column if not exists signals jsonb default '[]'::jsonb,
+  add column if not exists triggered_rules jsonb default '{}'::jsonb,
+  add column if not exists signals jsonb default '{}'::jsonb,
   add column if not exists special_flows text[] default '{}',
   add column if not exists emergency_flag boolean not null default false,
   add column if not exists completed_at timestamptz;
@@ -200,7 +200,7 @@ insert into public.fam_risk_rules (code, name, description, priority, condition,
  '{"set_state": "emergency", "set_emergency_flag": true, "priority_action": "show_emergency_resources"}',
  '[{"code": "SIG-EMERGENCY", "name": "Perigo Imediato", "priority": 100}]',
  100,
- '["emergency"]'),
+ ARRAY['emergency']),
 
 -- Regra de Atendimento Médico Necessário (AR-02 = sim)
 ('RULE-MEDICAL-001', 'Atendimento Médico Necessário', 'Necessidade de atendimento médico imediato', 20,
@@ -208,7 +208,7 @@ insert into public.fam_risk_rules (code, name, description, priority, condition,
  '{"add_signal": "SIG-MEDICAL", "action": "recommend_medical_care"}',
  '[{"code": "SIG-MEDICAL", "name": "Necessidade de Atendimento Médico", "priority": 90}]',
  90,
- '[]'),
+ '{}'),
 
 -- Regra de Acesso a Arma (AR-03 = sim)
 ('RULE-WEAPON-001', 'Acesso a Arma', 'Agressor tem acesso a arma', 30,
@@ -216,7 +216,7 @@ insert into public.fam_risk_rules (code, name, description, priority, condition,
  '{"add_signal": "SIG-WEAPON", "action": "increase_risk_level"}',
  '[{"code": "SIG-WEAPON", "name": "Acesso a Arma", "priority": 95}]',
  95,
- '[]'),
+ '{}'),
 
 -- Regra de Violência Sexual (AR-04 = sim)
 ('RULE-SEXUAL-001', 'Violência Sexual', 'Violência sexual ou coerção identificada', 40,
@@ -224,7 +224,7 @@ insert into public.fam_risk_rules (code, name, description, priority, condition,
  '{"set_special_flow": "sexual_violence", "add_signal": "SIG-SEXUAL", "priority_action": "specialized_support"}',
  '[{"code": "SIG-SEXUAL", "name": "Violência Sexual", "priority": 100}]',
  100,
- '["sexual_violence"]'),
+ ARRAY['sexual_violence']),
 
 -- Regra de Crianças em Risco (AR-05 = sim)
 ('RULE-CHILDREN-001', 'Crianças em Risco', 'Crianças ou adolescentes em situação de risco', 50,
@@ -232,7 +232,7 @@ insert into public.fam_risk_rules (code, name, description, priority, condition,
  '{"set_special_flow": "children_at_risk", "add_signal": "SIG-CHILDREN", "priority_action": "child_protection_referral"}',
  '[{"code": "SIG-CHILDREN", "name": "Crianças em Risco", "priority": 95}]',
  95,
- '["children_at_risk"]'),
+ ARRAY['children_at_risk']),
 
 -- Regra de Estrangulamento (AR-07 = sim)
 ('RULE-STRANGULATION-001', 'Estrangulamento', 'Tentativa de estrangulamento - alto risco letal', 10,
@@ -240,7 +240,7 @@ insert into public.fam_risk_rules (code, name, description, priority, condition,
  '{"set_emergency_flag": true, "add_signal": "SIG-STRANGULATION", "priority_action": "immediate_protection"}',
  '[{"code": "SIG-STRANGULATION", "name": "Estrangulamento", "priority": 100}]',
  100,
- '["emergency"]'),
+ ARRAY['emergency']),
 
 -- Regra de Ameaça de Morte (AR-08 = sim)
 ('RULE-DEATH-THREAT-001', 'Ameaça de Morte', 'Ameaça de matar a vítima ou filhos', 20,
@@ -248,7 +248,7 @@ insert into public.fam_risk_rules (code, name, description, priority, condition,
  '{"set_emergency_flag": true, "add_signal": "SIG-DEATH-THREAT", "priority_action": "immediate_protection"}',
  '[{"code": "SIG-DEATH-THREAT", "name": "Ameaça de Morte", "priority": 95}]',
  95,
- '[]'),
+ '{}'),
 
 -- Regra de Estrangulamento + Ameaça de Morte (combinação)
 ('RULE-LETHAL-COMBO-001', 'Combo Letal: Estrangulamento + Ameaça de Morte', 'Combinação de estrangulamento e ameaça de morte', 5,
@@ -256,7 +256,7 @@ insert into public.fam_risk_rules (code, name, description, priority, condition,
  '{"set_emergency_flag": true, "set_state": "emergency", "add_signal": "SIG-LETHAL-COMBO", "priority_action": "maximum_protection"}',
  '[{"code": "SIG-LETHAL-COMBO", "name": "Combo Letal", "priority": 100}]',
  100,
- '["emergency"]'),
+ ARRAY['emergency']),
 
 -- Regra de Crianças + Violência (AR-05 + AR-04)
 ('RULE-CHILDREN-VIOLENCE-001', 'Crianças + Violência', 'Crianças expostas a violência sexual', 30,
@@ -264,7 +264,7 @@ insert into public.fam_risk_rules (code, name, description, priority, condition,
  '{"set_special_flow": "children_sexual_violence", "add_signal": "SIG-CHILD-SEXUAL", "priority_action": "specialized_child_protection"}',
  '[{"code": "SIG-CHILD-SEXUAL", "name": "Crianças + Violência Sexual", "priority": 100}]',
  100,
- '["children_at_risk", "sexual_violence"]'),
+ ARRAY['children_at_risk','sexual_violence']),
 
 -- Regra de Controle Extremo (AR-06 + AR-09 + AR-10 + AR-20)
 ('RULE-CONTROL-001', 'Controle Extremo', 'Múltiplos indicadores de controle coercitivo', 40,
@@ -272,7 +272,7 @@ insert into public.fam_risk_rules (code, name, description, priority, condition,
  '{"add_signal": "SIG-COERCIVE-CONTROL", "action": "high_risk_coercive_control"}',
  '[{"code": "SIG-COERCIVE-CONTROL", "name": "Controle Coercitivo Extremo", "priority": 85}]',
  85,
- '[]'),
+ '{}'),
 
 -- Regra de Emergência por Saúde (AR-02 + AR-16)
 ('RULE-HEALTH-EMERGENCY-001', 'Emergência de Saúde', 'Ferimento atual + histórico de atendimento médico por violência', 30,
@@ -280,7 +280,7 @@ insert into public.fam_risk_rules (code, name, description, priority, condition,
  '{"set_emergency_flag": true, "add_signal": "SIG-HEALTH-EMERGENCY", "priority_action": "immediate_medical_care"}',
  '[{"code": "SIG-HEALTH-EMERGENCY", "name": "Emergência de Saúde", "priority": 95}]',
  95,
- '[]'),
+ '{}'),
 
 -- Regra de Violência Digital (AR-18 + AR-19 + AR-20)
 ('RULE-DIGITAL-001', 'Violência Digital', 'Múltiplos indicadores de violência digital', 50,
@@ -288,7 +288,7 @@ insert into public.fam_risk_rules (code, name, description, priority, condition,
  '{"set_special_flow": "digital_violence", "add_signal": "SIG-DIGITAL", "action": "digital_safety_plan"}',
  '[{"code": "SIG-DIGITAL", "name": "Violência Digital", "priority": 70}]',
  70,
- '["digital_violence"]'),
+ ARRAY['digital_violence']),
 
 -- Regra de Crianças + Violência Digital
 ('RULE-CHILD-DIGITAL-001', 'Crianças + Digital', 'Crianças expostas a violência digital', 40,
@@ -296,7 +296,7 @@ insert into public.fam_risk_rules (code, name, description, priority, condition,
  '{"set_special_flow": "children_digital_violence", "add_signal": "SIG-CHILD-DIGITAL", "priority_action": "child_digital_protection"}',
  '[{"code": "SIG-CHILD-DIGITAL", "name": "Crianças + Violência Digital", "priority": 90}]',
  90,
- '["children_at_risk", "digital_violence"]');
+ ARRAY['children_at_risk','digital_violence']);
 
 -- 12. Índices adicionais para performance
 create index if not exists idx_fam_risk_cases_state on public.fam_risk_cases(state);
