@@ -1,8 +1,8 @@
 /** Tipos de dominio do CEC FAMILY (espelham o schema do Supabase). */
 
-export type UserRole = "apostolo"|"pastor"|"supervisor"|"lider"|"anfitriao"|"discipulador"|"membro"|"visitante";
+export type UserRole = "adm_general"|"adm_instituicao"|"usuario_delegado"|"usuario_comum"|"pastor"|"supervisor"|"lider"|"anfitriao"|"discipulador"|"membro"|"visitante";
 export type ChurchType = "sede"|"nucleo"|"igreja_local";
-export type JourneyStage = "visitante"|"novo_convertido"|"consolidacao"|"discipulado"|"batismo"|"membro_ativo"|"membro_efetivo"|"servo"|"lider_formacao"|"lider"|"diacono"|"supervisor"|"supervisor_setor"|"supervisor_area"|"supervisor_distrito"|"pastor_auxiliar"|"pastor_principal"|"apostolo"|"missionario";
+export type JourneyStage = "visitante"|"novo_convertido"|"consolidacao"|"discipulado"|"batismo"|"membro_ativo"|"membro_efetivo"|"servo"|"lider_formacao"|"lider"|"diacono"|"supervisor"|"supervisor_setor"|"supervisor_area"|"supervisor_distrito"|"pastor_auxiliar"|"pastor_principal"|"missionario";
 export type MemberStatus = "ativo"|"inativo"|"afastado";
 export type Weekday = "domingo"|"segunda"|"terca"|"quarta"|"quinta"|"sexta"|"sabado";
 export type EventStatus = "abertas"|"encerradas"|"esgotado"|"em_breve";
@@ -342,8 +342,8 @@ export type NewsCategory = "minha_comunidade" | "cec_manaus" | "cec_brasilia" | 
 export type ContactStatus = "novo" | "em_andamento" | "concluido" | "spam";
 export interface News {
   id: string; slug: string; category: NewsCategory;
-  title: string; subtitle?: string | null; summary: string | null; body: string | null;
-  cover_url: string | null; author_name: string | null; source?: string | null; video_url?: string | null;
+  title: string; summary: string | null; body: string | null;
+  cover_url: string | null; author_name: string | null;
   church_id: string | null;
   is_published: boolean; published_at: string | null;
   meta_title: string | null; meta_description: string | null; og_image_url: string | null;
