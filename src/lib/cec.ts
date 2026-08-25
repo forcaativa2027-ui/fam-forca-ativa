@@ -231,7 +231,8 @@ export type Database = {
         | "conversao" | "batismo" | "consolidacao" | "discipulado" | "curso"
         | "ministerio" | "encontro" | "mudanca_etapa" | "observacao"
       user_role:
-        | "apostolo" | "pastor" | "supervisor" | "lider"
+        | "adm_general" | "adm_instituicao" | "usuario_delegado" | "usuario_comum"
+        | "pastor" | "supervisor" | "lider"
         | "anfitriao" | "discipulador" | "membro" | "visitante"
       weekday: "domingo" | "segunda" | "terca" | "quarta" | "quinta" | "sexta" | "sabado"
     }
@@ -257,7 +258,10 @@ export function createCecClient(url: string, anonKey: string, options?: Paramete
 
 /** Rotulos amigaveis (PT-BR) para os enums do dominio. */
 export const ROLE_LABELS: Record<Enums<"user_role">, string> = {
-  apostolo: "Apostolo",
+  adm_general: "Administrador Geral",
+  adm_instituicao: "Administrador da Instituição",
+  usuario_delegado: "Usuário Delegado",
+  usuario_comum: "Usuário Comum",
   pastor: "Pastor",
   supervisor: "Supervisor",
   lider: "Lider",
@@ -286,8 +290,8 @@ export const WEEKDAY_LABELS: Record<Enums<"weekday">, string> = {
   quinta: "Quinta", sexta: "Sexta", sabado: "Sabado",
 };
 
-/** Papeis com visao global (lideranca apostolica). */
-export const ADMIN_ROLES: Enums<"user_role">[] = ["apostolo", "pastor"];
+/** Papeis com visao global (administracao FAM). */
+export const ADMIN_ROLES: Enums<"user_role">[] = ["adm_general", "adm_instituicao"];
 
 export function isAdminRole(role?: Enums<"user_role"> | null): boolean {
   return !!role && ADMIN_ROLES.includes(role);
