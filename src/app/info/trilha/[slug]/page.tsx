@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { getTrackWithItems } from "@/services/knowledge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, ArrowLeft, BookOpen } from "lucide-react";
 
 export default async function TrackPage({ params }: { params: { slug: string } }) {
-  const data = await getTrackWithItems(params.slug as any);
+  const supabase = await createClient();
+  const data = await getTrackWithItems(params.slug as any, supabase as any);
   if (!data) return notFound();
   const { track, items } = data as any;
   return (

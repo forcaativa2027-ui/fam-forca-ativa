@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { getContentBySlug } from "@/services/knowledge";
-import { supabase } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 
 export default async function ContentPage({ params }: { params: { slug: string } }) {
-  const content = await getContentBySlug(params.slug as any);
+  const supabase = await createClient();
+  const content = await getContentBySlug(params.slug as any, supabase as any);
   if (!content) return notFound();
   // fontes vinculadas
   const { data: links } = await (supabase as any).from("knowledge_content_sources").select("source:knowledge_sources(*)").eq("content_id", content.id);

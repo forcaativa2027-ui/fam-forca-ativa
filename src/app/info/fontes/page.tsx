@@ -1,11 +1,13 @@
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import { listSources } from "@/services/knowledge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
 import { ExternalLink, ArrowLeft } from "lucide-react";
 
 export default async function FontesPage() {
-  const sources = await listSources();
+  const supabase = await createClient();
+  const sources = await listSources(supabase as any);
   return (
     <div className="container py-8 space-y-6 max-w-4xl">
       <Link href="/info" className="inline-flex items-center gap-1 text-sm text-fam-muted hover:text-fam-plum"><ArrowLeft className="h-4 w-4" /> Voltar ao INFO</Link>

@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 import { listTracks } from "@/services/knowledge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ArrowLeft, Clock } from "lucide-react";
 
 export default async function TrilhasPage() {
-  const tracks = await listTracks();
+  const supabase = await createClient();
+  const tracks = await listTracks(supabase as any);
   return (
     <div className="container py-8 space-y-6 max-w-3xl">
       <Link href="/info" className="inline-flex items-center gap-1 text-sm text-fam-muted hover:text-fam-plum"><ArrowLeft className="h-4 w-4" /> Voltar ao INFO</Link>
