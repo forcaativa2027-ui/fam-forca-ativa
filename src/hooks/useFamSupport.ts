@@ -27,6 +27,8 @@ import {
   listCaseAttachments,
 } from "@/services/famAttachments";
 import type { FamAttachment } from "@/services/famAttachments";
+import { createRiskEngine, RiskEngine } from "@/services/riskEngine";
+import { createAssessmentStateMachine, AssessmentStateMachine } from "@/services/riskStateMachine";
 
 export function useFamConversations(userId?: string) {
   const [conversations, setConversations] = useState<FamConversation[]>([]);
@@ -160,7 +162,7 @@ export function useFamRiskCase(userId?: string) {
   const submitAssessment = async (
     caseId: string,
     assessment: {
-      attention: FamRiskCase["attention"];
+      attention: 'immediate' | 'relevant' | 'specialized' | 'insufficient_information';
       preliminary_summary: string;
       limitations_acknowledged_at: string;
       referred_conversation_id?: string;
@@ -182,6 +184,81 @@ export function useFamRiskCase(userId?: string) {
   return { riskCase, loading, error, create, saveAnswers, submitAssessment };
 }
 
+// ===== Risk Engine =====
+
+export function useFamRiskEngine() {
+  const [engine, setEngine] = useState<RiskEngine | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function init() {
+      setLoading(true);
+      try {
+        const { createRiskEngine } = await import("@/services/riskEngine");
+        const { createClient } = await import("@/lib/supabase/client");
+        const sb = createClient();
+        const engine = createRiskEngine(sb);
+        setEngine(engine);
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "Erro ao inicializar Risk Engine");
+      } finally {
+        setLoading(false);
+      }
+    }
+    init();
+  }, []);
+
+  return { engine, loading, error };
+}
+
+// ===== State Machine =====
+
+export function useFamStateMachine() {
+  const [stateMachine, setStateMachine] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function init() {
+      setLoading(true);
+      try {
+        const { createAssessmentStateMachine } = await import("@/services/riskStateMachine");
+        const { createClient } = await import("@/lib/supabase/client");
+        const sb = createClient();
+        const machine = createAssessmentStateMachine(sb);
+        setStateMachine(machine);
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : "Erro ao inicializar State Machine");
+      } finally {
+        setLoading(false);
+      }
+    }
+    init();
+  }, []);
+
+  // Return current state and transition function
+  const state = stateMachine?.getState() || 'initial';
+  const transition = stateMachine?.transition.bind(stateMachine);
+  const canAnswer = stateMachine?.canAnswer?.() ?? false;
+  const canAttach = stateMachine?.canAttach?.() ?? false;
+  const isEmergency = stateMachine?.isEmergency?.() ?? false;
+  const getAnswers = () => stateMachine?.getAnswers?.() || {};
+  const getAnsweredCount = stateMachine?.getAnsweredCount?.() || 0;
+
+  return { 
+    state, 
+    transition: stateMachine?.transition.bind(stateMachine),
+    canAnswer,
+    canAttach,
+    isEmergency,
+    getAnswers,
+    getAnsweredCount,
+    loading,
+    error
+  };
+}
+
 // ===== Attachments =====
 
 export function useFamAttachments() {
@@ -190,7 +267,10 @@ export function useFamAttachments() {
   const upload = async (file: File, userId: string, caseId?: string, conversationId?: string) => {
     setUploading(true);
     try {
-      const att = await uploadAttachment(supabase, { file, userId, caseId, conversationId });
+      const { uploadAttachment } = await import("@/services/famAttachments");
+      const { createClient } = await import("@/lib/supabase/client");
+      const sb = createClient();
+      const att = await uploadAttachment(sb, { file, userId, caseId, conversationId });
       return att;
     } finally {
       setUploading(false);
@@ -198,11 +278,17 @@ export function useFamAttachments() {
   };
 
   const getUrl = async (storagePath: string) => {
-    return getAttachmentUrl(supabase, storagePath);
+    const { getAttachmentUrl } = await import("@/services/famAttachments");
+    const { createClient } = await import("@/lib/supabase/client");
+    const sb = createClient();
+    return getAttachmentUrl(sb, storagePath);
   };
 
   const listForCase = async (caseId: string) => {
-    return listCaseAttachments(supabase, caseId);
+    const { listCaseAttachments } = await import("@/services/famAttachments");
+    const { createClient } = await import("@/lib/supabase/client");
+    const sb = createClient();
+    return listCaseAttachments(sb, caseId);
   };
 
   return { upload, getUrl, listForCase, uploading };
