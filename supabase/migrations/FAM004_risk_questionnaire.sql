@@ -145,7 +145,7 @@ with q as (
   select id as questionnaire_id from public.fam_risk_questionnaires where code = 'AR-FAM' and version = '1.0'
 )
 insert into public.fam_risk_questions (questionnaire_id, code, text, explanation, question_type, question_group, order_index, is_required, is_active, methodology_reference, signal_weight)
-select questionnaire_id, code, text, explanation, question_type, question_group, order_index, is_required, true, methodology_reference, signal_weight
+select questionnaire_id, code, text, explanation, question_type::public.fam_question_type, question_group::public.fam_question_group, order_index, is_required, true, methodology_reference, signal_weight
 from q
 cross join (values
   -- Perguntas iniciais (AR-01 a AR-05)
