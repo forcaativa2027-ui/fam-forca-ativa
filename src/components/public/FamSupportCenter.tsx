@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFamConversations, useFamMessages, useFamRiskCase } from "@/hooks/useFamSupport";
 import { FileUploader } from "@/components/ui/FileUploader";
+import { useActiveLegalBases } from "@/hooks/useLegalBases";
+import { LEGAL_BASIS_LABELS } from "@/services/legalBases";
 import { supabase } from "@/lib/supabase";
 
 const EMERGENCY_180 = "180";
@@ -291,6 +293,18 @@ function SpecialFlowsPanel({ answers }: { answers: Record<string, string> }) {
   );
 }
 
+function LegalBasisNotice({ purpose, category }: { purpose: string; category: string }) {
+  const { bases } = useActiveLegalBases();
+  const base = bases.find(b => b.purpose_code === purpose && b.data_category === category);
+  if (!base) return null;
+  return (
+    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+      <p className="font-semibold">Base jurídica aplicável (JUR-02): {LEGAL_BASIS_LABELS[base.legal_basis as any] ?? base.legal_basis}</p>
+      <p className="mt-1">{base.legal_basis_description ?? ""} • Retenção {base.retention_class} • v{base.version}</p>
+    </div>
+  );
+}
+
 export function FamRiskAnalysisPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -415,6 +429,7 @@ export function FamRiskAnalysisPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <SpecialFlowsPanel answers={answers} />
+            <LegalBasisNotice purpose={urgent ? "protecao_vida_incolumidade" : "orientacao_inicial"} category={answers["sexual"] === "sim" ? "vida_sexual" : answers["children"] === "sim" ? "crianca_adolescente" : "respostas_risco"} />
             <p className="rounded-lg bg-fam-lavender p-4 text-sm leading-relaxed">
               {urgent
                 ? "Se houver perigo agora, procure um local seguro quando puder e acione a emergência pelo 190. Para orientação e encaminhamento sobre violência contra a mulher, o Ligue 180 funciona 24 horas. Uma atendente especializada da FAM também pode acolher você quando houver disponibilidade."
