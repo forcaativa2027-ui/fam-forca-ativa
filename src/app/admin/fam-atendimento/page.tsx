@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
+import { listFamReferralRequests, updateFamReferralRequestStatus } from "@/services/famReferralOperations";
+import type { FamReferralRequest, FamReferralRequestStatus } from "@/services/famReferralRequests";
 
 interface FamConversation {
   id: string;
@@ -46,10 +48,13 @@ export default function FamAtendimentoAdmin() {
   const [loading, setLoading] = useState(true);
   const [attendants, setAttendants] = useState<FamAttendant[]>([]);
   const [currentAttendantId, setCurrentAttendantId] = useState<string | null>(null);
+  const [referralRequests, setReferralRequests] = useState<FamReferralRequest[]>([]);
+  const [referralLoading, setReferralLoading] = useState(false);
 
   useEffect(() => {
     loadAttendants();
     loadConversations();
+    loadReferralRequests();
   }, []);
 
   async function loadAttendants() {
@@ -69,6 +74,28 @@ export default function FamAtendimentoAdmin() {
       .select("*")
       .eq("status", "active");
     setAttendants(attendantsData ?? []);
+  }
+
+  async function loadReferralRequests() {
+    setReferralLoading(true);
+    try {
+      const data = await listFamReferralRequests(sb);
+      setReferralRequests(data);
+    } catch (e) {
+      console.error("Erro ao carregar solicitações:", e);
+    } finally {
+      setReferralLoading(false);
+    }
+  }
+
+  async function handleReferralStatus(requestId: string, nextStatus: FamReferralRequestStatus) {
+    try {
+      const updated = await updateFamReferralRequestStatus(sb, requestId, nextStatus);
+      setReferralRequests((current) => current.map((request) => request.id === updated.id ? updated : request));
+    } catch (e) {
+      console.error("Erro ao atualizar solicitação:", e);
+      alert("Não foi possível atualizar esta solicitação. Verifique se sua conta é de atendente ativa e se a transição é permitida.");
+    }
   }
 
   async function loadConversations() {
@@ -189,6 +216,45 @@ export default function FamAtendimentoAdmin() {
           </Button>
         </div>
       </div>
+
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-lg">Solicitações de encaminhamento ({referralRequests.length})</CardTitle>
+            <p className="mt-1 text-xs text-fam-muted">A revisão não envia dados automaticamente. Cada transição é validada e auditada no servidor.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={loadReferralRequests} disabled={referralLoading}>Atualizar</Button>
+        </CardHeader>
+        <CardContent>
+          {referralLoading ? (
+            <p className="text-sm text-fam-muted">Carregando solicitações...</p>
+          ) : referralRequests.length === 0 ? (
+            <p className="text-sm text-fam-muted">Nenhuma solicitação disponível para revisão.</p>
+          ) : (
+            <div className="space-y-3">
+              {referralRequests.map((request) => (
+                <div key={request.id} className="rounded-lg border border-fam-gold/30 p-4">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="space-y-1 text-sm">
+                      <p className="font-semibold text-fam-deep-plum">{request.recipient} · {request.priority}</p>
+                      <p className="text-fam-muted">{request.purpose}</p>
+                      <p className="text-xs text-fam-muted">Solicitada em {new Date(request.created_at).toLocaleString("pt-BR")} · Escopo: {request.requested_data.join(", ")}</p>
+                      <p className="text-xs text-fam-muted">Recebimento não significa atendimento, investigação ou adoção de providência.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`rounded-full px-2 py-1 text-xs ${getReferralStatusColor(request.status)}`}>{getReferralStatusLabel(request.status)}</span>
+                      {request.status === "requested" && <Button size="sm" onClick={() => handleReferralStatus(request.id, "under_review")}>Iniciar revisão</Button>}
+                      {request.status === "under_review" && <Button size="sm" onClick={() => handleReferralStatus(request.id, "sent")}>Marcar como enviado</Button>}
+                      {request.status === "sent" && <Button size="sm" onClick={() => handleReferralStatus(request.id, "received")}>Confirmar recebimento</Button>}
+                      {(request.status === "requested" || request.status === "under_review" || request.status === "sent") && <Button size="sm" variant="outline" onClick={() => handleReferralStatus(request.id, "cancelled")}>Cancelar</Button>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid lg:grid-cols-[280px_1fr] gap-6">
         {/* Sidebar - Lista de Conversas */}
@@ -338,6 +404,28 @@ function getStatusLabel(status: string) {
     escalated: "Escalado",
   };
   return labels[status] ?? status;
+}
+
+function getReferralStatusLabel(status: FamReferralRequestStatus) {
+  const labels: Record<FamReferralRequestStatus, string> = {
+    requested: "Solicitada",
+    under_review: "Em revisão",
+    sent: "Enviada",
+    received: "Recebimento confirmado",
+    cancelled: "Cancelada",
+  };
+  return labels[status];
+}
+
+function getReferralStatusColor(status: FamReferralRequestStatus) {
+  const colors: Record<FamReferralRequestStatus, string> = {
+    requested: "bg-amber-100 text-amber-800",
+    under_review: "bg-blue-100 text-blue-800",
+    sent: "bg-fam-magenta/10 text-fam-magenta",
+    received: "bg-green-100 text-green-800",
+    cancelled: "bg-gray-100 text-gray-600",
+  };
+  return colors[status];
 }
 
 function getStatusColor(status: string) {

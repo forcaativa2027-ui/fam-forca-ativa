@@ -99,6 +99,12 @@ A validação de leitura no Supabase confirmou que `fam_risk_cases`, `fam_assess
 
 A FAM003 original e o reparo baseado em `case_id` não devem mais ser executados nesse projeto. A versão compatível cria ou normaliza as relações na ordem correta e termina com `FAM003_REMOTE_COMPAT_OK`.
 
-## 12. Limites desta entrega
+## 12. Incremento adicional — painel operacional
 
-Esta entrega implementa uma fundação técnica, as correções UX prioritárias, o fluxo vertical de proteção, o catálogo orientativo e a solicitação explícita de encaminhamentos, mas não declara que todos os requisitos do pacote documental ou do COR-UX-01 estão concluídos. A publicação Vercel e a validação de produção continuam condicionadas ao vínculo do projeto e à aplicação das migrations remotas. Nenhuma migration foi aplicada remotamente, nenhum arquivo foi enviado ao GitHub e nenhum dado de produção foi alterado. As alterações permanecem no clone local para revisão e aprovação.
+Foi criada a migration `FAM005_painel_operacional_encaminhamentos.sql`, com a função `fam_is_active_attendant()` e a RPC `fam_update_referral_status()`. Apenas atendentes com registro operacional ativo podem listar solicitações e alterar seus status. As transições permitidas são `requested → under_review`, `under_review → sent`, `sent → received` e cancelamento a partir de estados não terminais. Cada mudança gera um evento técnico em `fam_audit_events`.
+
+A central `/admin/fam-atendimento` agora exibe as solicitações, escopo mínimo e ressalvas institucionais, oferece as ações de revisão e usa a RPC em vez de updates livres. O painel não exibe histórico completo, não envia dados automaticamente e não trata recebimento como garantia de atendimento.
+
+## 13. Limites desta entrega
+
+Esta entrega implementa uma fundação técnica, as correções UX prioritárias, o fluxo vertical de proteção, o catálogo orientativo, a solicitação explícita e o painel operacional de encaminhamentos, mas não declara que todos os requisitos do pacote documental ou do COR-UX-01 estão concluídos. A publicação Vercel e a validação de produção continuam condicionadas ao vínculo do projeto e à aplicação/validação das migrations remotas. Nenhuma migration foi aplicada remotamente, nenhum arquivo foi enviado ao GitHub e nenhum dado de produção foi alterado. As alterações permanecem no clone local para revisão e aprovação.
