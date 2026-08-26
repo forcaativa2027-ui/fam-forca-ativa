@@ -29,6 +29,18 @@ export async function listChurches(sb: SupabaseClient): Promise<Church[]> {
   if (error) throw error;
   return (data ?? []) as Church[];
 }
+
+/** Catálogo público de atendimento FAM. Mantém o cadastro separado do legado CEC. */
+export async function listPublicFamRegistrationRegions(sb: SupabaseClient): Promise<Church[]> {
+  const { data, error } = await sb
+    .from("churches")
+    .select("*")
+    .eq("slug", "fam-samambaia-df")
+    .eq("is_active", true)
+    .order("name");
+  if (error) throw error;
+  return (data ?? []) as Church[];
+}
 export async function getChurch(sb: SupabaseClient, id: string): Promise<Church | null> {
   const { data, error } = await sb.from("churches").select("*").eq("id", id).maybeSingle();
   if (error) throw error;

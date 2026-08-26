@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DarkBlueTheme } from "@/components/shared/DarkBlueTheme";
-import { useChurches, useActiveCommunity, useCells } from "@/hooks/use-queries";
+import { usePublicFamRegistrationRegions, useActiveCommunity, useCells } from "@/hooks/use-queries";
 import type { PipelineIntent } from "@/types/domain";
 
 import { INITIAL_STATE, TOTAL_STEPS, BASICO_STEP, type RegisterState } from "./register-wizard/RegisterWizardTypes";
@@ -25,7 +25,7 @@ import { StepFinalizacao } from "./register-wizard/StepFinalizacao";
 export default function RegisterWizard() {
   const params = useSearchParams();
   const initialIntent = (params.get("intent") as PipelineIntent | null) ?? "conhecer";
-  const churchesQuery = useChurches();
+  const churchesQuery = usePublicFamRegistrationRegions();
   const { data: churches = [], isLoading: churchesLoading, isError: churchesError, refetch: refetchChurches } = churchesQuery;
   const { data: cells = [] } = useCells();
   const { data: activeCommunity } = useActiveCommunity();

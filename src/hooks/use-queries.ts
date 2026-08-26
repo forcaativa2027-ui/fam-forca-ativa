@@ -25,6 +25,7 @@ import * as Live360 from "@/services/live360";
 
 export const useMyProfile      = () => useQuery({ queryKey: ["my-profile"], queryFn: () => P.getMyProfile(supabase) });
 export const useChurches       = () => useQuery({ queryKey: ["churches"],   queryFn: () => C.listChurches(supabase) });
+export const usePublicFamRegistrationRegions = () => useQuery({ queryKey: ["public-fam-registration-regions"], queryFn: () => C.listPublicFamRegistrationRegions(supabase) });
 /** Igreja/instituto do usuário logado — base pra marca personalizada (logo, cores, nome). */
 export const useMyChurch = (churchId: string | null | undefined) =>
   useQuery({ queryKey: ["my-church", churchId], queryFn: () => C.getChurch(supabase, churchId as string), enabled: !!churchId });
