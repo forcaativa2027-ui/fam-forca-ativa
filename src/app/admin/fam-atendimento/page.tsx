@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MessageCircle, User, AlertTriangle, CheckCircle2, Clock, ChevronRight, MoreVertical } from "lucide-react";
+import { MessageCircle, User, AlertTriangle, CheckCircle2, Clock, ChevronRight, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { listFamReferralRequests, updateFamReferralRequestStatus } from "@/services/famReferralOperations";
 import type { FamReferralRequest, FamReferralRequestStatus } from "@/services/famReferralRequests";
+import { QuickExit } from "@/components/public/FamSupportCenter";
 
 interface FamConversation {
   id: string;
@@ -230,7 +231,18 @@ export default function FamAtendimentoAdmin() {
           <p className="text-xs font-bold uppercase tracking-wide text-gold">FAM · Administração</p>
           <h1 className="font-display text-3xl text-fam-plum">Central de Atendimento</h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Button variant="outline" asChild className="border-fam-danger/40 text-fam-danger">
+            <a href="tel:190" aria-label="Ligar para emergência 190">
+              <Phone className="mr-2 h-4 w-4" /> 190
+            </a>
+          </Button>
+          <Button variant="outline" asChild className="border-fam-danger/40 text-fam-danger">
+            <a href="tel:180" aria-label="Ligar para o Ligue 180">
+              <Phone className="mr-2 h-4 w-4" /> 180
+            </a>
+          </Button>
+          <QuickExit />
           <Button variant="outline" onClick={loadConversations}>
             Atualizar
           </Button>
