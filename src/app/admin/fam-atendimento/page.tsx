@@ -431,7 +431,7 @@ export default function FamAtendimentoAdmin() {
                         }) : "nenhum"}.</p>
                         {request.status === "sent" && request.sent_package_hash && <>
                           <p className="mt-1"><b>Pacote congelado:</b> {request.sent_at ? new Date(request.sent_at).toLocaleString("pt-BR") : "sim"} · hash {request.sent_package_hash}.</p>
-                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <div className="mt-2 flex flex-wrap items-center gap-2" aria-live="polite">
                             <Button size="sm" variant="outline" onClick={() => verifyPackageIntegrity(request.id)}>Verificar integridade</Button>
                             {integrityResults[request.id] && <span className={`text-xs ${integrityResults[request.id].isValid ? "text-fam-success" : "text-fam-danger"}`} role="status">
                               {integrityResults[request.id].isValid ? "Snapshot íntegro" : "Snapshot divergente"} · {new Date(integrityResults[request.id].checkedAt).toLocaleString("pt-BR")}
@@ -439,7 +439,7 @@ export default function FamAtendimentoAdmin() {
                           </div>
                         </>}
                       </div>
-                      <p className="text-xs text-fam-muted">Recebimento não significa atendimento, investigação ou adoção de providência.</p>
+                      <p className="text-xs text-fam-muted">O recebimento não garante atendimento, investigação ou adoção de providência pelo destinatário.</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`rounded-full px-2 py-1 text-xs ${getReferralStatusColor(request.status)}`}>{getReferralStatusLabel(request.status)}</span>
@@ -532,7 +532,8 @@ export default function FamAtendimentoAdmin() {
                   </div>
                   <div className="flex gap-2">
                     {selectedConv.status !== "closed" && (
-                      <select
+                        <select
+                        aria-label="Atendente responsável pela conversa"
                         className="border rounded px-2 py-1 text-sm"
                         value={selectedConv.assigned_attendant_id ?? ""}
                         onChange={(e) => handleAssign(selectedConv.id, e.target.value || undefined)}
@@ -550,7 +551,7 @@ export default function FamAtendimentoAdmin() {
                     )}
                     {selectedConv.status !== "closed" && selectedConv.status !== "paused_safe_contact" && (
                       <>
-                        <select aria-label="Motivo da pausa" className="max-w-[190px] rounded border px-2 py-1 text-xs" value={pauseReason} onChange={(event) => setPauseReason(event.target.value as typeof pauseReason)}>
+                        <select aria-label="Motivo da pausa — não registre detalhes sensíveis" className="max-w-[190px] rounded border px-2 py-1 text-xs" value={pauseReason} onChange={(event) => setPauseReason(event.target.value as typeof pauseReason)}>
                           {PAUSE_REASONS.map((reason) => <option key={reason.value} value={reason.value}>{reason.label}</option>)}
                         </select>
                         <Button variant="outline" onClick={() => handlePause(selectedConv)} size="sm">
@@ -560,7 +561,7 @@ export default function FamAtendimentoAdmin() {
                     )}
                     {selectedConv.status !== "closed" && (
                       <>
-                        <select aria-label="Motivo do encerramento" className="max-w-[180px] rounded border px-2 py-1 text-xs" value={closeReason} onChange={(event) => setCloseReason(event.target.value as typeof closeReason)}>
+                        <select aria-label="Motivo do encerramento — não registre detalhes sensíveis" className="max-w-[180px] rounded border px-2 py-1 text-xs" value={closeReason} onChange={(event) => setCloseReason(event.target.value as typeof closeReason)}>
                           {CLOSE_REASONS.map((reason) => <option key={reason.value} value={reason.value}>{reason.label}</option>)}
                         </select>
                         <Button variant="outline" onClick={() => handleClose(selectedConv)} size="sm">
@@ -609,13 +610,17 @@ export default function FamAtendimentoAdmin() {
                 </div>
                 {selectedConv.status !== "closed" && selectedConv.status !== "paused_safe_contact" && (
                   <div className="mt-4 flex gap-2">
+                    <label htmlFor="fam-attendant-reply" className="sr-only">Resposta para a usuária</label>
                     <Textarea
+                      id="fam-attendant-reply"
+                      aria-describedby="fam-attendant-reply-help"
                       value={reply}
                       onChange={(e) => setReply(e.target.value)}
-                      placeholder="Digite sua resposta..."
+                      placeholder="Escreva uma resposta acolhedora e objetiva..."
                       className="flex-1 min-h-[60px]"
                       rows={2}
                     />
+                    <span id="fam-attendant-reply-help" className="sr-only">Não inclua detalhes desnecessários ou informações que possam aumentar o risco.</span>
                     <Button onClick={handleReply} disabled={!reply.trim()} className="self-end gap-2">
                       <MessageCircle className="h-4 w-4" /> Enviar
                     </Button>

@@ -322,7 +322,7 @@ export function FamContactPage() {
             </div>
 
             {sent && (
-              <div className="flex items-center gap-2 rounded-lg bg-fam-success/10 p-3 text-sm text-fam-success">
+              <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-lg bg-fam-success/10 p-3 text-sm text-fam-success">
                 <CheckCircle2 className="h-4 w-4" />
                 Mensagem registrada para atendimento.
               </div>
@@ -330,7 +330,10 @@ export function FamContactPage() {
 
             <div className="flex flex-col gap-2">
               <div className="flex gap-2">
+                <label htmlFor="fam-message" className="sr-only">Mensagem para a atendente</label>
                 <textarea
+                  id="fam-message"
+                  aria-describedby="fam-message-help"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={3}
@@ -338,6 +341,7 @@ export function FamContactPage() {
                   className="flex-1 rounded-md border bg-background p-3 text-sm"
                   disabled={msgLoading}
                 />
+                <span id="fam-message-help" className="sr-only">Compartilhe somente o que você se sente segura para informar.</span>
                 <Button
                   disabled={!message.trim() || msgLoading}
                   onClick={handleSend}
@@ -579,6 +583,7 @@ export function FamRiskAnalysisPage() {
                       key={option.code}
                       type="button"
                       onClick={() => setSelectedReferral(option)}
+                      aria-pressed={selectedReferral?.code === option.code}
                       className={`w-full rounded-lg border p-3 text-left transition ${selectedReferral?.code === option.code ? "border-fam-magenta bg-white" : "border-fam-gold/30 bg-white/70 hover:border-fam-magenta/60"}`}
                     >
                       <span className="block text-sm font-semibold text-fam-deep-plum">{option.label}</span>
