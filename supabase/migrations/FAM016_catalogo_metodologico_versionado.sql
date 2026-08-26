@@ -8,6 +8,7 @@ create table if not exists public.fam_risk_questionnaires (
   name text,
   version text,
   text_version text,
+  policy_version text,
   questionnaire_version text,
   methodology_version text,
   status text default 'draft',
@@ -22,6 +23,7 @@ alter table public.fam_risk_questionnaires add column if not exists code text;
 alter table public.fam_risk_questionnaires add column if not exists name text;
 alter table public.fam_risk_questionnaires add column if not exists version text;
 alter table public.fam_risk_questionnaires add column if not exists text_version text;
+alter table public.fam_risk_questionnaires add column if not exists policy_version text;
 alter table public.fam_risk_questionnaires add column if not exists questionnaire_version text;
 alter table public.fam_risk_questionnaires add column if not exists methodology_version text;
 alter table public.fam_risk_questionnaires add column if not exists status text default 'draft';
@@ -42,6 +44,10 @@ where name is null or btrim(name) = '';
 update public.fam_risk_questionnaires
 set text_version = coalesce(nullif(version, ''), 'OC-04-v1.1')
 where text_version is null or btrim(text_version) = '';
+
+update public.fam_risk_questionnaires
+set policy_version = coalesce(nullif(version, ''), 'OC-04-v1.1')
+where policy_version is null or btrim(policy_version) = '';
 
 update public.fam_risk_questionnaires
 set questionnaire_version = coalesce(nullif(version, ''), 'OC-04-v1.1')
@@ -107,8 +113,8 @@ create unique index if not exists fam_risk_questions_order_uidx
   on public.fam_risk_questions (questionnaire_id, order_index)
   where questionnaire_id is not null and order_index is not null;
 
-insert into public.fam_risk_questionnaires (code, name, version, text_version, questionnaire_version, methodology_version, status, source_document)
-select 'FAM-RISK-MAP', 'Questionário de sinais de atenção FAM', 'OC-04-v1.1', 'OC-04-v1.1', 'OC-04-v1.1', 'OC-04-v1.1', 'draft', 'OC-04_Matriz_Situacoes_Risco_Respostas_v1.1.md'
+insert into public.fam_risk_questionnaires (code, name, version, text_version, policy_version, questionnaire_version, methodology_version, status, source_document)
+select 'FAM-RISK-MAP', 'Questionário de sinais de atenção FAM', 'OC-04-v1.1', 'OC-04-v1.1', 'OC-04-v1.1', 'OC-04-v1.1', 'OC-04-v1.1', 'draft', 'OC-04_Matriz_Situacoes_Risco_Respostas_v1.1.md'
 where not exists (
   select 1 from public.fam_risk_questionnaires
   where version = 'OC-04-v1.1' or code = 'FAM-RISK-MAP'
