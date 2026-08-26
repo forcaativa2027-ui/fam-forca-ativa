@@ -69,13 +69,13 @@ where q.code = 'FAM-RISK-MAP'
    or q.version = 'OC-04-v1.1';
 
 -- 4. Verificação de códigos e ordens duplicados no catálogo canônico.
-select code, count(*) as ocorrencias
+select r.code, count(*) as ocorrencias
 from public.fam_risk_questions r
 join public.fam_risk_questionnaires q
   on q.id = r.questionnaire_id
 where q.code = 'FAM-RISK-MAP'
    or q.version = 'OC-04-v1.1'
-group by code
+group by r.code
 having count(*) > 1;
 
 select order_index, count(*) as ocorrencias
