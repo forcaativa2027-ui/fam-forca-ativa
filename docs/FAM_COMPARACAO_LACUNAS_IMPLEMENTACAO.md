@@ -105,6 +105,10 @@ Foi criada a migration `FAM005_painel_operacional_encaminhamentos.sql`, com a fu
 
 A central `/admin/fam-atendimento` agora exibe as solicitações, escopo mínimo e ressalvas institucionais, oferece as ações de revisão e usa a RPC em vez de updates livres. O painel não exibe histórico completo, não envia dados automaticamente e não trata recebimento como garantia de atendimento.
 
-## 13. Limites desta entrega
+## 13. Testes automatizados
+
+Foi adicionada a suíte `src/services/famRiskEngine.test.ts`, executada por `npm run test:fam`. Os seis testes cobrem risco imediato, fluxos especiais, informação insuficiente, precedência de emergência, transições inválidas e metadados de transição. A suíte não usa dados reais nem acessa o Supabase.
+
+## 14. Limites desta entrega
 
 Esta entrega implementa uma fundação técnica, as correções UX prioritárias, o fluxo vertical de proteção, o catálogo orientativo, a solicitação explícita e o painel operacional de encaminhamentos, mas não declara que todos os requisitos do pacote documental ou do COR-UX-01 estão concluídos. A publicação Vercel e a validação de produção continuam condicionadas ao vínculo do projeto e à aplicação/validação das migrations remotas. Nenhuma migration foi aplicada remotamente, nenhum arquivo foi enviado ao GitHub e nenhum dado de produção foi alterado. As alterações permanecem no clone local para revisão e aprovação.
