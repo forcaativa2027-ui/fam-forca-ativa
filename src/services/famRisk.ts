@@ -97,25 +97,25 @@ export async function updateRiskCaseAssessment(
 ): Promise<FamRiskCase> {
   const { data: before, error: beforeError } = await sb
     .from("fam_risk_cases")
-    .select("id, user_id, assessment_state")
+    .select("id, user_id, state")
     .eq("id", caseId)
     .single();
   if (beforeError) throw beforeError;
 
+  const nextState = assessment.assessment_state ?? "RESULT";
+  const now = new Date().toISOString();
   const { data, error } = await sb
     .from("fam_risk_cases")
     .update({
       attention: assessment.attention,
       preliminary_summary: assessment.preliminary_summary,
       limitations_acknowledged_at: assessment.limitations_acknowledged_at,
-      current_step: assessment.current_step ?? "result",
-      risk_engine_version: FAM_RISK_ENGINE_VERSION,
-      special_flow_flags: assessment.special_flow_flags ?? [],
-      triggered_indicators: assessment.triggered_indicators ?? [],
-      assessment_state: assessment.assessment_state ?? "RESULT",
-      transition_reason_code: assessment.transition_reason_code ?? null,
-      transition_rule_code: assessment.transition_rule_code ?? null,
-      assessment_status: "completed",
+      state: nextState,
+      triggered_rules: assessment.transition_rule_code ? [assessment.transition_rule_code] : [],
+      signals: assessment.triggered_indicators ?? [],
+      special_flows: assessment.special_flow_flags ?? [],
+      emergency_flag: assessment.attention === "immediate",
+      completed_at: now,
       referred_conversation_id: assessment.referred_conversation_id ?? null,
     })
     .eq("id", caseId)
@@ -123,15 +123,16 @@ export async function updateRiskCaseAssessment(
     .single();
   if (error) throw error;
 
-  const previousState = before?.assessment_state ?? "INITIAL";
-  const nextState = assessment.assessment_state ?? "RESULT";
+  const previousState = before?.state ?? "INITIAL";
   if (previousState !== nextState) {
     const { error: historyError } = await sb.from("fam_assessment_state_history").insert({
-      case_id: caseId,
+      risk_case_id: caseId,
       from_state: previousState,
       to_state: nextState,
       reason_code: assessment.transition_reason_code ?? "ASSESSMENT_COMPLETED",
       rule_code: assessment.transition_rule_code ?? null,
+      triggered_by: "system",
+      metadata: { engine_version: FAM_RISK_ENGINE_VERSION },
     });
     if (historyError) throw historyError;
   }
