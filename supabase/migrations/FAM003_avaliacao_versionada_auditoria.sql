@@ -33,11 +33,11 @@ alter table public.fam_assessment_state_history enable row level security;
 
 drop policy if exists fam_assessment_state_history_owner_select on public.fam_assessment_state_history;
 create policy fam_assessment_state_history_owner_select on public.fam_assessment_state_history for select to authenticated
-  using (exists (select 1 from public.fam_risk_cases c where c.id = case_id and c.user_id = auth.uid()));
+  using (exists (select 1 from public.fam_risk_cases c where c.id = public.fam_assessment_state_history.case_id and c.user_id = auth.uid()));
 
 drop policy if exists fam_assessment_state_history_owner_insert on public.fam_assessment_state_history;
 create policy fam_assessment_state_history_owner_insert on public.fam_assessment_state_history for insert to authenticated
-  with check (exists (select 1 from public.fam_risk_cases c where c.id = case_id and c.user_id = auth.uid()));
+  with check (exists (select 1 from public.fam_risk_cases c where c.id = public.fam_assessment_state_history.case_id and c.user_id = auth.uid()));
 
 create table if not exists public.fam_audit_events (
   id uuid primary key default gen_random_uuid(),
@@ -68,8 +68,8 @@ drop policy if exists fam_audit_events_owner_select on public.fam_audit_events;
 create policy fam_audit_events_owner_select on public.fam_audit_events for select to authenticated
   using (
     actor_user_id = auth.uid()
-    or exists (select 1 from public.fam_risk_cases c where c.id = case_id and c.user_id = auth.uid())
-    or exists (select 1 from public.fam_conversations c where c.id = conversation_id and c.user_id = auth.uid())
+    or exists (select 1 from public.fam_risk_cases c where c.id = public.fam_audit_events.case_id and c.user_id = auth.uid())
+    or exists (select 1 from public.fam_conversations c where c.id = public.fam_audit_events.conversation_id and c.user_id = auth.uid())
   );
 
 drop policy if exists fam_audit_events_owner_insert on public.fam_audit_events;
