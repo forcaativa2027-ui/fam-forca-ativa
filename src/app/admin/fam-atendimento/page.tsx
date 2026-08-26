@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MessageCircle, User, AlertTriangle, CheckCircle2, Clock, ChevronRight, Phone } from "lucide-react";
+import { MessageCircle, User, AlertTriangle, CheckCircle2, Clock, ChevronRight, Phone, Pause, Play, LockKeyhole } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -189,12 +189,41 @@ export default function FamAtendimentoAdmin() {
     }
   };
 
-  const handleClose = async (convId: string) => {
+  const handlePause = async (conv: FamConversation) => {
     try {
-      await sb.from("fam_conversations").update({ status: "closed" }).eq("id", convId);
-      loadConversations();
+      const { error } = await sb.from("fam_conversations").update({ status: "paused_safe_contact" }).eq("id", conv.id);
+      if (error) throw error;
+      setSelectedConv({ ...conv, status: "paused_safe_contact" });
+      await loadConversations();
     } catch (e) {
       console.error(e);
+      alert("Não foi possível pausar a conversa com segurança.");
+    }
+  };
+
+  const handleResume = async (conv: FamConversation) => {
+    try {
+      const { error } = await sb.from("fam_conversations").update({ status: "in_progress" }).eq("id", conv.id);
+      if (error) throw error;
+      setSelectedConv({ ...conv, status: "in_progress" });
+      await loadConversations();
+    } catch (e) {
+      console.error(e);
+      alert("Não foi possível retomar a conversa.");
+    }
+  };
+
+  const handleClose = async (conv: FamConversation) => {
+    if (!window.confirm("Encerrar esta conversa? O histórico será preservado e novas mensagens serão bloqueadas.")) return;
+    try {
+      const { error } = await sb.from("fam_conversations").update({ status: "closed" }).eq("id", conv.id);
+      if (error) throw error;
+      setSelectedConv({ ...conv, status: "closed" });
+      setReply("");
+      await loadConversations();
+    } catch (e) {
+      console.error(e);
+      alert("Não foi possível encerrar a conversa.");
     }
   };
 
@@ -378,15 +407,35 @@ export default function FamAtendimentoAdmin() {
                         ))}
                       </select>
                     )}
+                    {selectedConv.status === "paused_safe_contact" && (
+                      <Button variant="outline" onClick={() => handleResume(selectedConv)} size="sm">
+                        <Play className="mr-2 h-4 w-4" /> Retomar
+                      </Button>
+                    )}
+                    {selectedConv.status !== "closed" && selectedConv.status !== "paused_safe_contact" && (
+                      <Button variant="outline" onClick={() => handlePause(selectedConv)} size="sm">
+                        <Pause className="mr-2 h-4 w-4" /> Pausar por segurança
+                      </Button>
+                    )}
                     {selectedConv.status !== "closed" && (
-                      <Button variant="outline" onClick={() => handleClose(selectedConv.id)} size="sm">
-                        Encerrar
+                      <Button variant="outline" onClick={() => handleClose(selectedConv)} size="sm">
+                        <LockKeyhole className="mr-2 h-4 w-4" /> Encerrar
                       </Button>
                     )}
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="flex flex-col h-[600px]">
+                {selectedConv.status === "paused_safe_contact" && (
+                  <div className="mb-4 rounded-lg border border-fam-danger/30 bg-fam-danger/5 p-3 text-sm text-fam-deep-plum" role="status">
+                    Conversa pausada por segurança. Não envie novas mensagens até que seja seguro retomar o contato.
+                  </div>
+                )}
+                {selectedConv.status === "closed" && (
+                  <div className="mb-4 rounded-lg border border-border bg-muted/20 p-3 text-sm text-fam-muted" role="status">
+                    Conversa encerrada. O histórico permanece preservado para rastreabilidade e novas mensagens estão bloqueadas.
+                  </div>
+                )}
                 <div className="flex-1 overflow-y-auto space-y-3 p-4 border rounded-lg bg-background">
                   {messages.length === 0 ? (
                     <p className="text-center text-fam-muted py-8">Nenhuma mensagem ainda</p>
@@ -412,7 +461,7 @@ export default function FamAtendimentoAdmin() {
                     ))
                   )}
                 </div>
-                {selectedConv.status !== "closed" && (
+                {selectedConv.status !== "closed" && selectedConv.status !== "paused_safe_contact" && (
                   <div className="mt-4 flex gap-2">
                     <Textarea
                       value={reply}
