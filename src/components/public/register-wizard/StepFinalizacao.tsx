@@ -24,6 +24,7 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
 
   async function finish() {
     const errs: Record<string,string> = {};
+    if (!s.community_id) errs.community = "Selecione uma região de atendimento antes de finalizar o cadastro.";
     if (s.password.length < 6) errs.password = "Senha precisa ter ao menos 6 caracteres";
     if (s.password !== passwordConfirm) errs.password_confirm = "Senhas não conferem";
     if (!lgpdAccepted) errs.lgpd = "Você precisa aceitar os Termos e a Política de Privacidade para continuar.";
@@ -33,7 +34,7 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
 
     setBusy(true); setGlobalErr("");
     try {
-      const { error: signError } = await supabase.auth.signUp({
+      const { data: signUpData, error: signError } = await supabase.auth.signUp({
         email: s.email, password: s.password,
         options: { data: { full_name: s.full_name }, captchaToken: captchaToken ?? undefined },
       });
@@ -47,6 +48,10 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
         } else {
           setGlobalErr(signError.message);
         }
+        setBusy(false); return;
+      }
+      if (!signUpData.session) {
+        setGlobalErr("Sua conta foi criada, mas precisa ser confirmada pelo e-mail antes de concluir o cadastro. Verifique sua caixa de entrada e faça login para finalizar.");
         setBusy(false); return;
       }
 
@@ -90,6 +95,8 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
 
   return (
     <div className="space-y-4">
+      {err.community && <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{err.community}</p>}
+
       <div className="flex items-center gap-2">
         <PartyPopper className="h-5 w-5 text-gold" />
         <div>
