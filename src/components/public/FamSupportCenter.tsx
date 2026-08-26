@@ -356,7 +356,7 @@ export function FamRiskAnalysisPage() {
   const handleReferralRequest = async () => {
     if (!selectedReferral || !referralConfirmed || !userId || !caseId) return;
     try {
-      await requestReferral(caseId, userId, selectedReferral);
+      await requestReferral(caseId, userId, selectedReferral, referralConfirmed);
       setReferralRequestStatus("requested");
     } catch (e) {
       console.error("Erro ao registrar encaminhamento:", e);

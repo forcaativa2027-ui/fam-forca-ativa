@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { FamReferralOption } from "@/services/famReferrals";
+import { referralRequiresExplicitConfirmation, type FamReferralOption } from "./famReferrals";
 
 export type FamReferralRequestStatus = "requested" | "under_review" | "sent" | "received" | "cancelled";
 
@@ -26,8 +26,12 @@ export async function createFamReferralRequest(
     userId: string;
     option: FamReferralOption;
     selectedAttachmentIds?: string[];
+    confirmationAccepted: boolean;
   },
 ): Promise<FamReferralRequest> {
+  if (!input.confirmationAccepted || !referralRequiresExplicitConfirmation(input.option)) {
+    throw new Error("Confirmação explícita obrigatória antes de registrar o encaminhamento.");
+  }
   const { data, error } = await sb
     .from("fam_referral_requests")
     .insert({
