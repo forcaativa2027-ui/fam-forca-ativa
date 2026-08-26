@@ -107,7 +107,7 @@ A central `/admin/fam-atendimento` agora exibe as solicitações, escopo mínimo
 
 ## 13. Testes automatizados
 
-Foi adicionada a suíte `src/services/famRiskEngine.test.ts`, executada por `npm run test:fam`. Os seis testes cobrem risco imediato, fluxos especiais, informação insuficiente, precedência de emergência, transições inválidas e metadados de transição. A suíte não usa dados reais nem acessa o Supabase.
+Foi adicionada a suíte `src/services/famRiskEngine.test.ts`, executada por `npm run test:fam`. Os nove testes cobrem risco imediato, fluxos especiais, informação insuficiente, precedência de emergência, transições inválidas, metadados de transição, listagem ordenada de solicitações, chamada da RPC de status e propagação de erro de autorização. A suíte não usa dados reais nem acessa o Supabase.
 
 ## 14. Limites desta entrega
 
