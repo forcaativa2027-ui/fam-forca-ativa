@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAccessibility, PROFILE_PRESETS } from "./AccessibilityProvider";
 import { WELCOME_PROFILE_STYLE } from "./onboarding/ProfileIcons";
 import { LivingLogo } from "./LivingLogo";
+import { supabase } from "@/lib/supabase";
 import { feedback } from "@/lib/feedback";
 import type { AccessibilityProfile } from "@/types/domain";
 
@@ -88,6 +89,17 @@ export function AccessibilityOnboarding() {
     if (visible) { setStep("boas_vindas"); setSelected(null); setDontShowAgain(false); }
   }, [visible]);
 
+  // Sair da conta não deve reabrir o cartão automaticamente ao retornar à home.
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        setSessionDismissed(true);
+        closeOnboarding();
+      }
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
   if (!visible) return null;
 
   function finish(profile: AccessibilityProfile) {
@@ -165,7 +177,7 @@ function WelcomeScreen({ onStart, onUseDefault }: { onStart: () => void; onUseDe
           É uma alegria ter você conosco.
         </p>
         <p className="text-sm leading-relaxed text-[#475569]">
-          Que esta plataforma seja uma ferramenta para fortalecer sua caminhada, sua comunhão e seu crescimento.
+          A FAM oferece acolhimento, informação e orientação para fortalecer sua autonomia e sua rede de proteção.
         </p>
         <p className="text-sm leading-relaxed text-[#475569]">
           Vamos preparar sua experiência para oferecer uma navegação mais confortável, simples e personalizada.
@@ -319,7 +331,7 @@ function ConfirmationScreen({ onEnter }: { onEnter: () => void }) {
         </p>
       </div>
       <PrimaryButton size="lg" onClick={onEnter} className="w-full max-w-sm text-base">
-        Entrar no CEC FAMILY
+        Entrar na FAM
       </PrimaryButton>
     </div>
   );

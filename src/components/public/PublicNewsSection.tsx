@@ -8,15 +8,13 @@ import { usePublicNews, useVisibleNewsVideos, useMyProfile } from "@/hooks/use-q
 import type { News, NewsCategory, VisibleNewsVideo } from "@/types/domain";
 import Link from "next/link";
 
-const CATEGORIES: { value: NewsCategory; label: string }[] = [
-  { value: "minha_comunidade", label: "Minha região" },
-  { value: "cec_manaus",       label: "FAM — Manaus" },
-  { value: "cec_brasilia",     label: "FAM — Brasília" },
-  { value: "geral",            label: "Institucional" },
+const NEWS_TABS: { value: "todas" | NewsCategory; label: string }[] = [
+  { value: "todas", label: "Notícias" },
+  { value: "geral", label: "Notícias institucionais" },
 ];
 
 export function PublicNewsSection({ churchId }: { churchId?: string | null } = {}) {
-  const [cat, setCat] = useState<NewsCategory | "todas">("todas");
+  const [cat, setCat] = useState<"todas" | NewsCategory>("todas");
   const { data: all = [] } = usePublicNews(undefined, churchId);
   const filtered = cat === "todas" ? all : all.filter((n) => n.category === cat);
 
@@ -31,15 +29,14 @@ export function PublicNewsSection({ churchId }: { churchId?: string | null } = {
 
       <Tabs value={cat} onValueChange={(v) => setCat(v as NewsCategory | "todas")}>
         <div className="overflow-x-auto">
-          <TabsList className="min-w-max">
-            <TabsTrigger value="todas">Todas</TabsTrigger>
-            {CATEGORIES.map((c) => <TabsTrigger key={c.value} value={c.value}>{c.label}</TabsTrigger>)}
+          <TabsList className="min-w-max" aria-label="Subabas de notícias">
+            {NEWS_TABS.map((tab) => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
           </TabsList>
         </div>
 
         <TabsContent value={cat}>
           {filtered.length === 0 ? (
-            <p className="py-8 text-center italic text-muted">Nenhuma notícia publicada nessa categoria.</p>
+            <p className="py-8 text-center italic text-muted">            Nenhuma notícia publicada nesta subaba.</p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((n) => <NewsCard key={n.id} news={n} />)}
@@ -135,7 +132,7 @@ function FamNewsVideosHero() {
 }
 
 function NewsCard({ news: n }: { news: News }) {
-  const cat = CATEGORIES.find((c) => c.value === n.category)?.label ?? n.category;
+  const cat = n.category === "geral" ? "Notícia institucional" : "Notícia FAM";
   return (
     <Card className="overflow-hidden">
       {n.cover_url && <img src={n.cover_url} alt="" className="aspect-video w-full object-cover" />}

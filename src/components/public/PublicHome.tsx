@@ -208,28 +208,31 @@ export default function PublicHome() {
             </section>
           )}
 
-          {/* Horários de atendimento e atividades FAM */}
-          {services.length > 0 && (
-            <section>
-              <h2 className="mb-4 font-display text-xl text-navy">Horários de atendimento</h2>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {services.slice(0, 4).map((s) => (
-                  <Card key={s.id} className="border-l-4 border-l-gold">
-                    <CardContent className="flex items-center gap-4 pt-6">
-                      <div className="text-center">
-                        <b className="block font-display text-xl text-navy">{s.time.slice(0, 5)}</b>
-                        <span className="text-[10px] font-bold uppercase tracking-wide text-muted">{WEEKDAY_LABELS[s.weekday]}</span>
-                      </div>
-                      <div className="flex-1 border-l border-border pl-4">
-                        <b className="text-ink">{s.description ?? "Atendimento FAM"}</b>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              <Button variant="ghost" onClick={() => setTab("contato")} className="mt-4 gap-2">Falar com a equipe FAM <ArrowRight className="h-4 w-4" /></Button>
-            </section>
-          )}
+          {/* Dashboard institucional FAM — sem horários de culto ou agenda eclesiástica */}
+          <section aria-labelledby="fam-dashboard-title">
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-fam-magenta">Força Ativa da Mulher</p>
+              <h2 id="fam-dashboard-title" className="mt-1 font-display text-xl text-navy">Como podemos apoiar você hoje?</h2>
+              <p className="mt-1 max-w-2xl text-sm text-muted">Acesse acolhimento, informação e orientação de proteção em um só lugar.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <button type="button" onClick={() => setTab("contato")} className="rounded-2xl border border-fam-pink/30 bg-fam-pink/10 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fam-magenta">
+                <MessageCircle className="h-6 w-6 text-fam-magenta" aria-hidden="true" />
+                <b className="mt-3 block text-sm text-navy">Falar com a FAM</b>
+                <span className="mt-1 block text-xs text-muted">Converse com nossa equipe de acolhimento.</span>
+              </button>
+              <button type="button" onClick={() => setTab("noticias")} className="rounded-2xl border border-fam-gold/30 bg-fam-gold/10 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fam-magenta">
+                <Newspaper className="h-6 w-6 text-fam-plum" aria-hidden="true" />
+                <b className="mt-3 block text-sm text-navy">Informação FAM</b>
+                <span className="mt-1 block text-xs text-muted">Leia conteúdos, orientações e notícias.</span>
+              </button>
+              <button type="button" onClick={() => { window.location.href = "/analise-risco"; }} className="rounded-2xl border border-fam-plum/30 bg-fam-plum/10 p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fam-magenta">
+                <ShieldAlert className="h-6 w-6 text-fam-plum" aria-hidden="true" />
+                <b className="mt-3 block text-sm text-navy">Acolhimento e proteção</b>
+                <span className="mt-1 block text-xs text-muted">Receba uma orientação inicial de segurança.</span>
+              </button>
+            </div>
+          </section>
         </TabsContent>
 
         {/* === NOTÍCIAS === */}

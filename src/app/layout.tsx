@@ -7,8 +7,8 @@ import { AccessibilityButton } from "@/components/shared/AccessibilityButton";
 import { AccessibilityOnboarding } from "@/components/shared/AccessibilityOnboarding";
 
 export const metadata: Metadata = {
-  title: "CEC Family",
-  description: "Plataforma apostólica da CEC Manaus — discipulado, células e gestão pastoral",
+  title: "FAM — Força Ativa da Mulher",
+  description: "Plataforma de acolhimento, informação e proteção da Força Ativa da Mulher",
   manifest: "/manifest.json",
 };
 
