@@ -42,4 +42,27 @@ describe("decideFamProtection", () => {
     expect(result.guidance).toContain("não significa que esteja tudo bem");
     expect(result.actions).not.toContain("OFFER_REFERRAL");
   });
+
+  it("exige confirmação mesmo quando a decisão oferece encaminhamento", () => {
+    const withoutConfirmation = decideFamProtection({ evaluation: evaluation({ sexual: "YES" }) });
+    const withConfirmation = decideFamProtection({ evaluation: evaluation({ sexual: "YES" }), referralConfirmed: true });
+
+    expect(withoutConfirmation.referralAllowed).toBe(false);
+    expect(withConfirmation.referralAllowed).toBe(true);
+    expect(withConfirmation.sharingRequiresConfirmation).toBe(true);
+  });
+
+  it("mantém linguagem orientativa e não diagnóstica em todos os cenários", () => {
+    const results = [
+      decideFamProtection({ evaluation: evaluation({ danger_now: "YES" }) }),
+      decideFamProtection({ evaluation: evaluation({ injury: "YES" }) }),
+      decideFamProtection({ evaluation: evaluation({ children: "YES" }) }),
+      decideFamProtection({ evaluation: evaluation({ danger_now: "PREFER_NOT_TO_ANSWER" }) }),
+    ];
+
+    for (const result of results) {
+      expect(result.disclaimer).toMatch(/orientativo/);
+      expect(result.disclaimer).not.toMatch(/diagnóstico|laudo/);
+    }
+  });
 });
