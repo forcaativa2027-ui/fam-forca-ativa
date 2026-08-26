@@ -93,6 +93,12 @@ Foi criada a migration `FAM004_solicitacoes_encaminhamento.sql` e o serviço `fa
 
 Na interface, o registro só pode ocorrer depois de selecionar um caminho, marcar a confirmação de entendimento e estar com uma avaliação autenticada. O registro tem status próprio (`requested`, `under_review`, `sent`, `received` ou `cancelled`) e não representa envio, recebimento ou garantia de atendimento. Para visitantes sem login, a interface oferece conversa com atendente ou login, sem registrar solicitação.
 
-## 11. Limites desta entrega
+## 11. Compatibilidade com o schema remoto
 
-Esta entrega implementa uma fundação técnica, as correções UX prioritárias, o fluxo vertical de proteção, o catálogo orientativo e a solicitação explícita de encaminhamentos, mas não declara que todos os requisitos do pacote documental ou do COR-UX-01 estão concluídos. Nenhuma migration foi aplicada remotamente, nenhum arquivo foi enviado ao GitHub e nenhum dado de produção foi alterado. As alterações permanecem no clone local para revisão e aprovação.
+A validação de leitura no Supabase confirmou que `fam_risk_cases`, `fam_assessment_state_history` e `fam_audit_events` estão acessíveis pela API pública com RLS e retornam listas vazias para uma consulta sem sessão, sem expor dados. O schema remoto usa `risk_case_id` no histórico e campos próprios de estado em `fam_risk_cases`; por isso foi criada `FAM003_REMOTE_COMPAT.sql` e o serviço foi alinhado a esses nomes.
+
+A FAM003 original e o reparo baseado em `case_id` não devem mais ser executados nesse projeto. A versão compatível cria ou normaliza as relações na ordem correta e termina com `FAM003_REMOTE_COMPAT_OK`.
+
+## 12. Limites desta entrega
+
+Esta entrega implementa uma fundação técnica, as correções UX prioritárias, o fluxo vertical de proteção, o catálogo orientativo e a solicitação explícita de encaminhamentos, mas não declara que todos os requisitos do pacote documental ou do COR-UX-01 estão concluídos. A publicação Vercel e a validação de produção continuam condicionadas ao vínculo do projeto e à aplicação das migrations remotas. Nenhuma migration foi aplicada remotamente, nenhum arquivo foi enviado ao GitHub e nenhum dado de produção foi alterado. As alterações permanecem no clone local para revisão e aprovação.
