@@ -19,6 +19,9 @@ export interface FamRiskCase {
   risk_engine_version?: string | null;
   special_flow_flags?: string[];
   triggered_indicators?: string[];
+  assessment_state?: string | null;
+  transition_reason_code?: string | null;
+  transition_rule_code?: string | null;
 }
 
 export interface FamRiskAnswer {
@@ -86,9 +89,19 @@ export async function updateRiskCaseAssessment(
     current_step?: string;
     special_flow_flags?: string[];
     triggered_indicators?: string[];
+    assessment_state?: string;
+    transition_reason_code?: string;
+    transition_rule_code?: string;
     referred_conversation_id?: string;
   }
 ): Promise<FamRiskCase> {
+  const { data: before, error: beforeError } = await sb
+    .from("fam_risk_cases")
+    .select("id, user_id, assessment_state")
+    .eq("id", caseId)
+    .single();
+  if (beforeError) throw beforeError;
+
   const { data, error } = await sb
     .from("fam_risk_cases")
     .update({
@@ -99,6 +112,9 @@ export async function updateRiskCaseAssessment(
       risk_engine_version: FAM_RISK_ENGINE_VERSION,
       special_flow_flags: assessment.special_flow_flags ?? [],
       triggered_indicators: assessment.triggered_indicators ?? [],
+      assessment_state: assessment.assessment_state ?? "RESULT",
+      transition_reason_code: assessment.transition_reason_code ?? null,
+      transition_rule_code: assessment.transition_rule_code ?? null,
       assessment_status: "completed",
       referred_conversation_id: assessment.referred_conversation_id ?? null,
     })
@@ -106,6 +122,35 @@ export async function updateRiskCaseAssessment(
     .select("*")
     .single();
   if (error) throw error;
+
+  const previousState = before?.assessment_state ?? "INITIAL";
+  const nextState = assessment.assessment_state ?? "RESULT";
+  if (previousState !== nextState) {
+    const { error: historyError } = await sb.from("fam_assessment_state_history").insert({
+      case_id: caseId,
+      from_state: previousState,
+      to_state: nextState,
+      reason_code: assessment.transition_reason_code ?? "ASSESSMENT_COMPLETED",
+      rule_code: assessment.transition_rule_code ?? null,
+    });
+    if (historyError) throw historyError;
+  }
+
+  if (before?.user_id) {
+    const { error: auditError } = await sb.from("fam_audit_events").insert({
+      actor_user_id: before.user_id,
+      case_id: caseId,
+      event_type: "ASSESSMENT_COMPLETED",
+      metadata: {
+        from_state: previousState,
+        to_state: nextState,
+        engine_version: FAM_RISK_ENGINE_VERSION,
+        rule_code: assessment.transition_rule_code ?? null,
+      },
+    });
+    if (auditError) throw auditError;
+  }
+
   return data as FamRiskCase;
 }
 

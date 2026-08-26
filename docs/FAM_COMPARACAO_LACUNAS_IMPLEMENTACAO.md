@@ -73,6 +73,14 @@ O onboarding global agora não é renderizado na rota `/analise-risco`, evitando
 
 O guard de workspace deixou de conceder acesso automático por `profile.role === "apostolo"`; a autorização continua baseada em módulos ativos. A central de atendimento FAM passou a reconhecer o operador pelo registro `fam_attendants` ativo, sem depender desse role herdado. A busca global ainda encontra referências legadas de `apostolo` em outras áreas da plataforma CEC, incluindo tipos e migrations históricas; elas não foram apagadas automaticamente porque exigem uma migração de roles, revisão de permissões e tratamento de dados históricos.
 
-## 8. Limites desta entrega
+## 8. Incremento adicional — fluxo vertical de proteção
 
-Esta entrega implementa uma fundação técnica e as correções UX prioritárias, mas não declara que todos os requisitos do pacote documental ou do COR-UX-01 estão concluídos. Nenhuma migration foi aplicada remotamente, nenhum arquivo foi enviado ao GitHub e nenhum dado de produção foi alterado. As alterações permanecem no clone local para revisão e aprovação.
+O segundo incremento criou `famAssessmentState.ts`, com os estados `INITIAL`, `INFORMED`, `IN_PROGRESS`, `EMERGENCY`, `PROTECTION_SPECIAL`, `ORIENTATION`, `OPTIONAL_ATTACHMENT`, `RESULT` e `CLOSED`. As transições são controladas por uma tabela explícita e rejeitam saltos arbitrários. O motor agora traduz sinais de urgência e fluxos especiais em estado, código de motivo e código de regra, sem produzir diagnóstico, conclusão jurídica ou afirmação de crime.
+
+A Análise de Risco usa o estado calculado tanto para persistência quanto para a apresentação do resultado. Visitantes sem login recebem a mesma orientação local, enquanto avaliações autenticadas preservam o estado, a regra e o motivo. O atendimento conversacional também recebeu o Quick Exit no cabeçalho, além da análise de risco.
+
+A migration `FAM003_avaliacao_versionada_auditoria.sql` foi ampliada com `assessment_state`, códigos de transição e a tabela `fam_assessment_state_history`, com políticas RLS de leitura e inserção limitadas ao caso do usuário. A conclusão persistida também registra `ASSESSMENT_COMPLETED` em `fam_audit_events`, usando apenas metadados técnicos e seguros. A migration ainda não foi aplicada ao Supabase remoto.
+
+## 9. Limites desta entrega
+
+Esta entrega implementa uma fundação técnica, as correções UX prioritárias e o segundo incremento do fluxo vertical de proteção, mas não declara que todos os requisitos do pacote documental ou do COR-UX-01 estão concluídos. Nenhuma migration foi aplicada remotamente, nenhum arquivo foi enviado ao GitHub e nenhum dado de produção foi alterado. As alterações permanecem no clone local para revisão e aprovação.

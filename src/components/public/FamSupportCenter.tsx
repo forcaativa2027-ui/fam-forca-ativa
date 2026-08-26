@@ -15,6 +15,11 @@ import {
   evaluateFamRisk,
   type FamRiskAnswerValue,
 } from "@/services/famRiskEngine";
+import {
+  stateForEvaluation,
+  transitionAssessment,
+  type FamAssessmentState,
+} from "@/services/famAssessmentState";
 
 const EMERGENCY_180 = "180";
 const EMERGENCY_190 = "190";
@@ -131,6 +136,9 @@ export function FamContactPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 py-6">
+      <div className="flex justify-end">
+        <QuickExit />
+      </div>
       <FamSafetyNotice />
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">FAM · acolhimento</p>
@@ -285,6 +293,7 @@ export function FamContactPage() {
 export function FamRiskAnalysisPage() {
   const [answers, setAnswers] = useState<Record<string, FamRiskAnswerValue>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [assessmentState, setAssessmentState] = useState<FamAssessmentState>("IN_PROGRESS");
   const [openContact, setOpenContact] = useState(false);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [caseId, setCaseId] = useState<string | undefined>(undefined);
@@ -302,18 +311,27 @@ export function FamRiskAnalysisPage() {
   const handleSubmit = async () => {
     if (!complete) return;
     try {
+      const attention = evaluation.attention;
+      const next = stateForEvaluation(evaluation);
+      transitionAssessment(assessmentState, next.state, {
+        reasonCode: next.reasonCode,
+        ruleCode: next.ruleCode,
+      });
+      setAssessmentState(next.state);
       // Visitantes podem concluir a orientação sem cadastro. Nesse caso,
       // respostas e resultado permanecem somente nesta sessão do navegador.
       if (userId) {
         const activeCaseId = caseId ?? (await create({ user_id: userId, contact_name: undefined })).id;
         if (!caseId) setCaseId(activeCaseId);
         await saveAnswers(activeCaseId, answers);
-        const attention = evaluation.attention;
         await submitAssessment(activeCaseId, {
           attention,
           preliminary_summary: evaluation.summary,
           limitations_acknowledged_at: new Date().toISOString(),
           current_step: "result",
+          assessment_state: next.state,
+          transition_reason_code: next.reasonCode,
+          transition_rule_code: next.ruleCode,
           special_flow_flags: evaluation.specialFlowFlags,
           triggered_indicators: evaluation.triggeredIndicators,
         });
@@ -328,6 +346,7 @@ export function FamRiskAnalysisPage() {
   const handleRestart = () => {
     setAnswers({});
     setSubmitted(false);
+    setAssessmentState("IN_PROGRESS");
     setCaseId(undefined);
   };
 
@@ -401,7 +420,11 @@ export function FamRiskAnalysisPage() {
                 <CheckCircle2 className="h-5 w-5 text-gold" />
               )}
               <CardTitle>
-                {urgent ? "Sinais que merecem atenção imediata" : "É importante conversar com uma atendente"}
+                {assessmentState === "EMERGENCY"
+                  ? "Sinais que merecem atenção imediata"
+                  : assessmentState === "PROTECTION_SPECIAL"
+                    ? "Há um fluxo de proteção que merece atenção especializada"
+                    : "É importante conversar com uma atendente"}
               </CardTitle>
             </div>
             <CardDescription>
@@ -414,6 +437,12 @@ export function FamRiskAnalysisPage() {
                 ? "Se houver perigo agora, procure um local seguro quando puder e acione a emergência pelo 190. Para orientação e encaminhamento sobre violência contra a mulher, o Ligue 180 funciona 24 horas. Uma atendente especializada da FAM também pode acolher você quando houver disponibilidade."
                 : "Não foi possível concluir uma situação a partir destas respostas. Isso não significa que esteja tudo bem ou que não exista risco. Converse com uma atendente especializada para avaliar com cuidado o próximo passo."}
             </p>
+            <div className="rounded-lg border border-fam-gold/30 bg-fam-gold-soft/10 p-3 text-xs text-fam-deep-plum">
+              Estado da jornada: <b>{assessmentState}</b>.
+              {evaluation.specialFlowFlags.length > 0 && (
+                <> Fluxo especial acionado: <b>{evaluation.specialFlowFlags.join(", ")}</b>.</>
+              )}
+            </div>
             <div className="flex flex-wrap gap-2">
               <Button onClick={() => setOpenContact(true)} className="gap-2">
                 <MessageCircle className="h-4 w-4" /> Fale com uma atendente

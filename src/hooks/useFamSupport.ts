@@ -166,6 +166,9 @@ export function useFamRiskCase(userId?: string) {
       current_step?: string;
       special_flow_flags?: string[];
       triggered_indicators?: string[];
+      assessment_state?: string;
+      transition_reason_code?: string;
+      transition_rule_code?: string;
       referred_conversation_id?: string;
     }
   ) => {
