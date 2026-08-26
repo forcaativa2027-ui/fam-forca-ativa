@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFamAttachments, useFamConversations, useFamMessages, useFamRiskCase } from "@/hooks/useFamSupport";
 import type { FamAttachment } from "@/services/famAttachments";
+import type { FamConversation } from "@/services/famSupport";
 import { FileUploader } from "@/components/ui/FileUploader";
 import { supabase } from "@/lib/supabase";
 import {
@@ -29,6 +30,19 @@ import { decideFamProtection } from "@/services/famProtectionFlow";
 
 const EMERGENCY_180 = "180";
 const EMERGENCY_190 = "190";
+
+function getFamConversationStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    waiting: "Aguardando atendente",
+    in_progress: "Em atendimento",
+    paused_safe_contact: "Pausada por segurança",
+    referred: "Encaminhada",
+    resolved: "Resolvida",
+    closed: "Encerrada",
+    escalated: "Escalada",
+  };
+  return labels[status] ?? "Em atualização";
+}
 
 export function FamSafetyNotice() {
   const [hidden, setHidden] = useState(false);
@@ -91,6 +105,7 @@ export function FamContactPage() {
 
   const { conversations, startConversation, loading: convLoading } = useFamConversations(userId);
   const { messages, sendMessage, loading: msgLoading } = useFamMessages(convId);
+  const resumableConversation = conversations.find((conversation) => !["closed", "resolved"].includes(conversation.status));
 
   // Get current user on mount
   useEffect(() => {
@@ -134,6 +149,13 @@ export function FamContactPage() {
     }
   };
 
+  const handleResumeConversation = (conversation: FamConversation) => {
+    setConvId(conversation.id);
+    setName(conversation.contact_name ?? "");
+    setStarted(true);
+    setSent(false);
+  };
+
   const handleExit = () => {
     setStarted(false);
     setConvId(undefined);
@@ -157,7 +179,24 @@ export function FamContactPage() {
       </div>
 
       {!started ? (
-        <Card>
+        <>
+          {resumableConversation && (
+            <Card className="border-fam-gold/30 bg-fam-gold-soft/10">
+              <CardHeader>
+                <CardTitle>Retomar atendimento</CardTitle>
+                <CardDescription>Encontramos uma conversa que ainda pode continuar com segurança.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-fam-deep-plum">
+                  Status atual: <b>{getFamConversationStatusLabel(resumableConversation.status)}</b> · referência <b>{resumableConversation.public_reference}</b>.
+                </p>
+                <Button onClick={() => handleResumeConversation(resumableConversation)} className="w-full gap-2">
+                  <MessageCircle className="h-4 w-4" /> Retomar esta conversa
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+          <Card>
           <CardHeader>
             <CardTitle>Iniciar conversa</CardTitle>
             <CardDescription>
@@ -213,22 +252,26 @@ export function FamContactPage() {
               </div>
             )}
           </CardContent>
-        </Card>
+          </Card>
+        </>
       ) : (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Conversa protegida</CardTitle>
-                <CardDescription>
-                  {name ? `Olá, ${name}. ` : ""}
-                  {messages.length > 0
-                    ? "Mensagens carregadas."
-                    : "Aguardando mensagens..."}
-                </CardDescription>
+                  <CardTitle>Conversa protegida</CardTitle>
+                  <CardDescription>
+                    {name ? `Olá, ${name}. ` : ""}
+                    {messages.length > 0
+                      ? "Mensagens carregadas."
+                      : "Aguardando mensagens..."}
+                  </CardDescription>
+                  <p className="mt-2 text-xs text-fam-muted" aria-live="polite">
+                    Status operacional: <b>{getFamConversationStatusLabel(conversations.find((conversation) => conversation.id === convId)?.status ?? "waiting")}</b>.
+                  </p>
               </div>
               <span className="rounded-full bg-fam-soft-pink px-2 py-1 text-xs font-medium text-fam-plum">
-                {messages.length > 0 ? "Ativo" : "Conectado"}
+                {getFamConversationStatusLabel(conversations.find((conversation) => conversation.id === convId)?.status ?? "waiting")}
               </span>
             </div>
           </CardHeader>

@@ -48,11 +48,36 @@ export function useFamConversations(userId?: string) {
     }
   }, [userId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    if (!userId) return;
+    const channel = supabase
+      .channel(`fam_user_conversations:${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "fam_conversations", filter: `user_id=eq.${userId}` },
+        (payload) => {
+          const incoming = payload.new as FamConversation;
+          const previous = payload.old as Partial<FamConversation>;
+          if (payload.eventType === "DELETE") {
+            setConversations((current) => current.filter((conversation) => conversation.id !== previous.id));
+            return;
+          }
+          setConversations((current) => {
+            const exists = current.some((conversation) => conversation.id === incoming.id);
+            return exists
+              ? current.map((conversation) => conversation.id === incoming.id ? { ...conversation, ...incoming } : conversation)
+              : [incoming, ...current];
+          });
+        },
+      )
+      .subscribe();
+    return () => { channel.unsubscribe(); };
+  }, [load, userId]);
 
   const startConversation = async (data: { user_id: string; community_id?: string; contact_name?: string }) => {
     const conv = await createConversation(supabase, data);
-    setConversations((prev) => [conv, ...prev]);
+    setConversations((prev) => [conv, ...prev.filter((conversation) => conversation.id !== conv.id)]);
     return conv;
   };
 
