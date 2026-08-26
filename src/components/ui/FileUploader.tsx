@@ -40,10 +40,12 @@ export function FileUploader({
   }, []);
 
   const addFiles = (newFiles: File[]) => {
-    const valid = newFiles.filter(f => {
-      if (f.size > maxSizeMB * 1024 * 1024) return false;
-      return true;
-    });
+    const allowed = /^(image\/(jpeg|png|webp|gif)|application\/pdf|audio\/(mpeg|wav|ogg|webm)|video\/(mp4|webm|quicktime)|text\/plain)$/;
+    const valid = newFiles.filter(f => f.size > 0 && f.size <= maxSizeMB * 1024 * 1024 && allowed.test(f.type));
+    const rejected = newFiles.length - valid.length;
+    if (rejected > 0) {
+      setFiles(prev => [...prev, { file: new File([], `${rejected} arquivo(s) rejeitado(s) — tipo ou tamanho inválido`), status: 'error' as const, error: `Aceitos: PDF, imagem, áudio ou vídeo até ${maxSizeMB} MB.` }]);
+    }
     setFiles(prev => [...prev, ...valid.map(f => ({ 
       file: f, 
       preview: f.type.startsWith('image/') ? URL.createObjectURL(f) : undefined,
@@ -82,7 +84,8 @@ export function FileUploader({
           <label htmlFor="fam-upload" className="cursor-pointer">
             <Upload className="mx-auto h-10 w-10 text-fam-magenta/50 mb-2" />
             <p className="text-fam-deep-plum font-medium">Arraste arquivos ou clique para selecionar</p>
-            <p className="text-xs text-fam-muted mt-1">PDF, imagens, áudio, vídeo até {maxSizeMB}MB</p>
+                                <p className="text-xs text-fam-muted mt-1">PDF, imagens, áudio ou vídeo até {maxSizeMB}MB · arquivos entram em quarentena para verificação</p>
+
           </label>
         </div>
 
@@ -98,11 +101,12 @@ export function FileUploader({
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-fam-deep-plum truncate">{f.file.name}</p>
-                    <p className="text-xs text-fam-muted">{(f.file.size / 1024).toFixed(1)} KB</p>
+                    <p className="text-xs text-fam-muted">{f.status === 'done' ? 'Recebido — aguardando verificação de segurança' : `${(f.file.size / 1024).toFixed(1)} KB`}</p>
+                    {f.error && <p className="text-xs text-fam-danger">{f.error}</p>}
                   </div>
                   {f.status === 'uploading' && <div className="h-4 w-4 animate-spin border-2 border-fam-magenta/30 border-t-fam-magenta rounded-full" />}
-                  {f.status === 'done' && <CheckCircle2 className="h-5 w-5 text-fam-success" />}
-                  {f.status === 'error' && <AlertCircle className="h-5 w-5 text-fam-danger" />}
+                  {f.status === 'done' && <CheckCircle2 className="h-5 w-5 text-fam-success" aria-label="Recebido para verificação" />}
+                  {f.status === 'error' && <AlertCircle className="h-5 w-5 text-fam-danger" aria-label={f.error ?? "Erro no arquivo"} />}
                   <Button variant="ghost" size="icon" onClick={() => removeFile(i)} className="text-fam-muted">
                     <X className="h-4 w-4" />
                   </Button>
