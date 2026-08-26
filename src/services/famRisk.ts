@@ -1,5 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { FAM_RISK_ENGINE_VERSION } from "@/services/famRiskEngine";
+import { FAM_RISK_ENGINE_VERSION } from "./famRiskEngine";
+import { FAM_RISK_CATALOG_VERSION } from "./famRiskCatalog";
+
+export const FAM_RISK_METHODOLOGY_VERSION = FAM_RISK_CATALOG_VERSION;
+export const FAM_RISK_QUESTIONNAIRE_VERSION = FAM_RISK_CATALOG_VERSION;
+export const FAM_RISK_METHODOLOGY_SOURCE_DOCUMENT = "OC-04_Matriz_Situacoes_Risco_Respostas_v1.1.md";
 
 export interface FamRiskCase {
   id: string;
@@ -17,6 +22,9 @@ export interface FamRiskCase {
   assessment_status?: string;
   current_step?: string | null;
   risk_engine_version?: string | null;
+  methodology_version?: string | null;
+  questionnaire_version?: string | null;
+  methodology_source_document?: string | null;
   special_flow_flags?: string[];
   triggered_indicators?: string[];
   assessment_state?: string | null;
@@ -54,6 +62,10 @@ export async function createRiskCase(
       community_id: data.community_id,
       contact_name: data.contact_name,
       consented_at: new Date().toISOString(),
+      risk_engine_version: FAM_RISK_ENGINE_VERSION,
+      methodology_version: FAM_RISK_METHODOLOGY_VERSION,
+      questionnaire_version: FAM_RISK_QUESTIONNAIRE_VERSION,
+      methodology_source_document: FAM_RISK_METHODOLOGY_SOURCE_DOCUMENT,
     })
     .select("*")
     .single();
