@@ -112,7 +112,7 @@ create policy fam_banner_events_public_insert on public.fam_banner_events for in
   with check (tenant_key = 'FAM' and length(coalesce(session_hash,'')) <= 128 and metadata_minimal ?| array['route','source']);
 drop policy if exists fam_banner_events_admin_read on public.fam_banner_events;
 create policy fam_banner_events_admin_read on public.fam_banner_events for select to authenticated
-  using (public.is_apostle());
+  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'apostolo'));
 create index if not exists idx_fam_banner_events_banner_time on public.fam_banner_events(banner_id, occurred_at desc);
 
 create table if not exists public.fam_banner_audit_events (
@@ -127,7 +127,7 @@ create table if not exists public.fam_banner_audit_events (
 );
 alter table public.fam_banner_audit_events enable row level security;
 drop policy if exists fam_banner_audit_admin_read on public.fam_banner_audit_events;
-create policy fam_banner_audit_admin_read on public.fam_banner_audit_events for select to authenticated using (public.is_apostle());
+create policy fam_banner_audit_admin_read on public.fam_banner_audit_events for select to authenticated using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'apostolo'));
 create index if not exists idx_fam_banner_audit_banner_time on public.fam_banner_audit_events(banner_id, created_at desc);
 
 comment on table public.fam_banner_events is 'Métricas agregadas e minimizadas do carrossel FAM; não armazena dados de atendimento.';
