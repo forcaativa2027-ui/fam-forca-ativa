@@ -1,6 +1,6 @@
 -- GOV-011 — Elevação confirmada da conta técnica ao administrador geral
 -- Conta-alvo: tecnologiaagilize@gmail.com
--- Não altera senha, não cria usuário e não remove dados.
+-- Não altera senha, não cria usuário Auth e não remove dados.
 -- Executar no SQL Editor do Supabase com a conta proprietária do projeto.
 
 BEGIN;
@@ -8,16 +8,17 @@ BEGIN;
 DO $$
 DECLARE
   v_user_id uuid;
+  v_email text := 'tecnologiaagilize@gmail.com';
   v_old_role text;
 BEGIN
   SELECT id
     INTO v_user_id
     FROM auth.users
-   WHERE lower(email) = lower('tecnologiaagilize@gmail.com')
+   WHERE lower(email) = lower(v_email)
    LIMIT 1;
 
   IF v_user_id IS NULL THEN
-    RAISE EXCEPTION 'Usuário tecnologiaagilize@gmail.com não encontrado em auth.users';
+    RAISE EXCEPTION 'Usuário % não encontrado em auth.users', v_email;
   END IF;
 
   SELECT role::text
@@ -26,15 +27,16 @@ BEGIN
    WHERE id = v_user_id;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'Perfil público não encontrado para o usuário %', v_user_id;
+    INSERT INTO public.profiles (id, full_name, email, role)
+    VALUES (v_user_id, 'Administrador Geral', v_email, 'apostolo');
+    RAISE NOTICE 'Perfil público criado para % com role apostolo', v_email;
+  ELSE
+    UPDATE public.profiles
+       SET role = 'apostolo'
+     WHERE id = v_user_id
+       AND role IS DISTINCT FROM 'apostolo';
+    RAISE NOTICE 'Perfil atualizado: % -> apostolo para %', coalesce(v_old_role, '[nulo]'), v_email;
   END IF;
-
-  UPDATE public.profiles
-     SET role = 'apostolo'
-   WHERE id = v_user_id
-     AND role IS DISTINCT FROM 'apostolo';
-
-  RAISE NOTICE 'Perfil atualizado: % -> apostolo para %', coalesce(v_old_role, '[nulo]'), v_user_id;
 END $$;
 
 -- Verificação final: deve retornar exatamente a conta-alvo com role = apostolo.
