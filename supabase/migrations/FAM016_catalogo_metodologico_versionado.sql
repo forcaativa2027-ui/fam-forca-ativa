@@ -4,6 +4,7 @@
 
 create table if not exists public.fam_risk_questionnaires (
   id uuid primary key default gen_random_uuid(),
+  code text,
   version text,
   status text default 'draft',
   source_document text,
@@ -13,6 +14,7 @@ create table if not exists public.fam_risk_questionnaires (
   updated_at timestamptz default now()
 );
 
+alter table public.fam_risk_questionnaires add column if not exists code text;
 alter table public.fam_risk_questionnaires add column if not exists version text;
 alter table public.fam_risk_questionnaires add column if not exists status text default 'draft';
 alter table public.fam_risk_questionnaires add column if not exists source_document text;
@@ -22,12 +24,20 @@ alter table public.fam_risk_questionnaires add column if not exists created_at t
 alter table public.fam_risk_questionnaires add column if not exists updated_at timestamptz default now();
 
 update public.fam_risk_questionnaires
+set code = 'FAM-RISK-LEGACY-' || id::text
+where code is null or btrim(code) = '';
+
+update public.fam_risk_questionnaires
 set status = 'draft'
 where status is null or status not in ('draft', 'in_review', 'published', 'archived');
 
 update public.fam_risk_questionnaires
 set source_document = 'legacy-fam-risk-questionnaire'
 where source_document is null or btrim(source_document) = '';
+
+create unique index if not exists fam_risk_questionnaires_code_uidx
+  on public.fam_risk_questionnaires (code)
+  where code is not null;
 
 create unique index if not exists fam_risk_questionnaires_version_uidx
   on public.fam_risk_questionnaires (version)
@@ -73,10 +83,11 @@ create unique index if not exists fam_risk_questions_order_uidx
   on public.fam_risk_questions (questionnaire_id, order_index)
   where questionnaire_id is not null and order_index is not null;
 
-insert into public.fam_risk_questionnaires (version, status, source_document)
-select 'OC-04-v1.1', 'draft', 'OC-04_Matriz_Situacoes_Risco_Respostas_v1.1.md'
+insert into public.fam_risk_questionnaires (code, version, status, source_document)
+select 'FAM-RISK-MAP', 'OC-04-v1.1', 'draft', 'OC-04_Matriz_Situacoes_Risco_Respostas_v1.1.md'
 where not exists (
-  select 1 from public.fam_risk_questionnaires where version = 'OC-04-v1.1'
+  select 1 from public.fam_risk_questionnaires
+  where version = 'OC-04-v1.1' or code = 'FAM-RISK-MAP'
 );
 
 insert into public.fam_risk_questions (questionnaire_id, question_key, question_text, source_reference, order_index, answer_options)
