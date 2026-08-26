@@ -49,6 +49,16 @@ create table if not exists public.fam_audit_events (
   created_at timestamptz not null default now()
 );
 
+-- Compatibilidade com uma execução anterior que tenha criado a tabela sem
+-- as colunas de vínculo. O índice e as políticas abaixo dependem delas.
+alter table if exists public.fam_audit_events
+  add column if not exists actor_user_id uuid references auth.users(id) on delete set null,
+  add column if not exists case_id uuid references public.fam_risk_cases(id) on delete set null,
+  add column if not exists conversation_id uuid references public.fam_conversations(id) on delete set null,
+  add column if not exists event_type text,
+  add column if not exists metadata jsonb not null default '{}'::jsonb,
+  add column if not exists created_at timestamptz not null default now();
+
 create index if not exists idx_fam_audit_events_case on public.fam_audit_events(case_id, created_at);
 create index if not exists idx_fam_audit_events_type on public.fam_audit_events(event_type, created_at);
 
