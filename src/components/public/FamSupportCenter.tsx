@@ -397,23 +397,24 @@ export function FamRiskAnalysisPage() {
           </CardHeader>
           <CardContent className="space-y-5">
             {FAM_RISK_QUESTIONS.map(({ key, text, options, source }) => (
-              <div key={key} className="space-y-2">
-                <p className="text-sm font-medium text-fam-deep-plum">{text}</p>
-                <p className="text-xs text-fam-muted">Referência metodológica: {source}</p>
-                <div className="flex flex-wrap gap-2">
+              <fieldset key={key} className="space-y-2">
+                <legend className="text-sm font-medium text-fam-deep-plum">{text}</legend>
+                <p id={`fam-source-${key}`} className="text-xs text-fam-muted">Referência metodológica: {source}</p>
+                <div className="flex flex-wrap gap-2" role="group" aria-describedby={`fam-source-${key}`}>
                   {options.map(({ value, label }) => (
                     <Button
                       key={value}
                       type="button"
                       variant={answers[key] === value ? "default" : "outline"}
                       size="sm"
+                      aria-pressed={answers[key] === value}
                       onClick={() => setAnswers((prev) => ({ ...prev, [key]: value }))}
                     >
                       {label}
                     </Button>
                   ))}
                 </div>
-              </div>
+              </fieldset>
             ))}
             {userId ? (
               <FileUploader userId={userId} caseId={caseId} accept="image/*,application/pdf,audio/*,video/*" />
