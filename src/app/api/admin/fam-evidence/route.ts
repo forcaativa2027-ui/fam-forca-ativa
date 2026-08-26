@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { adminClient } from "@/lib/supabase/admin";
+import { purgeExpiredFamEvidence } from "@/services/famEvidencePurge";
 
 const ALLOWED_SCAN_STATUS = new Set(["clean", "infected", "error"]);
 
@@ -92,22 +93,10 @@ export async function GET(req: Request) {
 export async function DELETE(req: Request) {
   const caller = await getAdminCaller(req);
   if (!caller) return NextResponse.json({ error: "Acesso restrito a atendentes FAM ativos." }, { status: 403 });
-  const { data: expired, error } = await caller.admin.from("fam_risk_attachments")
-    .select("id, storage_path, case_id, conversation_id")
-    .is("deleted_at", null)
-    .eq("legal_hold", false)
-    .lt("retention_expires_at", new Date().toISOString())
-    .limit(100);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  let deleted = 0;
-  for (const attachment of expired ?? []) {
-    const { error: storageError } = await caller.admin.storage.from("fam-attachments").remove([attachment.storage_path]);
-    if (storageError) continue;
-    const { error: updateError } = await caller.admin.from("fam_risk_attachments").update({ deleted_at: new Date().toISOString(), deletion_reason: "retention_expired" }).eq("id", attachment.id).is("deleted_at", null);
-    if (updateError) continue;
-    await audit(caller.admin, caller.user.id, attachment, "attachment_retention_purged", { reason: "retention_expired" });
-    deleted += 1;
+  try {
+    const result = await purgeExpiredFamEvidence(caller.admin, caller.user.id);
+    return NextResponse.json({ ok: true, ...result });
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Expurgo não concluído." }, { status: 500 });
   }
-  return NextResponse.json({ ok: true, scanned: expired?.length ?? 0, deleted });
 }
