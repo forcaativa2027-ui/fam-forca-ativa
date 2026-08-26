@@ -10,7 +10,6 @@ export default function AnaliseRiscoPage() {
       <header className="sticky top-0 z-20 border-b-[3px] border-gold bg-navy text-white shadow-sm">
         <div className="container flex min-h-16 items-center justify-between gap-3 py-3">
           <div className="flex min-w-0 items-center gap-3">
-            <BackButton fallbackHref="/painel" />
             <Link href="/" className="flex min-w-0 items-center gap-2" aria-label="Voltar para a página inicial da FAM">
               <img src="/brand/fam-logo.jpg" alt="" className="h-9 w-9 rounded-full bg-white object-contain p-0.5" />
               <span className="truncate font-display text-sm font-bold sm:text-base">FAM · Força Ativa da Mulher</span>
@@ -26,6 +25,9 @@ export default function AnaliseRiscoPage() {
           </div>
         </div>
       </header>
+      <div className="container pt-3">
+        <BackButton fallbackHref="/painel" />
+      </div>
       <div className="container py-4">
         <FamRiskAnalysisPage />
       </div>
