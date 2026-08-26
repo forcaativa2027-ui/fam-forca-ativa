@@ -30,3 +30,23 @@ describe("createFamReferralRequest", () => {
     expect(insert).toHaveBeenCalledWith(expect.objectContaining({ case_id: "case-1", requested_by: "user-1", requested_data: ["identificador do caso"] }));
   });
 });
+
+
+describe("selected attachments", () => {
+  it("rejeita anexo pendente antes de criar o encaminhamento", async () => {
+    const single = vi.fn();
+    const inFilter = vi.fn().mockResolvedValue({ data: [{ id: "att-1", malware_scan_status: "pending", deleted_at: null, retention_expires_at: null }], error: null });
+    const sb = { from: vi.fn().mockReturnValue({ select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: inFilter }) }) }) }) };
+    await expect(createFamReferralRequest(sb as never, { caseId: "case-1", userId: "user-1", option, confirmationAccepted: true, selectedAttachmentIds: ["att-1"] })).rejects.toThrow("anexos selecionados");
+    expect(single).not.toHaveBeenCalled();
+  });
+
+  it("normaliza IDs e insere apenas anexos limpos dentro da retenção", async () => {
+    const single = vi.fn().mockResolvedValue({ data: { id: "request-2", selected_attachment_ids: ["att-1"] }, error: null });
+    const insert = vi.fn().mockReturnValue({ select: vi.fn().mockReturnValue({ single }) });
+    const inFilter = vi.fn().mockResolvedValue({ data: [{ id: "att-1", malware_scan_status: "clean", deleted_at: null, retention_expires_at: null }], error: null });
+    const sb = { from: vi.fn().mockImplementation((table: string) => table === "fam_risk_attachments" ? { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ in: inFilter }) }) }) } : { insert }) };
+    await expect(createFamReferralRequest(sb as never, { caseId: "case-1", userId: "user-1", option, confirmationAccepted: true, selectedAttachmentIds: ["att-1", "att-1"] })).resolves.toMatchObject({ id: "request-2" });
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ selected_attachment_ids: ["att-1"] }));
+  });
+});

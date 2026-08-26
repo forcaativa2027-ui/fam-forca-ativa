@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useFamConversations, useFamMessages, useFamRiskCase } from "@/hooks/useFamSupport";
+import { useFamAttachments, useFamConversations, useFamMessages, useFamRiskCase } from "@/hooks/useFamSupport";
+import type { FamAttachment } from "@/services/famAttachments";
 import { FileUploader } from "@/components/ui/FileUploader";
 import { supabase } from "@/lib/supabase";
 import {
@@ -305,6 +306,9 @@ export function FamRiskAnalysisPage() {
   const [referralRequestStatus, setReferralRequestStatus] = useState<"idle" | "requested">("idle");
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [caseId, setCaseId] = useState<string | undefined>(undefined);
+  const [attachments, setAttachments] = useState<FamAttachment[]>([]);
+  const [selectedAttachmentIds, setSelectedAttachmentIds] = useState<string[]>([]);
+  const { listForCase } = useFamAttachments();
   const { riskCase, create, saveAnswers, submitAssessment, requestReferral, loading: riskLoading, error: riskError } = useFamRiskCase(userId);
   const evaluation = evaluateFamRisk(answers);
   const protectionDecision = decideFamProtection({ evaluation, referralConfirmed });
@@ -312,12 +316,16 @@ export function FamRiskAnalysisPage() {
   const urgent = evaluation.emergency;
   const complete = FAM_RISK_QUESTIONS.every(({ key }) => answers[key]);
 
+    useEffect(() => {
+    if (!caseId || !submitted) return;
+    listForCase(caseId).then(setAttachments).catch(() => setAttachments([]));
+  }, [caseId, submitted, listForCase]);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) setUserId(user.id);
     });
   }, []);
-
   const handleSubmit = async () => {
     if (!complete) return;
     try {
@@ -356,7 +364,7 @@ export function FamRiskAnalysisPage() {
   const handleReferralRequest = async () => {
     if (!selectedReferral || !referralConfirmed || !userId || !caseId) return;
     try {
-      await requestReferral(caseId, userId, selectedReferral, referralConfirmed);
+      await requestReferral(caseId, userId, selectedReferral, referralConfirmed, selectedAttachmentIds);
       setReferralRequestStatus("requested");
     } catch (e) {
       console.error("Erro ao registrar encaminhamento:", e);
@@ -366,6 +374,8 @@ export function FamRiskAnalysisPage() {
 
   const handleRestart = () => {
     setAnswers({});
+    setAttachments([]);
+    setSelectedAttachmentIds([]);
     setSubmitted(false);
     setAssessmentState("IN_PROGRESS");
     setSelectedReferral(null);
@@ -418,17 +428,7 @@ export function FamRiskAnalysisPage() {
                 </div>
               </fieldset>
             ))}
-            {userId ? (
-              <FileUploader userId={userId} caseId={caseId} accept="image/*,application/pdf,audio/*,video/*" />
-            ) : (
-              <div className="rounded-lg border border-fam-gold/30 bg-fam-gold-soft/10 p-4 text-sm text-fam-deep-plum">
-                <p className="font-semibold">Quer enviar documentos, fotos, áudios ou vídeos?</p>
-                <p className="mt-1">Entre na sua conta para anexar arquivos com segurança. Não é necessário ser associada à FAM.</p>
-                <Button asChild variant="outline" size="sm" className="mt-3">
-                  <Link href="/entrar?redirect=/analise-risco">Entrar para enviar anexos</Link>
-                </Button>
-              </div>
-            )}
+            <p className="text-xs text-fam-muted">Você poderá anexar arquivos depois de ver esta orientação. Assim, cada arquivo fica vinculado ao caso correto.</p>
             <Button disabled={!complete || riskLoading} onClick={handleSubmit} className="w-full">
               {riskLoading ? "Salvando..." : "Ver orientação inicial"}
             </Button>
@@ -453,6 +453,7 @@ export function FamRiskAnalysisPage() {
           <CardContent className="space-y-4">
             <p className="rounded-lg bg-fam-lavender p-4 text-sm leading-relaxed">{protectionDecision.guidance}</p>
             <p className="text-xs leading-relaxed text-fam-muted">{protectionDecision.disclaimer}</p>
+            {userId && caseId ? <Card className="border-fam-lavender"><CardContent className="space-y-3 p-4"><div><p className="text-sm font-semibold text-fam-deep-plum">Anexos do caso</p><p className="mt-1 text-xs text-fam-muted">Arquivos enviados ficam em quarentena até a verificação. Somente arquivos marcados como limpos podem ser selecionados para encaminhamento.</p></div><FileUploader userId={userId} caseId={caseId} accept="image/*,application/pdf,audio/*,video/*" onUploadComplete={() => listForCase(caseId).then(setAttachments).catch(() => setAttachments([]))} />{attachments.length > 0 && <div className="space-y-2">{attachments.map((attachment) => <label key={attachment.id} className="flex items-start gap-2 rounded-md border p-2 text-xs"><input type="checkbox" disabled={attachment.malware_scan_status !== "clean"} checked={selectedAttachmentIds.includes(attachment.id)} onChange={(event) => setSelectedAttachmentIds((previous) => event.target.checked ? [...previous, attachment.id] : previous.filter((id) => id !== attachment.id))} /><span><b>{attachment.original_name}</b><span className="ml-1 text-fam-muted">{attachment.malware_scan_status === "clean" ? "Disponível para seleção" : "Aguardando verificação de segurança"}</span></span></label>)}</div>}</CardContent></Card> : null}
             <div className="rounded-lg border border-fam-gold/30 bg-fam-gold-soft/10 p-3 text-xs text-fam-deep-plum">
               Estado da jornada: <b>{assessmentState}</b>.
               {evaluation.specialFlowFlags.length > 0 && (

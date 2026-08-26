@@ -159,10 +159,10 @@ export function useFamRiskCase(userId?: string) {
     await saveRiskAnswers(supabase, caseId, answers);
   };
 
-  const requestReferral = async (caseId: string, userId: string, option: FamReferralOption, confirmationAccepted: boolean) => {
+  const requestReferral = async (caseId: string, userId: string, option: FamReferralOption, confirmationAccepted: boolean, selectedAttachmentIds: string[] = []) => {
     setLoading(true);
     try {
-      return await createFamReferralRequest(supabase, { caseId, userId, option, confirmationAccepted });
+      return await createFamReferralRequest(supabase, { caseId, userId, option, confirmationAccepted, selectedAttachmentIds });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Erro ao registrar encaminhamento");
       throw e;
