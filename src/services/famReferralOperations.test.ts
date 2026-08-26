@@ -25,6 +25,8 @@ describe("famReferralOperations", () => {
     expect(rpc).toHaveBeenCalledWith("fam_update_referral_status", {
       p_request_id: "request-1",
       p_next_status: "under_review",
+      p_operator_confirmed: false,
+      p_confirmation_note: null,
     });
   });
 

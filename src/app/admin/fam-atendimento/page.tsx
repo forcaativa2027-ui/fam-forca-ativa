@@ -50,6 +50,8 @@ export default function FamAtendimentoAdmin() {
   const [currentAttendantId, setCurrentAttendantId] = useState<string | null>(null);
   const [referralRequests, setReferralRequests] = useState<FamReferralRequest[]>([]);
   const [referralLoading, setReferralLoading] = useState(false);
+  const [operatorReviewRequestId, setOperatorReviewRequestId] = useState<string | null>(null);
+  const [operatorConfirmationNote, setOperatorConfirmationNote] = useState("");
 
   useEffect(() => {
     loadAttendants();
@@ -89,12 +91,30 @@ export default function FamAtendimentoAdmin() {
   }
 
   async function handleReferralStatus(requestId: string, nextStatus: FamReferralRequestStatus) {
+    if (nextStatus === "sent") {
+      setOperatorReviewRequestId(requestId);
+      setOperatorConfirmationNote("");
+      return;
+    }
     try {
       const updated = await updateFamReferralRequestStatus(sb, requestId, nextStatus);
       setReferralRequests((current) => current.map((request) => request.id === updated.id ? updated : request));
     } catch (e) {
       console.error("Erro ao atualizar solicitação:", e);
       alert("Não foi possível atualizar esta solicitação. Verifique se sua conta é de atendente ativa e se a transição é permitida.");
+    }
+  }
+
+  async function confirmOperatorSend() {
+    if (!operatorReviewRequestId || !operatorConfirmationNote.trim()) return;
+    try {
+      const updated = await updateFamReferralRequestStatus(sb, operatorReviewRequestId, "sent", { confirmed: true, note: operatorConfirmationNote.trim() });
+      setReferralRequests((current) => current.map((request) => request.id === updated.id ? updated : request));
+      setOperatorReviewRequestId(null);
+      setOperatorConfirmationNote("");
+    } catch (e) {
+      console.error("Erro ao confirmar envio:", e);
+      alert("Não foi possível confirmar o envio. Verifique a permissão da atendente e tente novamente.");
     }
   }
 
@@ -238,17 +258,34 @@ export default function FamAtendimentoAdmin() {
                     <div className="space-y-1 text-sm">
                       <p className="font-semibold text-fam-deep-plum">{request.recipient} · {request.priority}</p>
                       <p className="text-fam-muted">{request.purpose}</p>
-                      <p className="text-xs text-fam-muted">Solicitada em {new Date(request.created_at).toLocaleString("pt-BR")} · Escopo: {request.requested_data.join(", ")}</p>
+                      <p className="text-xs text-fam-muted">Solicitada em {new Date(request.created_at).toLocaleString("pt-BR")}</p>
+                      <div className="rounded-md bg-fam-lavender/40 p-3 text-xs text-fam-deep-plum">
+                        <p><b>Resumo para revisão:</b> destinatário {request.recipient}; finalidade: {request.purpose}; prioridade: {request.priority}.</p>
+                        <p className="mt-1"><b>Escopo textual:</b> {request.requested_data.join(", ") || "nenhum dado textual informado"}.</p>
+                        <p className="mt-1"><b>Anexos selecionados:</b> {request.selected_attachment_ids.length ? request.selected_attachment_ids.join(", ") : "nenhum"}.</p>
+                      </div>
                       <p className="text-xs text-fam-muted">Recebimento não significa atendimento, investigação ou adoção de providência.</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`rounded-full px-2 py-1 text-xs ${getReferralStatusColor(request.status)}`}>{getReferralStatusLabel(request.status)}</span>
                       {request.status === "requested" && <Button size="sm" onClick={() => handleReferralStatus(request.id, "under_review")}>Iniciar revisão</Button>}
-                      {request.status === "under_review" && <Button size="sm" onClick={() => handleReferralStatus(request.id, "sent")}>Marcar como enviado</Button>}
+                      {request.status === "under_review" && <Button size="sm" onClick={() => handleReferralStatus(request.id, "sent")}>Revisar e enviar</Button>}
                       {request.status === "sent" && <Button size="sm" onClick={() => handleReferralStatus(request.id, "received")}>Confirmar recebimento</Button>}
                       {(request.status === "requested" || request.status === "under_review" || request.status === "sent") && <Button size="sm" variant="outline" onClick={() => handleReferralStatus(request.id, "cancelled")}>Cancelar</Button>}
                     </div>
                   </div>
+                  {operatorReviewRequestId === request.id && (
+                    <div className="mt-4 space-y-3 rounded-md border border-fam-danger/30 bg-fam-danger/5 p-3">
+                      <p className="text-sm font-semibold text-fam-deep-plum">Confirmação da atendente antes do envio</p>
+                      <p className="text-xs leading-relaxed text-fam-muted">Confirme que você revisou o destinatário, a finalidade, o escopo textual e os anexos selecionados. Esta ação registra sua identidade e justificativa; não garante recebimento ou atendimento pelo destinatário.</p>
+                      <Label htmlFor={`operator-note-${request.id}`}>Justificativa operacional</Label>
+                      <Textarea id={`operator-note-${request.id}`} value={operatorConfirmationNote} onChange={(event) => setOperatorConfirmationNote(event.target.value)} placeholder="Descreva a revisão realizada e o motivo do envio." rows={3} />
+                      <div className="flex gap-2">
+                        <Button size="sm" disabled={!operatorConfirmationNote.trim()} onClick={confirmOperatorSend}>Confirmar e marcar como enviado</Button>
+                        <Button size="sm" variant="outline" onClick={() => { setOperatorReviewRequestId(null); setOperatorConfirmationNote(""); }}>Voltar</Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

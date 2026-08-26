@@ -17,10 +17,13 @@ export async function updateFamReferralRequestStatus(
   sb: SupabaseClient,
   requestId: string,
   nextStatus: FamReferralRequestStatus,
+  operatorConfirmation?: { confirmed: boolean; note?: string },
 ): Promise<FamReferralRequest> {
   const { data, error } = await sb.rpc("fam_update_referral_status", {
     p_request_id: requestId,
     p_next_status: nextStatus,
+    p_operator_confirmed: operatorConfirmation?.confirmed ?? false,
+    p_confirmation_note: operatorConfirmation?.note ?? null,
   });
   if (error) throw error;
   return data as FamReferralRequest;
