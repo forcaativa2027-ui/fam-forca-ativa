@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useFamAttachments, useFamConversations, useFamMessages, useFamRiskCase } from "@/hooks/useFamSupport";
 import type { FamAttachment } from "@/services/famAttachments";
 import type { FamConversation } from "@/services/famSupport";
+import type { FamReferralRequest } from "@/services/famReferralRequests";
 import { FileUploader } from "@/components/ui/FileUploader";
 import { supabase } from "@/lib/supabase";
 import {
@@ -30,6 +31,17 @@ import { decideFamProtection } from "@/services/famProtectionFlow";
 
 const EMERGENCY_180 = "180";
 const EMERGENCY_190 = "190";
+
+function getFamReferralStatusLabel(status: FamReferralRequest["status"]): string {
+  const labels: Record<FamReferralRequest["status"], string> = {
+    requested: "Pedido registrado",
+    under_review: "Em revisão pela atendente",
+    sent: "Enviado ao destinatário",
+    received: "Recebimento confirmado",
+    cancelled: "Cancelado",
+  };
+  return labels[status] ?? "Em atualização";
+}
 
 function getFamConversationStatusLabel(status: string): string {
   const labels: Record<string, string> = {
@@ -365,6 +377,7 @@ export function FamRiskAnalysisPage() {
   const [selectedReferral, setSelectedReferral] = useState<FamReferralOption | null>(null);
   const [referralConfirmed, setReferralConfirmed] = useState(false);
   const [referralRequestStatus, setReferralRequestStatus] = useState<"idle" | "requested">("idle");
+  const [referralRequest, setReferralRequest] = useState<FamReferralRequest | null>(null);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [caseId, setCaseId] = useState<string | undefined>(undefined);
   const [attachments, setAttachments] = useState<FamAttachment[]>([]);
@@ -381,6 +394,22 @@ export function FamRiskAnalysisPage() {
     if (!caseId || !submitted) return;
     listForCase(caseId).then(setAttachments).catch(() => setAttachments([]));
   }, [caseId, submitted, listForCase]);
+
+  useEffect(() => {
+    if (!userId || !caseId) return;
+    const channel = supabase
+      .channel(`fam_user_referrals:${caseId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "fam_referral_requests", filter: `case_id=eq.${caseId}` },
+        (payload) => {
+          const updated = payload.new as FamReferralRequest;
+          setReferralRequest((current) => current?.id === updated.id ? { ...current, ...updated } : current);
+        },
+      )
+      .subscribe();
+    return () => { channel.unsubscribe(); };
+  }, [caseId, userId]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -425,7 +454,8 @@ export function FamRiskAnalysisPage() {
   const handleReferralRequest = async () => {
     if (!selectedReferral || !referralConfirmed || !userId || !caseId) return;
     try {
-      await requestReferral(caseId, userId, selectedReferral, referralConfirmed, selectedAttachmentIds);
+      const createdRequest = await requestReferral(caseId, userId, selectedReferral, referralConfirmed, selectedAttachmentIds);
+      setReferralRequest(createdRequest);
       setReferralRequestStatus("requested");
     } catch (e) {
       console.error("Erro ao registrar encaminhamento:", e);
@@ -442,6 +472,7 @@ export function FamRiskAnalysisPage() {
     setSelectedReferral(null);
     setReferralConfirmed(false);
     setReferralRequestStatus("idle");
+    setReferralRequest(null);
     setCaseId(undefined);
   };
 
@@ -556,10 +587,14 @@ export function FamRiskAnalysisPage() {
                       <p className="mt-3 text-xs text-fam-muted">
                         Entre na sua conta para registrar um pedido de encaminhamento. Você também pode conversar com uma atendente sem enviar esse pedido.
                       </p>
-                    ) : referralRequestStatus === "requested" ? (
-                      <p className="mt-3 rounded-md bg-fam-success/10 p-2 text-xs text-fam-success">
-                        Pedido registrado. Ele ainda não foi enviado ao destinatário e será revisado por uma profissional autorizada.
-                      </p>
+                    ) : referralRequest ? (
+                      <div className="mt-3 space-y-2 rounded-md bg-fam-success/10 p-2 text-xs text-fam-success">
+                        <p>Pedido registrado. Status: <b>{getFamReferralStatusLabel(referralRequest.status)}</b>.</p>
+                        <p className="text-fam-muted">O pedido só é enviado após revisão e confirmação operacional de uma profissional autorizada.</p>
+                        {referralRequest.sent_package_hash && (
+                          <p className="break-all text-fam-deep-plum"><b>Recibo do pacote congelado:</b> {referralRequest.sent_at ? new Date(referralRequest.sent_at).toLocaleString("pt-BR") : "enviado"} · hash {referralRequest.sent_package_hash}</p>
+                        )}
+                      </div>
                     ) : (
                       <>
                         <label className="mt-3 flex items-start gap-2 text-xs">

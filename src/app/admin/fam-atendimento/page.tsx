@@ -70,6 +70,7 @@ export default function FamAtendimentoAdmin() {
   const [lastQueueUpdate, setLastQueueUpdate] = useState<Date | null>(null);
   const [pauseReason, setPauseReason] = useState<(typeof PAUSE_REASONS)[number]["value"]>("SAFE_CONTACT_PAUSE");
   const [closeReason, setCloseReason] = useState<(typeof CLOSE_REASONS)[number]["value"]>("USER_REQUESTED_CLOSE");
+  const [integrityResults, setIntegrityResults] = useState<Record<string, { isValid: boolean; checkedAt: string }>>({});
 
   useEffect(() => {
     loadAttendants();
@@ -96,6 +97,30 @@ export default function FamAtendimentoAdmin() {
     setAttendants(attendantsData ?? []);
   }
 
+  useEffect(() => {
+    const channel = sb
+      .channel("admin_fam_referral_requests")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "fam_referral_requests" },
+        (payload: { eventType: "INSERT" | "UPDATE" | "DELETE"; new: FamReferralRequest; old: Partial<FamReferralRequest> }) => {
+          const incoming = payload.new as FamReferralRequest;
+          if (payload.eventType === "DELETE") {
+            setReferralRequests((current) => current.filter((request) => request.id !== payload.old.id));
+            return;
+          }
+          setReferralRequests((current) => {
+            const exists = current.some((request) => request.id === incoming.id);
+            return exists
+              ? current.map((request) => request.id === incoming.id ? { ...request, ...incoming } : request)
+              : [incoming, ...current];
+          });
+        },
+      )
+      .subscribe();
+    return () => { channel.unsubscribe(); };
+  }, []);
+
   async function loadReferralRequests() {
     setReferralLoading(true);
     try {
@@ -120,6 +145,21 @@ export default function FamAtendimentoAdmin() {
     } catch (e) {
       console.error("Erro ao atualizar solicitação:", e);
       alert("Não foi possível atualizar esta solicitação. Verifique se sua conta é de atendente ativa e se a transição é permitida.");
+    }
+  }
+
+  async function verifyPackageIntegrity(requestId: string) {
+    try {
+      const { data, error } = await sb.rpc("fam_verify_referral_package", { p_request_id: requestId });
+      if (error) throw error;
+      const result = Array.isArray(data) ? data[0] : data;
+      setIntegrityResults((current) => ({
+        ...current,
+        [requestId]: { isValid: Boolean(result?.is_valid), checkedAt: result?.verified_at ?? new Date().toISOString() },
+      }));
+    } catch (e) {
+      console.error("Erro ao verificar integridade:", e);
+      alert("Não foi possível verificar a integridade do pacote congelado.");
     }
   }
 
@@ -366,7 +406,15 @@ export default function FamAtendimentoAdmin() {
                         <p><b>Resumo para revisão:</b> destinatário {request.recipient}; finalidade: {request.purpose}; prioridade: {request.priority}.</p>
                         <p className="mt-1"><b>Escopo textual:</b> {request.requested_data.join(", ") || "nenhum dado textual informado"}.</p>
                         <p className="mt-1"><b>Anexos selecionados:</b> {request.selected_attachment_ids.length ? request.selected_attachment_ids.join(", ") : "nenhum"}.</p>
-                        {request.status === "sent" && request.sent_package_hash && <p className="mt-1"><b>Pacote congelado:</b> {request.sent_at ? new Date(request.sent_at).toLocaleString("pt-BR") : "sim"} · hash {request.sent_package_hash}.</p>}
+                        {request.status === "sent" && request.sent_package_hash && <>
+                          <p className="mt-1"><b>Pacote congelado:</b> {request.sent_at ? new Date(request.sent_at).toLocaleString("pt-BR") : "sim"} · hash {request.sent_package_hash}.</p>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <Button size="sm" variant="outline" onClick={() => verifyPackageIntegrity(request.id)}>Verificar integridade</Button>
+                            {integrityResults[request.id] && <span className={`text-xs ${integrityResults[request.id].isValid ? "text-fam-success" : "text-fam-danger"}`} role="status">
+                              {integrityResults[request.id].isValid ? "Snapshot íntegro" : "Snapshot divergente"} · {new Date(integrityResults[request.id].checkedAt).toLocaleString("pt-BR")}
+                            </span>}
+                          </div>
+                        </>}
                       </div>
                       <p className="text-xs text-fam-muted">Recebimento não significa atendimento, investigação ou adoção de providência.</p>
                     </div>
