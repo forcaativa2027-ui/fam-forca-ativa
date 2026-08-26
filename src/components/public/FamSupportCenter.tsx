@@ -459,6 +459,11 @@ export function FamRiskAnalysisPage() {
               {evaluation.specialFlowFlags.length > 0 && (
                 <> Fluxo especial acionado: <b>{evaluation.specialFlowFlags.join(", ")}</b>.</>
               )}
+              {riskCase?.methodology_version && riskCase.methodology_version !== "LEGACY-UNVERSIONED" && (
+                <span className="mt-1 block text-fam-muted">
+                  Versão metodológica registrada: <b>{riskCase.methodology_version}</b>.
+                </span>
+              )}
             </div>
             {referralOptions.length > 0 && (
               <div className="space-y-3 rounded-lg border border-fam-gold/30 bg-fam-gold-soft/10 p-4">
