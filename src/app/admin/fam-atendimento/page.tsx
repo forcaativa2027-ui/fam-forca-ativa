@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { listFamReferralRequests, updateFamReferralRequestStatus } from "@/services/famReferralOperations";
 import type { FamReferralRequest, FamReferralRequestStatus } from "@/services/famReferralRequests";
+import type { FamAttachment } from "@/services/famAttachments";
 import { QuickExit } from "@/components/public/FamSupportCenter";
 
 interface FamConversation {
@@ -52,6 +53,15 @@ const CLOSE_REASONS = [
   { value: "NO_FURTHER_CONTACT", label: "Sem continuidade de contato" },
 ] as const;
 
+function getAdminAttachmentStatus(attachment?: FamAttachment): { label: string; className: string } {
+  if (!attachment) return { label: "metadados não carregados", className: "text-fam-muted" };
+  const expired = Boolean(attachment.retention_expires_at && Date.parse(attachment.retention_expires_at) <= Date.now());
+  if (expired || attachment.deleted_at) return { label: "expirado/removido", className: "text-fam-muted" };
+  if (attachment.malware_scan_status === "clean") return { label: "limpo", className: "text-fam-success" };
+  if (attachment.malware_scan_status === "pending") return { label: "em quarentena", className: "text-fam-muted" };
+  return { label: "bloqueado", className: "text-fam-danger" };
+}
+
 // Cast supabase to any para acessar tabelas não tipadas
 const sb = supabase as any;
 
@@ -71,6 +81,7 @@ export default function FamAtendimentoAdmin() {
   const [pauseReason, setPauseReason] = useState<(typeof PAUSE_REASONS)[number]["value"]>("SAFE_CONTACT_PAUSE");
   const [closeReason, setCloseReason] = useState<(typeof CLOSE_REASONS)[number]["value"]>("USER_REQUESTED_CLOSE");
   const [integrityResults, setIntegrityResults] = useState<Record<string, { isValid: boolean; checkedAt: string }>>({});
+  const [attachmentStatuses, setAttachmentStatuses] = useState<Record<string, FamAttachment>>({});
 
   useEffect(() => {
     loadAttendants();
@@ -126,6 +137,15 @@ export default function FamAtendimentoAdmin() {
     try {
       const data = await listFamReferralRequests(sb);
       setReferralRequests(data);
+      const attachmentIds = [...new Set(data.flatMap((request) => request.selected_attachment_ids))];
+      if (attachmentIds.length > 0) {
+        const { data: attachmentsData, error: attachmentsError } = await sb
+          .from("fam_risk_attachments")
+          .select("*")
+          .in("id", attachmentIds);
+        if (attachmentsError) throw attachmentsError;
+        setAttachmentStatuses(Object.fromEntries(((attachmentsData ?? []) as FamAttachment[]).map((attachment) => [attachment.id, attachment])));
+      }
     } catch (e) {
       console.error("Erro ao carregar solicitações:", e);
     } finally {
@@ -405,7 +425,10 @@ export default function FamAtendimentoAdmin() {
                       <div className="rounded-md bg-fam-lavender/40 p-3 text-xs text-fam-deep-plum">
                         <p><b>Resumo para revisão:</b> destinatário {request.recipient}; finalidade: {request.purpose}; prioridade: {request.priority}.</p>
                         <p className="mt-1"><b>Escopo textual:</b> {request.requested_data.join(", ") || "nenhum dado textual informado"}.</p>
-                        <p className="mt-1"><b>Anexos selecionados:</b> {request.selected_attachment_ids.length ? request.selected_attachment_ids.join(", ") : "nenhum"}.</p>
+                        <p className="mt-1"><b>Anexos selecionados:</b> {request.selected_attachment_ids.length ? request.selected_attachment_ids.map((attachmentId) => {
+                          const attachment = attachmentStatuses[attachmentId];
+                          return <span key={attachmentId} className="mr-2 inline-block">{attachment?.original_name ?? attachmentId} <span className={getAdminAttachmentStatus(attachment).className}>({getAdminAttachmentStatus(attachment).label})</span></span>;
+                        }) : "nenhum"}.</p>
                         {request.status === "sent" && request.sent_package_hash && <>
                           <p className="mt-1"><b>Pacote congelado:</b> {request.sent_at ? new Date(request.sent_at).toLocaleString("pt-BR") : "sim"} · hash {request.sent_package_hash}.</p>
                           <div className="mt-2 flex flex-wrap items-center gap-2">

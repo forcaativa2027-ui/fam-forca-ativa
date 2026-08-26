@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { AlertTriangle, CheckCircle2, LogOut, MessageCircle, Phone, ShieldAlert, Send, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, LogOut, MessageCircle, Phone, ShieldAlert, Send, X, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,14 @@ import { decideFamProtection } from "@/services/famProtectionFlow";
 
 const EMERGENCY_180 = "180";
 const EMERGENCY_190 = "190";
+
+function getFamAttachmentStatus(attachment: FamAttachment): { label: string; selectable: boolean; className: string } {
+  const expired = Boolean(attachment.retention_expires_at && Date.parse(attachment.retention_expires_at) <= Date.now());
+  if (expired || attachment.deleted_at) return { label: "Expirado ou removido — não pode ser selecionado", selectable: false, className: "text-fam-muted" };
+  if (attachment.malware_scan_status === "clean") return { label: "Limpo — disponível para encaminhamento", selectable: true, className: "text-fam-success" };
+  if (attachment.malware_scan_status === "pending") return { label: "Em quarentena — aguardando verificação", selectable: false, className: "text-fam-muted" };
+  return { label: "Bloqueado — falha ou ameaça identificada", selectable: false, className: "text-fam-danger" };
+}
 
 function getFamReferralStatusLabel(status: FamReferralRequest["status"]): string {
   const labels: Record<FamReferralRequest["status"], string> = {
@@ -545,7 +553,7 @@ export function FamRiskAnalysisPage() {
           <CardContent className="space-y-4">
             <p className="rounded-lg bg-fam-lavender p-4 text-sm leading-relaxed">{protectionDecision.guidance}</p>
             <p className="text-xs leading-relaxed text-fam-muted">{protectionDecision.disclaimer}</p>
-            {userId && caseId ? <Card className="border-fam-lavender"><CardContent className="space-y-3 p-4"><div><p className="text-sm font-semibold text-fam-deep-plum">Anexos do caso</p><p className="mt-1 text-xs text-fam-muted">Arquivos enviados ficam em quarentena até a verificação. Somente arquivos marcados como limpos podem ser selecionados para encaminhamento.</p></div><FileUploader userId={userId} caseId={caseId} accept="image/*,application/pdf,audio/*,video/*" onUploadComplete={() => listForCase(caseId).then(setAttachments).catch(() => setAttachments([]))} />{attachments.length > 0 && <div className="space-y-2">{attachments.map((attachment) => <label key={attachment.id} className="flex items-start gap-2 rounded-md border p-2 text-xs"><input type="checkbox" disabled={attachment.malware_scan_status !== "clean"} checked={selectedAttachmentIds.includes(attachment.id)} onChange={(event) => setSelectedAttachmentIds((previous) => event.target.checked ? [...previous, attachment.id] : previous.filter((id) => id !== attachment.id))} /><span><b>{attachment.original_name}</b><span className="ml-1 text-fam-muted">{attachment.malware_scan_status === "clean" ? "Disponível para seleção" : "Aguardando verificação de segurança"}</span></span></label>)}</div>}</CardContent></Card> : null}
+            {userId && caseId ?             <Card className="border-fam-lavender"><CardContent className="space-y-3 p-4"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-semibold text-fam-deep-plum">Anexos do caso</p><p className="mt-1 text-xs text-fam-muted">Arquivos enviados ficam em quarentena até a verificação. Somente arquivos limpos e dentro do prazo de retenção podem ser selecionados.</p></div><Button type="button" size="sm" variant="outline" onClick={() => listForCase(caseId).then(setAttachments).catch(() => setAttachments([]))}><RefreshCw className="mr-2 h-3 w-3" /> Atualizar status</Button></div><FileUploader userId={userId} caseId={caseId} accept="image/*,application/pdf,audio/*,video/*" onUploadComplete={() => listForCase(caseId).then(setAttachments).catch(() => setAttachments([]))} />{attachments.length > 0 && <div className="space-y-2">{attachments.map((attachment) => { const state = getFamAttachmentStatus(attachment); return <label key={attachment.id} className="flex items-start gap-2 rounded-md border p-2 text-xs"><input type="checkbox" disabled={!state.selectable} checked={selectedAttachmentIds.includes(attachment.id)} onChange={(event) => setSelectedAttachmentIds((previous) => event.target.checked ? [...previous, attachment.id] : previous.filter((id) => id !== attachment.id))} /><span><b>{attachment.original_name}</b><span className={`ml-1 ${state.className}`}>{state.label}</span></span></label>; })}</div>}</CardContent></Card> : null}
             <div className="rounded-lg border border-fam-gold/30 bg-fam-gold-soft/10 p-3 text-xs text-fam-deep-plum">
               Estado da jornada: <b>{assessmentState}</b>.
               {evaluation.specialFlowFlags.length > 0 && (
