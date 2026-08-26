@@ -121,7 +121,7 @@ export default function PublicHome() {
           {/* Hero rotativo (carousel) — fallback para hero estático se sem banners */}
           <HeroCarousel banners={banners}
             onSeeVideos={() => setTab("videos")}
-            onSeeServices={() => setTab("agenda")}
+            onSeeServices={() => { window.location.href = "/fale-conosco"; }}
           />
 
 
