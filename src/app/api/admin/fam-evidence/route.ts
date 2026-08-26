@@ -78,6 +78,16 @@ export async function PATCH(req: Request) {
   return NextResponse.json({ ok: true, request_id: result?.request_id, is_valid: result?.is_valid, package_hash: result?.package_hash, verified_at: result?.verified_at });
 }
 
+/** Prévia do expurgo: não remove nem expõe caminhos ou nomes de arquivos. */
+export async function GET(req: Request) {
+  const caller = await getAdminCaller(req);
+  if (!caller) return NextResponse.json({ error: "Acesso restrito a atendentes FAM ativos." }, { status: 403 });
+  const cutoff = new Date().toISOString();
+  const { count, error } = await caller.admin.from("fam_risk_attachments").select("id", { count: "exact", head: true }).is("deleted_at", null).eq("legal_hold", false).lt("retention_expires_at", cutoff);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true, eligible_count: count ?? 0, cutoff });
+}
+
 /** Expurgo lógico de metadados vencidos; o arquivo físico é removido somente após a atualização auditada. */
 export async function DELETE(req: Request) {
   const caller = await getAdminCaller(req);
