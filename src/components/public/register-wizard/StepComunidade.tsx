@@ -39,7 +39,12 @@ export function StepComunidade({ s, update, churches, cells, onBack, onNext }: {
       </div>
 
       <div className="space-y-2">
-        {churches.map((c) => {
+        {churches.length === 0 ? (
+          <div className="rounded-xl border-2 border-dashed border-gold/40 bg-gold/5 p-4 text-sm text-muted">
+            <p className="font-semibold text-navy">Nenhuma região de atendimento está disponível no momento.</p>
+            <p className="mt-1">A equipe FAM precisa ativar uma região antes que o cadastro possa continuar. Atualize a página após a configuração ou fale com a equipe de atendimento.</p>
+          </div>
+        ) : churches.map((c) => {
           const selected = s.community_id === c.id;
           return (
             <button key={c.id} type="button"
