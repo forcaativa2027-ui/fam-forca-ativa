@@ -5,7 +5,8 @@ alter table if exists public.churches
   add column if not exists city text,
   add column if not exists state text,
   add column if not exists slug text,
-  add column if not exists is_active boolean not null default true;
+  add column if not exists is_active boolean not null default true,
+  add column if not exists short_description text;
 
 -- Regiões-base previstas na documentação multicomunidade.
 insert into public.churches (name, type, parent_id, slug, address, city, state, is_active, short_description)
