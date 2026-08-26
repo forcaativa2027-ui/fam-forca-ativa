@@ -263,6 +263,7 @@ export default function FamAtendimentoAdmin() {
                         <p><b>Resumo para revisão:</b> destinatário {request.recipient}; finalidade: {request.purpose}; prioridade: {request.priority}.</p>
                         <p className="mt-1"><b>Escopo textual:</b> {request.requested_data.join(", ") || "nenhum dado textual informado"}.</p>
                         <p className="mt-1"><b>Anexos selecionados:</b> {request.selected_attachment_ids.length ? request.selected_attachment_ids.join(", ") : "nenhum"}.</p>
+                        {request.status === "sent" && request.sent_package_hash && <p className="mt-1"><b>Pacote congelado:</b> {request.sent_at ? new Date(request.sent_at).toLocaleString("pt-BR") : "sim"} · hash {request.sent_package_hash}.</p>}
                       </div>
                       <p className="text-xs text-fam-muted">Recebimento não significa atendimento, investigação ou adoção de providência.</p>
                     </div>

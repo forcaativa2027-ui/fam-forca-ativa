@@ -17,6 +17,9 @@ export interface FamReferralRequest {
   explicit_confirmation_at: string;
   created_at: string;
   updated_at: string;
+  sent_at?: string | null;
+  sent_package_snapshot?: Record<string, unknown> | null;
+  sent_package_hash?: string | null;
 }
 
 export async function createFamReferralRequest(
