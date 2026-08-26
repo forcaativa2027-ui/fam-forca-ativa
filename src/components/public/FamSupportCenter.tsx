@@ -16,6 +16,10 @@ import {
   type FamRiskAnswerValue,
 } from "@/services/famRiskEngine";
 import {
+  resolveFamReferralOptions,
+  type FamReferralOption,
+} from "@/services/famReferrals";
+import {
   stateForEvaluation,
   transitionAssessment,
   type FamAssessmentState,
@@ -295,10 +299,12 @@ export function FamRiskAnalysisPage() {
   const [submitted, setSubmitted] = useState(false);
   const [assessmentState, setAssessmentState] = useState<FamAssessmentState>("IN_PROGRESS");
   const [openContact, setOpenContact] = useState(false);
+  const [selectedReferral, setSelectedReferral] = useState<FamReferralOption | null>(null);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [caseId, setCaseId] = useState<string | undefined>(undefined);
   const { riskCase, create, saveAnswers, submitAssessment, loading: riskLoading, error: riskError } = useFamRiskCase(userId);
   const evaluation = evaluateFamRisk(answers);
+  const referralOptions = resolveFamReferralOptions(evaluation);
   const urgent = evaluation.emergency;
   const complete = FAM_RISK_QUESTIONS.every(({ key }) => answers[key]);
 
@@ -347,6 +353,7 @@ export function FamRiskAnalysisPage() {
     setAnswers({});
     setSubmitted(false);
     setAssessmentState("IN_PROGRESS");
+    setSelectedReferral(null);
     setCaseId(undefined);
   };
 
@@ -443,6 +450,39 @@ export function FamRiskAnalysisPage() {
                 <> Fluxo especial acionado: <b>{evaluation.specialFlowFlags.join(", ")}</b>.</>
               )}
             </div>
+            {referralOptions.length > 0 && (
+              <div className="space-y-3 rounded-lg border border-fam-gold/30 bg-fam-gold-soft/10 p-4">
+                <div>
+                  <h3 className="font-semibold text-fam-deep-plum">Possíveis caminhos de proteção</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-fam-muted">
+                    Estas são possibilidades informativas. Nenhum dado será enviado sem uma escolha explícita e confirmação adequada.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  {referralOptions.map((option) => (
+                    <button
+                      key={option.code}
+                      type="button"
+                      onClick={() => setSelectedReferral(option)}
+                      className={`w-full rounded-lg border p-3 text-left transition ${selectedReferral?.code === option.code ? "border-fam-magenta bg-white" : "border-fam-gold/30 bg-white/70 hover:border-fam-magenta/60"}`}
+                    >
+                      <span className="block text-sm font-semibold text-fam-deep-plum">{option.label}</span>
+                      <span className="mt-1 block text-xs text-fam-muted">{option.purpose}</span>
+                      <span className="mt-1 block text-[11px] text-fam-muted">Prioridade: {option.priority}</span>
+                    </button>
+                  ))}
+                </div>
+                {selectedReferral && (
+                  <div className="rounded-md bg-white p-3 text-xs leading-relaxed text-fam-deep-plum">
+                    <p><b>O que pode ser compartilhado:</b> {selectedReferral.dataScope.join(", ")}.</p>
+                    <p className="mt-1">{selectedReferral.disclaimer}</p>
+                    <Button type="button" size="sm" className="mt-3" onClick={() => setOpenContact(true)}>
+                      Conversar com uma atendente sobre este caminho
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="flex flex-wrap gap-2">
               <Button onClick={() => setOpenContact(true)} className="gap-2">
                 <MessageCircle className="h-4 w-4" /> Fale com uma atendente

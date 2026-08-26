@@ -81,6 +81,12 @@ A Análise de Risco usa o estado calculado tanto para persistência quanto para 
 
 A migration `FAM003_avaliacao_versionada_auditoria.sql` foi ampliada com `assessment_state`, códigos de transição e a tabela `fam_assessment_state_history`, com políticas RLS de leitura e inserção limitadas ao caso do usuário. A conclusão persistida também registra `ASSESSMENT_COMPLETED` em `fam_audit_events`, usando apenas metadados técnicos e seguros. A migration ainda não foi aplicada ao Supabase remoto.
 
-## 9. Limites desta entrega
+## 9. Incremento adicional — encaminhamento orientativo
 
-Esta entrega implementa uma fundação técnica, as correções UX prioritárias e o segundo incremento do fluxo vertical de proteção, mas não declara que todos os requisitos do pacote documental ou do COR-UX-01 estão concluídos. Nenhuma migration foi aplicada remotamente, nenhum arquivo foi enviado ao GitHub e nenhum dado de produção foi alterado. As alterações permanecem no clone local para revisão e aprovação.
+Foi criado `famReferrals.ts` com o catálogo versionado `FAM-REFERRAL-1.0`. O catálogo representa CRAS, Polícia Civil, Ministério Público, Saúde e outros órgãos competentes como destinatários institucionais, mas não cria acesso automático ao banco da FAM nem permite o envio de histórico completo.
+
+As opções são calculadas a partir dos sinais do motor de risco e exibem finalidade, prioridade, motivo, escopo mínimo de dados e a ressalva de que recebimento não significa atendimento, investigação ou adoção de providência. Na tela de resultado, a usuária pode selecionar um caminho informativo e conversar com uma atendente; não há disparo automático de encaminhamento.
+
+## 10. Limites desta entrega
+
+Esta entrega implementa uma fundação técnica, as correções UX prioritárias, o fluxo vertical de proteção e o catálogo orientativo de encaminhamentos, mas não declara que todos os requisitos do pacote documental ou do COR-UX-01 estão concluídos. Nenhuma migration foi aplicada remotamente, nenhum arquivo foi enviado ao GitHub e nenhum dado de produção foi alterado. As alterações permanecem no clone local para revisão e aprovação.
