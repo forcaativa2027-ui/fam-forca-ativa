@@ -7,11 +7,14 @@ import type { RegisterState, UpdateFn } from "./RegisterWizardTypes";
 // ============================================================
 // ETAPA 6 — Região de atendimento e grupo de apoio FAM
 // ============================================================
-export function StepComunidade({ s, update, churches, cells, onBack, onNext }: {
+export function StepComunidade({ s, update, churches, cells, churchesLoading, churchesError, onRetryChurches, onBack, onNext }: {
   s: RegisterState;
   update: UpdateFn;
   churches: { id: string; name: string; type: string; city: string | null; state: string | null }[];
   cells: { id: string; name: string; church_id: string | null; state: string | null; city: string | null; neighborhood: string | null; meeting_weekday: string | null; meeting_time: string | null; is_active: boolean }[];
+  churchesLoading?: boolean;
+  churchesError?: boolean;
+  onRetryChurches?: () => void;
   onBack: () => void; onNext: () => void;
 }) {
   const [err, setErr] = useState("");
@@ -39,7 +42,15 @@ export function StepComunidade({ s, update, churches, cells, onBack, onNext }: {
       </div>
 
       <div className="space-y-2">
-        {churches.length === 0 ? (
+        {churchesLoading ? (
+          <div className="rounded-xl border-2 border-dashed border-border bg-card p-4 text-sm text-muted">Carregando regiões de atendimento...</div>
+        ) : churchesError ? (
+          <div className="rounded-xl border-2 border-dashed border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
+            <p className="font-semibold">Não foi possível carregar as regiões.</p>
+            <p className="mt-1">Verifique sua conexão e tente novamente. Se o problema persistir, fale com a equipe FAM.</p>
+            {onRetryChurches && <button type="button" onClick={onRetryChurches} className="mt-3 rounded-lg border border-destructive/40 px-3 py-2 text-xs font-semibold">Tentar novamente</button>}
+          </div>
+        ) : churches.length === 0 ? (
           <div className="rounded-xl border-2 border-dashed border-gold/40 bg-gold/5 p-4 text-sm text-muted">
             <p className="font-semibold text-navy">Nenhuma região de atendimento está disponível no momento.</p>
             <p className="mt-1">A equipe FAM precisa ativar uma região antes que o cadastro possa continuar. Atualize a página após a configuração ou fale com a equipe de atendimento.</p>

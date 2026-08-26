@@ -25,7 +25,8 @@ import { StepFinalizacao } from "./register-wizard/StepFinalizacao";
 export default function RegisterWizard() {
   const params = useSearchParams();
   const initialIntent = (params.get("intent") as PipelineIntent | null) ?? "conhecer";
-  const { data: churches = [] } = useChurches();
+  const churchesQuery = useChurches();
+  const { data: churches = [], isLoading: churchesLoading, isError: churchesError, refetch: refetchChurches } = churchesQuery;
   const { data: cells = [] } = useCells();
   const { data: activeCommunity } = useActiveCommunity();
   const [s, setS] = useState<RegisterState>({ ...INITIAL_STATE, intent: initialIntent });
@@ -85,7 +86,7 @@ export default function RegisterWizard() {
             {s.step === 3 && <StepVerificacao s={s} update={update} onBack={() => goTo(2)} onNext={() => goTo(4)} />}
             {s.step === 4 && <StepPessoal s={s} update={update} onBack={() => goTo(3)} onNext={() => goTo(5)} />}
             {s.step === 5 && <StepLocalizacao s={s} update={update} onBack={() => goTo(4)} onNext={() => goTo(6)} />}
-            {s.step === 6 && <StepComunidade s={s} update={update} churches={churches} cells={cells} onBack={() => goTo(5)} onNext={() => goTo(7)} />}
+            {s.step === 6 && <StepComunidade s={s} update={update} churches={churches} cells={cells} churchesLoading={churchesLoading} churchesError={churchesError} onRetryChurches={() => { void refetchChurches(); }} onBack={() => goTo(5)} onNext={() => goTo(7)} />}
             {s.step === 7 && <StepFe s={s} update={update} onBack={() => goTo(6)} onNext={() => goTo(8)} />}
             {s.step === 8 && <StepJornada s={s} update={update} onBack={() => goTo(7)} onNext={() => goTo(9)} />}
             {s.step === 9 && <StepIntencao s={s} update={update} onBack={() => goTo(8)} onNext={() => goTo(10)} />}
