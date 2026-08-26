@@ -7,6 +7,7 @@ create table if not exists public.fam_risk_questionnaires (
   code text,
   name text,
   version text,
+  methodology_version text,
   status text default 'draft',
   source_document text,
   approved_at timestamptz,
@@ -18,6 +19,7 @@ create table if not exists public.fam_risk_questionnaires (
 alter table public.fam_risk_questionnaires add column if not exists code text;
 alter table public.fam_risk_questionnaires add column if not exists name text;
 alter table public.fam_risk_questionnaires add column if not exists version text;
+alter table public.fam_risk_questionnaires add column if not exists methodology_version text;
 alter table public.fam_risk_questionnaires add column if not exists status text default 'draft';
 alter table public.fam_risk_questionnaires add column if not exists source_document text;
 alter table public.fam_risk_questionnaires add column if not exists approved_at timestamptz;
@@ -32,6 +34,10 @@ where code is null or btrim(code) = '';
 update public.fam_risk_questionnaires
 set name = 'Questionário de sinais de atenção FAM'
 where name is null or btrim(name) = '';
+
+update public.fam_risk_questionnaires
+set methodology_version = coalesce(nullif(version, ''), 'OC-04-v1.1')
+where methodology_version is null or btrim(methodology_version) = '';
 
 update public.fam_risk_questionnaires
 set status = 'draft'
@@ -89,8 +95,8 @@ create unique index if not exists fam_risk_questions_order_uidx
   on public.fam_risk_questions (questionnaire_id, order_index)
   where questionnaire_id is not null and order_index is not null;
 
-insert into public.fam_risk_questionnaires (code, name, version, status, source_document)
-select 'FAM-RISK-MAP', 'Questionário de sinais de atenção FAM', 'OC-04-v1.1', 'draft', 'OC-04_Matriz_Situacoes_Risco_Respostas_v1.1.md'
+insert into public.fam_risk_questionnaires (code, name, version, methodology_version, status, source_document)
+select 'FAM-RISK-MAP', 'Questionário de sinais de atenção FAM', 'OC-04-v1.1', 'OC-04-v1.1', 'draft', 'OC-04_Matriz_Situacoes_Risco_Respostas_v1.1.md'
 where not exists (
   select 1 from public.fam_risk_questionnaires
   where version = 'OC-04-v1.1' or code = 'FAM-RISK-MAP'
