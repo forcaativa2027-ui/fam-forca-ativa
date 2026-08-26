@@ -300,9 +300,11 @@ export function FamRiskAnalysisPage() {
   const [assessmentState, setAssessmentState] = useState<FamAssessmentState>("IN_PROGRESS");
   const [openContact, setOpenContact] = useState(false);
   const [selectedReferral, setSelectedReferral] = useState<FamReferralOption | null>(null);
+  const [referralConfirmed, setReferralConfirmed] = useState(false);
+  const [referralRequestStatus, setReferralRequestStatus] = useState<"idle" | "requested">("idle");
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [caseId, setCaseId] = useState<string | undefined>(undefined);
-  const { riskCase, create, saveAnswers, submitAssessment, loading: riskLoading, error: riskError } = useFamRiskCase(userId);
+  const { riskCase, create, saveAnswers, submitAssessment, requestReferral, loading: riskLoading, error: riskError } = useFamRiskCase(userId);
   const evaluation = evaluateFamRisk(answers);
   const referralOptions = resolveFamReferralOptions(evaluation);
   const urgent = evaluation.emergency;
@@ -349,11 +351,24 @@ export function FamRiskAnalysisPage() {
     }
   };
 
+  const handleReferralRequest = async () => {
+    if (!selectedReferral || !referralConfirmed || !userId || !caseId) return;
+    try {
+      await requestReferral(caseId, userId, selectedReferral);
+      setReferralRequestStatus("requested");
+    } catch (e) {
+      console.error("Erro ao registrar encaminhamento:", e);
+      alert("Não foi possível registrar o pedido. Nenhum dado foi enviado ao destinatário.");
+    }
+  };
+
   const handleRestart = () => {
     setAnswers({});
     setSubmitted(false);
     setAssessmentState("IN_PROGRESS");
     setSelectedReferral(null);
+    setReferralConfirmed(false);
+    setReferralRequestStatus("idle");
     setCaseId(undefined);
   };
 
@@ -476,9 +491,35 @@ export function FamRiskAnalysisPage() {
                   <div className="rounded-md bg-white p-3 text-xs leading-relaxed text-fam-deep-plum">
                     <p><b>O que pode ser compartilhado:</b> {selectedReferral.dataScope.join(", ")}.</p>
                     <p className="mt-1">{selectedReferral.disclaimer}</p>
-                    <Button type="button" size="sm" className="mt-3" onClick={() => setOpenContact(true)}>
-                      Conversar com uma atendente sobre este caminho
-                    </Button>
+                    {!userId || !caseId ? (
+                      <p className="mt-3 text-xs text-fam-muted">
+                        Entre na sua conta para registrar um pedido de encaminhamento. Você também pode conversar com uma atendente sem enviar esse pedido.
+                      </p>
+                    ) : referralRequestStatus === "requested" ? (
+                      <p className="mt-3 rounded-md bg-fam-success/10 p-2 text-xs text-fam-success">
+                        Pedido registrado. Ele ainda não foi enviado ao destinatário e será revisado por uma profissional autorizada.
+                      </p>
+                    ) : (
+                      <>
+                        <label className="mt-3 flex items-start gap-2 text-xs">
+                          <input
+                            type="checkbox"
+                            checked={referralConfirmed}
+                            onChange={(event) => setReferralConfirmed(event.target.checked)}
+                            className="mt-0.5"
+                          />
+                          <span>Confirmo que entendi o destinatário, a finalidade e o escopo mínimo de informações acima.</span>
+                        </label>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Button type="button" size="sm" disabled={!referralConfirmed || riskLoading} onClick={handleReferralRequest}>
+                            Registrar pedido de encaminhamento
+                          </Button>
+                          <Button type="button" size="sm" variant="outline" onClick={() => setOpenContact(true)}>
+                            Conversar com uma atendente
+                          </Button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

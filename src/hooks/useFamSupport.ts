@@ -21,6 +21,8 @@ import {
   getRiskAnswers,
 } from "@/services/famRisk";
 import type { FamRiskCase, FamRiskAnswer } from "@/services/famRisk";
+import { createFamReferralRequest } from "@/services/famReferralRequests";
+import type { FamReferralOption } from "@/services/famReferrals";
 import {
   uploadAttachment,
   getAttachmentUrl,
@@ -157,6 +159,18 @@ export function useFamRiskCase(userId?: string) {
     await saveRiskAnswers(supabase, caseId, answers);
   };
 
+  const requestReferral = async (caseId: string, userId: string, option: FamReferralOption) => {
+    setLoading(true);
+    try {
+      return await createFamReferralRequest(supabase, { caseId, userId, option });
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Erro ao registrar encaminhamento");
+      throw e;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const submitAssessment = async (
     caseId: string,
     assessment: {
@@ -185,7 +199,7 @@ export function useFamRiskCase(userId?: string) {
     }
   };
 
-  return { riskCase, loading, error, create, saveAnswers, submitAssessment };
+  return { riskCase, loading, error, create, saveAnswers, submitAssessment, requestReferral };
 }
 
 // ===== Attachments =====

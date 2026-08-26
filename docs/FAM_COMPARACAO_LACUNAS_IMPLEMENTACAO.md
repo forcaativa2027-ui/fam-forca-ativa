@@ -87,6 +87,12 @@ Foi criado `famReferrals.ts` com o catálogo versionado `FAM-REFERRAL-1.0`. O ca
 
 As opções são calculadas a partir dos sinais do motor de risco e exibem finalidade, prioridade, motivo, escopo mínimo de dados e a ressalva de que recebimento não significa atendimento, investigação ou adoção de providência. Na tela de resultado, a usuária pode selecionar um caminho informativo e conversar com uma atendente; não há disparo automático de encaminhamento.
 
-## 10. Limites desta entrega
+## 10. Incremento adicional — solicitação explícita de encaminhamento
 
-Esta entrega implementa uma fundação técnica, as correções UX prioritárias, o fluxo vertical de proteção e o catálogo orientativo de encaminhamentos, mas não declara que todos os requisitos do pacote documental ou do COR-UX-01 estão concluídos. Nenhuma migration foi aplicada remotamente, nenhum arquivo foi enviado ao GitHub e nenhum dado de produção foi alterado. As alterações permanecem no clone local para revisão e aprovação.
+Foi criada a migration `FAM004_solicitacoes_encaminhamento.sql` e o serviço `famReferralRequests.ts`. A solicitação registra caso, usuária, destinatário, finalidade, prioridade, motivo, escopo mínimo de dados, anexos selecionados, status e horário de confirmação. As políticas RLS limitam leitura e inserção à usuária autenticada do caso.
+
+Na interface, o registro só pode ocorrer depois de selecionar um caminho, marcar a confirmação de entendimento e estar com uma avaliação autenticada. O registro tem status próprio (`requested`, `under_review`, `sent`, `received` ou `cancelled`) e não representa envio, recebimento ou garantia de atendimento. Para visitantes sem login, a interface oferece conversa com atendente ou login, sem registrar solicitação.
+
+## 11. Limites desta entrega
+
+Esta entrega implementa uma fundação técnica, as correções UX prioritárias, o fluxo vertical de proteção, o catálogo orientativo e a solicitação explícita de encaminhamentos, mas não declara que todos os requisitos do pacote documental ou do COR-UX-01 estão concluídos. Nenhuma migration foi aplicada remotamente, nenhum arquivo foi enviado ao GitHub e nenhum dado de produção foi alterado. As alterações permanecem no clone local para revisão e aprovação.
