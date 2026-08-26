@@ -114,8 +114,14 @@ set code = coalesce(nullif(question_key, ''), 'FAM-RISK-QUESTION-' || id::text)
 where code is null or btrim(code) = '';
 
 update public.fam_risk_questions
-set text = coalesce(nullif(question_text, ''), 'Pergunta de avaliação de risco FAM')
+set text = coalesce(nullif(question_text, ''), nullif(text, ''), 'Pergunta de avaliação de risco FAM')
 where text is null or btrim(text) = '';
+
+update public.fam_risk_questions x
+set question_key = coalesce(nullif(x.question_key, ''), nullif(x.code, '')),
+    question_text = coalesce(nullif(x.question_text, ''), nullif(x.text, ''), 'Pergunta de avaliação de risco FAM'),
+    text = coalesce(nullif(x.text, ''), nullif(x.question_text, ''), 'Pergunta de avaliação de risco FAM')
+where x.question_key is null or btrim(x.question_key) = '' or x.question_text is null or btrim(x.question_text) = '';
 
 create unique index if not exists fam_risk_questions_question_uidx
   on public.fam_risk_questions (questionnaire_id, question_key)
@@ -146,7 +152,8 @@ cross join (values
 where q.version = 'OC-04-v1.1'
   and not exists (
     select 1 from public.fam_risk_questions x
-    where x.questionnaire_id = q.id and x.question_key = v.question_key
+    where x.questionnaire_id = q.id
+      and (x.question_key = v.question_key or x.code = v.question_key)
   );
 
 alter table public.fam_risk_questionnaires enable row level security;
