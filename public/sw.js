@@ -3,9 +3,9 @@ const APP_SHELL = [
   "/",
   "/radio",
   "/manifest.json",
-  "/assets/servo360/icons/app/web-radio-app-192.png",
-  "/assets/servo360/icons/app/web-radio-app-512.png",
-  "/assets/servo360/icons/app/web-radio-app-maskable-512.png",
+  "/icons/app/web-radio-app-192.png",
+  "/icons/app/web-radio-app-512.png",
+  "/icons/app/web-radio-app-maskable-512.png",
 ];
 
 self.addEventListener("install", (event) => {
