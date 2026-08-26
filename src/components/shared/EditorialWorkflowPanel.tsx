@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useContentWorkflowState, useMyProfile } from "@/hooks/use-queries";
 import { supabase } from "@/lib/supabase/client";
 import { submitContentForReview, reviewContent, setContentWorkflowStatus } from "@/services/editorialWorkflow";
+import { transitionFamBannerWorkflow, type FamBannerWorkflowAction } from "@/services/banners";
 import type { ContentWorkflowStatus } from "@/types/domain";
 
 const STATUS_LABELS: Record<ContentWorkflowStatus, string> = {
@@ -45,6 +46,17 @@ export function EditorialWorkflowPanel({ entityType, entityId }: { entityType: s
     finally { setBusy(false); }
   }
 
+  async function transition(action: FamBannerWorkflowAction, workflowStatus: ContentWorkflowStatus, transitionNote: string | null = null) {
+    if (entityType === "banner") {
+      await transitionFamBannerWorkflow(supabase, entityId!, action, transitionNote);
+      return;
+    }
+    if (action === "enviar_revisao") await submitContentForReview(supabase, entityType, entityId!);
+    else if (action === "aprovar") await reviewContent(supabase, entityType, entityId!, true, transitionNote);
+    else if (action === "reprovar") await reviewContent(supabase, entityType, entityId!, false, transitionNote);
+    else await setContentWorkflowStatus(supabase, entityType, entityId!, workflowStatus);
+  }
+
   if (!entityId) return null;
   const status = state?.status ?? "rascunho";
 
@@ -66,7 +78,7 @@ export function EditorialWorkflowPanel({ entityType, entityId }: { entityType: s
       <div className="flex flex-wrap gap-1.5">
         {status === "rascunho" && (
           <Button type="button" size="sm" variant="outline" disabled={busy} className="gap-1.5"
-            onClick={() => run(() => submitContentForReview(supabase, entityType, entityId))}>
+            onClick={() => run(() => transition("enviar_revisao", "em_revisao"))}>
             <Send className="h-3.5 w-3.5" /> Enviar pra revisão
           </Button>
         )}
@@ -74,7 +86,7 @@ export function EditorialWorkflowPanel({ entityType, entityId }: { entityType: s
         {status === "em_revisao" && canReview && !showRejectNote && (
           <>
             <Button type="button" size="sm" className="gap-1.5" disabled={busy}
-              onClick={() => run(() => reviewContent(supabase, entityType, entityId, true, null))}>
+              onClick={() => run(() => transition("aprovar", "aprovado"))}>
               <CheckCircle2 className="h-3.5 w-3.5" /> Aprovar
             </Button>
             <Button type="button" size="sm" variant="destructive" className="gap-1.5" disabled={busy}
@@ -90,11 +102,11 @@ export function EditorialWorkflowPanel({ entityType, entityId }: { entityType: s
         {status === "aprovado" && (
           <>
             <Button type="button" size="sm" variant="outline" className="gap-1.5" disabled={busy}
-              onClick={() => run(() => setContentWorkflowStatus(supabase, entityType, entityId, "agendado"))}>
+              onClick={() => run(() => transition("agendar", "agendado"))}>
               <CalendarClock className="h-3.5 w-3.5" /> Marcar agendado
             </Button>
             <Button type="button" size="sm" className="gap-1.5" disabled={busy}
-              onClick={() => run(() => setContentWorkflowStatus(supabase, entityType, entityId, "publicado"))}>
+              onClick={() => run(() => transition("publicar", "publicado"))}>
               <Rocket className="h-3.5 w-3.5" /> Marcar publicado
             </Button>
           </>
@@ -102,16 +114,22 @@ export function EditorialWorkflowPanel({ entityType, entityId }: { entityType: s
 
         {status === "agendado" && (
           <Button type="button" size="sm" className="gap-1.5" disabled={busy}
-            onClick={() => run(() => setContentWorkflowStatus(supabase, entityType, entityId, "publicado"))}>
+            onClick={() => run(() => transition("publicar", "publicado"))}>
             <Rocket className="h-3.5 w-3.5" /> Marcar publicado
           </Button>
         )}
 
         {status === "publicado" && (
-          <Button type="button" size="sm" variant="outline" className="gap-1.5" disabled={busy}
-            onClick={() => run(() => setContentWorkflowStatus(supabase, entityType, entityId, "arquivado"))}>
-            <Archive className="h-3.5 w-3.5" /> Arquivar
-          </Button>
+          <>
+            <Button type="button" size="sm" variant="outline" className="gap-1.5" disabled={busy}
+              onClick={() => run(() => transition("pausar", "arquivado"))}>
+              <Archive className="h-3.5 w-3.5" /> Pausar
+            </Button>
+            <Button type="button" size="sm" variant="outline" className="gap-1.5" disabled={busy}
+              onClick={() => run(() => transition("arquivar", "arquivado"))}>
+              <Archive className="h-3.5 w-3.5" /> Arquivar
+            </Button>
+          </>
         )}
       </div>
 
@@ -124,7 +142,7 @@ export function EditorialWorkflowPanel({ entityType, entityId }: { entityType: s
           />
           <div className="flex gap-2">
             <Button type="button" size="sm" variant="destructive" disabled={busy || !note.trim()}
-              onClick={() => run(async () => { await reviewContent(supabase, entityType, entityId, false, note.trim()); setShowRejectNote(false); setNote(""); })}>
+              onClick={() => run(async () => { await transition("reprovar", "rascunho", note.trim()); setShowRejectNote(false); setNote(""); })}>
               Confirmar reprovação
             </Button>
             <Button type="button" size="sm" variant="ghost" onClick={() => setShowRejectNote(false)}>Cancelar</Button>
@@ -133,7 +151,7 @@ export function EditorialWorkflowPanel({ entityType, entityId }: { entityType: s
       )}
 
       <p className="mt-2 text-[10px] text-muted-foreground">
-        Isso acompanha o processo — o campo "Publicado" do formulário continua sendo o que decide se aparece pro público.
+        {entityType === "banner" ? "A aprovação sincroniza o workflow editorial, a visibilidade e a auditoria do banner." : "Isso acompanha o processo — o campo de publicação do conteúdo continua sendo o que decide a visibilidade."}
       </p>
     </div>
   );

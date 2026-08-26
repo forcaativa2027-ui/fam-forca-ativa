@@ -225,3 +225,5 @@ válida: antes de mexer em função/tabela sem certeza, rodar introspecção
 
 > **FAM018:** migration aditiva. Não remove colunas, dados ou tokens de cor; a aplicação da migration remota deve ser validada antes do aceite.
 
+
+| `FAM019_rpc_workflow_banners.sql` | RPC transaccional que integra workflow editorial, visibilidade e auditoria de banners FAM |

@@ -104,3 +104,21 @@ export async function recordBannerEvent(
   });
   if (error) throw error;
 }
+
+export type FamBannerWorkflowAction =
+  | "enviar_revisao" | "aprovar" | "reprovar" | "agendar"
+  | "publicar" | "pausar" | "arquivar";
+
+export async function transitionFamBannerWorkflow(
+  sb: SupabaseClient,
+  bannerId: string,
+  action: FamBannerWorkflowAction,
+  note: string | null = null,
+): Promise<void> {
+  const { error } = await sb.rpc("transition_fam_banner_workflow", {
+    p_banner_id: bannerId,
+    p_action: action,
+    p_note: note,
+  });
+  if (error) throw error;
+}
