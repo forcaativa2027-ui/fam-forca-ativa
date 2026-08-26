@@ -89,6 +89,7 @@ end $$;
 create table if not exists public.fam_risk_questions (
   id uuid primary key default gen_random_uuid(),
   questionnaire_id uuid,
+  code text,
   question_key text,
   question_text text,
   source_reference text,
@@ -98,12 +99,17 @@ create table if not exists public.fam_risk_questions (
 );
 
 alter table public.fam_risk_questions add column if not exists questionnaire_id uuid;
+alter table public.fam_risk_questions add column if not exists code text;
 alter table public.fam_risk_questions add column if not exists question_key text;
 alter table public.fam_risk_questions add column if not exists question_text text;
 alter table public.fam_risk_questions add column if not exists source_reference text;
 alter table public.fam_risk_questions add column if not exists order_index integer;
 alter table public.fam_risk_questions add column if not exists answer_options jsonb;
 alter table public.fam_risk_questions add column if not exists created_at timestamptz default now();
+
+update public.fam_risk_questions
+set code = coalesce(nullif(question_key, ''), 'FAM-RISK-QUESTION-' || id::text)
+where code is null or btrim(code) = '';
 
 create unique index if not exists fam_risk_questions_question_uidx
   on public.fam_risk_questions (questionnaire_id, question_key)
@@ -120,8 +126,8 @@ where not exists (
   where version = 'OC-04-v1.1' or code = 'FAM-RISK-MAP'
 );
 
-insert into public.fam_risk_questions (questionnaire_id, question_key, question_text, source_reference, order_index, answer_options)
-select q.id, v.question_key, v.question_text, v.source_reference, v.order_index,
+insert into public.fam_risk_questions (questionnaire_id, code, question_key, question_text, source_reference, order_index, answer_options)
+select q.id, v.question_key, v.question_key, v.question_text, v.source_reference, v.order_index,
   '[{"value":"YES","label":"Sim"},{"value":"NO","label":"Não"},{"value":"PREFER_NOT_TO_ANSWER","label":"Prefiro não responder"}]'::jsonb
 from public.fam_risk_questionnaires q
 cross join (values
