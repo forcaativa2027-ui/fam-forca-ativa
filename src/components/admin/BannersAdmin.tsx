@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase/client";
 import {
   createBanner, updateBanner, deleteBanner, swapBannerOrder,
 } from "@/services/banners";
+import { EditorialWorkflowPanel } from "@/components/shared/EditorialWorkflowPanel";
 import { logAudit, diffFields } from "@/services/audit";
 import type { Banner } from "@/types/domain";
 
@@ -49,8 +50,16 @@ export function BannersAdmin() {
       title: b.title,
       subtitle: b.subtitle ?? "",
       image_url: b.image_url ?? "",
+      desktop_image_url: b.desktop_image_url ?? b.image_url ?? "",
+      mobile_image_url: b.mobile_image_url ?? "",
+      image_alt: b.image_alt ?? "",
+      institutional_label: b.institutional_label ?? "FAM · FORÇA ATIVA DA MULHER",
       cta_label: b.cta_label ?? "",
       cta_url: b.cta_url ?? "",
+      cta_kind: b.cta_kind ?? "internal",
+      priority: b.priority ?? b.sort_order ?? 0,
+      audience: b.audience ?? "publico_geral",
+      campaign_key: b.campaign_key ?? "",
       is_active: b.is_active,
       starts_at: fromIsoToLocal(b.starts_at),
       ends_at: fromIsoToLocal(b.ends_at),
@@ -66,9 +75,17 @@ export function BannersAdmin() {
       const payload: Partial<Banner> & { church_id?: string | null } = {
         title: v.title,
         subtitle: v.subtitle || null,
-        image_url: v.image_url || null,
+        image_url: v.image_url || v.desktop_image_url || null,
+        desktop_image_url: v.desktop_image_url || v.image_url || null,
+        mobile_image_url: v.mobile_image_url || null,
+        image_alt: v.image_alt || null,
+        institutional_label: v.institutional_label || "FAM · FORÇA ATIVA DA MULHER",
         cta_label: v.cta_label || null,
         cta_url: v.cta_url || null,
+        cta_kind: v.cta_kind,
+        priority: v.priority,
+        audience: v.audience,
+        campaign_key: v.campaign_key || null,
         is_active: v.is_active,
         starts_at: toIsoOrNull(v.starts_at),
         ends_at: toIsoOrNull(v.ends_at),
@@ -150,9 +167,22 @@ export function BannersAdmin() {
                 className="w-full rounded-md border bg-background p-3 text-sm"
                 placeholder="Frase explicativa (opcional)" />
             </Field>
-            <Field label="Imagem de fundo (URL)" error={errors.image_url?.message}>
-              <Input {...register("image_url")} placeholder="https://..." />
-            </Field>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Imagem desktop (URL)" error={errors.desktop_image_url?.message}>
+                <Input {...register("desktop_image_url")} placeholder="https://..." />
+              </Field>
+              <Field label="Imagem mobile (URL)">
+                <Input {...register("mobile_image_url")} placeholder="https://... (opcional)" />
+              </Field>
+            </div>
+            <Field label="Texto alternativo da imagem"><Input {...register("image_alt")} placeholder="Descreva a informação relevante da imagem" /></Field>
+            <Field label="Label institucional"><Input {...register("institutional_label")} placeholder="FAM · FORÇA ATIVA DA MULHER" /></Field>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="Tipo de CTA"><select {...register("cta_kind")} className="h-10 w-full rounded-md border bg-background px-3 text-sm"><option value="internal">Rota interna</option><option value="ancora">Seção da página</option><option value="formulario">Formulário</option><option value="externo">Link externo</option><option value="telefone">Telefone</option><option value="emergencia">Emergência</option></select></Field>
+              <Field label="Prioridade"><Input type="number" min={0} max={999} {...register("priority")} /></Field>
+              <Field label="Público"><select {...register("audience")} className="h-10 w-full rounded-md border bg-background px-3 text-sm"><option value="publico_geral">Público geral</option><option value="beneficiarias">Beneficiárias</option><option value="voluntarias">Voluntárias</option><option value="equipe">Equipe</option></select></Field>
+            </div>
+            <Field label="Campanha"><Input {...register("campaign_key")} placeholder="Ex.: acolhimento-2026 (opcional)" /></Field>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Texto do botão"><Input {...register("cta_label")} placeholder="Ex: Inscreva-se" /></Field>
               <Field label="Link do botão" error={errors.cta_url?.message}><Input {...register("cta_url")} placeholder="https://..." /></Field>
@@ -202,6 +232,7 @@ export function BannersAdmin() {
                 <Button onClick={() => move(b, "up")}   variant="ghost" size="sm" disabled={idx === 0}            className="h-7 w-7 p-0"><ChevronUp className="h-3.5 w-3.5" /></Button>
                 <Button onClick={() => move(b, "down")} variant="ghost" size="sm" disabled={idx === sorted.length-1} className="h-7 w-7 p-0"><ChevronDown className="h-3.5 w-3.5" /></Button>
               </div>
+              <EditorialWorkflowPanel entityType="banner" entityId={b.id} />
               <Button onClick={() => toggleActive(b)} variant="outline" size="sm" title={b.is_active ? "Desativar" : "Ativar"}>
                 {b.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
               </Button>

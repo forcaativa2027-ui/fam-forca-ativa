@@ -327,13 +327,25 @@ export const financeSchema = z.object({
 });
 export type FinanceFormInput = z.infer<typeof financeSchema>;
 
-// M1b — Banners (Hero Carousel)
+// FAM018 — Carrossel Institucional e Workflow Editorial
+const bannerCtaKind = z.enum(["internal", "ancora", "formulario", "externo", "telefone", "emergencia"]);
+const bannerAudience = z.enum(["publico_geral", "beneficiarias", "voluntarias", "equipe"]);
 export const bannerSchema = z.object({
-  title: reqText("Titulo", 3),
+  title: reqText("Título", 3),
   subtitle: optionalText,
-  image_url: z.string().url("URL invalida").optional().or(z.literal("")),
+  image_url: z.string().url("URL inválida").optional().or(z.literal("")),
+  desktop_image_url: z.string().url("URL inválida").optional().or(z.literal("")),
+  mobile_image_url: z.string().url("URL inválida").optional().or(z.literal("")),
+  image_alt: optionalText,
+  institutional_label: optionalText,
   cta_label: optionalText,
-  cta_url: z.string().url("URL invalida").optional().or(z.literal("")),
+  cta_url: z.string().optional().refine((v) => !v || v.startsWith("/") || v.startsWith("#") || v.startsWith("http") || v.startsWith("tel:"), "Destino inválido"),
+  cta_kind: bannerCtaKind.default("internal"),
+  background_color: z.string().default("fam-plum"),
+  text_color: z.string().default("white"),
+  priority: z.coerce.number().int().min(0).max(999).default(0),
+  audience: bannerAudience.default("publico_geral"),
+  campaign_key: optionalText,
   is_active: z.boolean().default(true),
   starts_at: optionalText,
   ends_at: optionalText,

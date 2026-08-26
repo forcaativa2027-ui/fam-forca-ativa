@@ -219,3 +219,9 @@ válida: antes de mexer em função/tabela sem certeza, rodar introspecção
    raiz — e nunca em duas fontes diferentes (ZIP local vs. pasta pessoal). Se você mantém
    uma cópia local própria (como o `sql_tar.gz`), ela devia ser exatamente esta pasta daqui
    pra frente, pra não divergir de novo.
+
+
+| `FAM018_carrossel_institucional_workflow.sql` | Carrossel institucional FAM, workflow editorial, elegibilidade, auditoria e métricas minimizadas |
+
+> **FAM018:** migration aditiva. Não remove colunas, dados ou tokens de cor; a aplicação da migration remota deve ser validada antes do aceite.
+

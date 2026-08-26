@@ -288,13 +288,23 @@ export interface Member {
 export interface Sermon { id:string; title:string; reference:string|null; speaker:string|null; youtube_url:string; thumbnail_url:string|null; category:string|null; published_at:string; is_featured:boolean; is_published:boolean; church_id:string|null; duration?:string|null; sort_order:number; description?:string|null; pdf_url?:string|null; }
 export interface EventItem { id:string; title:string; description:string|null; starts_at:string; ends_at:string|null; location:string|null; image_url:string|null; registration_url:string|null; status:EventStatus; event_type:EventTypeKind; is_published:boolean; church_id:string|null; }
 
-// M1b — Banners (Hero Carousel)
+// FAM018 — Carrossel Institucional e Workflow Editorial
+export type BannerCtaKind = "internal" | "ancora" | "formulario" | "externo" | "telefone" | "emergencia";
+export type BannerAudience = "publico_geral" | "beneficiarias" | "voluntarias" | "equipe";
+export type BannerWorkflowStatus = "rascunho" | "em_revisao" | "aprovado" | "agendado" | "publicado" | "pausado" | "expirado" | "arquivado" | "rejeitado";
 export interface Banner {
   id: string; title: string; subtitle: string | null;
-  image_url: string | null; cta_label: string | null; cta_url: string | null;
+  image_url: string | null; desktop_image_url?: string | null; mobile_image_url?: string | null;
+  image_alt?: string | null; institutional_label?: string | null;
+  cta_label: string | null; cta_url: string | null; cta_kind?: BannerCtaKind;
+  background_color?: string; text_color?: string;
+  priority?: number; audience?: BannerAudience; campaign_key?: string | null;
+  tenant_key?: string; workflow_status?: BannerWorkflowStatus;
+  review_note?: string | null; approved_by?: string | null; approved_at?: string | null;
+  published_at?: string | null; paused_at?: string | null; archived_at?: string | null;
   sort_order: number; is_active: boolean;
   starts_at: string | null; ends_at: string | null;
-  created_at: string;
+  created_at: string; updated_at?: string;
 }
 export interface PrayerRequest { id:string; life_group_id:string|null; member_id:string|null; request:string; is_answered:boolean; created_at:string; }
 export interface Discipleship { id:string; discipler_id:string; disciple_id:string; status:DiscipleshipStatus; started_on:string; ended_on:string|null; current_module:string|null; notes:string|null; }

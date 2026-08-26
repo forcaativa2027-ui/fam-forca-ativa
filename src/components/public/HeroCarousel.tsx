@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Pause, Play, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Banner } from "@/types/domain";
+import { recordBannerEvent } from "@/services/banners";
+import { supabase } from "@/lib/supabase/client";
 
 interface Props {
   banners: Banner[];
@@ -19,6 +21,7 @@ export function HeroCarousel({ banners, fallback, intervalMs = 7000, onSeeVideos
   const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const liveRef = useRef<HTMLHeadingElement>(null);
+  const [imageFailed, setImageFailed] = useState(false);
   const total = active.length;
 
   useEffect(() => {
@@ -45,12 +48,19 @@ export function HeroCarousel({ banners, fallback, intervalMs = 7000, onSeeVideos
     window.setTimeout(() => setPaused(false), 3500);
   };
 
+  const banner = active[index];
+  const external = Boolean(banner?.cta_url?.startsWith("http"));
+  const imageUrl = banner?.desktop_image_url || banner?.image_url;
+  const institutionalLabel = banner?.institutional_label || "FAM · FORÇA ATIVA DA MULHER";
+
+  useEffect(() => {
+    setImageFailed(false);
+    if (banner?.id) void recordBannerEvent(supabase, banner.id, "impressao").catch(() => undefined);
+  }, [banner?.id]);
+
   if (total === 0) {
     return <DefaultHero onSeeVideos={onSeeVideos} onSeeServices={onSeeServices} fallback={fallback} />;
   }
-
-  const banner = active[index];
-  const external = Boolean(banner.cta_url?.startsWith("http"));
 
   return (
     <section
@@ -66,13 +76,18 @@ export function HeroCarousel({ banners, fallback, intervalMs = 7000, onSeeVideos
     >
       <div
         className="relative min-h-[330px] bg-cover bg-center"
-        style={banner.image_url ? {
-          backgroundImage: `linear-gradient(90deg, rgba(74,23,63,.96) 0%, rgba(74,23,63,.78) 48%, rgba(50,19,45,.28) 100%), url(${banner.image_url})`,
+        role="group"
+        aria-label={`Banner ${index + 1} de ${total}`}
+        style={imageUrl && !imageFailed ? {
+          backgroundImage: `linear-gradient(90deg, rgba(74,23,63,.96) 0%, rgba(74,23,63,.78) 48%, rgba(50,19,45,.28) 100%), url(${imageUrl})`,
         } : undefined}
       >
+        {imageUrl && !imageFailed && (
+          <img src={banner.mobile_image_url || imageUrl} alt={banner.image_alt || ""} className="sr-only" onError={() => { setImageFailed(true); void recordBannerEvent(supabase, banner.id, "erro_imagem").catch(() => undefined); }} />
+        )}
         <div className="relative z-10 flex min-h-[330px] max-w-3xl flex-col justify-center px-8 py-12 md:px-14">
           <span className="w-fit rounded-full border border-fam-gold px-3 py-1 text-[11px] font-extrabold tracking-[0.18em] text-fam-gold-soft">
-            FAM · FORÇA ATIVA DA MULHER
+            {institutionalLabel}
           </span>
           <h2 ref={liveRef} aria-live="polite" className="mt-4 font-display text-3xl font-semibold leading-tight text-white md:text-5xl">
             {banner.title}
@@ -81,7 +96,8 @@ export function HeroCarousel({ banners, fallback, intervalMs = 7000, onSeeVideos
           {banner.cta_label && banner.cta_url && (
             <div className="mt-6">
               <Button asChild className="gap-2 bg-fam-pink text-white shadow-lg shadow-fam-night/20 hover:bg-fam-rose">
-                <a href={banner.cta_url} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}>
+                <a href={banner.cta_url} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}
+                  onClick={() => void recordBannerEvent(supabase, banner.id, "cta_click").catch(() => undefined)}>
                   {banner.cta_label}{external && <span aria-hidden="true">↗</span>}
                 </a>
               </Button>
