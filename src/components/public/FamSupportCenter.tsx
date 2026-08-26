@@ -86,6 +86,7 @@ export function FamContactPage() {
   const [name, setName] = useState("");
   const [safe, setSafe] = useState(false);
   const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [authLoading, setAuthLoading] = useState(true);
   const [convId, setConvId] = useState<string | undefined>(undefined);
 
   const { conversations, startConversation, loading: convLoading } = useFamConversations(userId);
@@ -95,7 +96,7 @@ export function FamContactPage() {
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) setUserId(user.id);
-    });
+    }).finally(() => setAuthLoading(false));
   }, []);
 
   // Auto-select latest conversation if not started
@@ -186,14 +187,31 @@ export function FamContactPage() {
                 chat não substitui emergência policial, atendimento médico ou orientação jurídica.
               </span>
             </label>
-            <Button
-              disabled={!safe || convLoading}
-              onClick={handleStart}
-              className="w-full gap-2"
-            >
-              <MessageCircle className="h-4 w-4" />
-              {convLoading ? "Conectando..." : "Entrar na fila de atendimento"}
-            </Button>
+            {authLoading ? (
+              <Button disabled className="w-full gap-2">
+                Verificando sua sessão...
+              </Button>
+            ) : userId ? (
+              <Button
+                disabled={!safe || convLoading}
+                onClick={handleStart}
+                className="w-full gap-2"
+              >
+                <MessageCircle className="h-4 w-4" />
+                {convLoading ? "Conectando..." : "Entrar na fila de atendimento"}
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-xs leading-relaxed text-fam-muted">
+                  Para proteger a conversa e permitir que você retome o atendimento, entre na sua conta antes de iniciar.
+                </p>
+                <Button asChild disabled={!safe} className="w-full gap-2">
+                  <Link href="/entrar?next=/fale-conosco">
+                    <LogOut className="h-4 w-4 rotate-180" /> Entrar para iniciar atendimento
+                  </Link>
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       ) : (
