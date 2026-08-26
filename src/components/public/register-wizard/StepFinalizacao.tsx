@@ -23,6 +23,7 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   async function finish() {
+    if (busy) return;
     const errs: Record<string,string> = {};
     if (!s.community_id) errs.community = "Selecione uma região de atendimento antes de finalizar o cadastro.";
     if (s.password.length < 6) errs.password = "Senha precisa ter ao menos 6 caracteres";
@@ -42,6 +43,8 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
         const msg = signError.message.toLowerCase();
         if (msg.includes("already")) {
           setGlobalErr("Este e-mail já está cadastrado. Tente fazer login.");
+        } else if (msg.includes("rate limit") || msg.includes("too many requests") || msg.includes("email rate limit")) {
+          setGlobalErr("O serviço de confirmação por e-mail atingiu o limite temporário de envios. Nenhum novo cadastro foi concluído nesta tentativa. Aguarde alguns minutos antes de tentar novamente e evite tocar em Concluir várias vezes.");
         } else if (msg.includes("captcha")) {
           setGlobalErr("A verificação de segurança expirou antes de você concluir o cadastro. Role até o quadro de verificação, espere aparecer \"Sucesso\" de novo, e toque em concluir mais uma vez.");
           setCaptchaToken(null);
@@ -158,7 +161,7 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
         <Button type="button" variant="outline" onClick={onBack} className="h-12 gap-2 rounded-xl text-base shadow-sm transition active:scale-95"><ArrowLeft className="h-5 w-5" /> Voltar</Button>
         <Button type="button" onClick={finish} disabled={busy} className="h-12 gap-2 rounded-xl text-base shadow-md transition hover:shadow-lg active:scale-95">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-          Concluir cadastro
+          {busy ? "Enviando..." : "Concluir cadastro"}
         </Button>
       </div>
     </div>
