@@ -10,6 +10,9 @@ export interface FamRiskQuestion {
   options: ReadonlyArray<{ value: FamRiskAnswerValue; label: string }>;
 }
 
+export { FAM_RISK_CATALOG_VERSION, FAM_RISK_QUESTIONS } from "./famRiskCatalog";
+import { FAM_RISK_QUESTIONS } from "./famRiskCatalog";
+
 export interface FamRiskEvaluation {
   attention: FamRiskAttention;
   emergency: boolean;
@@ -18,20 +21,6 @@ export interface FamRiskEvaluation {
   summary: string;
   engineVersion: typeof FAM_RISK_ENGINE_VERSION;
 }
-
-const ANSWER_OPTIONS = [
-  { value: "YES", label: "Sim" },
-  { value: "NO", label: "Não" },
-  { value: "PREFER_NOT_TO_ANSWER", label: "Prefiro não responder" },
-] as const;
-
-export const FAM_RISK_QUESTIONS: readonly FamRiskQuestion[] = [
-  { key: "danger_now", text: "Existe perigo ou ameaça acontecendo agora?", source: "OC-04/AR-01", options: ANSWER_OPTIONS },
-  { key: "injury", text: "Você precisa de atendimento médico ou está ferida?", source: "OC-04/AR-02", options: ANSWER_OPTIONS },
-  { key: "weapon", text: "A pessoa que ameaça você tem acesso a arma?", source: "OC-04/AR-03", options: ANSWER_OPTIONS },
-  { key: "sexual", text: "Houve violência sexual ou coerção?", source: "OC-04/AR-04; JUR-01", options: ANSWER_OPTIONS },
-  { key: "children", text: "Há crianças ou adolescentes em situação de risco?", source: "OC-04/AR-05; JUR-01", options: ANSWER_OPTIONS },
-];
 
 export function evaluateFamRisk(answers: Record<string, FamRiskAnswerValue | undefined>): FamRiskEvaluation {
   const triggeredIndicators = FAM_RISK_QUESTIONS
