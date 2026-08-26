@@ -38,6 +38,19 @@ interface FamAttendant {
   status: string;
 }
 
+const PAUSE_REASONS = [
+  { value: "SAFE_CONTACT_PAUSE", label: "Segurança: pausar contato" },
+  { value: "USER_REQUESTED_PAUSE", label: "Solicitado pela usuária" },
+  { value: "OPERATIONAL_PAUSE", label: "Pausa operacional" },
+] as const;
+
+const CLOSE_REASONS = [
+  { value: "USER_REQUESTED_CLOSE", label: "Solicitado pela usuária" },
+  { value: "RESOLVED", label: "Atendimento concluído" },
+  { value: "REFERRED", label: "Encaminhamento realizado" },
+  { value: "NO_FURTHER_CONTACT", label: "Sem continuidade de contato" },
+] as const;
+
 // Cast supabase to any para acessar tabelas não tipadas
 const sb = supabase as any;
 
@@ -53,6 +66,8 @@ export default function FamAtendimentoAdmin() {
   const [referralLoading, setReferralLoading] = useState(false);
   const [operatorReviewRequestId, setOperatorReviewRequestId] = useState<string | null>(null);
   const [operatorConfirmationNote, setOperatorConfirmationNote] = useState("");
+  const [pauseReason, setPauseReason] = useState<(typeof PAUSE_REASONS)[number]["value"]>("SAFE_CONTACT_PAUSE");
+  const [closeReason, setCloseReason] = useState<(typeof CLOSE_REASONS)[number]["value"]>("USER_REQUESTED_CLOSE");
 
   useEffect(() => {
     loadAttendants();
@@ -189,15 +204,28 @@ export default function FamAtendimentoAdmin() {
     }
   };
 
+  const recordConversationEvent = async (conversationId: string, eventType: string, reason: string) => {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) throw new Error("Sessão da atendente não encontrada");
+    const { error } = await sb.from("fam_audit_events").insert({
+      actor_user_id: user.id,
+      conversation_id: conversationId,
+      event_type: eventType,
+      metadata: { reason },
+    });
+    if (error) throw error;
+  };
+
   const handlePause = async (conv: FamConversation) => {
     try {
       const { error } = await sb.from("fam_conversations").update({ status: "paused_safe_contact" }).eq("id", conv.id);
       if (error) throw error;
+      await recordConversationEvent(conv.id, "CONVERSATION_PAUSED", pauseReason);
       setSelectedConv({ ...conv, status: "paused_safe_contact" });
       await loadConversations();
     } catch (e) {
       console.error(e);
-      alert("Não foi possível pausar a conversa com segurança.");
+      alert("Não foi possível pausar a conversa com segurança. Nenhuma justificativa sensível deve ser registrada no campo de motivo.");
     }
   };
 
@@ -205,6 +233,7 @@ export default function FamAtendimentoAdmin() {
     try {
       const { error } = await sb.from("fam_conversations").update({ status: "in_progress" }).eq("id", conv.id);
       if (error) throw error;
+      await recordConversationEvent(conv.id, "CONVERSATION_RESUMED", "SAFE_CONTACT_RESUMED");
       setSelectedConv({ ...conv, status: "in_progress" });
       await loadConversations();
     } catch (e) {
@@ -218,12 +247,13 @@ export default function FamAtendimentoAdmin() {
     try {
       const { error } = await sb.from("fam_conversations").update({ status: "closed" }).eq("id", conv.id);
       if (error) throw error;
+      await recordConversationEvent(conv.id, "CONVERSATION_CLOSED", closeReason);
       setSelectedConv({ ...conv, status: "closed" });
       setReply("");
       await loadConversations();
     } catch (e) {
       console.error(e);
-      alert("Não foi possível encerrar a conversa.");
+      alert("Não foi possível encerrar a conversa. O histórico permanece preservado.");
     }
   };
 
@@ -413,14 +443,24 @@ export default function FamAtendimentoAdmin() {
                       </Button>
                     )}
                     {selectedConv.status !== "closed" && selectedConv.status !== "paused_safe_contact" && (
-                      <Button variant="outline" onClick={() => handlePause(selectedConv)} size="sm">
-                        <Pause className="mr-2 h-4 w-4" /> Pausar por segurança
-                      </Button>
+                      <>
+                        <select aria-label="Motivo da pausa" className="max-w-[190px] rounded border px-2 py-1 text-xs" value={pauseReason} onChange={(event) => setPauseReason(event.target.value as typeof pauseReason)}>
+                          {PAUSE_REASONS.map((reason) => <option key={reason.value} value={reason.value}>{reason.label}</option>)}
+                        </select>
+                        <Button variant="outline" onClick={() => handlePause(selectedConv)} size="sm">
+                          <Pause className="mr-2 h-4 w-4" /> Pausar
+                        </Button>
+                      </>
                     )}
                     {selectedConv.status !== "closed" && (
-                      <Button variant="outline" onClick={() => handleClose(selectedConv)} size="sm">
-                        <LockKeyhole className="mr-2 h-4 w-4" /> Encerrar
-                      </Button>
+                      <>
+                        <select aria-label="Motivo do encerramento" className="max-w-[180px] rounded border px-2 py-1 text-xs" value={closeReason} onChange={(event) => setCloseReason(event.target.value as typeof closeReason)}>
+                          {CLOSE_REASONS.map((reason) => <option key={reason.value} value={reason.value}>{reason.label}</option>)}
+                        </select>
+                        <Button variant="outline" onClick={() => handleClose(selectedConv)} size="sm">
+                          <LockKeyhole className="mr-2 h-4 w-4" /> Encerrar
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
