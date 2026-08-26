@@ -61,6 +61,23 @@ export async function POST(req: Request) {
   return NextResponse.json({ ok: true, attachment_id: attachmentId, status });
 }
 
+/** Verifica o hash do pacote congelado sem retornar o conteúdo do snapshot. */
+export async function PATCH(req: Request) {
+  const caller = await getAdminCaller(req);
+  if (!caller) return NextResponse.json({ error: "Acesso restrito a atendentes FAM ativos." }, { status: 403 });
+  let body: { request_id?: unknown };
+  try { body = await req.json(); } catch { return NextResponse.json({ error: "JSON inválido." }, { status: 400 }); }
+  const requestId = String(body.request_id ?? "");
+  if (!requestId) return NextResponse.json({ error: "request_id é obrigatório." }, { status: 400 });
+  const { data, error } = await caller.admin.rpc("fam_verify_referral_package", { p_request_id: requestId });
+  if (error) {
+    const status = error.message === "referral_request_not_found" ? 404 : error.message === "referral_package_not_frozen" ? 409 : 500;
+    return NextResponse.json({ error: error.message }, { status });
+  }
+  const result = Array.isArray(data) ? data[0] : data;
+  return NextResponse.json({ ok: true, request_id: result?.request_id, is_valid: result?.is_valid, package_hash: result?.package_hash, verified_at: result?.verified_at });
+}
+
 /** Expurgo lógico de metadados vencidos; o arquivo físico é removido somente após a atualização auditada. */
 export async function DELETE(req: Request) {
   const caller = await getAdminCaller(req);
