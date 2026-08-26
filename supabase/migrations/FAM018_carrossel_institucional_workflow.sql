@@ -7,6 +7,21 @@
 -- tokens cromáticos FAM já aprovados; nenhum token de CSS é alterado.
 -- ============================================================
 
+-- Compatibilidade com instalações onde a tabela legacy banners foi criada
+-- parcialmente. Todas as adições são NULL/default-safe e não removem dados.
+alter table public.banners add column if not exists title text;
+alter table public.banners add column if not exists subtitle text;
+alter table public.banners add column if not exists image_url text;
+alter table public.banners add column if not exists cta_label text;
+alter table public.banners add column if not exists cta_url text;
+alter table public.banners add column if not exists sort_order integer not null default 0;
+alter table public.banners add column if not exists is_active boolean not null default true;
+alter table public.banners add column if not exists starts_at timestamptz;
+alter table public.banners add column if not exists ends_at timestamptz;
+alter table public.banners add column if not exists created_at timestamptz not null default now();
+alter table public.banners add column if not exists updated_at timestamptz not null default now();
+alter table public.banners add column if not exists created_by uuid;
+
 alter table public.banners add column if not exists tenant_key text not null default 'FAM';
 alter table public.banners add column if not exists desktop_image_url text;
 alter table public.banners add column if not exists mobile_image_url text;
