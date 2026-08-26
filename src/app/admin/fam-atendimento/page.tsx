@@ -56,20 +56,13 @@ export default function FamAtendimentoAdmin() {
     const { data: { user } } = await sb.auth.getUser();
     if (!user) return;
 
-    const { data: profile } = await sb
-      .from("profiles")
-      .select("id, role")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.role === "apostolo" || profile?.role === "pastor") {
-      const { data: attendant } = await sb
-        .from("fam_attendants")
-        .select("*")
-        .eq("profile_id", user.id)
-        .maybeSingle();
-      if (attendant) setCurrentAttendantId(attendant.id);
-    }
+    const { data: attendant } = await sb
+      .from("fam_attendants")
+      .select("*")
+      .eq("profile_id", user.id)
+      .eq("status", "active")
+      .maybeSingle();
+    if (attendant) setCurrentAttendantId(attendant.id);
 
     const { data: attendantsData } = await sb
       .from("fam_attendants")

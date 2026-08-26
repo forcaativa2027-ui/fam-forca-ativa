@@ -8,14 +8,12 @@ import type { Profile } from "@/types/domain";
  * um membro comum — via e editava tudo, porque essas páginas só buscavam
  * o perfil pro nome de exibição, sem checar cargo ou delegação nenhuma.
  *
- * Regra: Apóstolo sempre entra. Qualquer outra pessoa precisa ter pelo
- * menos UMA delegação ativa (Governança → Delegações) — mesma regra do
- * painel /admin.
+ * Regra: qualquer pessoa precisa ter pelo menos UMA delegação ativa
+ * (Governança → Delegações) — a função real é determinada por permissões,
+ * não por um perfil herdado.
  */
 export async function requireWorkspaceAccess(supabase: SupabaseClient, profile: Profile | null): Promise<void> {
   if (!profile) redirect("/entrar");
-  if (profile!.role === "apostolo") return;
-
   const { data, error } = await supabase.rpc("my_active_modules");
   const myModules: string[] = error ? [] : (data ?? []);
 

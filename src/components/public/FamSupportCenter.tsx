@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { AlertTriangle, CheckCircle2, MessageCircle, Phone, ShieldAlert, Send, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, LogOut, MessageCircle, Phone, ShieldAlert, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,11 @@ import { Label } from "@/components/ui/label";
 import { useFamConversations, useFamMessages, useFamRiskCase } from "@/hooks/useFamSupport";
 import { FileUploader } from "@/components/ui/FileUploader";
 import { supabase } from "@/lib/supabase";
+import {
+  FAM_RISK_QUESTIONS,
+  evaluateFamRisk,
+  type FamRiskAnswerValue,
+} from "@/services/famRiskEngine";
 
 const EMERGENCY_180 = "180";
 const EMERGENCY_190 = "190";
@@ -38,6 +43,28 @@ export function FamSafetyNotice() {
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+export function QuickExit() {
+  const handleQuickExit = () => {
+    if (typeof window !== "undefined") {
+      window.location.replace("https://www.google.com/");
+    }
+  };
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      className="gap-2 border-fam-danger/40 text-fam-danger"
+      onClick={handleQuickExit}
+      title="Sai rapidamente desta página; isso não apaga o histórico do navegador"
+    >
+      <LogOut className="h-4 w-4" />
+      Sair rapidamente
+    </Button>
   );
 }
 
@@ -255,25 +282,16 @@ export function FamContactPage() {
 }
 
 // --- Análise de Risco (com persistência no Supabase) ---
-const QUESTIONS = [
-  ["danger_now", "Existe perigo ou ameaça acontecendo agora?"],
-  ["injury", "Você precisa de atendimento médico ou está ferida?"],
-  ["weapon", "A pessoa que ameaça você tem acesso a arma?"],
-  ["sexual", "Houve violência sexual ou coerção?"],
-  ["children", "Há crianças ou adolescentes em situação de risco?"],
-] as const;
-
 export function FamRiskAnalysisPage() {
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, FamRiskAnswerValue>>({});
   const [submitted, setSubmitted] = useState(false);
   const [openContact, setOpenContact] = useState(false);
   const [userId, setUserId] = useState<string | undefined>(undefined);
   const [caseId, setCaseId] = useState<string | undefined>(undefined);
   const { riskCase, create, saveAnswers, submitAssessment, loading: riskLoading, error: riskError } = useFamRiskCase(userId);
-  const urgent = ["danger_now", "injury", "weapon", "sexual", "children"].some(
-    (key) => answers[key] === "sim"
-  );
-  const complete = QUESTIONS.every(([key]) => answers[key]);
+  const evaluation = evaluateFamRisk(answers);
+  const urgent = evaluation.emergency;
+  const complete = FAM_RISK_QUESTIONS.every(({ key }) => answers[key]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -290,13 +308,14 @@ export function FamRiskAnalysisPage() {
         const activeCaseId = caseId ?? (await create({ user_id: userId, contact_name: undefined })).id;
         if (!caseId) setCaseId(activeCaseId);
         await saveAnswers(activeCaseId, answers);
-        const attention = urgent ? "immediate" : "relevant";
+        const attention = evaluation.attention;
         await submitAssessment(activeCaseId, {
           attention,
-          preliminary_summary: urgent
-            ? "Sinais de risco imediato identificados na triagem."
-            : "Sinais de risco relevantes; recomenda-se acompanhamento especializado.",
+          preliminary_summary: evaluation.summary,
           limitations_acknowledged_at: new Date().toISOString(),
+          current_step: "result",
+          special_flow_flags: evaluation.specialFlowFlags,
+          triggered_indicators: evaluation.triggeredIndicators,
         });
       }
       setSubmitted(true);
@@ -314,6 +333,9 @@ export function FamRiskAnalysisPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 py-6">
+      <div className="flex justify-end">
+        <QuickExit />
+      </div>
       <FamSafetyNotice />
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold">FAM · orientação inicial</p>
@@ -333,11 +355,12 @@ export function FamRiskAnalysisPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            {QUESTIONS.map(([key, label]) => (
+            {FAM_RISK_QUESTIONS.map(({ key, text, options, source }) => (
               <div key={key} className="space-y-2">
-                <p className="text-sm font-medium text-fam-deep-plum">{label}</p>
+                <p className="text-sm font-medium text-fam-deep-plum">{text}</p>
+                <p className="text-xs text-fam-muted">Referência metodológica: {source}</p>
                 <div className="flex flex-wrap gap-2">
-                  {["sim", "não", "prefiro não responder"].map((value) => (
+                  {options.map(({ value, label }) => (
                     <Button
                       key={value}
                       type="button"
@@ -345,7 +368,7 @@ export function FamRiskAnalysisPage() {
                       size="sm"
                       onClick={() => setAnswers((prev) => ({ ...prev, [key]: value }))}
                     >
-                      {value}
+                      {label}
                     </Button>
                   ))}
                 </div>

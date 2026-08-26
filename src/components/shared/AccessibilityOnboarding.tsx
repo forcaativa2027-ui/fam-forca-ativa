@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { ArrowRight, Check, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAccessibility, PROFILE_PRESETS } from "./AccessibilityProvider";
@@ -64,16 +65,18 @@ function PrimaryButton(props: React.ComponentProps<typeof Button>) {
  */
 export function AccessibilityOnboarding() {
   const { onboarded, loaded, onboardingForceOpen, applyProfile, markOnboarded, closeOnboarding } = useAccessibility();
+  const pathname = usePathname();
   const [step, setStep] = useState<Step>("boas_vindas");
   const [selected, setSelected] = useState<AccessibilityProfile | null>(null);
-  const [dontShowAgain, setDontShowAgain] = useState(true);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   // Primeiro acesso já concluído nesta aba, mas ainda não persistido (checkbox desmarcado) —
   // fecha o overlay desta vez sem impedir que ele volte a abrir sozinho no próximo login.
   const [sessionDismissed, setSessionDismissed] = useState(false);
 
   const isFirstAccess = !onboarded && !sessionDismissed;
-  const visible = loaded && (isFirstAccess || onboardingForceOpen);
+  const isRiskAnalysisRoute = pathname === "/analise-risco";
+  const visible = loaded && !isRiskAnalysisRoute && (isFirstAccess || onboardingForceOpen);
 
   useEffect(() => {
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
@@ -82,7 +85,7 @@ export function AccessibilityOnboarding() {
 
   // Sempre que o assistente é (re)aberto, volta pra primeira tela.
   useEffect(() => {
-    if (visible) { setStep("boas_vindas"); setSelected(null); setDontShowAgain(true); }
+    if (visible) { setStep("boas_vindas"); setSelected(null); setDontShowAgain(false); }
   }, [visible]);
 
   if (!visible) return null;
@@ -261,11 +264,11 @@ function ChooseProfileScreen({
       <label className="flex min-h-[44px] cursor-pointer items-center gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm text-[#0F172A] focus-within:ring-2 focus-within:ring-[#2563EB]">
         <input
           type="checkbox"
-          checked={!dontShowAgain}
-          onChange={(e) => onToggleDontShowAgain(!e.target.checked)}
+          checked={dontShowAgain}
+          onChange={(e) => onToggleDontShowAgain(e.target.checked)}
           className="h-5 w-5 shrink-0 rounded border-2 border-[#94A3B8] accent-[#2563EB]"
         />
-        Não mostrar esta tela novamente
+        Não mostrar novamente
       </label>
 
       <div className="mt-auto flex flex-col gap-3 pt-1">

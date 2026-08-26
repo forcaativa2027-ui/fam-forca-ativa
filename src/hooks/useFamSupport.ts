@@ -163,6 +163,9 @@ export function useFamRiskCase(userId?: string) {
       attention: FamRiskCase["attention"];
       preliminary_summary: string;
       limitations_acknowledged_at: string;
+      current_step?: string;
+      special_flow_flags?: string[];
+      triggered_indicators?: string[];
       referred_conversation_id?: string;
     }
   ) => {

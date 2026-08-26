@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { FAM_RISK_ENGINE_VERSION } from "@/services/famRiskEngine";
 
 export interface FamRiskCase {
   id: string;
@@ -14,6 +14,11 @@ export interface FamRiskCase {
   referred_conversation_id: string | null;
   created_at: string;
   updated_at: string;
+  assessment_status?: string;
+  current_step?: string | null;
+  risk_engine_version?: string | null;
+  special_flow_flags?: string[];
+  triggered_indicators?: string[];
 }
 
 export interface FamRiskAnswer {
@@ -78,6 +83,9 @@ export async function updateRiskCaseAssessment(
     attention: FamRiskCase["attention"];
     preliminary_summary: string;
     limitations_acknowledged_at: string;
+    current_step?: string;
+    special_flow_flags?: string[];
+    triggered_indicators?: string[];
     referred_conversation_id?: string;
   }
 ): Promise<FamRiskCase> {
@@ -87,6 +95,11 @@ export async function updateRiskCaseAssessment(
       attention: assessment.attention,
       preliminary_summary: assessment.preliminary_summary,
       limitations_acknowledged_at: assessment.limitations_acknowledged_at,
+      current_step: assessment.current_step ?? "result",
+      risk_engine_version: FAM_RISK_ENGINE_VERSION,
+      special_flow_flags: assessment.special_flow_flags ?? [],
+      triggered_indicators: assessment.triggered_indicators ?? [],
+      assessment_status: "completed",
       referred_conversation_id: assessment.referred_conversation_id ?? null,
     })
     .eq("id", caseId)
