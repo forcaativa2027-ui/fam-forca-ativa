@@ -1,6 +1,7 @@
 "use client";
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { normalizeSupabaseUrl } from "@/lib/supabase/url";
 
 let _client: SupabaseClient | null = null;
 
@@ -18,7 +19,7 @@ function getClient(): SupabaseClient {
       "NEXT_PUBLIC_SUPABASE_ANON_KEY na Vercel e refaca o deploy."
     );
   }
-  _client = createBrowserClient(url, key);
+  _client = createBrowserClient(normalizeSupabaseUrl(url), key);
   return _client;
 }
 

@@ -1,5 +1,6 @@
 "use client";
 import { createCecClient, type CecClient } from "@/lib/cec";
+import { normalizeSupabaseUrl } from "@/lib/supabase/url";
 
 // Criacao "preguicosa": cliente so instanciado no browser (evita erro no build da Vercel).
 let _client: CecClient | null = null;
@@ -9,7 +10,7 @@ function getClient(): CecClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) throw new Error("Supabase env ausente.");
-  _client = createCecClient(url, key, { auth: { persistSession: true, autoRefreshToken: true } });
+  _client = createCecClient(normalizeSupabaseUrl(url), key, { auth: { persistSession: true, autoRefreshToken: true } });
   return _client;
 }
 

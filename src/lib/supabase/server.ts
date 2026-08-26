@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { normalizeSupabaseUrl } from "@/lib/supabase/url";
 
 /**
  * Cliente Supabase para uso em Server Components, Server Actions e Route Handlers.
@@ -19,7 +20,7 @@ export async function createClient(): Promise<SupabaseClient> {
     );
   }
 
-  return createServerClient(url, key, {
+  return createServerClient(normalizeSupabaseUrl(url), key, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
