@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test:fam": "vitest run src/services/famRiskEngine.test.ts src/services/famReferralOperations.test.ts src/services/famRiskCatalog.test.ts src/lib/supabase/url.test.ts"
+    "test:fam": "vitest run src/services/fam*.test.ts src/lib/supabase/url.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

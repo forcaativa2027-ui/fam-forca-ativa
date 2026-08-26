@@ -62,7 +62,7 @@ describe("decideFamProtection", () => {
 
     for (const result of results) {
       expect(result.disclaimer).toMatch(/orientativo/);
-      expect(result.disclaimer).not.toMatch(/diagnóstico|laudo/);
+      expect(result.disclaimer).toMatch(/não (confirma nem descarta crime|produz laudo)|não substitui/);
     }
   });
 });
