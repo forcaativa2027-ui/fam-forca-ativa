@@ -20,6 +20,7 @@ interface FamConversation {
   contact_name: string | null;
   assigned_attendant_id: string | null;
   created_at: string;
+  updated_at?: string;
 }
 
 interface FamMessage {
@@ -66,6 +67,7 @@ export default function FamAtendimentoAdmin() {
   const [referralLoading, setReferralLoading] = useState(false);
   const [operatorReviewRequestId, setOperatorReviewRequestId] = useState<string | null>(null);
   const [operatorConfirmationNote, setOperatorConfirmationNote] = useState("");
+  const [lastQueueUpdate, setLastQueueUpdate] = useState<Date | null>(null);
   const [pauseReason, setPauseReason] = useState<(typeof PAUSE_REASONS)[number]["value"]>("SAFE_CONTACT_PAUSE");
   const [closeReason, setCloseReason] = useState<(typeof CLOSE_REASONS)[number]["value"]>("USER_REQUESTED_CLOSE");
 
@@ -144,12 +146,42 @@ export default function FamAtendimentoAdmin() {
         .limit(50);
       if (error) throw error;
       setConversations(data ?? []);
+      setLastQueueUpdate(new Date());
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    const channel = sb
+      .channel("admin_fam_conversations_queue")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "fam_conversations" },
+        (payload: { eventType: "INSERT" | "UPDATE" | "DELETE"; new: FamConversation; old: Partial<FamConversation> }) => {
+          const incoming = payload.new;
+          if (payload.eventType === "DELETE") {
+            setConversations((current) => current.filter((conversation) => conversation.id !== payload.old.id));
+            setSelectedConv((current) => current?.id === payload.old.id ? null : current);
+          } else {
+            setConversations((current) => {
+              const exists = current.some((conversation) => conversation.id === incoming.id);
+              const next = exists
+                ? current.map((conversation) => conversation.id === incoming.id ? { ...conversation, ...incoming } : conversation)
+                : [incoming, ...current];
+              return next.sort((a, b) => new Date(b.updated_at ?? b.created_at).getTime() - new Date(a.updated_at ?? a.created_at).getTime());
+            });
+            setSelectedConv((current) => current?.id === incoming.id ? { ...current, ...incoming } : current);
+          }
+          setLastQueueUpdate(new Date());
+        },
+      )
+      .subscribe();
+
+    return () => { channel.unsubscribe(); };
+  }, []);
 
   useEffect(() => {
     if (!selectedConv) { setMessages([]); return; }
@@ -370,6 +402,9 @@ export default function FamAtendimentoAdmin() {
         <Card className="lg:sticky lg:top-6 h-fit">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Conversas ({conversations.length})</CardTitle>
+            <p className="mt-1 text-xs text-fam-muted" aria-live="polite">
+              {lastQueueUpdate ? `Fila atualizada às ${lastQueueUpdate.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}` : "Sincronizando fila..."}
+            </p>
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
@@ -397,7 +432,7 @@ export default function FamAtendimentoAdmin() {
                             {getStatusLabel(conv.status)}
                           </span>
                           <Clock className="h-3 w-3" />
-                          <span>{new Date(conv.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</span>
+                          <span>{new Date(conv.updated_at ?? conv.created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</span>
                         </div>
                       </div>
                       {selectedConv?.id === conv.id && <ChevronRight className="h-4 w-4 text-fam-magenta" />}
