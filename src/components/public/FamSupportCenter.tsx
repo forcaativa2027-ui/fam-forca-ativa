@@ -24,6 +24,7 @@ import {
   transitionAssessment,
   type FamAssessmentState,
 } from "@/services/famAssessmentState";
+import { decideFamProtection } from "@/services/famProtectionFlow";
 
 const EMERGENCY_180 = "180";
 const EMERGENCY_190 = "190";
@@ -306,6 +307,7 @@ export function FamRiskAnalysisPage() {
   const [caseId, setCaseId] = useState<string | undefined>(undefined);
   const { riskCase, create, saveAnswers, submitAssessment, requestReferral, loading: riskLoading, error: riskError } = useFamRiskCase(userId);
   const evaluation = evaluateFamRisk(answers);
+  const protectionDecision = decideFamProtection({ evaluation, referralConfirmed });
   const referralOptions = resolveFamReferralOptions(evaluation);
   const urgent = evaluation.emergency;
   const complete = FAM_RISK_QUESTIONS.every(({ key }) => answers[key]);
@@ -442,24 +444,15 @@ export function FamRiskAnalysisPage() {
               ) : (
                 <CheckCircle2 className="h-5 w-5 text-gold" />
               )}
-              <CardTitle>
-                {assessmentState === "EMERGENCY"
-                  ? "Sinais que merecem atenção imediata"
-                  : assessmentState === "PROTECTION_SPECIAL"
-                    ? "Há um fluxo de proteção que merece atenção especializada"
-                    : "É importante conversar com uma atendente"}
-              </CardTitle>
+              <CardTitle>{protectionDecision.title}</CardTitle>
             </div>
             <CardDescription>
               Este resultado é orientativo e foi baseado somente nas respostas fornecidas.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="rounded-lg bg-fam-lavender p-4 text-sm leading-relaxed">
-              {urgent
-                ? "Se houver perigo agora, procure um local seguro quando puder e acione a emergência pelo 190. Para orientação e encaminhamento sobre violência contra a mulher, o Ligue 180 funciona 24 horas. Uma atendente especializada da FAM também pode acolher você quando houver disponibilidade."
-                : "Não foi possível concluir uma situação a partir destas respostas. Isso não significa que esteja tudo bem ou que não exista risco. Converse com uma atendente especializada para avaliar com cuidado o próximo passo."}
-            </p>
+            <p className="rounded-lg bg-fam-lavender p-4 text-sm leading-relaxed">{protectionDecision.guidance}</p>
+            <p className="text-xs leading-relaxed text-fam-muted">{protectionDecision.disclaimer}</p>
             <div className="rounded-lg border border-fam-gold/30 bg-fam-gold-soft/10 p-3 text-xs text-fam-deep-plum">
               Estado da jornada: <b>{assessmentState}</b>.
               {evaluation.specialFlowFlags.length > 0 && (
