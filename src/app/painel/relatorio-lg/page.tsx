@@ -2,7 +2,8 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft, Clock, AlertTriangle } from "lucide-react";
-import { useMyProfile, useMyMember, useCells, useRelmdaDraftId, useRelmdaDeadline } from "@/hooks/use-queries";
+import { useMyProfile, useMyMember, useCells, useRelmdaDraftId, useRelmdaDeadline, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 
 const WEEKDAY_NAMES = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
 
@@ -49,6 +50,7 @@ function weekNumberOfMonth(date: Date): number {
 
 export default function RelatorioLgPage() {
   const { data: profile, isLoading: loadingProfile } = useMyProfile();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(profile?.church_id);
   const { data: member, isLoading: loadingMember } = useMyMember();
   const { data: cells = [], isLoading: loadingCells } = useCells();
 
@@ -65,7 +67,7 @@ export default function RelatorioLgPage() {
     return (
       <main className="grid min-h-screen place-items-center p-5 text-center">
         <div>
-          <p className="text-sm text-muted-foreground">Você ainda não está vinculado a um Life Group.</p>
+          <p className="text-sm text-muted-foreground">Você ainda não está vinculado a um {terms.life_group}.</p>
           <Link href="/painel" className="mt-3 inline-flex items-center gap-1 text-sm text-navy underline"><ArrowLeft className="h-3.5 w-3.5" />Voltar ao painel</Link>
         </div>
       </main>
@@ -76,7 +78,7 @@ export default function RelatorioLgPage() {
     return (
       <main className="grid min-h-screen place-items-center p-5 text-center">
         <div>
-          <p className="text-sm text-muted-foreground">Você não possui permissão para preencher o relatório deste Life Group.</p>
+          <p className="text-sm text-muted-foreground">Você não possui permissão para preencher o relatório deste {terms.life_group}.</p>
           <Link href="/painel" className="mt-3 inline-flex items-center gap-1 text-sm text-navy underline"><ArrowLeft className="h-3.5 w-3.5" />Voltar ao painel</Link>
         </div>
       </main>

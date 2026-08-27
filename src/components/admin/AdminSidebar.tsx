@@ -14,9 +14,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useMyProfile, useMyActiveModules, useMyChurch, useTenantModules } from "@/hooks/use-queries";
+import { useMyProfile, useMyActiveModules, useMyChurch, useTenantModules, useOrgTerminology } from "@/hooks/use-queries";
 import { DELEGATION_TAB_MAP } from "@/services/delegations";
 import { TENANT_MODULE_DEFAULTS, TAB_TENANT_MODULE } from "@/services/tenantModules";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 
 export type TabKey =
   | "supervision" | "org-dashboard" | "pendencias" | "agenda" | "notificacoes" | "usuarios-painel" | "pesquisa-avancada"
@@ -60,7 +61,10 @@ export interface AdminSidebarProps {
   mobileOnly?: boolean;
 }
 
-export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[] {
+export function buildGroups(
+  counts: AdminSidebarProps["counts"] = {},
+  terms: Record<string, string> = ORG_TERM_DEFAULTS,
+): NavGroup[] {
   return [
     {
       id: "dashboard",
@@ -96,7 +100,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "genealogy",     label: "Genealogia",     icon: <Network size={15} /> },
         { key: "ministerios",   label: "Ministérios",    icon: <Mic2 size={15} /> },
         { key: "kids-admin",    label: "Ministério de Crianças (KIDS)", icon: <Baby size={15} /> },
-        { key: "life-groups",   label: "Life Groups",    icon: <Flame size={15} /> },
+        { key: "life-groups",   label: terms.life_group_plural, icon: <Flame size={15} /> },
         { key: "evangelism-groups", label: "Grupos de Evangelismo", icon: <Megaphone size={15} /> },
         { key: "mda",           label: "Estrutura MDA",  icon: <Network size={15} /> },
         { key: "mda-health",    label: "Saúde MDA",      icon: <Heart size={15} /> },
@@ -109,8 +113,8 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
       label: "Relatórios Operacionais",
       icon: <FileBarChart size={16} />,
       items: [
-        { key: "weekly",  label: "Life Groups — Semanal", icon: <CalendarDays size={15} /> },
-        { key: "monthly", label: "Life Groups — Mensal",  icon: <CalendarRange size={15} /> },
+        { key: "weekly",  label: `${terms.life_group_plural} — Semanal`, icon: <CalendarDays size={15} /> },
+        { key: "monthly", label: `${terms.life_group_plural} — Mensal`,  icon: <CalendarRange size={15} /> },
         { key: "relmda-supervisao", label: "M.D.A. — Supervisão", icon: <FileBarChart size={15} /> },
         { key: "relmda-consolidacao", label: "M.D.A. — Consolidação", icon: <Network size={15} /> },
         { key: "relmda-dashboard", label: "M.D.A. — Visão Geral", icon: <BarChart3 size={15} /> },
@@ -142,7 +146,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
     },
     {
       id: "cecmais",
-      label: "CECmais",
+      label: terms.more_brand,
       icon: <Sparkles size={16} />,
       items: [
         { key: "cecmais-ofertas", label: "Ofertas", icon: <Sparkles size={15} /> },
@@ -171,10 +175,10 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
     },
     {
       id: "cec-id",
-      label: "CEC ID",
+      label: terms.member_id_brand,
       icon: <IdCard size={16} />,
       items: [
-        { key: "cec-id-portaria", label: "Leitor de Portaria", icon: <IdCard size={15} /> },
+        { key: "cec-id-portaria", label: `Leitor de ${terms.member_id_brand}`, icon: <IdCard size={15} /> },
       ],
     },
     {
@@ -232,9 +236,10 @@ export function AdminSidebar({
     : (myChurch?.name ? myChurch.name.toUpperCase() : "CEC FAMILY");
   const { data: activeModules = [] } = useMyActiveModules();
   const { data: tenantModules = TENANT_MODULE_DEFAULTS } = useTenantModules(profile?.church_id);
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(profile?.church_id);
   const isApostolo = profile?.role === "apostolo";
 
-  let groups = buildGroups(counts)
+  let groups = buildGroups(counts, terms)
     .map((g) => ({
       ...g,
       items: g.items.filter((item) => {
@@ -270,7 +275,7 @@ export function AdminSidebar({
     (counts.pipeline_new ?? 0) + (counts.tower_alerts ?? 0);
 
   const roleLabel: Record<string, string> = {
-    apostolo: isFamTenant ? "Administrador Geral" : "Apóstolo",
+    apostolo: terms.admin_role ?? (isFamTenant ? "Adm" : "Administrador"),
     pastor: "Pastor", supervisor: "Supervisor", lider: "Líder",
   };
 

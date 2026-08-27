@@ -11,7 +11,7 @@ import { DatePicker } from "@/components/shared/DatePicker";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { weeklyReportSchema, type WeeklyReportFormInput } from "@/schemas";
-import { useAllMembers, useWeeklyReports, useOrgTerminology } from "@/hooks/use-queries";
+import { useAllMembers, useWeeklyReports, useOrgTerminology, useMyProfile } from "@/hooks/use-queries";
 import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 import { createWeeklyReport, deleteWeeklyReport } from "@/services/weeklyReports";
@@ -41,12 +41,12 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 }
 
 // ── Seletor de escopo hierárquico ─────────────────────────────
-function ScopeSelector({ onSelect }: { onSelect: (lgId: string, lgName: string) => void }) {
+function ScopeSelector({ onSelect, churchId }: { onSelect: (lgId: string, lgName: string) => void; churchId?: string | null }) {
   const [scopeType, setScopeType] = useState<ScopeType>("life_group");
   const [nucleos,   setNucleos]   = useState<OrgNode[]>([]);
   const [distritos, setDistritos] = useState<OrgNode[]>([]);
   const [areas,     setAreas]     = useState<OrgNode[]>([]);
-  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(churchId);
   const [setores,   setSetores]   = useState<OrgNode[]>([]);
   const [allLgs,    setAllLgs]    = useState<LifeGroup[]>([]);
   const [filteredLgs, setFilteredLgs] = useState<LifeGroup[]>([]);
@@ -97,21 +97,21 @@ function ScopeSelector({ onSelect }: { onSelect: (lgId: string, lgName: string) 
   }, [scopeType, selectedNucleo, selectedDistrito, selectedArea, selectedSetor, allLgs]);
 
   const SCOPE_LABELS: Record<ScopeType, string> = {
-    todos: "Todos os Life Groups",
+    todos: `Todos os ${terms.life_group_plural}`,
     nucleo: "Por Núcleo",
     distrito: "Por Distrito",
     area: "Por Área",
     setor: "Por Setor",
-    life_group: "Life Group específico",
+    life_group: `${terms.life_group} específico`,
   };
 
   return (
     <Card className="border-l-4 border-l-gold">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-base">
-          <Filter className="h-4 w-4 text-gold" />Selecionar Life Group
+          <Filter className="h-4 w-4 text-gold" />Selecionar {terms.life_group}
         </CardTitle>
-        <CardDescription>Filtre por escopo hierárquico e selecione o Life Group</CardDescription>
+        <CardDescription>Filtre por escopo hierárquico e selecione o {terms.life_group}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Tipo de escopo */}
@@ -166,21 +166,21 @@ function ScopeSelector({ onSelect }: { onSelect: (lgId: string, lgName: string) 
           </Field>
         )}
 
-        {/* Life Group final */}
-        <Field label={`Life Group (${filteredLgs.length} disponível${filteredLgs.length !== 1 ? "s" : ""})`}>
+        {/* Grupo final — a chave técnica permanece life_group */}
+        <Field label={`${terms.life_group} (${filteredLgs.length} disponível${filteredLgs.length !== 1 ? "s" : ""})`}>
           <select value={selectedLg} onChange={(e) => {
             setSelectedLg(e.target.value);
             const lg = filteredLgs.find(l => l.id === e.target.value);
             if (lg) onSelect(lg.id, lg.name);
           }}
             className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-            <option value="">— Selecione o Life Group —</option>
+            <option value="">— Selecione o {terms.life_group} —</option>
             {filteredLgs.map(lg => <option key={lg.id} value={lg.id}>{lg.name}</option>)}
           </select>
         </Field>
 
         {filteredLgs.length === 0 && (
-          <p className="text-xs italic text-muted">Nenhum Life Group encontrado para este escopo.</p>
+          <p className="text-xs italic text-muted">Nenhum {terms.life_group} encontrado para este escopo.</p>
         )}
       </CardContent>
     </Card>
@@ -189,7 +189,9 @@ function ScopeSelector({ onSelect }: { onSelect: (lgId: string, lgName: string) 
 
 // ── Componente principal ──────────────────────────────────────
 export function WeeklyReportsAdmin() {
+  const { data: profile } = useMyProfile();
   const { data: members = [] } = useAllMembers();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(profile?.church_id);
   const [cellId, setCellId] = useState<string>("");
   const { data: reports = [] } = useWeeklyReports(cellId || null);
   const qc = useQueryClient();
@@ -303,13 +305,13 @@ export function WeeklyReportsAdmin() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><ClipboardList className="h-5 w-5 text-gold" />Relatório Semanal — Life Group</CardTitle>
-          <CardDescription>Selecione o Life Group pelo escopo hierárquico desejado</CardDescription>
+          <CardTitle className="flex items-center gap-2"><ClipboardList className="h-5 w-5 text-gold" />Relatório Semanal — {terms.life_group}</CardTitle>
+          <CardDescription>Selecione o {terms.life_group} pelo escopo hierárquico desejado</CardDescription>
         </CardHeader>
       </Card>
 
       {/* Seletor hierárquico */}
-      <ScopeSelector onSelect={(id) => onPickCell(id)} />
+      <ScopeSelector churchId={profile?.church_id} onSelect={(id) => onPickCell(id)} />
 
       {cellId && (
         <Card>
@@ -427,7 +429,7 @@ export function WeeklyReportsAdmin() {
                 </details>
 
                 <details className="rounded-xl border bg-card" open>
-                  <summary className="cursor-pointer select-none px-4 py-3 font-semibold text-navy">❤️ Saúde do Life Group</summary>
+                  <summary className="cursor-pointer select-none px-4 py-3 font-semibold text-navy">❤️ Saúde do {terms.life_group}</summary>
                   <div className="border-t p-3 space-y-3">
                     <Field label="Avaliação de saúde">
                       <select {...register("saude_status")} className="h-10 w-full rounded-md border bg-background px-3 text-sm">
@@ -457,7 +459,7 @@ export function WeeklyReportsAdmin() {
               {/* Presença */}
               <div>
                 <Label className="mb-2 block">Presença ({present.length}/{attendance.length} — {membrosPres} membros + {freqPres} frequentadores)</Label>
-                {attendance.length === 0 && <p className="text-sm italic text-muted">Nenhum membro cadastrado neste Life Group.</p>}
+                {attendance.length === 0 && <p className="text-sm italic text-muted">Nenhum membro cadastrado neste {terms.life_group}.</p>}
                 <div className="space-y-2">
                   {attendance.map((a) => (
                     <div key={a.member_id} className="rounded-lg border p-3">
@@ -528,7 +530,7 @@ export function WeeklyReportsAdmin() {
         <div>
           <h3 className="mb-2 font-display text-lg text-navy">Relatórios anteriores ({reports.length})</h3>
           <div className="space-y-2">
-            {reports.length === 0 && <p className="text-sm italic text-muted">Nenhum relatório salvo para este Life Group.</p>}
+            {reports.length === 0 && <p className="text-sm italic text-muted">Nenhum relatório salvo para este {terms.life_group}.</p>}
             {reports.map((r) => (
               <div key={r.id} className="flex items-center justify-between rounded-xl border bg-card p-3">
                 <div className="min-w-0 flex-1">

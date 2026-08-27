@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { LogOut, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Mais } from "@/components/shared/CECmaisBrand";
+import { useMyProfile, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { Servo360Icon } from "@/components/servo360/Servo360Icon";
 
 export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
@@ -11,6 +12,9 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
   cardReady?: boolean;
   onSignOut: () => void;
 }) {
+  const { data: profile } = useMyProfile();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(profile?.church_id);
+
   return (
     <header className="border-b-[3px] border-gold bg-navy">
       <div className="container flex h-16 items-center justify-between">
@@ -60,7 +64,7 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
                 active === "cecmais" ? "border-b-2 border-gold text-white" : "text-white/60 hover:text-white"
               }`}
             >
-              CEC<Mais className="text-sm" />
+              {terms.more_brand ?? "CEC Mais"}
             </Link>
           </nav>
         </div>

@@ -8,8 +8,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  useMyProfile, useMyMember, useChurches, useCells, useMyMinistries, useMemberCard, useChurchStateName,
+  useMyProfile, useMyMember, useChurches, useCells, useMyMinistries, useMemberCard, useChurchStateName, useOrgTerminology,
 } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 import { MemberHeader } from "@/components/panel/MemberHeader";
 import { CompleteProfileCard } from "@/components/panel/CompleteProfileCard";
@@ -57,6 +58,7 @@ function carteirinhaLabel(cardStatus: CardStatus | undefined): { label: string; 
 
 export default function CarteiraPage() {
   const { data: profile } = useMyProfile();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(profile?.church_id);
   const { data: member } = useMyMember();
   const { data: churches = [] } = useChurches();
   const { data: cells = [] } = useCells();
@@ -79,7 +81,7 @@ export default function CarteiraPage() {
     const url = card ? `${window.location.origin}/cec-id/${card.qr_token}` : window.location.href;
     try {
       if (navigator.share) {
-        await navigator.share({ title: "Minha Carteira CEC ID", text: `${member?.full_name} — ${card?.categoria ?? ""}`, url });
+        await navigator.share({ title: `Minha Carteira ${terms.member_id_brand}`, text: `${member?.full_name} — ${card?.categoria ?? ""}`, url });
       } else {
         await navigator.clipboard.writeText(url);
         setShared(true); setTimeout(() => setShared(false), 2000);
@@ -157,7 +159,7 @@ export default function CarteiraPage() {
               <h2 className="mt-4 font-display text-2xl font-bold">{member.full_name}</h2>
               <p className="text-sm font-bold uppercase tracking-wide text-gold">{card.categoria}</p>
 
-              <p className="mt-3 text-[11px] font-bold uppercase tracking-widest text-white/60">CEC ID</p>
+              <p className="mt-3 text-[11px] font-bold uppercase tracking-widest text-white/60">{terms.member_id_brand}</p>
               <p className="rounded-md bg-white/10 px-3 py-1.5 font-mono text-sm tracking-wide text-white inline-block">{card.cec_id ?? "—"}</p>
             </div>
 
@@ -184,7 +186,7 @@ export default function CarteiraPage() {
               <p className="text-sm font-semibold">{church?.name ?? "—"}</p>
             </div>
             <div>
-              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/60"><Users2 className="h-3 w-3" /> Life Group</p>
+              <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/60"><Users2 className="h-3 w-3" /> {terms.life_group}</p>
               <p className="text-sm font-semibold">{lg?.name ?? "Aguardando alocação"}</p>
             </div>
             <div>
@@ -285,7 +287,7 @@ export default function CarteiraPage() {
         </Card>
 
         <p className="rounded-md border bg-muted/20 p-3 text-center text-xs text-muted-foreground">
-          <b className="text-navy">Esta é a sua Carteirinha Digital CEC ID.</b><br />
+          <b className="text-navy">Esta é a sua Carteirinha Digital {terms.member_id_brand}.</b><br />
           Apresente o QR Code para identificação em congressos, eventos e serviços da Igreja.
         </p>
       </main>

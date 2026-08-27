@@ -8,12 +8,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * As chaves técnicas permanecem estáveis; somente o texto apresentado muda.
  */
 export const ORG_TERM_DEFAULTS: Record<string, string> = {
-  lg: "Grupo", setor: "Setor", area: "Área", distrito: "Distrito",
+  lg: "Grupo", life_group: "Grupo", life_group_plural: "Grupos",
+  setor: "Setor", area: "Área", distrito: "Distrito",
   nucleo: "Núcleo", sede: "Sede", nacional: "Nacional", igreja: "Organização",
   event: "Evento", events: "Eventos", meeting: "Reunião", meetings: "Reuniões",
   service: "Atividade", services: "Atividades", communion: "Evento especial",
   church: "Organização", community: "Comunicação", discipleship: "Acompanhamento",
-  life_group: "Grupo", evangelism_group: "Grupo de Voluntários", member_id: "Membro ID",
+  evangelism_group: "Grupo de Voluntários", member_id: "Membro ID",
+  admin_role: "Apóstolo", more_brand: "CEC Mais", member_id_brand: "CEC ID",
 };
 
 export type OrgTerminologyMap = Record<string, string>;

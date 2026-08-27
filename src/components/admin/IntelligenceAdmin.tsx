@@ -4,7 +4,8 @@ import { Brain, TrendingUp, Users, Shield, BarChart3, ChevronUp, ChevronDown, Mi
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useLgScores, useLgRankings, useRetentionFunnel, useRetentionFunnelByChurch, useLgReliability, useReliabilitySummary, useGrowthVariation, useChurches } from "@/hooks/use-queries";
+import { useLgScores, useLgRankings, useRetentionFunnel, useRetentionFunnelByChurch, useLgReliability, useReliabilitySummary, useGrowthVariation, useChurches, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import type { LgRanking, LgReliabilityIndex, HealthBand, ReliabilityBand } from "@/types/domain";
 
 const BAND_COLOR: Record<HealthBand, string> = { saudavel:"bg-green-100 text-green-800 border-green-300", atencao:"bg-yellow-100 text-yellow-800 border-yellow-300", critico:"bg-red-100 text-red-800 border-red-300" };
@@ -26,6 +27,7 @@ function VarBadge({ val }: { val:number|null }) {
 
 function ScoreTab({ churchFilter }: { churchFilter:string }) {
   const { data:scores=[], isLoading } = useLgScores(churchFilter||undefined);
+  const { data:terms = ORG_TERM_DEFAULTS } = useOrgTerminology(churchFilter || null);
   const saudaveis=scores.filter(s=>s.health_band==="saudavel").length;
   const atencao=scores.filter(s=>s.health_band==="atencao").length;
   const criticos=scores.filter(s=>s.health_band==="critico").length;
@@ -72,7 +74,7 @@ function ScoreTab({ churchFilter }: { churchFilter:string }) {
             </CardContent>
           </Card>
         ))}
-        {scores.length===0&&<p className="py-10 text-center text-sm text-muted-foreground">Nenhum LG encontrado.</p>}
+        {scores.length===0&&<p className="py-10 text-center text-sm text-muted-foreground">Nenhum {terms.life_group} encontrado.</p>}
       </div>
     </div>
   );
@@ -87,6 +89,7 @@ const RANK_OPTIONS: {value:RankDim;label:string}[] = [
 ];
 function RankingsTab({ churchFilter }: { churchFilter:string }) {
   const { data:rankings=[], isLoading } = useLgRankings(churchFilter||undefined);
+  const { data:terms = ORG_TERM_DEFAULTS } = useOrgTerminology(churchFilter || null);
   const [dimension, setDimension] = useState<RankDim>("rank_geral");
   const sorted = [...rankings].sort((a,b)=>(a[dimension]??999)-(b[dimension]??999));
   if(isLoading) return <p className="py-8 text-center text-sm text-muted-foreground">Carregando rankings…</p>;
@@ -97,12 +100,12 @@ function RankingsTab({ churchFilter }: { churchFilter:string }) {
           <SelectTrigger className="w-52"><SelectValue/></SelectTrigger>
           <SelectContent>{RANK_OPTIONS.map(o=><SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
         </Select>
-        <span className="text-sm text-muted-foreground">{rankings.length} Life Groups</span>
+        <span className="text-sm text-muted-foreground">{rankings.length} {terms.life_group_plural}</span>
       </div>
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-[#0E2A47] text-white text-xs uppercase tracking-wider">
-            <tr><th className="px-3 py-2 text-left w-8">#</th><th className="px-3 py-2 text-left">Life Group</th><th className="px-3 py-2 text-center">Score</th><th className="px-3 py-2 text-center">Membros</th><th className="px-3 py-2 text-center">Visitantes</th><th className="px-3 py-2 text-center">Discip.</th><th className="px-3 py-2 text-center">Filhos</th></tr>
+            <tr><th className="px-3 py-2 text-left w-8">#</th><th className="px-3 py-2 text-left">{terms.life_group}</th><th className="px-3 py-2 text-center">Score</th><th className="px-3 py-2 text-center">Membros</th><th className="px-3 py-2 text-center">Visitantes</th><th className="px-3 py-2 text-center">Discip.</th><th className="px-3 py-2 text-center">Filhos</th></tr>
           </thead>
           <tbody>
             {sorted.slice(0,50).map((r,i)=>(
@@ -184,6 +187,7 @@ function FunnelTab() {
 
 function ReliabilityTab({ churchFilter }: { churchFilter:string }) {
   const { data:summary } = useReliabilitySummary();
+  const { data:terms = ORG_TERM_DEFAULTS } = useOrgTerminology(churchFilter || null);
   const { data:lgs=[], isLoading } = useLgReliability(churchFilter||undefined);
   if(isLoading) return <p className="py-8 text-center text-sm text-muted-foreground">Analisando dados…</p>;
   return (
@@ -199,7 +203,7 @@ function ReliabilityTab({ churchFilter }: { churchFilter:string }) {
       {summary&&summary.lgs_sem_relatorio_recente>0&&(
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 shrink-0"/>
-          <p className="text-sm text-red-800"><strong>{summary.lgs_sem_relatorio_recente} Life Group(s)</strong> não enviaram relatório nos últimos 14 dias.</p>
+          <p className="text-sm text-red-800"><strong>{summary.lgs_sem_relatorio_recente} {terms.life_group}(s)</strong> não enviaram relatório nos últimos 14 dias.</p>
         </div>
       )}
       <div className="space-y-2">

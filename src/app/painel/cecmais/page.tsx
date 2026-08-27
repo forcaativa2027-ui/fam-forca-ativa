@@ -3,7 +3,8 @@ import Link from "next/link";
 import { Search, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useMyProfile, useMyMember, useMemberCard } from "@/hooks/use-queries";
+import { useMyProfile, useMyMember, useMemberCard, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 import { MemberHeader } from "@/components/panel/MemberHeader";
 import { CECmaisLogo, Mais } from "@/components/shared/CECmaisBrand";
@@ -14,10 +15,12 @@ const CATEGORIES = CECMAIS_CATEGORIAS;
 
 export default function CECmaisPage() {
   const { data: profile } = useMyProfile();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(profile?.church_id);
   const { data: member } = useMyMember();
   const { data: card } = useMemberCard(member?.id ?? null);
   const isAdmin = profile?.role && profile.role !== "membro" && profile.role !== "visitante";
   const firstName = (member?.full_name ?? profile?.full_name ?? "").split(" ")[0];
+  const moreBrandPrefix = terms.more_brand.replace(/\s+mais$/i, "").trim() || terms.more_brand;
 
   async function signOut() {
     if (profile) await logAudit(supabase, "logout", "auth", profile.id);
@@ -30,7 +33,7 @@ export default function CECmaisPage() {
       <MemberHeader active="cecmais" isAdmin={!!isAdmin} cardReady={card?.card_status === "elegivel" || card?.card_status === "emitida"} onSignOut={signOut} />
 
       <main className="container max-w-3xl space-y-8 py-12 text-center">
-        <CECmaisLogo size="lg" className="justify-center" />
+        <CECmaisLogo size="lg" className="justify-center" brandName={moreBrandPrefix} />
 
         <div>
           <p className="text-lg text-muted-foreground">Olá, {firstName || "membro"}.</p>
@@ -43,7 +46,7 @@ export default function CECmaisPage() {
 
         <div className="relative mx-auto max-w-md">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Buscar no CECmais…" className="h-12 pl-9 text-sm" disabled />
+          <Input placeholder={`Buscar no ${terms.more_brand}…`} className="h-12 pl-9 text-sm" disabled />
         </div>
 
         <div className="rounded-xl border border-dashed border-gold/40 bg-gold/5 p-6">

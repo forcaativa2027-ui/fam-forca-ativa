@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useMemberCompletion } from "@/hooks/use-queries";
+import { useMemberCompletion, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 import { updateMember, uploadMemberPhoto, createMyMemberRecord } from "@/services/members";
 import { logAudit } from "@/services/audit";
@@ -44,6 +45,7 @@ const emptyToNull = (value: string) => value.trim() || null;
  */
 export function ProfileAlertBanner({ member }: { member: Member | null | undefined }) {
   const { data: percent = 0 } = useMemberCompletion(member?.id ?? null);
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(member?.church_id);
   if (member && percent >= 100) return null;
 
   return (
@@ -54,7 +56,7 @@ export function ProfileAlertBanner({ member }: { member: Member | null | undefin
       <AlertTriangle className="h-4 w-4 shrink-0 text-amber-300" />
       <span className="flex-1">
         {member
-          ? `Seu cadastro está ${percent}% completo — finalize pra liberar sua Carteirinha de Membro.`
+          ? `Seu cadastro está ${percent}% completo — finalize pra liberar sua Carteirinha ${terms.member_id_brand}.`
           : "Você ainda não completou seu cadastro de membro."}
       </span>
       <ChevronRight className="h-4 w-4 shrink-0" />
@@ -65,6 +67,7 @@ export function ProfileAlertBanner({ member }: { member: Member | null | undefin
 /** Mostrado quando o usuário logado ainda não tem nenhum registro de membro — ele mesmo pode criar o próprio cadastro. */
 function CreateMemberPrompt() {
   const qc = useQueryClient();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
@@ -87,7 +90,7 @@ function CreateMemberPrompt() {
           <p className="font-display text-base font-bold text-fam-plum">Complete seu cadastro</p>
           <p className="mt-1 text-xs text-fam-plum/80">
             Você ainda não tem um cadastro de membro. Preencha seus dados agora — depois a liderança só precisa
-            confirmar seu Life Group (se você não escolher um) e liberar sua Carteirinha.
+            confirmar seu {terms.life_group} (se você não escolher um) e liberar sua Carteirinha.
           </p>
           {err && <p role="alert" className="mt-1 text-xs font-medium text-red-700">{err}</p>}
         </div>
@@ -108,6 +111,7 @@ function CreateMemberPrompt() {
 export function CompleteProfileCard({ member }: { member: Member | null | undefined }) {
   const qc = useQueryClient();
   const { data: percent = 0 } = useMemberCompletion(member?.id ?? null);
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(member?.church_id);
   const [open, setOpen] = useState(false);
   const [snoozed, setSnoozed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -137,7 +141,7 @@ export function CompleteProfileCard({ member }: { member: Member | null | undefi
               <p className="font-display text-base font-bold text-navy">Seus dados estão atualizados</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Seu cadastro pessoal está completo e foi enviado para validação da liderança.
-                Após essa validação, sua Carteirinha CEC ID poderá ser liberada.
+                Após essa validação, sua Carteirinha {terms.member_id_brand} poderá ser liberada.
               </p>
             </div>
             <Button size="sm" variant="outline" onClick={() => setOpen(true)} className="gap-1">
@@ -176,7 +180,7 @@ export function CompleteProfileCard({ member }: { member: Member | null | undefi
               <p className="font-display text-base font-bold text-red-700">Complete seu cadastro</p>
               <p className="text-xs text-muted-foreground">
                 Seu cadastro ainda possui informações pendentes. Complete seus dados para iniciar
-                o processo de liberação da sua Carteirinha CEC ID.
+                o processo de liberação da sua Carteirinha {terms.member_id_brand}.
               </p>
               <div className="mt-2 flex items-center gap-2">
                 <div className="h-2 flex-1 max-w-[180px] overflow-hidden rounded-full bg-muted">
@@ -201,6 +205,7 @@ export function CompleteProfileCard({ member }: { member: Member | null | undefi
 
 function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: () => void }) {
   const qc = useQueryClient();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(member.church_id);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(member.photo_url ?? null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);

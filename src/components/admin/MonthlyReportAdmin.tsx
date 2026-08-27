@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAllMembers, useMonthlyReports, useMonthlyReportFull } from "@/hooks/use-queries";
+import { useAllMembers, useMonthlyReports, useMonthlyReportFull, useMyProfile, useOrgTerminology } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 import {
   prefillMonthlyReport, updateWeekTotals, updateMemberWeek,
@@ -40,7 +41,7 @@ const WEEK_FIELDS: { key: keyof MonthlyReportWeek; label: string; money?: boolea
 ];
 
 // ─── Seletor hierárquico (mesmo padrão do semanal) ────────────
-function ScopeSelector({ onSelectLgs }: { onSelectLgs: (lgs: LifeGroup[]) => void }) {
+function ScopeSelector({ onSelectLgs, churchId }: { onSelectLgs: (lgs: LifeGroup[]) => void; churchId?: string | null }) {
   const [scopeType, setScopeType]         = useState<ScopeType>("life_group");
   const [nucleos,   setNucleos]           = useState<OrgNode[]>([]);
   const [distritos, setDistritos]         = useState<OrgNode[]>([]);
@@ -53,6 +54,7 @@ function ScopeSelector({ onSelectLgs }: { onSelectLgs: (lgs: LifeGroup[]) => voi
   const [selectedArea,     setSelectedArea]     = useState("");
   const [selectedSetor,    setSelectedSetor]    = useState("");
   const [selectedLgs,      setSelectedLgs]      = useState<string[]>([]);
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(churchId);
 
   useEffect(() => {
     Promise.all([
@@ -110,9 +112,9 @@ function ScopeSelector({ onSelectLgs }: { onSelectLgs: (lgs: LifeGroup[]) => voi
   }
 
   const SCOPE_LABELS: Record<ScopeType, string> = {
-    life_group: "Life Group específico", setor: "Por Setor",
+    life_group: `${terms.life_group} específico`, setor: "Por Setor",
     area: "Por Área", distrito: "Por Distrito",
-    nucleo: "Por Núcleo", todos: "Todos os Life Groups",
+    nucleo: "Por Núcleo", todos: `Todos os ${terms.life_group_plural}`,
   };
 
   return (
@@ -121,7 +123,7 @@ function ScopeSelector({ onSelectLgs }: { onSelectLgs: (lgs: LifeGroup[]) => voi
         <CardTitle className="flex items-center gap-2 text-base">
           <Filter className="h-4 w-4 text-gold" />Escopo do Relatório
         </CardTitle>
-        <CardDescription>Selecione um ou mais Life Groups para consolidar</CardDescription>
+          <CardDescription>Selecione um ou mais {terms.life_group_plural.toLowerCase()} para consolidar</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="space-y-1.5">
@@ -565,7 +567,9 @@ function ConsolidatedDashboard({ lgs, year, month }: { lgs: LifeGroup[]; year: n
 
 // ─── Componente principal ──────────────────────────────────────
 export function MonthlyReportAdmin() {
-  const { data: allMembers = [] } = useAllMembers();
+  const { data: profile } = useMyProfile();
+  const { data: members = [] } = useAllMembers();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(profile?.church_id);
   const today = new Date();
   const [year,  setYear]  = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
@@ -579,7 +583,7 @@ export function MonthlyReportAdmin() {
             <FileSpreadsheet className="h-5 w-5 text-gold" />Relatório Mensal
           </CardTitle>
           <CardDescription>
-            Consolidação automática dos relatórios semanais por Life Group, setor, distrito, núcleo ou rede completa
+            Consolidação automática dos relatórios semanais por {terms.life_group_plural.toLowerCase()}, setor, distrito, núcleo ou rede completa
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -601,14 +605,14 @@ export function MonthlyReportAdmin() {
       </Card>
 
       {/* Seletor hierárquico */}
-      <ScopeSelector onSelectLgs={setSelectedLgs} />
+      <ScopeSelector churchId={profile?.church_id} onSelectLgs={setSelectedLgs} />
 
       {/* Conteúdo conforme seleção */}
       {selectedLgs.length === 0 && (
         <Card>
-          <CardContent className="pt-8 pb-8 text-center">
+              <CardContent className="pt-8 pb-8 text-center">
             <Users className="h-8 w-8 text-muted mx-auto mb-2" />
-            <p className="text-sm text-muted">Selecione um ou mais Life Groups para gerar o relatório.</p>
+            <p className="text-sm text-muted">Selecione um ou mais {terms.life_group_plural.toLowerCase()} para gerar o relatório.</p>
           </CardContent>
         </Card>
       )}
@@ -618,7 +622,7 @@ export function MonthlyReportAdmin() {
           lgId={selectedLgs[0].id}
           lgName={selectedLgs[0].name}
           year={year} month={month}
-          allMembers={allMembers}
+          allMembers={members}
         />
       )}
 
@@ -629,7 +633,7 @@ export function MonthlyReportAdmin() {
               <BarChart3 className="mr-1.5 h-3.5 w-3.5" />Dashboard consolidado
             </TabsTrigger>
             <TabsTrigger value="individual">
-              <Users className="mr-1.5 h-3.5 w-3.5" />Por Life Group ({selectedLgs.length})
+              <Users className="mr-1.5 h-3.5 w-3.5" />Por {terms.life_group} ({selectedLgs.length})
             </TabsTrigger>
           </TabsList>
 
@@ -643,7 +647,7 @@ export function MonthlyReportAdmin() {
                 <SingleLgReport
                   lgId={lg.id} lgName={lg.name}
                   year={year} month={month}
-                  allMembers={allMembers}
+                  allMembers={members}
                 />
               </div>
             ))}

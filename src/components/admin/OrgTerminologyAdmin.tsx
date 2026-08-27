@@ -12,7 +12,10 @@ import * as OrgTerm from "@/services/orgTerminology";
 const CONCEPT_LABELS: Record<string, string> = {
   nacional: "Nível Nacional", sede: "Nível Sede/Estado", area: "Nível Área",
   distrito: "Nível Distrito", setor: "Nível Setor", nucleo: "Nível Núcleo",
-  igreja: "Nível Igreja/Comunidade", lg: "Grupo de Acompanhamento (Life Group)",
+  igreja: "Nível Igreja/Comunidade", lg: "Grupo de Acompanhamento",
+  life_group: "Nome singular do grupo", life_group_plural: "Nome plural do grupo",
+  admin_role: "Rótulo do perfil administrador", more_brand: "Nome do módulo Mais",
+  member_id_brand: "Nome da identificação do membro",
 };
 
 /**
@@ -25,7 +28,7 @@ const CONCEPT_LABELS: Record<string, string> = {
 export function OrgTerminologyAdmin() {
   const { data: me } = useMyProfile();
   const qc = useQueryClient();
-  const { data: terms = {} } = useOrgTerminology();
+  const { data: terms = {} } = useOrgTerminology(me?.church_id);
   const [edited, setEdited] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -34,7 +37,7 @@ export function OrgTerminologyAdmin() {
     if (!value) return;
     setBusy(key);
     try {
-      await OrgTerm.setOrgTerm(supabase, key, value, me?.id);
+      await OrgTerm.setOrgTerm(supabase, key, value, me?.id, me?.church_id ?? null);
       qc.invalidateQueries({ queryKey: ["org-terminology"] });
       setEdited((prev) => { const n = { ...prev }; delete n[key]; return n; });
     } finally { setBusy(null); }
@@ -44,13 +47,13 @@ export function OrgTerminologyAdmin() {
     <div className="space-y-4 p-4">
       <div>
         <h2 className="flex items-center gap-2 font-display text-xl text-navy"><Tags className="h-5 w-5 text-gold" />Terminologia Organizacional</h2>
-        <p className="text-sm text-muted-foreground">Renomeie os níveis usados em toda a plataforma (Núcleo, Setor, Distrito…) sem afetar a estrutura de dados.</p>
+        <p className="text-sm text-muted-foreground">Configure os nomes exibidos para este tenant sem alterar chaves técnicas, rotas, permissões ou estrutura de dados.</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Níveis hierárquicos</CardTitle>
-          <CardDescription>Válido pra toda a plataforma, por enquanto (configuração por igreja/instituto chega numa fase futura).</CardDescription>
+          <CardDescription>Os valores são aplicados ao tenant atual; quando não houver configuração, a plataforma usa defaults compatíveis.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           {Object.entries(CONCEPT_LABELS).map(([key, description]) => (

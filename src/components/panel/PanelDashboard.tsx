@@ -36,8 +36,9 @@ import {
   useMyProfile, useDashboard, useChurches, useMdaAlerts,
   useMyMember, useMemberCard,
   useMyActiveDiscipleship, useMyDisciples,
-  useMyTimeline, useCellPrayers,
+  useMyTimeline, useCellPrayers, useOrgTerminology,
 } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { logAudit } from "@/services/audit";
 import { addPrayer, markPrayerAnswered } from "@/services/prayer";
 import { profileEditSchema, newPrayerSchema, type ProfileEditInput, type NewPrayerInput } from "@/schemas";
@@ -66,6 +67,7 @@ export const STAGE_LABELS: Record<string, string> = {
 
 export default function PanelDashboard() {
   const { data: profile } = useMyProfile();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(profile?.church_id);
   const { data: member } = useMyMember();
   const { data: card } = useMemberCard(member?.id ?? null);
   const { data: allChurches = [] } = useChurches();
@@ -98,7 +100,7 @@ export default function PanelDashboard() {
     { key: "geral", label: "Visão Geral", icon: <BarChart3 size={18} />, onClick: () => setTab("geral") },
     { key: "radio", label: "Rádio Web", icon: <Radio size={18} />, onClick: () => setTab("radio") },
     { key: "alertas", label: "Alertas", icon: <NotificationBadge count={notifCount} />, onClick: () => setTab("alertas") },
-    { key: "celula", label: "Life Group", icon: <Users size={18} />, onClick: () => setTab("celula") },
+    { key: "celula", label: terms.life_group, icon: <Users size={18} />, onClick: () => setTab("celula") },
     { key: "jornada", label: "Jornada", icon: <Map size={18} />, onClick: () => setTab("jornada") },
     { key: "oracao", label: "Oração", icon: <MessageSquareHeart size={18} />, onClick: () => setTab("oracao") },
     { key: "perfil", label: "Perfil", icon: <User size={18} />, onClick: () => setTab("perfil") },
@@ -114,7 +116,7 @@ export default function PanelDashboard() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-muted">Painel</p>
             <h1 className="mt-1 font-display text-3xl text-navy">{profile ? `Paz, ${profile.full_name.split(" ")[0]}.` : "Bem-vindo"}</h1>
-            {profile && <p className="mt-1 text-sm font-bold text-gold">{ROLE_LABELS[profile.role] ?? profile.role}</p>}
+            {profile && <p className="mt-1 text-sm font-bold text-gold">{profile.role === "apostolo" ? terms.admin_role : ROLE_LABELS[profile.role] ?? profile.role}</p>}
             <Link href="/painel/seguranca" className="mt-1 inline-block text-xs text-muted-foreground underline underline-offset-2 hover:text-navy">
               Segurança e senha
             </Link>
