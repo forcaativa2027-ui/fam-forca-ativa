@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -209,7 +209,7 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
-  const { register, handleSubmit } = useForm<FormValues>({
+  const { register, handleSubmit, setValue, watch } = useForm<FormValues>({
     defaultValues: {
       email: member.email ?? "",
       birth_date: member.birth_date ?? "", phone: member.phone ?? "",
@@ -221,6 +221,38 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
       gender: member.gender ?? "", marital_status: member.marital_status ?? "",
     },
   });
+  const cepValue = watch("cep");
+  const [cepStatus, setCepStatus] = useState<"idle" | "loading" | "found" | "not-found" | "error">("idle");
+
+  useEffect(() => {
+    const cep = cepValue.replace(/\D/g, "");
+    if (cep.length !== 8) {
+      setCepStatus("idle");
+      return;
+    }
+
+    let cancelled = false;
+    setCepStatus("loading");
+    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Falha na consulta")))
+      .then((data: { erro?: boolean; logradouro?: string; bairro?: string; localidade?: string; uf?: string }) => {
+        if (cancelled) return;
+        if (data.erro) {
+          setCepStatus("not-found");
+          return;
+        }
+        if (data.logradouro) setValue("address", data.logradouro, { shouldDirty: true });
+        if (data.bairro) setValue("neighborhood", data.bairro, { shouldDirty: true });
+        if (data.localidade) setValue("city", data.localidade, { shouldDirty: true });
+        if (data.uf) setValue("state", data.uf, { shouldDirty: true, shouldValidate: true });
+        setCepStatus("found");
+      })
+      .catch(() => {
+        if (!cancelled) setCepStatus("error");
+      });
+
+    return () => { cancelled = true; };
+  }, [cepValue, setValue]);
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -343,7 +375,14 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
           <div className="rounded-md border bg-muted/20 p-3 space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Endereço</p>
             <div className="grid gap-3 sm:grid-cols-3">
-              <div><Label>CEP</Label><Input {...register("cep")} placeholder="00000-000" /></div>
+              <div>
+                <Label htmlFor="member-cep">CEP</Label>
+                <Input id="member-cep" {...register("cep")} placeholder="00000-000" inputMode="numeric" maxLength={9} />
+                {cepStatus === "loading" && <p className="mt-1 text-[11px] text-muted-foreground">Consultando endereço…</p>}
+                {cepStatus === "found" && <p className="mt-1 text-[11px] text-emerald-700">Endereço preenchido pelo CEP.</p>}
+                {cepStatus === "not-found" && <p className="mt-1 text-[11px] text-amber-700">CEP não encontrado; preencha o endereço manualmente.</p>}
+                {cepStatus === "error" && <p className="mt-1 text-[11px] text-amber-700">Não foi possível consultar o CEP agora.</p>}
+              </div>
               <div className="sm:col-span-2"><Label>Logradouro</Label><Input {...register("address")} /></div>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
@@ -357,8 +396,10 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
                 <Label htmlFor="member-state">Estado</Label>
                 <select
                   id="member-state"
+                  aria-label="Estado da residência"
+                  defaultValue={member.state ?? ""}
                   {...register("state")}
-                  className="h-10 w-full rounded-md border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="relative z-10 h-10 w-full cursor-pointer appearance-auto rounded-md border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <option value="">— Selecione a UF —</option>
                   {BRAZILIAN_STATES.map(([uf, name]) => (

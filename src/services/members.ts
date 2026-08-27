@@ -24,10 +24,37 @@ export async function getMyMember(sb: SupabaseClient): Promise<Member | null> {
   } catch { return null; }
 }
 
+const completionValue = (value: unknown) =>
+  typeof value === "string" ? value.trim().length > 0 : value !== null && value !== undefined;
+
+function calculateMemberCompletion(row: Record<string, unknown>): number {
+  const filled = [
+    completionValue(row.birth_date),
+    completionValue(row.cpf),
+    completionValue(row.rg) || completionValue(row.cnh),
+    completionValue(row.phone),
+    completionValue(row.phone_recado),
+    completionValue(row.cep),
+    completionValue(row.address),
+    completionValue(row.numero),
+    completionValue(row.neighborhood),
+    completionValue(row.city),
+    completionValue(row.photo_url),
+    completionValue(row.gender),
+  ].filter(Boolean).length;
+  return Math.max(0, Math.min(100, Math.round((filled / 12) * 100)));
+}
+
 export async function getMemberCompletionPercent(sb: SupabaseClient, memberId: string): Promise<number> {
   const { data, error } = await sb.rpc("member_completion_percent", { p_member_id: memberId });
-  if (error) return 0;
-  return (data as number) ?? 0;
+  if (!error && typeof data === "number") return Math.max(0, Math.min(100, data));
+
+  const { data: member } = await sb
+    .from("members")
+    .select("birth_date, cpf, rg, cnh, phone, phone_recado, cep, address, numero, neighborhood, city, photo_url, gender")
+    .eq("id", memberId)
+    .maybeSingle();
+  return member ? calculateMemberCompletion(member as Record<string, unknown>) : 0;
 }
 
 export async function uploadMemberPhoto(sb: SupabaseClient, memberId: string, file: File): Promise<string> {
