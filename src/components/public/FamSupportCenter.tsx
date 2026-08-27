@@ -381,6 +381,7 @@ export function FamContactPage() {
 // --- Análise de Risco (com persistência no Supabase) ---
 export function FamRiskAnalysisPage() {
   const [answers, setAnswers] = useState<Record<string, FamRiskAnswerValue>>({});
+  const [questionIndex, setQuestionIndex] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [assessmentState, setAssessmentState] = useState<FamAssessmentState>("IN_PROGRESS");
   const [openContact, setOpenContact] = useState(false);
@@ -398,7 +399,11 @@ export function FamRiskAnalysisPage() {
   const protectionDecision = decideFamProtection({ evaluation, referralConfirmed });
   const referralOptions = resolveFamReferralOptions(evaluation);
   const urgent = evaluation.emergency;
-  const complete = FAM_RISK_QUESTIONS.every(({ key }) => Boolean(answers[key]) && answers[key] !== "NO_ANSWER");
+  const currentQuestion = FAM_RISK_QUESTIONS[questionIndex];
+  const currentAnswer = currentQuestion ? answers[currentQuestion.key] : undefined;
+  const dangerNowAffirmed = answers.danger_now === "YES";
+  const canAdvance = Boolean(currentAnswer);
+  const canSubmit = dangerNowAffirmed || (questionIndex === FAM_RISK_QUESTIONS.length - 1 && canAdvance);
 
     useEffect(() => {
     if (!caseId || !submitted) return;
@@ -426,8 +431,17 @@ export function FamRiskAnalysisPage() {
       if (user) setUserId(user.id);
     });
   }, []);
+  const handleNextQuestion = () => {
+    if (!canAdvance || dangerNowAffirmed) return;
+    setQuestionIndex((index) => Math.min(index + 1, FAM_RISK_QUESTIONS.length - 1));
+  };
+
+  const handlePreviousQuestion = () => {
+    setQuestionIndex((index) => Math.max(index - 1, 0));
+  };
+
   const handleSubmit = async () => {
-    if (!complete) return;
+    if (!canSubmit) return;
     try {
       const attention = evaluation.attention;
       const next = stateForEvaluation(evaluation);
@@ -529,6 +543,7 @@ export function FamRiskAnalysisPage() {
 
   const handleRestart = () => {
     setAnswers({});
+    setQuestionIndex(0);
     setAttachments([]);
     setSelectedAttachmentIds([]);
     setSubmitted(false);
@@ -564,29 +579,50 @@ export function FamRiskAnalysisPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            {FAM_RISK_QUESTIONS.map(({ key, text, options, source }) => (
-              <fieldset key={key} className="space-y-2">
-                <legend className="text-sm font-medium text-fam-deep-plum">{text}</legend>
-                <p id={`fam-source-${key}`} className="text-xs text-fam-muted">Referência metodológica: {source}</p>
-                <div className="flex flex-wrap gap-2" role="group" aria-describedby={`fam-source-${key}`}>
-                  {options.map(({ value, label }) => (
+            {currentQuestion && (
+              <fieldset className="space-y-3" aria-describedby={`fam-source-${currentQuestion.key}`}>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-fam-muted">
+                    Pergunta {questionIndex + 1} de {FAM_RISK_QUESTIONS.length}
+                  </p>
+                  <p className="text-xs text-fam-muted">Coleta progressiva</p>
+                </div>
+                <legend className="text-sm font-medium text-fam-deep-plum">{currentQuestion.text}</legend>
+                <p id={`fam-source-${currentQuestion.key}`} className="text-xs text-fam-muted">
+                  Referência metodológica: {currentQuestion.source}
+                </p>
+                <div className="flex flex-wrap gap-2" role="group" aria-label={`Respostas para: ${currentQuestion.text}`}>
+                  {currentQuestion.options.map(({ value, label }) => (
                     <Button
                       key={value}
                       type="button"
-                      variant={answers[key] === value ? "default" : "outline"}
+                      variant={answers[currentQuestion.key] === value ? "default" : "outline"}
                       size="sm"
-                      aria-pressed={answers[key] === value}
-                      onClick={() => setAnswers((prev) => ({ ...prev, [key]: value }))}
+                      aria-pressed={answers[currentQuestion.key] === value}
+                      onClick={() => setAnswers((prev) => ({ ...prev, [currentQuestion.key]: value }))}
                     >
                       {label}
                     </Button>
                   ))}
                 </div>
               </fieldset>
-            ))}
+            )}
+            {dangerNowAffirmed && (
+              <div role="alert" className="rounded-lg border border-fam-danger/30 bg-fam-danger/10 p-3 text-sm text-fam-deep-plum">
+                Você indicou perigo actual. A orientação imediata será apresentada sem prolongar esta triagem.
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2">
+              {questionIndex > 0 && (
+                <Button type="button" variant="outline" onClick={handlePreviousQuestion}>Voltar</Button>
+              )}
+              {!dangerNowAffirmed && questionIndex < FAM_RISK_QUESTIONS.length - 1 && (
+                <Button type="button" disabled={!canAdvance} onClick={handleNextQuestion}>Próxima pergunta</Button>
+              )}
+            </div>
             <p className="text-xs text-fam-muted">Você poderá anexar arquivos depois de ver esta orientação. Assim, cada arquivo fica vinculado ao caso correto.</p>
-            <Button disabled={!complete || riskLoading} onClick={handleSubmit} className="w-full">
-              {riskLoading ? "Salvando..." : "Ver orientação inicial"}
+            <Button disabled={!canSubmit || riskLoading} onClick={handleSubmit} className="w-full">
+              {riskLoading ? "Salvando..." : dangerNowAffirmed ? "Ver orientação imediata" : "Ver orientação inicial"}
             </Button>
             {riskError && <p className="text-sm text-fam-danger">{riskError}</p>}
           </CardContent>
