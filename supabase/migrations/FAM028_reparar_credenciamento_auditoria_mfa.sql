@@ -1,8 +1,10 @@
 -- FAM028 — Reparo idempotente de AC-02 / POL-ARQ-01
 -- Cria somente objetos ausentes; não remove nem altera dados legados.
 
-create type if not exists public.fam_credential_status as enum
-  ('requested','under_review','active','suspended','revoked','expired');
+do $$ begin
+  create type public.fam_credential_status as enum ('requested','under_review','active','suspended','revoked','expired');
+exception when duplicate_object then null;
+end $$;
 
 create table if not exists public.fam_professional_credentials (
   id uuid primary key default gen_random_uuid(),
