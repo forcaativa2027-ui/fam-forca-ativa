@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   Play, Calendar, Music, MapPin, Church as ChurchIcon, Sparkles,
   Clock, ArrowRight, ExternalLink, LayoutDashboard, FileDown,
-  Home, Newspaper, Video, MessageCircle, HeartHandshake, LogIn, Users2, Radio, ShieldAlert,
+  Home, Newspaper, Video, MessageCircle, HeartHandshake, LogIn, Users2, Radio, ShieldAlert, BookOpen,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,7 @@ export default function PublicHome() {
   const showContact = tenantModules.contact !== false;
   const showDonations = tenantModules.donations !== false;
   const showRiskAnalysis = tenantModules.risk_analysis !== false;
+  const showKnowledgeJourney = tenantModules.knowledge_journey !== false;
 
   // A programação deve vir dos dados do tenant; não há fallback religioso hardcoded.
   const word = dbWord ?? defaultWord();
@@ -100,6 +101,7 @@ export default function PublicHome() {
     ...(showContact ? [{ key: "contato", label: "Fale Conosco", icon: <MessageCircle size={18} />, onClick: () => setTab("contato") }] : []),
     ...(showRiskAnalysis ? [{ key: "risco", label: "Análise de Risco", icon: <ShieldAlert size={18} />, onClick: () => { window.location.href = "/analise-risco"; } }] : []),
     ...(showDonations ? [{ key: "ofertar", label: "Doação", icon: <HeartHandshake size={18} />, onClick: () => setTab("ofertar") }] : []),
+    ...(showKnowledgeJourney ? [{ key: "conhecimento", label: "Conheça seus direitos", icon: <BookOpen size={18} />, onClick: () => { window.location.href = "/jornada-conhecimento"; } }] : []),
     ...(profile && myMember ? [{ key: "member-id", label: memberIdLabel, icon: <LayoutDashboard size={18} />, onClick: () => { window.location.href = "/painel/carteira"; } }] : []),
     !profile
       ? { key: "entrar", label: "Entrar", icon: <LogIn size={18} />, onClick: () => { window.location.href = "/entrar"; } }

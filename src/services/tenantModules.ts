@@ -20,6 +20,7 @@ export const TENANT_MODULE_DEFAULTS: Record<string, boolean> = {
   cecmais: true,
   partners: true,
   risk_analysis: true,
+  knowledge_journey: true,
 };
 
 export type TenantModuleMap = Record<string, boolean>;

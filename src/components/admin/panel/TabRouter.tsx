@@ -73,6 +73,7 @@ import { ServiceTimesAdmin } from "./ServiceTimesAdmin";
 import { DailyWordsAdmin } from "./DailyWordsAdmin";
 import { FamProfessionalAccessAdmin } from "../FamProfessionalAccessAdmin";
 import { FamGovernanceReportsAdmin } from "../FamGovernanceReportsAdmin";
+import { FamKnowledgeAdmin } from "../FamKnowledgeAdmin";
 import { TenantModuleGuard } from "@/components/shared/TenantModuleGuard";
 
 // AuditView foi extraído para AuditAdmin.tsx (reutilizado também em /governanca).
@@ -115,6 +116,7 @@ export function TabContent({ activeTab, onNavigate, prefillEventId }: { activeTa
     case "delegations":         return <DelegationsAdmin />;
     case "fam-credenciamento": return <TenantModuleGuard moduleKey="usuarios" title="Credenciamento FAM indisponível" description="A administração de credenciamentos não está activa para esta organização."><FamProfessionalAccessAdmin /></TenantModuleGuard>;
     case "fam-governance-reports": return <TenantModuleGuard moduleKey="usuarios" title="Relatório operacional indisponível" description="Os relatórios de governança não estão activos para esta organização."><FamGovernanceReportsAdmin /></TenantModuleGuard>;
+    case "fam-conhecimento": return <TenantModuleGuard moduleKey="knowledge_journey" title="Jornada do Conhecimento indisponível" description="A Jornada do Conhecimento não está activa para esta organização."><FamKnowledgeAdmin /></TenantModuleGuard>;
     case "invites":             return <InviteLinksAdmin />;
     case "audit":               return <AuditView />;
     case "org-dashboard":       return <OrgDashboardAdmin onNavigate={onNavigate} />;
