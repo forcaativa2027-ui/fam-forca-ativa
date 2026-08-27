@@ -78,6 +78,7 @@ export interface FamKnowledgeTrailStep {
   title: string;
   objective: string;
   content_id: string | null;
+  content_key?: string | null;
   action_label: string | null;
   action_url: string | null;
   is_optional: boolean;
@@ -195,9 +196,18 @@ export async function getPublishedKnowledgeTrail(sb: SupabaseClient, trailKey: s
   const { data: trail, error: trailError } = await sb.from("fam_knowledge_trails").select("*").eq("tenant_key", "FAM").eq("trail_key", trailKey).eq("status", "published").maybeSingle();
   if (trailError) throw trailError;
   if (!trail) return null;
-  const { data: steps, error: stepsError } = await sb.from("fam_knowledge_trail_steps").select("*").eq("trail_id", trail.id).order("position");
+  const { data: steps, error: stepsError } = await sb.from("fam_knowledge_trail_steps").select("*").eq("tenant_key", "FAM").eq("trail_id", trail.id).order("position");
   if (stepsError) throw stepsError;
-  return { trail: trail as FamKnowledgeTrail, steps: (steps ?? []) as FamKnowledgeTrailStep[] };
+  const rawSteps = (steps ?? []) as FamKnowledgeTrailStep[];
+  const contentIds = rawSteps.map((step) => step.content_id).filter((id): id is string => !!id);
+  let contentKeys = new Map<string, string>();
+  if (contentIds.length > 0) {
+    const { data: linkedContents, error: contentsError } = await sb.from("fam_knowledge_contents").select("id, content_key").in("id", contentIds).eq("tenant_key", "FAM").eq("status", "published");
+    if (contentsError) throw contentsError;
+    contentKeys = new Map((linkedContents ?? []).map((content) => [content.id, content.content_key]));
+  }
+  const resolvedSteps = rawSteps.map((step) => ({ ...step, content_key: step.content_id ? contentKeys.get(step.content_id) ?? null : null }));
+  return { trail: trail as FamKnowledgeTrail, steps: resolvedSteps };
 }
 
 export async function listKnowledgeContentsForCurator(sb: SupabaseClient, status?: FamKnowledgeStatus) {
