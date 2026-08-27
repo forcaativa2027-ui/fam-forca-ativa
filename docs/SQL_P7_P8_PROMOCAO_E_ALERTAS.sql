@@ -158,7 +158,7 @@ as $$
       c.content_key as item_key,
       c.title as item_title,
       c.status as item_status,
-      c.review_date
+      c.review_date as review_date
     from public.fam_knowledge_contents c
     where c.tenant_key = 'FAM'
       and c.status in ('draft','curation','under_review','approved','published')
@@ -166,12 +166,12 @@ as $$
     union all
 
     select
-      'trail'::text,
-      t.id,
-      t.trail_key,
-      t.title,
-      t.status,
-      t.review_date
+      'trail'::text as item_kind,
+      t.id as item_id,
+      t.trail_key as item_key,
+      t.title as item_title,
+      t.status as item_status,
+      t.review_date as review_date
     from public.fam_knowledge_trails t
     where t.tenant_key = 'FAM'
       and t.status in ('draft','under_review','approved','published')
