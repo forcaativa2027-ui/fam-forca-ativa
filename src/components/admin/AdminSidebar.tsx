@@ -28,7 +28,7 @@ export type TabKey =
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
   | "news" | "banners" | "sermons" | "radio" | "live360" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
-  | "delegations" | "fam-credenciamento" | "invites" | "audit"
+  | "delegations" | "fam-credenciamento" | "fam-governance-reports" | "invites" | "audit"
   | "export";
 
 interface NavItem {
@@ -205,6 +205,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
       icon: <ClipboardList size={16} />,
       items: [
         { key: "audit", label: "Registros de Auditoria", icon: <ClipboardList size={15} /> },
+        { key: "fam-governance-reports", label: "Relatório Operacional FAM", icon: <FileBarChart size={15} /> },
       ],
     },
     {
