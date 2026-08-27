@@ -23,6 +23,16 @@ interface FormValues {
   gender: string; marital_status: string;
 }
 
+const BRAZILIAN_STATES = [
+  ["AC", "Acre"], ["AL", "Alagoas"], ["AP", "Amapá"], ["AM", "Amazonas"],
+  ["BA", "Bahia"], ["CE", "Ceará"], ["DF", "Distrito Federal"], ["ES", "Espírito Santo"],
+  ["GO", "Goiás"], ["MA", "Maranhão"], ["MT", "Mato Grosso"], ["MS", "Mato Grosso do Sul"],
+  ["MG", "Minas Gerais"], ["PA", "Pará"], ["PB", "Paraíba"], ["PR", "Paraná"],
+  ["PE", "Pernambuco"], ["PI", "Piauí"], ["RJ", "Rio de Janeiro"], ["RN", "Rio Grande do Norte"],
+  ["RS", "Rio Grande do Sul"], ["RO", "Rondônia"], ["RR", "Roraima"], ["SC", "Santa Catarina"],
+  ["SP", "São Paulo"], ["SE", "Sergipe"], ["TO", "Tocantins"],
+] as const;
+
 const LOCAL_STORAGE_SNOOZE_KEY = "cec_complete_profile_snoozed_until";
 
 /**
@@ -323,7 +333,19 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div><Label>Cidade</Label><Input {...register("city")} /></div>
-              <div><Label>Estado</Label><Input {...register("state")} placeholder="DF" /></div>
+              <div>
+                <Label htmlFor="member-state">Estado</Label>
+                <select
+                  id="member-state"
+                  {...register("state")}
+                  className="h-10 w-full rounded-md border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">— Selecione a UF —</option>
+                  {BRAZILIAN_STATES.map(([uf, name]) => (
+                    <option key={uf} value={uf}>{uf} — {name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
