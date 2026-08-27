@@ -12,9 +12,20 @@ const option: FamReferralOption = {
   dataScope: ["identificador do caso"],
   requiresProfessionalConfirmation: true,
   disclaimer: "O recebimento não significa atendimento.",
+  purposeCode: "ATENDIMENTO_SAUDE",
+  legalBasis: "TUTELA_SAUDE_VALIDAR",
+  retentionClass: "R3",
+  legalBasisApproved: true,
 };
 
 describe("createFamReferralRequest", () => {
+  it("bloqueia compartilhamento sem base jurídica aprovada", async () => {
+    const from = vi.fn();
+    const pendingOption = { ...option, legalBasisApproved: false };
+    await expect(createFamReferralRequest({ from } as never, { caseId: "case-1", userId: "user-1", option: pendingOption, confirmationAccepted: true })).rejects.toThrow("validação jurídica");
+    expect(from).not.toHaveBeenCalled();
+  });
+
   it("não acessa o banco sem confirmação explícita", async () => {
     const from = vi.fn();
     await expect(createFamReferralRequest({ from } as never, { caseId: "case-1", userId: "user-1", option, confirmationAccepted: false })).rejects.toThrow("Confirmação explícita");

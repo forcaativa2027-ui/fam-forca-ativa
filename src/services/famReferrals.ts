@@ -15,6 +15,10 @@ export interface FamReferralOption {
   dataScope: string[];
   requiresProfessionalConfirmation: boolean;
   disclaimer: string;
+  purposeCode: string;
+  legalBasis: string;
+  retentionClass: "R1" | "R2" | "R3" | "R4" | "R5";
+  legalBasisApproved: boolean;
 }
 
 const BASE_DISCLAIMER = "O recebimento não significa atendimento, investigação ou adoção de providência. O encaminhamento não concede acesso ao banco de dados da FAM.";
@@ -33,6 +37,10 @@ export function resolveFamReferralOptions(evaluation: FamRiskEvaluation): FamRef
       dataScope: ["identificador do caso", "sinais de atenção", "data e hora", "arquivos escolhidos explicitamente"],
       requiresProfessionalConfirmation: true,
       disclaimer: BASE_DISCLAIMER,
+      purposeCode: "PROTECAO_IMEDIATA",
+      legalBasis: "PROTECAO_VIDA_INTEGRIDADE",
+      retentionClass: "R3",
+      legalBasisApproved: false,
     });
   }
 
@@ -47,6 +55,10 @@ export function resolveFamReferralOptions(evaluation: FamRiskEvaluation): FamRef
       dataScope: ["identificador do caso", "sinais de atenção pertinentes", "data e hora", "arquivos escolhidos explicitamente"],
       requiresProfessionalConfirmation: true,
       disclaimer: BASE_DISCLAIMER,
+      purposeCode: "PROTECAO_CRIANCA_ADOLESCENTE",
+      legalBasis: "VALIDAR_JURIDICO",
+      retentionClass: "R3",
+      legalBasisApproved: false,
     });
     options.push({
       code: "REF-POLICE-CHILD-PROTECTION-001",
@@ -58,6 +70,10 @@ export function resolveFamReferralOptions(evaluation: FamRiskEvaluation): FamRef
       dataScope: ["identificador do caso", "sinais de atenção pertinentes", "data e hora", "arquivos escolhidos explicitamente"],
       requiresProfessionalConfirmation: true,
       disclaimer: BASE_DISCLAIMER,
+      purposeCode: "PROTECAO_CRIANCA_ADOLESCENTE",
+      legalBasis: "VALIDAR_JURIDICO",
+      retentionClass: "R3",
+      legalBasisApproved: false,
     });
   }
 
@@ -74,6 +90,10 @@ export function resolveFamReferralOptions(evaluation: FamRiskEvaluation): FamRef
       dataScope: ["identificador do caso", "sinais de atenção pertinentes", "data e hora", "arquivos escolhidos explicitamente"],
       requiresProfessionalConfirmation: true,
       disclaimer: BASE_DISCLAIMER,
+      purposeCode: "ATENDIMENTO_SAUDE",
+      legalBasis: "TUTELA_SAUDE_VALIDAR",
+      retentionClass: "R3",
+      legalBasisApproved: false,
     });
   }
 
@@ -82,4 +102,8 @@ export function resolveFamReferralOptions(evaluation: FamRiskEvaluation): FamRef
 
 export function referralRequiresExplicitConfirmation(option: FamReferralOption): boolean {
   return option.requiresProfessionalConfirmation;
+}
+
+export function referralHasApprovedLegalPurpose(option: FamReferralOption): boolean {
+  return option.legalBasisApproved === true && option.purposeCode.trim().length > 0 && option.legalBasis.trim().length > 0;
 }

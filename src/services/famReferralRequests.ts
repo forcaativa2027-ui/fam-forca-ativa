@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { referralRequiresExplicitConfirmation, type FamReferralOption } from "./famReferrals";
+import { referralHasApprovedLegalPurpose, referralRequiresExplicitConfirmation, type FamReferralOption } from "./famReferrals";
 
 export type FamReferralRequestStatus = "requested" | "under_review" | "sent" | "received" | "cancelled";
 
@@ -35,6 +35,9 @@ export async function createFamReferralRequest(
   if (!input.confirmationAccepted || !referralRequiresExplicitConfirmation(input.option)) {
     throw new Error("Confirmação explícita obrigatória antes de registrar o encaminhamento.");
   }
+  if (!referralHasApprovedLegalPurpose(input.option)) {
+    throw new Error("Este encaminhamento aguarda validação jurídica da finalidade e da base aplicável.");
+  }
   const requestedAttachmentIds = [...new Set(input.selectedAttachmentIds ?? [])];
   let cleanAttachmentIds: string[] = [];
   if (requestedAttachmentIds.length > 0) {
@@ -67,6 +70,10 @@ export async function createFamReferralRequest(
       priority: input.option.priority,
       reason_code: input.option.code,
       requested_data: input.option.dataScope,
+      purpose_code: input.option.purposeCode,
+      legal_basis: input.option.legalBasis,
+      retention_class: input.option.retentionClass,
+      legal_catalog_version: "JUR-02-v1.0",
       selected_attachment_ids: cleanAttachmentIds,
       explicit_confirmation_at: new Date().toISOString(),
     })

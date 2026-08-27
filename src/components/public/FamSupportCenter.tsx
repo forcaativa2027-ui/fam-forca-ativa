@@ -711,17 +711,23 @@ export function FamRiskAnalysisPage() {
                       </div>
                     ) : (
                       <>
+                        {!selectedReferral.legalBasisApproved && (
+                          <p className="mt-3 rounded-md border border-fam-gold/30 bg-fam-gold-soft/10 p-2 text-xs text-fam-deep-plum" role="status">
+                            Este caminho informativo aguarda validação jurídica da finalidade e da base aplicável. Nenhum dado será compartilhado agora.
+                          </p>
+                        )}
                         <label className="mt-3 flex items-start gap-2 text-xs">
                           <input
                             type="checkbox"
                             checked={referralConfirmed}
                             onChange={(event) => setReferralConfirmed(event.target.checked)}
                             className="mt-0.5"
+                            disabled={!selectedReferral.legalBasisApproved}
                           />
                           <span>Confirmo que entendi o destinatário, a finalidade e o escopo mínimo de informações acima.</span>
                         </label>
                         <div className="mt-3 flex flex-wrap gap-2">
-                          <Button type="button" size="sm" disabled={!referralConfirmed || riskLoading} onClick={handleReferralRequest}>
+                          <Button type="button" size="sm" disabled={!referralConfirmed || !selectedReferral.legalBasisApproved || riskLoading} onClick={handleReferralRequest}>
                             Confirmar e registrar pedido
                           </Button>
                           <Button type="button" size="sm" variant="outline" onClick={() => { setSelectedReferral(null); setShowReferralDetails(false); setReferralConfirmed(false); }}>
