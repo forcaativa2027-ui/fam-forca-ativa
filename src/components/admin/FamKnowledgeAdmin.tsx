@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, FileText, Send, Archive } from "lucide-react";
+import { Archive, CheckCircle2, FileText, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useFamKnowledgeCurator, useTransitionFamKnowledgeContent } from "@/hooks/use-fam-knowledge";
@@ -20,14 +20,26 @@ const NEXT_STATUS: Partial<Record<FamKnowledgeStatus, FamKnowledgeStatus>> = {
 export function FamKnowledgeAdmin() {
   const { data: profile } = useMyProfile();
   const [statusFilter, setStatusFilter] = useState<FamKnowledgeStatus | undefined>();
+  const [approvalReference, setApprovalReference] = useState("");
+  const [reviewDate, setReviewDate] = useState("");
+  const [notes, setNotes] = useState("");
   const { data: contents = [], isLoading, isError } = useFamKnowledgeCurator(statusFilter);
   const transition = useTransitionFamKnowledgeContent();
 
   async function move(item: { id: string; status: FamKnowledgeStatus }) {
     const next = NEXT_STATUS[item.status];
     if (!next || !profile?.id) return;
-    await transition.mutateAsync({ id: item.id, status: next, actorProfileId: profile.id });
+    await transition.mutateAsync({
+      id: item.id,
+      status: next,
+      actorProfileId: profile.id,
+      notes: notes.trim() || undefined,
+      approvalReference: next === "published" ? approvalReference.trim() : undefined,
+      reviewDate: next === "published" ? reviewDate : undefined,
+    });
   }
+
+  const canPublish = approvalReference.trim().length > 0 && reviewDate.trim().length > 0;
 
   return (
     <main className="space-y-6 p-6">
@@ -36,6 +48,27 @@ export function FamKnowledgeAdmin() {
         <h1 className="mt-1 font-display text-2xl text-navy">Curadoria e publicação</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">Organize conteúdos, fontes e versões. Salvar uma alteração não publica o conteúdo automaticamente.</p>
       </div>
+
+      <Card className="border-fam-gold/40 bg-fam-gold/10">
+        <CardHeader>
+          <CardTitle className="text-lg text-navy">Dados da aprovação editorial</CardTitle>
+          <CardDescription>Preencha estes campos antes de publicar qualquer conteúdo. Eles serão registrados no histórico de auditoria.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-3">
+          <label className="text-sm font-medium text-navy">Referência do parecer ou ata
+            <input value={approvalReference} onChange={(event) => setApprovalReference(event.target.value)} placeholder="Ex.: ATA-FAM-2026-001" className="mt-1 w-full rounded-md border border-fam-plum/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-fam-gold" />
+          </label>
+          <label className="text-sm font-medium text-navy">Próxima revisão
+            <input type="date" value={reviewDate} onChange={(event) => setReviewDate(event.target.value)} className="mt-1 w-full rounded-md border border-fam-plum/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-fam-gold" />
+          </label>
+          <label className="text-sm font-medium text-navy">Nota da transição
+            <input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Motivo ou observação editorial" className="mt-1 w-full rounded-md border border-fam-plum/25 bg-white px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-fam-gold" />
+          </label>
+        </CardContent>
+      </Card>
+
+      {transition.isError && <p role="alert" className="rounded-lg bg-fam-pink/10 p-4 text-sm text-fam-plum">{transition.error instanceof Error ? transition.error.message : "Não foi possível concluir a transição editorial."}</p>}
+      {!canPublish && <p className="text-xs text-muted">A publicação ficará bloqueada até que a referência de aprovação e a próxima data de revisão sejam preenchidas.</p>}
 
       <div className="flex flex-wrap gap-2" aria-label="Filtrar por status">
         <Button variant={!statusFilter ? "default" : "outline"} className={!statusFilter ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setStatusFilter(undefined)}>Todos</Button>
@@ -49,7 +82,8 @@ export function FamKnowledgeAdmin() {
       <div className="grid gap-4 lg:grid-cols-2">
         {contents.map((item) => {
           const next = NEXT_STATUS[item.status];
-          return <Card key={item.id} className="border-fam-pink/20"><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle className="text-lg text-navy">{item.title}</CardTitle><CardDescription>{item.content_key} · versão {item.version}</CardDescription></div><span className="rounded-full bg-fam-gold/20 px-2 py-1 text-xs font-semibold text-fam-plum">{STATUS_LABELS[item.status]}</span></div></CardHeader><CardContent><div className="flex flex-wrap items-center gap-2 text-xs text-muted"><FileText className="h-4 w-4" aria-hidden="true" />{item.content_type}<span>•</span>{item.review_date ? `Revisão ${item.review_date}` : "Sem data de revisão"}</div><div className="mt-4 flex flex-wrap gap-2">{next && <Button disabled={transition.isPending} onClick={() => move(item)} className="gap-2 bg-fam-plum hover:bg-fam-plum/90">{next === "published" ? <CheckCircle2 className="h-4 w-4" /> : <Send className="h-4 w-4" />} {next === "published" ? "Publicar" : `Mover para ${STATUS_LABELS[next]}`}</Button>}{item.status === "published" && <Button variant="outline" disabled={transition.isPending} onClick={() => transition.mutate({ id: item.id, status: "archived", actorProfileId: profile?.id ?? "" })} className="gap-2 border-fam-plum/30 text-fam-plum"><Archive className="h-4 w-4" /> Arquivar</Button>}</div></CardContent></Card>;
+          const publishing = next === "published";
+          return <Card key={item.id} className="border-fam-pink/20"><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle className="text-lg text-navy">{item.title}</CardTitle><CardDescription>{item.content_key} · versão {item.version}</CardDescription></div><span className="rounded-full bg-fam-gold/20 px-2 py-1 text-xs font-semibold text-fam-plum">{STATUS_LABELS[item.status]}</span></div></CardHeader><CardContent><div className="flex flex-wrap items-center gap-2 text-xs text-muted"><FileText className="h-4 w-4" aria-hidden="true" />{item.content_type}<span>•</span>{item.review_date ? `Revisão ${item.review_date}` : "Sem data de revisão"}</div><div className="mt-4 flex flex-wrap gap-2">{next && <Button disabled={transition.isPending || (publishing && !canPublish)} onClick={() => move(item)} className="gap-2 bg-fam-plum hover:bg-fam-plum/90">{publishing ? <CheckCircle2 className="h-4 w-4" /> : <Send className="h-4 w-4" />} {publishing ? "Publicar" : `Mover para ${STATUS_LABELS[next]}`}</Button>}{item.status === "published" && <Button variant="outline" disabled={transition.isPending} onClick={() => transition.mutate({ id: item.id, status: "archived", actorProfileId: profile?.id ?? "", notes: notes.trim() || undefined })} className="gap-2 border-fam-plum/30 text-fam-plum"><Archive className="h-4 w-4" /> Arquivar</Button>}</div></CardContent></Card>;
         })}
       </div>
     </main>

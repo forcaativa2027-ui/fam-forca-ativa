@@ -90,6 +90,27 @@ export interface FamKnowledgeFilters {
   stage?: string;
 }
 
+export interface FamKnowledgeTransitionOptions {
+  notes?: string;
+  approvalReference?: string;
+  reviewDate?: string;
+}
+
+export function validateKnowledgeTransition(
+  status: FamKnowledgeStatus,
+  options: FamKnowledgeTransitionOptions = {},
+): { ok: true } | { ok: false; message: string } {
+  if (status === "published") {
+    if (!options.approvalReference?.trim()) {
+      return { ok: false, message: "A publicação exige a referência do parecer ou ata de aprovação." };
+    }
+    if (!options.reviewDate?.trim()) {
+      return { ok: false, message: "A publicação exige a data da próxima revisão." };
+    }
+  }
+  return { ok: true };
+}
+
 function publishedQuery(sb: SupabaseClient) {
   const now = new Date().toISOString();
   return sb
@@ -190,7 +211,16 @@ export async function updateKnowledgeContent(sb: SupabaseClient, id: string, pat
   return data as FamKnowledgeContent;
 }
 
-export async function transitionKnowledgeContent(sb: SupabaseClient, id: string, status: FamKnowledgeStatus, actorProfileId: string, notes?: string) {
+export async function transitionKnowledgeContent(
+  sb: SupabaseClient,
+  id: string,
+  status: FamKnowledgeStatus,
+  actorProfileId: string,
+  options: FamKnowledgeTransitionOptions = {},
+) {
+  const validation = validateKnowledgeTransition(status, options);
+  if (!validation.ok) throw new Error(validation.message);
+
   const { data: current, error: currentError } = await sb.from("fam_knowledge_contents").select("status, version").eq("id", id).single();
   if (currentError) throw currentError;
   const patch: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
@@ -198,11 +228,14 @@ export async function transitionKnowledgeContent(sb: SupabaseClient, id: string,
     patch.approved_by = actorProfileId;
     patch.approved_at = new Date().toISOString();
   }
+  if (options.approvalReference) patch.approval_reference = options.approvalReference.trim();
+  if (options.reviewDate) patch.review_date = options.reviewDate;
   const { error } = await sb.from("fam_knowledge_contents").update(patch).eq("id", id);
   if (error) throw error;
-  await sb.from("fam_knowledge_audit_events").insert({
+  const { error: auditError } = await sb.from("fam_knowledge_audit_events").insert({
     tenant_key: "FAM", content_id: id, actor_profile_id: actorProfileId,
     event_type: status === "under_review" ? "submitted" : status,
-    from_status: current.status, to_status: status, version: current.version, notes: notes ?? null,
+    from_status: current.status, to_status: status, version: current.version, notes: options.notes ?? null,
   });
+  if (auditError) throw auditError;
 }

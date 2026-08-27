@@ -80,8 +80,18 @@ export function useUpdateFamKnowledgeContent() {
 export function useTransitionFamKnowledgeContent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status, actorProfileId, notes }: { id: string; status: Knowledge.FamKnowledgeStatus; actorProfileId: string; notes?: string }) =>
-      Knowledge.transitionKnowledgeContent(supabase, id, status, actorProfileId, notes),
+    mutationFn: ({ id, status, actorProfileId, notes, approvalReference, reviewDate }: {
+      id: string;
+      status: Knowledge.FamKnowledgeStatus;
+      actorProfileId: string;
+      notes?: string;
+      approvalReference?: string;
+      reviewDate?: string;
+    }) => Knowledge.transitionKnowledgeContent(supabase, id, status, actorProfileId, {
+      notes,
+      approvalReference,
+      reviewDate,
+    }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["fam-knowledge-curator"] });
       queryClient.invalidateQueries({ queryKey: ["fam-knowledge-content", variables.id] });
