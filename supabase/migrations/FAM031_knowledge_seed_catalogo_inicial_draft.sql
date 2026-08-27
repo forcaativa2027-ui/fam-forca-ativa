@@ -65,7 +65,7 @@ begin
   ) values (
     'FAM',
     'legislacao-pdcv-mulher-df-001',
-    'decreto',
+    'referencia',
     'Distrito Federal: Plano de Combate à Violência e de Proteção à Mulher',
     'Referência ao Decreto nº 48.878/2026 e ao PDCV-MULHER, com foco informativo na política distrital.',
     'Este conteúdo apresenta, de forma educativa, o Decreto nº 48.878, de 1º de julho de 2026, que institui o Plano Distrital de Combate à Violência e de Proteção à Mulher (PDCV-MULHER). O material resume a finalidade e a governança do plano, sem substituir o texto normativo oficial ou orientar decisões jurídicas individuais.',
