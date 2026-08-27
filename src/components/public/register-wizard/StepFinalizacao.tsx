@@ -3,7 +3,6 @@ import { useState } from "react";
 import { ArrowLeft, Check, Eye, EyeOff, Loader2, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Turnstile } from "@marsidev/react-turnstile";
 import { supabase } from "@/lib/supabase/client";
 import { createPipelineEntryFull } from "@/services/pipeline";
 import { Field, SectionDivider, TermsCheckbox } from "./RegisterWizardHelpers";
@@ -17,10 +16,8 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
   const [err, setErr] = useState<Record<string,string>>({});
   const [busy, setBusy] = useState(false);
   const [lgpdAccepted, setLgpdAccepted] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
-  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   async function finish() {
     if (busy) return;
@@ -29,7 +26,6 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
     if (s.password.length < 6) errs.password = "Senha precisa ter ao menos 6 caracteres";
     if (s.password !== passwordConfirm) errs.password_confirm = "Senhas não conferem";
     if (!lgpdAccepted) errs.lgpd = "Você precisa aceitar os Termos e a Política de Privacidade para continuar.";
-    if (turnstileSiteKey && !captchaToken) errs.captcha = "Confirme que você não é um robô.";
     setErr(errs);
     if (Object.keys(errs).length > 0) return;
 
@@ -37,7 +33,7 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
     try {
       const { data: signUpData, error: signError } = await supabase.auth.signUp({
         email: s.email, password: s.password,
-        options: { data: { full_name: s.full_name }, captchaToken: captchaToken ?? undefined },
+        options: { data: { full_name: s.full_name } },
       });
       if (signError) {
         const msg = signError.message.toLowerCase();
@@ -45,9 +41,6 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
           setGlobalErr("Este e-mail já está cadastrado. Tente fazer login.");
         } else if (msg.includes("rate limit") || msg.includes("too many requests") || msg.includes("email rate limit")) {
           setGlobalErr("O serviço de confirmação por e-mail atingiu o limite temporário de envios. Nenhum novo cadastro foi concluído nesta tentativa. Aguarde alguns minutos antes de tentar novamente e evite tocar em Concluir várias vezes.");
-        } else if (msg.includes("captcha")) {
-          setGlobalErr("A verificação de segurança expirou antes de você concluir o cadastro. Role até o quadro de verificação, espere aparecer \"Sucesso\" de novo, e toque em concluir mais uma vez.");
-          setCaptchaToken(null);
         } else {
           setGlobalErr(signError.message);
         }
@@ -145,17 +138,6 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
 
       <SectionDivider label="Termos de Uso" />
       <TermsCheckbox checked={lgpdAccepted} onChange={setLgpdAccepted} error={err.lgpd} />
-
-      {turnstileSiteKey && (
-        <div className="flex justify-center">
-          <Turnstile
-            siteKey={turnstileSiteKey}
-            onSuccess={(token) => { setCaptchaToken(token); setGlobalErr(""); }}
-            onExpire={() => setCaptchaToken(null)}
-          />
-          {err.captcha && <p className="mt-1 text-xs text-destructive">{err.captcha}</p>}
-        </div>
-      )}
 
       <div className="flex justify-between gap-2">
         <Button type="button" variant="outline" onClick={onBack} className="h-12 gap-2 rounded-xl text-base shadow-sm transition active:scale-95"><ArrowLeft className="h-5 w-5" /> Voltar</Button>

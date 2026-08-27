@@ -6,23 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase/client";
-import { Turnstile } from "@marsidev/react-turnstile";
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email || !/\S+@\S+\.\S+/.test(email)) { setErr("Informe um e-mail válido."); return; }
-    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !captchaToken) { setErr("Confirme que você não é um robô."); return; }
     setBusy(true); setErr("");
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/nova-senha`,
-      captchaToken: captchaToken ?? undefined,
     });
     setBusy(false);
     if (error) { setErr(error.message); return; }
@@ -54,16 +50,6 @@ export default function ForgotPasswordForm() {
               </div>
             </div>
             {err&&<p className="rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{err}</p>}
-            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-              <div className="flex justify-center">
-                <Turnstile
-                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                  onSuccess={(token) => setCaptchaToken(token)}
-                  onExpire={() => setCaptchaToken(null)}
-                  options={{ theme: "light", language: "pt-BR" }}
-                />
-              </div>
-            )}
             <Button type="submit" disabled={busy} className="w-full">{busy?"Enviando…":"Enviar link de recuperação"}</Button>
             <p className="text-center text-xs text-muted-foreground">Lembrou a senha? <Link href="/entrar" className="font-semibold text-fam-plum hover:underline">Entrar</Link></p>
           </form>
