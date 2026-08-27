@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 test.describe("FAM — Jornada do Conhecimento", () => {
-  async function dismissWelcome(page: Parameters<typeof test>[0]["page"]) {
+  async function dismissWelcome(page: Page) {
     const defaultButton = page.getByRole("button", { name: "Usar configuração padrão" });
     if (await defaultButton.isVisible().catch(() => false)) await defaultButton.click();
   }

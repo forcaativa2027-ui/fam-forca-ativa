@@ -5,6 +5,8 @@ import { Archive, CheckCircle2, FileText, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCreateFamKnowledgeSource, useFamKnowledgeCurator, useFamKnowledgeSources, useTransitionFamKnowledgeContent } from "@/hooks/use-fam-knowledge";
+import { FamKnowledgeTaxonomyAdmin } from "@/components/admin/FamKnowledgeTaxonomyAdmin";
+import { FamKnowledgeTrailsAdmin } from "@/components/admin/FamKnowledgeTrailsAdmin";
 import { useMyProfile } from "@/hooks/use-queries";
 import type { FamKnowledgeStatus } from "@/services/famKnowledge";
 
@@ -54,6 +56,7 @@ function SourceEditor({ contentId }: { contentId: string }) {
 export function FamKnowledgeAdmin() {
   const { data: profile } = useMyProfile();
   const [statusFilter, setStatusFilter] = useState<FamKnowledgeStatus | undefined>();
+  const [activeSection, setActiveSection] = useState<"contents" | "taxonomy" | "trails">("contents");
   const [approvalReference, setApprovalReference] = useState("");
   const [reviewDate, setReviewDate] = useState("");
   const [notes, setNotes] = useState("");
@@ -104,6 +107,11 @@ export function FamKnowledgeAdmin() {
       {transition.isError && <p role="alert" className="rounded-lg bg-fam-pink/10 p-4 text-sm text-fam-plum">{transition.error instanceof Error ? transition.error.message : "Não foi possível concluir a transição editorial."}</p>}
       {!canPublish && <p className="text-xs text-muted">A publicação ficará bloqueada até que a referência de aprovação e a próxima data de revisão sejam preenchidas.</p>}
 
+      <div className="flex flex-wrap gap-2 border-b border-fam-plum/15 pb-3" aria-label="Seções da Jornada"><Button variant={activeSection === "contents" ? "default" : "outline"} className={activeSection === "contents" ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setActiveSection("contents")}>Conteúdos e fontes</Button><Button variant={activeSection === "taxonomy" ? "default" : "outline"} className={activeSection === "taxonomy" ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setActiveSection("taxonomy")}>Taxonomia</Button><Button variant={activeSection === "trails" ? "default" : "outline"} className={activeSection === "trails" ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setActiveSection("trails")}>Trilhas</Button></div>
+
+      {activeSection === "taxonomy" && <FamKnowledgeTaxonomyAdmin />}
+      {activeSection === "trails" && <FamKnowledgeTrailsAdmin />}
+      {activeSection === "contents" && <>
       <div className="flex flex-wrap gap-2" aria-label="Filtrar por status">
         <Button variant={!statusFilter ? "default" : "outline"} className={!statusFilter ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setStatusFilter(undefined)}>Todos</Button>
         {(Object.keys(STATUS_LABELS) as FamKnowledgeStatus[]).map((status) => <Button key={status} variant={statusFilter === status ? "default" : "outline"} className={statusFilter === status ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setStatusFilter(status)}>{STATUS_LABELS[status]}</Button>)}
@@ -120,6 +128,7 @@ export function FamKnowledgeAdmin() {
           return <Card key={item.id} className="border-fam-pink/20"><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle className="text-lg text-navy">{item.title}</CardTitle><CardDescription>{item.content_key} · versão {item.version}</CardDescription></div><span className="rounded-full bg-fam-gold/20 px-2 py-1 text-xs font-semibold text-fam-plum">{STATUS_LABELS[item.status]}</span></div></CardHeader><CardContent><div className="flex flex-wrap items-center gap-2 text-xs text-muted"><FileText className="h-4 w-4" aria-hidden="true" />{item.content_type}<span>•</span>{item.review_date ? `Revisão ${item.review_date}` : "Sem data de revisão"}</div><SourceEditor contentId={item.id} /><div className="mt-4 flex flex-wrap gap-2">{next && <Button disabled={transition.isPending || (publishing && !canPublish)} onClick={() => move(item)} className="gap-2 bg-fam-plum hover:bg-fam-plum/90">{publishing ? <CheckCircle2 className="h-4 w-4" /> : <Send className="h-4 w-4" />} {publishing ? "Publicar" : `Mover para ${STATUS_LABELS[next]}`}</Button>}{item.status === "published" && <Button variant="outline" disabled={transition.isPending} onClick={() => transition.mutate({ id: item.id, status: "archived", actorProfileId: profile?.id ?? "", notes: notes.trim() || undefined })} className="gap-2 border-fam-plum/30 text-fam-plum"><Archive className="h-4 w-4" /> Arquivar</Button>}</div></CardContent></Card>;
         })}
       </div>
+      </>}
     </main>
   );
 }

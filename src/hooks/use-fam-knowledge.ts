@@ -51,6 +51,68 @@ export function useUpdateFamKnowledgeSource() {
   });
 }
 
+export function useFamKnowledgeTerms(status?: "active" | "proposed" | "retired") {
+  return useQuery({
+    queryKey: ["fam-knowledge-terms", status ?? "all"],
+    queryFn: () => Knowledge.listKnowledgeTerms(supabase, status),
+  });
+}
+
+export function useCreateFamKnowledgeTerm() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof Knowledge.createKnowledgeTerm>[1]) => Knowledge.createKnowledgeTerm(supabase, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["fam-knowledge-terms"] }),
+  });
+}
+
+export function useUpdateFamKnowledgeTerm() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Parameters<typeof Knowledge.updateKnowledgeTerm>[2] }) => Knowledge.updateKnowledgeTerm(supabase, id, patch),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["fam-knowledge-terms"] }),
+  });
+}
+
+export function useFamKnowledgeTrailsForCurator(status?: Knowledge.FamKnowledgeStatus) {
+  return useQuery({
+    queryKey: ["fam-knowledge-trails-curator", status ?? "all"],
+    queryFn: () => Knowledge.listKnowledgeTrailsForCurator(supabase, status),
+  });
+}
+
+export function useFamKnowledgeTrailForCurator(trailId: string | null) {
+  return useQuery({
+    queryKey: ["fam-knowledge-trail-curator", trailId],
+    queryFn: () => Knowledge.getKnowledgeTrailForCurator(supabase, trailId as string),
+    enabled: !!trailId,
+  });
+}
+
+export function useCreateFamKnowledgeTrail() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof Knowledge.createKnowledgeTrail>[1]) => Knowledge.createKnowledgeTrail(supabase, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["fam-knowledge-trails-curator"] }),
+  });
+}
+
+export function useCreateFamKnowledgeTrailStep() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof Knowledge.createKnowledgeTrailStep>[1]) => Knowledge.createKnowledgeTrailStep(supabase, input),
+    onSuccess: (_, variables) => queryClient.invalidateQueries({ queryKey: ["fam-knowledge-trail-curator", variables.trail_id] }),
+  });
+}
+
+export function useUpdateFamKnowledgeTrailStep() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, trailId, patch }: { id: string; trailId: string; patch: Parameters<typeof Knowledge.updateKnowledgeTrailStep>[2] }) => Knowledge.updateKnowledgeTrailStep(supabase, id, patch),
+    onSuccess: (_, variables) => queryClient.invalidateQueries({ queryKey: ["fam-knowledge-trail-curator", variables.trailId] }),
+  });
+}
+
 export function useFamKnowledgeTrails() {
   return useQuery({
     queryKey: ["fam-knowledge-trails"],

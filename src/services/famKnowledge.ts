@@ -186,6 +186,78 @@ export async function updateKnowledgeSource(sb: SupabaseClient, id: string, patc
   return data as FamKnowledgeSource;
 }
 
+export async function listKnowledgeTerms(sb: SupabaseClient, status?: "active" | "proposed" | "retired") {
+  let query = sb.from("fam_knowledge_terms").select("*").eq("tenant_key", "FAM").order("preferred_label");
+  if (status) query = query.eq("status", status);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createKnowledgeTerm(sb: SupabaseClient, input: { term_key: string; preferred_label: string; alternative_labels?: string[]; definition?: string; parent_id?: string | null; status?: "active" | "proposed" | "retired" }) {
+  const { data, error } = await sb.from("fam_knowledge_terms").insert({ tenant_key: "FAM", alternative_labels: [], definition: "", status: "proposed", ...input }).select("*").single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateKnowledgeTerm(sb: SupabaseClient, id: string, patch: Partial<{ term_key: string; preferred_label: string; alternative_labels: string[]; definition: string; parent_id: string | null; status: "active" | "proposed" | "retired" }>) {
+  const { data, error } = await sb.from("fam_knowledge_terms").update(patch).eq("id", id).eq("tenant_key", "FAM").select("*").single();
+  if (error) throw error;
+  return data;
+}
+
+export async function listKnowledgeContentTerms(sb: SupabaseClient, contentId: string) {
+  const { data, error } = await sb.from("fam_knowledge_content_terms").select("*, term:fam_knowledge_terms(*)").eq("content_id", contentId);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function linkKnowledgeTermToContent(sb: SupabaseClient, input: { content_id: string; term_id: string; relation_type: "tag" | "broader" | "narrower" | "related" }) {
+  const { data, error } = await sb.from("fam_knowledge_content_terms").upsert(input, { onConflict: "content_id,term_id,relation_type" }).select("*").single();
+  if (error) throw error;
+  return data;
+}
+
+export async function listKnowledgeTrailsForCurator(sb: SupabaseClient, status?: FamKnowledgeStatus) {
+  let query = sb.from("fam_knowledge_trails").select("*").eq("tenant_key", "FAM").order("updated_at", { ascending: false });
+  if (status) query = query.eq("status", status);
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as FamKnowledgeTrail[];
+}
+
+export async function getKnowledgeTrailForCurator(sb: SupabaseClient, trailId: string) {
+  const { data: trail, error: trailError } = await sb.from("fam_knowledge_trails").select("*").eq("id", trailId).eq("tenant_key", "FAM").single();
+  if (trailError) throw trailError;
+  const { data: steps, error: stepsError } = await sb.from("fam_knowledge_trail_steps").select("*").eq("trail_id", trailId).eq("tenant_key", "FAM").order("position");
+  if (stepsError) throw stepsError;
+  return { trail: trail as FamKnowledgeTrail, steps: (steps ?? []) as FamKnowledgeTrailStep[] };
+}
+
+export async function createKnowledgeTrail(sb: SupabaseClient, input: Pick<FamKnowledgeTrail, "trail_key" | "title"> & Partial<FamKnowledgeTrail>) {
+  const { data, error } = await sb.from("fam_knowledge_trails").insert({ tenant_key: "FAM", status: "draft", version: "1.0", summary: "", audience: ["publico"], purpose: ["informar"], difficulty: "basico", ...input }).select("*").single();
+  if (error) throw error;
+  return data as FamKnowledgeTrail;
+}
+
+export async function updateKnowledgeTrail(sb: SupabaseClient, id: string, patch: Partial<FamKnowledgeTrail>) {
+  const { data, error } = await sb.from("fam_knowledge_trails").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id).eq("tenant_key", "FAM").select("*").single();
+  if (error) throw error;
+  return data as FamKnowledgeTrail;
+}
+
+export async function createKnowledgeTrailStep(sb: SupabaseClient, input: Pick<FamKnowledgeTrailStep, "trail_id" | "position" | "title"> & Partial<FamKnowledgeTrailStep>) {
+  const { data, error } = await sb.from("fam_knowledge_trail_steps").insert({ tenant_key: "FAM", objective: "", is_optional: false, ...input }).select("*").single();
+  if (error) throw error;
+  return data as FamKnowledgeTrailStep;
+}
+
+export async function updateKnowledgeTrailStep(sb: SupabaseClient, id: string, patch: Partial<FamKnowledgeTrailStep>) {
+  const { data, error } = await sb.from("fam_knowledge_trail_steps").update(patch).eq("id", id).eq("tenant_key", "FAM").select("*").single();
+  if (error) throw error;
+  return data as FamKnowledgeTrailStep;
+}
+
 export async function listPublishedKnowledgeTrails(sb: SupabaseClient): Promise<FamKnowledgeTrail[]> {
   const { data, error } = await sb.from("fam_knowledge_trails").select("*").eq("tenant_key", "FAM").eq("status", "published").order("updated_at", { ascending: false });
   if (error) throw error;
