@@ -72,12 +72,12 @@ function CreateMemberPrompt() {
     <Card className="border-2 border-gold/40 bg-gold/5">
       <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-4">
         <div className="min-w-[220px] flex-1">
-          <p className="font-display text-base font-bold text-white">Complete seu cadastro</p>
-          <p className="mt-1 text-xs text-white/70">
+          <p className="font-display text-base font-bold text-fam-plum">Complete seu cadastro</p>
+          <p className="mt-1 text-xs text-fam-plum/80">
             Você ainda não tem um cadastro de membro. Preencha seus dados agora — depois a liderança só precisa
             confirmar seu Life Group (se você não escolher um) e liberar sua Carteirinha.
           </p>
-          {err && <p className="mt-1 text-xs text-red-300">{err}</p>}
+          {err && <p role="alert" className="mt-1 text-xs font-medium text-red-700">{err}</p>}
         </div>
         <Button onClick={handleCreate} disabled={busy} className="gap-1.5 shrink-0">
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}

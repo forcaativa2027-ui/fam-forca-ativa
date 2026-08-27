@@ -4,7 +4,13 @@ import type { Member } from "@/types/domain";
 /** Cria (uma única vez) o registro de membro do próprio usuário logado, quando ele ainda não existe. */
 export async function createMyMemberRecord(sb: SupabaseClient): Promise<string> {
   const { data, error } = await sb.rpc("create_my_member_record");
-  if (error) throw error;
+  if (error) {
+    const detail = [error.message, error.details, error.hint, error.code]
+      .filter(Boolean)
+      .join(" — ");
+    throw new Error(detail || "Não foi possível criar o cadastro de membro.");
+  }
+  if (!data) throw new Error("A RPC não retornou o identificador do cadastro criado.");
   return data as string;
 }
 
