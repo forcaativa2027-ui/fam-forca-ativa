@@ -99,6 +99,12 @@ BEGIN
     RETURN false;
   END IF;
 
+  IF coalesce(auth.jwt() ->> 'aal', 'aal1') <> 'aal2' THEN
+    INSERT INTO public.fam_access_audit_events(actor_user_id, subject_profile_id, case_id, purpose, action, decision, reason)
+    VALUES (auth.uid(), p_profile_id, p_case_id, coalesce(p_purpose,''), 'read_sensitive_content', 'REQUIRE_MFA', 'Sessão sem assurance level aal2');
+    RETURN false;
+  END IF;
+
   SELECT * INTO c
   FROM public.fam_professional_credentials
   WHERE tenant_key = 'FAM'
@@ -172,3 +178,38 @@ SELECT 'FAM024 installed' AS migration, count(*) AS credentials FROM public.fam_
 -- Nota: não inserir credenciais activas automaticamente. A activação depende de aprovação institucional.
 
 -- Fim FAM024
+
+
+-- Confirma o MFA da sessão para credenciais activas do próprio usuário.
+-- A função não aceita profile_id externo e não permite auto-activação da credencial.
+CREATE OR REPLACE FUNCTION public.fam_confirm_credential_mfa()
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  updated_count integer;
+BEGIN
+  IF auth.uid() IS NULL OR coalesce(auth.jwt() ->> 'aal', 'aal1') <> 'aal2' THEN
+    RAISE EXCEPTION 'MFA_REQUIRED';
+  END IF;
+
+  UPDATE public.fam_professional_credentials
+  SET mfa_verified_at = now(), updated_at = now()
+  WHERE tenant_key = 'FAM'
+    AND profile_id = auth.uid()
+    AND status = 'active'
+    AND mfa_required = true
+    AND (valid_from IS NULL OR valid_from <= now())
+    AND (valid_until IS NULL OR valid_until > now());
+
+  GET DIAGNOSTICS updated_count = ROW_COUNT;
+  RETURN updated_count;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.fam_confirm_credential_mfa() TO authenticated;
+
+COMMENT ON FUNCTION public.fam_confirm_credential_mfa() IS
+  'AC-02/POL-ARQ-01: registra a verificação MFA aal2 apenas na credencial activa do próprio usuário.';

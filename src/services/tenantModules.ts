@@ -38,6 +38,7 @@ export const TAB_TENANT_MODULE: Record<string, string> = {
   formacao: "academy", "conhecimento-biblico": "academy", "biblioteca-conhecimento": "academy", "biblia-referencias": "academy",
   discipleship: "discipleship", acolhimento: "contact", "prayer-requests": "contact", "visit-requests": "contact",
   communities: "partners", structure: "partners", genealogy: "partners", "expansion-map": "partners",
+  "fam-credenciamento": "usuarios",
 };
 
 /** Defaults globais + overrides do tenant; falha de rede não esconde módulos. */

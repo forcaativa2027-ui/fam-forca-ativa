@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getAssuranceLevel, listFactors, verifyLoginChallenge } from "./mfa";
 
 export const FAM_CREDENTIAL_STATUSES = [
   "requested",
@@ -131,19 +132,56 @@ export async function reviewFamProfessionalCredential(
   return data as FamProfessionalCredential;
 }
 
+export type FamSensitiveAccessResult =
+  | { allowed: true }
+  | { allowed: false; reason: "AUTHENTICATION_REQUIRED" | "MFA_REQUIRED" | "CREDENTIAL_REQUIRED" | "PURPOSE_OR_SCOPE_DENIED" };
+
+async function hasVerifiedMfaSession(sb: SupabaseClient): Promise<boolean> {
+  const [factors, assurance] = await Promise.all([listFactors(sb), getAssuranceLevel(sb)]);
+  return factors.some((factor) => factor.status === "verified") && assurance.current === "aal2";
+}
+
+/**
+ * Confirma o factor TOTP e só resolve quando a sessão passou para aal2.
+ * A RPC do banco continua sendo a autoridade final da credencial e finalidade.
+ */
+export async function verifyMfaForSensitiveAccess(
+  sb: SupabaseClient,
+  factorId: string,
+  code: string,
+): Promise<boolean> {
+  if (!factorId || !/^\d{6}$/.test(code.trim())) return false;
+  await verifyLoginChallenge(sb, factorId, code.trim());
+  return hasVerifiedMfaSession(sb);
+}
+
+/**
+ * Acesso sensível sempre exige MFA da sessão antes de consultar a autorização da RPC.
+ * O helper server-side confirma o instante de MFA da credencial ativa para manter AC-02/POL-ARQ-01 rastreável.
+ */
 export async function canAccessFamSensitiveContent(
   sb: SupabaseClient,
   profileId: string,
   caseId: string,
   purpose: string,
-): Promise<boolean> {
+): Promise<FamSensitiveAccessResult> {
+  const { data: userData } = await sb.auth.getUser();
+  if (!userData.user || userData.user.id !== profileId) return { allowed: false, reason: "AUTHENTICATION_REQUIRED" };
+
+  let mfaReady = false;
+  try { mfaReady = await hasVerifiedMfaSession(sb); } catch { return { allowed: false, reason: "MFA_REQUIRED" }; }
+  if (!mfaReady) return { allowed: false, reason: "MFA_REQUIRED" };
+
+  const { error: confirmError } = await sb.rpc("fam_confirm_credential_mfa");
+  if (confirmError) return { allowed: false, reason: "CREDENTIAL_REQUIRED" };
+
   const { data, error } = await sb.rpc("fam_can_access_sensitive_content", {
     p_profile_id: profileId,
     p_case_id: caseId,
     p_purpose: purpose,
   });
-  if (error) return false;
-  return data === true;
+  if (error || data !== true) return { allowed: false, reason: "PURPOSE_OR_SCOPE_DENIED" };
+  return { allowed: true };
 }
 
 export function isFamCredentialCurrentlyValid(

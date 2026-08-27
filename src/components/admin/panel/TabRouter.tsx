@@ -71,6 +71,8 @@ import { SermonsAdmin } from "./SermonsAdmin";
 import { EventsAdmin } from "./EventsAdmin";
 import { ServiceTimesAdmin } from "./ServiceTimesAdmin";
 import { DailyWordsAdmin } from "./DailyWordsAdmin";
+import { FamProfessionalAccessAdmin } from "../FamProfessionalAccessAdmin";
+import { TenantModuleGuard } from "@/components/shared/TenantModuleGuard";
 
 // AuditView foi extraído para AuditAdmin.tsx (reutilizado também em /governanca).
 function AuditView() {
@@ -110,6 +112,7 @@ export function TabContent({ activeTab, onNavigate, prefillEventId }: { activeTa
     case "agenda":               return <AgendaAdmin onNavigate={onNavigate} />;
     case "pendencias":          return <PendenciasAdmin onNavigate={onNavigate} />;
     case "delegations":         return <DelegationsAdmin />;
+    case "fam-credenciamento": return <TenantModuleGuard moduleKey="usuarios" title="Credenciamento FAM indisponível" description="A administração de credenciamentos não está activa para esta organização."><FamProfessionalAccessAdmin /></TenantModuleGuard>;
     case "invites":             return <InviteLinksAdmin />;
     case "audit":               return <AuditView />;
     case "org-dashboard":       return <OrgDashboardAdmin onNavigate={onNavigate} />;

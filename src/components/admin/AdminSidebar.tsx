@@ -9,7 +9,7 @@ import {
   DollarSign, Landmark, UserCog,
   Download, Search, Bell, Video, Compass,
   Gavel, ClipboardList, ChevronDown, ChevronRight,
-  Menu, X, LogOut,
+  Menu, X, LogOut, UserCheck,
   BarChart2, Users2, ChevronLeft, Flame, Network, Link2, Cake, UserCog2, Sparkles, IdCard, Clock, GraduationCap, Activity, HandCoins, QrCode, Library, FolderTree, Baby, Tags, ScreenShare, LayoutGrid,
 } from "lucide-react";
 import Link from "next/link";
@@ -28,7 +28,7 @@ export type TabKey =
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
   | "news" | "banners" | "sermons" | "radio" | "live360" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
-  | "delegations" | "invites" | "audit"
+  | "delegations" | "fam-credenciamento" | "invites" | "audit"
   | "export";
 
 interface NavItem {
@@ -188,6 +188,7 @@ export function buildGroups(counts: AdminSidebarProps["counts"] = {}): NavGroup[
         { key: "permissions", label: "Permissões",          icon: <Shield size={15} /> },
         { key: "org-terminology", label: "Terminologia Organizacional", icon: <Tags size={15} /> },
         { key: "delegations", label: "Delegações",          icon: <Gavel size={15} /> },
+        { key: "fam-credenciamento", label: "Credenciamento FAM", icon: <UserCheck size={15} /> },
         { key: "score",            label: "Score",               icon: <Star size={15} /> },
         { key: "birthdays",        label: "Aniversários",        icon: <Cake size={15} /> },
         { key: "discipleship",     label: "Discipulado",         icon: <BookOpen size={15} />, sectionLabel: "Cuidado e Acompanhamento" },
