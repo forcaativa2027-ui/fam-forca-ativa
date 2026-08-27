@@ -6,17 +6,17 @@ import { normalizeSupabaseUrl } from "@/lib/supabase/url";
 let _client: SupabaseClient | null = null;
 
 export function hasSupabaseEnv(): boolean {
-  return !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!(process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 }
 
 function getClient(): SupabaseClient {
   if (_client) return _client;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) {
     throw new Error(
       "Variaveis de ambiente do Supabase ausentes. Configure NEXT_PUBLIC_SUPABASE_URL e " +
-      "NEXT_PUBLIC_SUPABASE_ANON_KEY na Vercel e refaca o deploy."
+      "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (ou NEXT_PUBLIC_SUPABASE_ANON_KEY) na Vercel e refaca o deploy."
     );
   }
   _client = createBrowserClient(normalizeSupabaseUrl(url), key);
