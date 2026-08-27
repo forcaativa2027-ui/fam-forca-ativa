@@ -73,12 +73,6 @@ returns boolean language sql stable security definer set search_path = public as
   select exists (
     select 1 from public.profiles p
     where p.id = auth.uid() and p.role::text = 'apostolo'
-  ) or exists (
-    select 1 from public.module_delegations d
-    where d.profile_id = auth.uid()
-      and d.module::text in ('administrativo','usuarios')
-      and d.status::text = 'ativo'
-      and (d.expires_at is null or d.expires_at > now())
   );
 $$;
 
