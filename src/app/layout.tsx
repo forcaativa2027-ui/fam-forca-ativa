@@ -16,7 +16,7 @@ function ServiceWorkerRegistration() {
   return (
     <script
       dangerouslySetInnerHTML={{
-        __html: `if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js").catch(function () {}); }); }`,
+        __html: `if ("serviceWorker" in navigator) { window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js").then(function (registration) { registration.update(); }).catch(function () {}); var refreshing = false; navigator.serviceWorker.addEventListener("controllerchange", function () { if (!refreshing) { refreshing = true; window.location.reload(); } }); }); }`,
       }}
     />
   );
