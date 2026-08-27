@@ -12,19 +12,22 @@ where version = 'FAM-RULES-1.0'
     'RULE-EMERGENCY-001',
     'RULE-EMERGENCY-002',
     'RULE-SPECIAL-CHILDREN-001',
-    'RULE-COMBINED-001'
+    'RULE-COMBINED-001',
+    'RULE-WEAPON-001'
   );
 
 update public.fam_risk_rules
 set
   rule_version = 'FAM-RULES-1.1',
   source_document = coalesce(source_document, 'OC-04_Matriz_Situacoes_Risco_Respostas_v1.1.md'),
+  condition = case when code = 'RULE-WEAPON-001' then '{"kind":"all","conditions":[{"kind":"condition","question_key":"danger_now","operator":"equals","value":"YES"},{"kind":"condition","question_key":"weapon","operator":"equals","value":"YES"}]}'::jsonb else condition end,
   updated_at = now()
 where code in (
   'RULE-EMERGENCY-001',
   'RULE-EMERGENCY-002',
   'RULE-SPECIAL-CHILDREN-001',
-  'RULE-COMBINED-001'
+  'RULE-COMBINED-001',
+  'RULE-WEAPON-001'
 )
   and is_active = true;
 
