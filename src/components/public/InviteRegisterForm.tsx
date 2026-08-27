@@ -10,7 +10,6 @@ import { supabase } from "@/lib/supabase/client";
 import { consumeInviteLink } from "@/services/invites";
 import { CommunityIdentity } from "@/components/shared/CommunityIdentity";
 import { KIND_LABELS } from "@/components/admin/InviteLinksAdmin";
-import { Turnstile } from "@marsidev/react-turnstile";
 import type { InviteTokenValidation } from "@/types/domain";
 
 // Seção 9 do script de melhoria — mensagens específicas por motivo,
@@ -42,7 +41,6 @@ export function InviteRegisterForm({ token, validation }: Props) {
   const [hasSession, setHasSession] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [err, setErr] = useState("");
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const roleName = validation.kind ? KIND_LABELS[validation.kind] : null;
 
@@ -119,12 +117,11 @@ export function InviteRegisterForm({ token, validation }: Props) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !captchaToken) { setErr("Confirme que você não é um robô."); return; }
     setErr(""); setBusy(true);
     try {
       const { data: signData, error: signErr } = await supabase.auth.signUp({
         email, password,
-        options: { data: { full_name: fullName }, captchaToken: captchaToken ?? undefined },
+        options: { data: { full_name: fullName } },
       });
       if (signErr) {
         setErr(signErr.message.includes("already") ? "Este e-mail já está cadastrado. Tente fazer login." : signErr.message);
@@ -175,16 +172,6 @@ export function InviteRegisterForm({ token, validation }: Props) {
               <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
             {err && <p className="text-sm text-destructive">{err}</p>}
-            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
-              <div className="flex justify-center">
-                <Turnstile
-                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
-                  onSuccess={(token) => setCaptchaToken(token)}
-                  onExpire={() => setCaptchaToken(null)}
-                  options={{ theme: "light", language: "pt-BR" }}
-                />
-              </div>
-            )}
             <Button type="submit" disabled={busy} className="w-full gap-1.5">
               {busy ? <Loader2 size={16} className="animate-spin" /> : null}
               Concluir cadastro
