@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useCreateFamKnowledgeSource, useFamKnowledgeCurator, useFamKnowledgeSources, useTransitionFamKnowledgeContent } from "@/hooks/use-fam-knowledge";
 import { FamKnowledgeTaxonomyAdmin } from "@/components/admin/FamKnowledgeTaxonomyAdmin";
 import { FamKnowledgeTrailsAdmin } from "@/components/admin/FamKnowledgeTrailsAdmin";
+import { FamKnowledgeOperationsAdmin } from "@/components/admin/FamKnowledgeOperationsAdmin";
 import { useMyProfile } from "@/hooks/use-queries";
 import type { FamKnowledgeStatus } from "@/services/famKnowledge";
 
@@ -56,7 +57,7 @@ function SourceEditor({ contentId }: { contentId: string }) {
 export function FamKnowledgeAdmin() {
   const { data: profile } = useMyProfile();
   const [statusFilter, setStatusFilter] = useState<FamKnowledgeStatus | undefined>();
-  const [activeSection, setActiveSection] = useState<"contents" | "taxonomy" | "trails">("contents");
+  const [activeSection, setActiveSection] = useState<"contents" | "taxonomy" | "trails" | "operations">("contents");
   const [approvalReference, setApprovalReference] = useState("");
   const [reviewDate, setReviewDate] = useState("");
   const [notes, setNotes] = useState("");
@@ -107,10 +108,11 @@ export function FamKnowledgeAdmin() {
       {transition.isError && <p role="alert" className="rounded-lg bg-fam-pink/10 p-4 text-sm text-fam-plum">{transition.error instanceof Error ? transition.error.message : "Não foi possível concluir a transição editorial."}</p>}
       {!canPublish && <p className="text-xs text-muted">A publicação ficará bloqueada até que a referência de aprovação e a próxima data de revisão sejam preenchidas.</p>}
 
-      <div className="flex flex-wrap gap-2 border-b border-fam-plum/15 pb-3" aria-label="Seções da Jornada"><Button variant={activeSection === "contents" ? "default" : "outline"} className={activeSection === "contents" ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setActiveSection("contents")}>Conteúdos e fontes</Button><Button variant={activeSection === "taxonomy" ? "default" : "outline"} className={activeSection === "taxonomy" ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setActiveSection("taxonomy")}>Taxonomia</Button><Button variant={activeSection === "trails" ? "default" : "outline"} className={activeSection === "trails" ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setActiveSection("trails")}>Trilhas</Button></div>
+      <div className="flex flex-wrap gap-2 border-b border-fam-plum/15 pb-3" aria-label="Seções da Jornada"><Button variant={activeSection === "contents" ? "default" : "outline"} className={activeSection === "contents" ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setActiveSection("contents")}>Conteúdos e fontes</Button><Button variant={activeSection === "taxonomy" ? "default" : "outline"} className={activeSection === "taxonomy" ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setActiveSection("taxonomy")}>Taxonomia</Button><Button variant={activeSection === "trails" ? "default" : "outline"} className={activeSection === "trails" ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setActiveSection("trails")}>Trilhas</Button><Button variant={activeSection === "operations" ? "default" : "outline"} className={activeSection === "operations" ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setActiveSection("operations")}>Pendências e auditoria</Button></div>
 
       {activeSection === "taxonomy" && <FamKnowledgeTaxonomyAdmin />}
       {activeSection === "trails" && <FamKnowledgeTrailsAdmin />}
+      {activeSection === "operations" && <FamKnowledgeOperationsAdmin />}
       {activeSection === "contents" && <>
       <div className="flex flex-wrap gap-2" aria-label="Filtrar por status">
         <Button variant={!statusFilter ? "default" : "outline"} className={!statusFilter ? "bg-fam-plum hover:bg-fam-plum/90" : "border-fam-plum/30 text-fam-plum"} onClick={() => setStatusFilter(undefined)}>Todos</Button>

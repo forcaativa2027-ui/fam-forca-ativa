@@ -308,6 +308,54 @@ export async function updateKnowledgeContent(sb: SupabaseClient, id: string, pat
   return data as FamKnowledgeContent;
 }
 
+export interface FamKnowledgeReviewAlert {
+  item_kind: "content" | "trail";
+  item_id: string;
+  item_key: string;
+  item_title: string;
+  item_status: FamKnowledgeStatus;
+  review_date: string | null;
+  days_until_review: number | null;
+  urgency: "sem_data" | "vencida" | "proxima";
+}
+
+export interface FamKnowledgeAuditEvent {
+  id: string;
+  tenant_key: "FAM";
+  content_id: string | null;
+  trail_id: string | null;
+  actor_profile_id: string | null;
+  event_type: string;
+  from_status: string | null;
+  to_status: string | null;
+  version: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export async function listKnowledgeReviewAlerts(
+  sb: SupabaseClient,
+  daysAhead = 30,
+): Promise<FamKnowledgeReviewAlert[]> {
+  const { data, error } = await sb.rpc("fam_knowledge_review_alerts", { p_days_ahead: daysAhead });
+  if (error) throw error;
+  return (data ?? []) as FamKnowledgeReviewAlert[];
+}
+
+export async function listKnowledgeAuditEvents(
+  sb: SupabaseClient,
+  limit = 50,
+): Promise<FamKnowledgeAuditEvent[]> {
+  const { data, error } = await sb
+    .from("fam_knowledge_audit_events")
+    .select("*")
+    .eq("tenant_key", "FAM")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as FamKnowledgeAuditEvent[];
+}
+
 export async function transitionKnowledgeContent(
   sb: SupabaseClient,
   id: string,

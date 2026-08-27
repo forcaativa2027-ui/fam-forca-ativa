@@ -2,6 +2,22 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase/client";
 import * as Knowledge from "@/services/famKnowledge";
 
+export function useFamKnowledgeReviewAlerts(daysAhead = 30) {
+  return useQuery({
+    queryKey: ["fam-knowledge-review-alerts", daysAhead],
+    queryFn: () => Knowledge.listKnowledgeReviewAlerts(supabase, daysAhead),
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+export function useFamKnowledgeAuditEvents(limit = 50) {
+  return useQuery({
+    queryKey: ["fam-knowledge-audit-events", limit],
+    queryFn: () => Knowledge.listKnowledgeAuditEvents(supabase, limit),
+    staleTime: 1000 * 60,
+  });
+}
+
 export function useFamKnowledgeContents(filters?: Knowledge.FamKnowledgeFilters) {
   return useQuery({
     queryKey: ["fam-knowledge-contents", filters ?? {}],
