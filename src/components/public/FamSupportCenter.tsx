@@ -386,6 +386,7 @@ export function FamRiskAnalysisPage() {
   const [assessmentState, setAssessmentState] = useState<FamAssessmentState>("IN_PROGRESS");
   const [openContact, setOpenContact] = useState(false);
   const [selectedReferral, setSelectedReferral] = useState<FamReferralOption | null>(null);
+  const [showReferralDetails, setShowReferralDetails] = useState(false);
   const [referralConfirmed, setReferralConfirmed] = useState(false);
   const [referralRequestStatus, setReferralRequestStatus] = useState<"idle" | "requested">("idle");
   const [referralRequest, setReferralRequest] = useState<FamReferralRequest | null>(null);
@@ -549,6 +550,7 @@ export function FamRiskAnalysisPage() {
     setSubmitted(false);
     setAssessmentState("IN_PROGRESS");
     setSelectedReferral(null);
+    setShowReferralDetails(false);
     setReferralConfirmed(false);
     setReferralRequestStatus("idle");
     setReferralRequest(null);
@@ -681,9 +683,20 @@ export function FamRiskAnalysisPage() {
                   ))}
                 </div>
                 {selectedReferral && (
-                  <div className="rounded-md bg-white p-3 text-xs leading-relaxed text-fam-deep-plum">
-                    <p><b>O que pode ser compartilhado:</b> {selectedReferral.dataScope.join(", ")}.</p>
+                    <div className="rounded-md bg-white p-3 text-xs leading-relaxed text-fam-deep-plum">
+                    <p><b>Destinatário:</b> {selectedReferral.recipient}.</p>
+                    <p className="mt-1"><b>Finalidade:</b> {selectedReferral.purpose}</p>
+                    <p className="mt-1"><b>O que pode ser compartilhado:</b> {selectedReferral.dataScope.join(", ")}.</p>
                     <p className="mt-1">{selectedReferral.disclaimer}</p>
+                    <button type="button" className="mt-2 font-semibold text-fam-plum underline" onClick={() => setShowReferralDetails((value) => !value)} aria-expanded={showReferralDetails}>
+                      {showReferralDetails ? "Ocultar detalhes" : "Saiba mais sobre este encaminhamento"}
+                    </button>
+                    {showReferralDetails && (
+                      <div className="mt-2 rounded border border-fam-lavender bg-fam-lavender/50 p-2">
+                        <p><b>Motivo da sugestão:</b> {selectedReferral.reason}</p>
+                        <p className="mt-1">O pedido será apenas registrado para revisão. O recebimento não significa atendimento, investigação ou adopção de providência.</p>
+                      </div>
+                    )}
                     {!userId || !caseId ? (
                       <p className="mt-3 text-xs text-fam-muted">
                         Entre na sua conta para registrar um pedido de encaminhamento. Você também pode conversar com uma atendente sem enviar esse pedido.
@@ -709,7 +722,10 @@ export function FamRiskAnalysisPage() {
                         </label>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <Button type="button" size="sm" disabled={!referralConfirmed || riskLoading} onClick={handleReferralRequest}>
-                            Registrar pedido de encaminhamento
+                            Confirmar e registrar pedido
+                          </Button>
+                          <Button type="button" size="sm" variant="outline" onClick={() => { setSelectedReferral(null); setShowReferralDetails(false); setReferralConfirmed(false); }}>
+                            Não compartilhar agora
                           </Button>
                           <Button type="button" size="sm" variant="outline" onClick={() => setOpenContact(true)}>
                             Conversar com uma atendente
