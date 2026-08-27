@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Archive, CheckCircle2, FileText, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useFamKnowledgeCurator, useTransitionFamKnowledgeContent } from "@/hooks/use-fam-knowledge";
+import { useCreateFamKnowledgeSource, useFamKnowledgeCurator, useFamKnowledgeSources, useTransitionFamKnowledgeContent } from "@/hooks/use-fam-knowledge";
 import { useMyProfile } from "@/hooks/use-queries";
 import type { FamKnowledgeStatus } from "@/services/famKnowledge";
 
@@ -16,6 +16,40 @@ const STATUS_LABELS: Record<FamKnowledgeStatus, string> = {
 const NEXT_STATUS: Partial<Record<FamKnowledgeStatus, FamKnowledgeStatus>> = {
   draft: "curation", curation: "under_review", under_review: "approved", approved: "published",
 };
+
+const SOURCE_TYPES = [
+  ["lei", "Lei"], ["decreto", "Decreto"], ["orgao_publico", "Órgão público"],
+  ["servico_publico", "Serviço público"], ["documento", "Documento"], ["video", "Vídeo"],
+  ["artigo", "Artigo"], ["outro", "Outro"],
+] as const;
+
+function SourceEditor({ contentId }: { contentId: string }) {
+  const { data: sources = [], isLoading } = useFamKnowledgeSources(contentId);
+  const createSource = useCreateFamKnowledgeSource();
+  const [sourceType, setSourceType] = useState("lei");
+  const [sourceTitle, setSourceTitle] = useState("");
+  const [sourceReference, setSourceReference] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [authority, setAuthority] = useState("");
+  const [publicationDate, setPublicationDate] = useState("");
+
+  async function addSource(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!sourceTitle.trim() || !sourceReference.trim()) return;
+    await createSource.mutateAsync({
+      content_id: contentId,
+      source_type: sourceType,
+      source_title: sourceTitle.trim(),
+      source_reference: sourceReference.trim(),
+      source_url: sourceUrl.trim() || undefined,
+      issuing_authority: authority.trim() || undefined,
+      publication_date: publicationDate || undefined,
+    });
+    setSourceTitle(""); setSourceReference(""); setSourceUrl(""); setAuthority(""); setPublicationDate("");
+  }
+
+  return <details className="mt-4 rounded-lg border border-fam-plum/15 p-3"><summary className="cursor-pointer text-sm font-semibold text-fam-plum">Fontes e referências oficiais ({sources.length})</summary><div className="mt-3 space-y-3">{isLoading && <p className="text-xs text-muted">Carregando fontes…</p>}{sources.map((source) => <div key={source.id} className="rounded-md bg-fam-gold/10 p-3 text-xs text-navy"><p className="font-semibold">{source.source_title}</p><p>{source.source_reference}{source.issuing_authority ? ` · ${source.issuing_authority}` : ""}</p>{source.source_url && <a className="break-all text-fam-plum underline" href={source.source_url} target="_blank" rel="noreferrer">{source.source_url}</a>}</div>)}<form onSubmit={addSource} className="grid gap-2 md:grid-cols-2"><select aria-label="Tipo de fonte" value={sourceType} onChange={(event) => setSourceType(event.target.value)} className="rounded-md border border-fam-plum/25 bg-white px-3 py-2 text-sm">{SOURCE_TYPES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><input required aria-label="Título da fonte" value={sourceTitle} onChange={(event) => setSourceTitle(event.target.value)} placeholder="Título da fonte" className="rounded-md border border-fam-plum/25 bg-white px-3 py-2 text-sm" /><input required aria-label="Referência da fonte" value={sourceReference} onChange={(event) => setSourceReference(event.target.value)} placeholder="Referência oficial" className="rounded-md border border-fam-plum/25 bg-white px-3 py-2 text-sm" /><input aria-label="Órgão emissor" value={authority} onChange={(event) => setAuthority(event.target.value)} placeholder="Órgão emissor" className="rounded-md border border-fam-plum/25 bg-white px-3 py-2 text-sm" /><input type="url" aria-label="URL oficial" value={sourceUrl} onChange={(event) => setSourceUrl(event.target.value)} placeholder="https://gov.br/..." className="rounded-md border border-fam-plum/25 bg-white px-3 py-2 text-sm" /><input type="date" aria-label="Data de publicação" value={publicationDate} onChange={(event) => setPublicationDate(event.target.value)} className="rounded-md border border-fam-plum/25 bg-white px-3 py-2 text-sm" /><div className="md:col-span-2"><Button type="submit" disabled={createSource.isPending} className="bg-fam-plum hover:bg-fam-plum/90">{createSource.isPending ? "Salvando…" : "Adicionar fonte"}</Button></div></form>{createSource.isError && <p role="alert" className="text-xs text-fam-plum">Não foi possível salvar a fonte. Verifique sua permissão de curadoria.</p>}</div></details>;
+}
 
 export function FamKnowledgeAdmin() {
   const { data: profile } = useMyProfile();
@@ -83,7 +117,7 @@ export function FamKnowledgeAdmin() {
         {contents.map((item) => {
           const next = NEXT_STATUS[item.status];
           const publishing = next === "published";
-          return <Card key={item.id} className="border-fam-pink/20"><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle className="text-lg text-navy">{item.title}</CardTitle><CardDescription>{item.content_key} · versão {item.version}</CardDescription></div><span className="rounded-full bg-fam-gold/20 px-2 py-1 text-xs font-semibold text-fam-plum">{STATUS_LABELS[item.status]}</span></div></CardHeader><CardContent><div className="flex flex-wrap items-center gap-2 text-xs text-muted"><FileText className="h-4 w-4" aria-hidden="true" />{item.content_type}<span>•</span>{item.review_date ? `Revisão ${item.review_date}` : "Sem data de revisão"}</div><div className="mt-4 flex flex-wrap gap-2">{next && <Button disabled={transition.isPending || (publishing && !canPublish)} onClick={() => move(item)} className="gap-2 bg-fam-plum hover:bg-fam-plum/90">{publishing ? <CheckCircle2 className="h-4 w-4" /> : <Send className="h-4 w-4" />} {publishing ? "Publicar" : `Mover para ${STATUS_LABELS[next]}`}</Button>}{item.status === "published" && <Button variant="outline" disabled={transition.isPending} onClick={() => transition.mutate({ id: item.id, status: "archived", actorProfileId: profile?.id ?? "", notes: notes.trim() || undefined })} className="gap-2 border-fam-plum/30 text-fam-plum"><Archive className="h-4 w-4" /> Arquivar</Button>}</div></CardContent></Card>;
+          return <Card key={item.id} className="border-fam-pink/20"><CardHeader><div className="flex items-start justify-between gap-3"><div><CardTitle className="text-lg text-navy">{item.title}</CardTitle><CardDescription>{item.content_key} · versão {item.version}</CardDescription></div><span className="rounded-full bg-fam-gold/20 px-2 py-1 text-xs font-semibold text-fam-plum">{STATUS_LABELS[item.status]}</span></div></CardHeader><CardContent><div className="flex flex-wrap items-center gap-2 text-xs text-muted"><FileText className="h-4 w-4" aria-hidden="true" />{item.content_type}<span>•</span>{item.review_date ? `Revisão ${item.review_date}` : "Sem data de revisão"}</div><SourceEditor contentId={item.id} /><div className="mt-4 flex flex-wrap gap-2">{next && <Button disabled={transition.isPending || (publishing && !canPublish)} onClick={() => move(item)} className="gap-2 bg-fam-plum hover:bg-fam-plum/90">{publishing ? <CheckCircle2 className="h-4 w-4" /> : <Send className="h-4 w-4" />} {publishing ? "Publicar" : `Mover para ${STATUS_LABELS[next]}`}</Button>}{item.status === "published" && <Button variant="outline" disabled={transition.isPending} onClick={() => transition.mutate({ id: item.id, status: "archived", actorProfileId: profile?.id ?? "", notes: notes.trim() || undefined })} className="gap-2 border-fam-plum/30 text-fam-plum"><Archive className="h-4 w-4" /> Arquivar</Button>}</div></CardContent></Card>;
         })}
       </div>
     </main>

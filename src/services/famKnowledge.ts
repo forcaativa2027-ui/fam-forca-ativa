@@ -164,10 +164,25 @@ export async function getPublishedKnowledgeContent(
   return (data as FamKnowledgeContent | null) ?? null;
 }
 
+export type FamKnowledgeSourceInput = Pick<FamKnowledgeSource, "content_id" | "source_type" | "source_title" | "source_reference"> & Partial<Pick<FamKnowledgeSource, "source_url" | "issuing_authority" | "publication_date" | "verified_at" | "verified_by">>;
+
 export async function listKnowledgeSources(sb: SupabaseClient, contentId: string): Promise<FamKnowledgeSource[]> {
-  const { data, error } = await sb.from("fam_knowledge_sources").select("*").eq("content_id", contentId).order("publication_date", { ascending: false });
+  const { data, error } = await sb.from("fam_knowledge_sources").select("*").eq("tenant_key", "FAM").eq("content_id", contentId).order("publication_date", { ascending: false });
   if (error) throw error;
   return (data ?? []) as FamKnowledgeSource[];
+}
+
+export async function createKnowledgeSource(sb: SupabaseClient, input: FamKnowledgeSourceInput): Promise<FamKnowledgeSource> {
+  const payload = { tenant_key: "FAM", ...input };
+  const { data, error } = await sb.from("fam_knowledge_sources").insert(payload).select("*").single();
+  if (error) throw error;
+  return data as FamKnowledgeSource;
+}
+
+export async function updateKnowledgeSource(sb: SupabaseClient, id: string, patch: Partial<Omit<FamKnowledgeSource, "id" | "tenant_key" | "content_id" | "created_at">>): Promise<FamKnowledgeSource> {
+  const { data, error } = await sb.from("fam_knowledge_sources").update(patch).eq("id", id).eq("tenant_key", "FAM").select("*").single();
+  if (error) throw error;
+  return data as FamKnowledgeSource;
 }
 
 export async function listPublishedKnowledgeTrails(sb: SupabaseClient): Promise<FamKnowledgeTrail[]> {

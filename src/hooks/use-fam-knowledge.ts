@@ -35,6 +35,22 @@ export function useFamKnowledgeSources(contentId: string | null) {
   });
 }
 
+export function useCreateFamKnowledgeSource() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Knowledge.FamKnowledgeSourceInput) => Knowledge.createKnowledgeSource(supabase, input),
+    onSuccess: (_, variables) => queryClient.invalidateQueries({ queryKey: ["fam-knowledge-sources", variables.content_id] }),
+  });
+}
+
+export function useUpdateFamKnowledgeSource() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, contentId, patch }: { id: string; contentId: string; patch: Parameters<typeof Knowledge.updateKnowledgeSource>[2] }) => Knowledge.updateKnowledgeSource(supabase, id, patch),
+    onSuccess: (_, variables) => queryClient.invalidateQueries({ queryKey: ["fam-knowledge-sources", variables.contentId] }),
+  });
+}
+
 export function useFamKnowledgeTrails() {
   return useQuery({
     queryKey: ["fam-knowledge-trails"],
