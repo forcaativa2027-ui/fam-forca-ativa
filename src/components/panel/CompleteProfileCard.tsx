@@ -35,6 +35,8 @@ const BRAZILIAN_STATES = [
 
 const LOCAL_STORAGE_SNOOZE_KEY = "cec_complete_profile_snoozed_until";
 
+const emptyToNull = (value: string) => value.trim() || null;
+
 /**
  * Alerta compacto e amarelo, pra aparecer em QUALQUER aba do painel — leva
  * direto pra aba Perfil, onde fica a funcionalidade completa de cadastro.
@@ -236,13 +238,31 @@ function CompleteProfileDialog({ member, onClose }: { member: Member; onClose: (
         photoUrl = await uploadMemberPhoto(supabase, member.id, photoFile);
       }
       const { phone_is_whatsapp, ...rest } = v;
-      await updateMember(supabase, member.id, {
+      const payload = {
         ...rest,
-        whatsapp: phone_is_whatsapp ? v.phone : null,
+        email: emptyToNull(v.email),
+        phone: emptyToNull(v.phone),
+        birth_date: v.birth_date || null,
+        cpf: emptyToNull(v.cpf),
+        rg: emptyToNull(v.rg),
+        rg_orgao_expedidor: emptyToNull(v.rg_orgao_expedidor),
+        phone_recado: emptyToNull(v.phone_recado),
+        phone_recado_nome: emptyToNull(v.phone_recado_nome),
+        cep: emptyToNull(v.cep),
+        address: emptyToNull(v.address),
+        numero: emptyToNull(v.numero),
+        complemento: emptyToNull(v.complemento),
+        neighborhood: emptyToNull(v.neighborhood),
+        city: emptyToNull(v.city),
+        state: v.state.trim().toUpperCase() || null,
+        gender: emptyToNull(v.gender),
+        marital_status: emptyToNull(v.marital_status),
+        whatsapp: phone_is_whatsapp ? emptyToNull(v.phone) : null,
         photo_url: photoUrl,
         consent_accepted_at: new Date().toISOString(),
         photo_consent_accepted_at: photoConsent ? new Date().toISOString() : member.photo_consent_accepted_at ?? null,
-      });
+      };
+      await updateMember(supabase, member.id, payload);
       await logAudit(supabase, "update", "members", member.id, { acao: "complementacao_cadastro" });
       qc.invalidateQueries({ queryKey: ["member-completion", member.id] });
       qc.invalidateQueries({ queryKey: ["my-member"] });
