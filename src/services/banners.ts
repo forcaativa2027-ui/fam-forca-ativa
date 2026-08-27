@@ -1,7 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Banner, BannerWorkflowStatus } from "@/types/domain";
-
-const FAM_TENANT_KEY = "FAM" as const;
+import { assertFamBannerCta, FAM_TENANT_KEY, isEligibleFamBanner } from "./famBannerRules";
 
 /**
  * Lista somente banners FAM elegíveis.
@@ -25,16 +24,7 @@ export async function listActiveBanners(sb: SupabaseClient): Promise<Banner[]> {
 
 function filterEligible(banners: Banner[]): Banner[] {
   const now = Date.now();
-  return banners.filter((b) => {
-    // Ausência/null nunca é interpretada como banner FAM.
-    if (b.tenant_key !== FAM_TENANT_KEY) return false;
-    if (!b.is_active) return false;
-    if (!b.workflow_status || !["publicado", "agendado"].includes(b.workflow_status)) return false;
-    if (b.starts_at && new Date(b.starts_at).getTime() > now) return false;
-    if (b.ends_at && new Date(b.ends_at).getTime() < now) return false;
-    if (b.audience && b.audience !== "publico_geral") return false;
-    return true;
-  });
+  return banners.filter((banner) => isEligibleFamBanner(banner, now));
 }
 
 /**
@@ -55,6 +45,7 @@ export async function listAllBanners(sb: SupabaseClient): Promise<Banner[]> {
 export async function createBanner(sb: SupabaseClient, input: Partial<Banner>): Promise<Banner> {
   // O tenant é imposto pelo serviço; nunca aceitar esse campo do formulário.
   const { tenant_key: _ignoredTenant, ...safeInput } = input as Partial<Banner> & { tenant_key?: string };
+  assertFamBannerCta(safeInput.cta_kind, safeInput.cta_label ?? null, safeInput.cta_url ?? null);
   const payload = { ...safeInput, tenant_key: FAM_TENANT_KEY };
   const { data, error } = await sb.from("banners").insert(payload).select().single();
   if (error) throw error;
@@ -63,6 +54,9 @@ export async function createBanner(sb: SupabaseClient, input: Partial<Banner>): 
 
 export async function updateBanner(sb: SupabaseClient, id: string, patch: Partial<Banner>): Promise<void> {
   const { tenant_key: _ignoredTenant, ...safePatch } = patch as Partial<Banner> & { tenant_key?: string };
+  if ("cta_kind" in safePatch || "cta_label" in safePatch || "cta_url" in safePatch) {
+    assertFamBannerCta(safePatch.cta_kind, safePatch.cta_label ?? null, safePatch.cta_url ?? null);
+  }
   const { error } = await sb.from("banners").update(safePatch)
     .eq("id", id)
     .eq("tenant_key", FAM_TENANT_KEY);
