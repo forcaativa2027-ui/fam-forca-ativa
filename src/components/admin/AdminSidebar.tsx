@@ -225,7 +225,10 @@ export function AdminSidebar({
 }: AdminSidebarProps) {
   const { data: profile } = useMyProfile();
   const { data: myChurch } = useMyChurch(profile?.church_id);
-  const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC FAMILY";
+  const isFamTenant = myChurch?.slug === "fam-samambaia-df" || myChurch?.name?.toLowerCase().includes("fam");
+  const brandLabel = isFamTenant
+    ? "FAM · FORÇA ATIVA DA MULHER"
+    : (myChurch?.name ? myChurch.name.toUpperCase() : "CEC FAMILY");
   const { data: activeModules = [] } = useMyActiveModules();
   const { data: tenantModules = TENANT_MODULE_DEFAULTS } = useTenantModules(profile?.church_id);
   const isApostolo = profile?.role === "apostolo";
@@ -266,7 +269,8 @@ export function AdminSidebar({
     (counts.pipeline_new ?? 0) + (counts.tower_alerts ?? 0);
 
   const roleLabel: Record<string, string> = {
-    apostolo: "Apóstolo", pastor: "Pastor", supervisor: "Supervisor", lider: "Líder",
+    apostolo: isFamTenant ? "Administrador Geral" : "Apóstolo",
+    pastor: "Pastor", supervisor: "Supervisor", lider: "Líder",
   };
 
   const SidebarContent = (
