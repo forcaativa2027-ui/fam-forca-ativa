@@ -22,11 +22,9 @@ import {
   resolveFamReferralOptions,
   type FamReferralOption,
 } from "@/services/famReferrals";
-import {
-  stateForEvaluation,
-  transitionAssessment,
-  type FamAssessmentState,
-} from "@/services/famAssessmentState";
+import { stateForEvaluation, type FamAssessmentState } from "@/services/famAssessmentState";
+import { createRiskAuditEvent, transitionRiskAssessment } from "@/services/famRiskStateMachine";
+import { recordFamRiskAuditEvents } from "@/services/famRiskAudit";
 import { decideFamProtection } from "@/services/famProtectionFlow";
 
 const EMERGENCY_180 = "180";
@@ -400,7 +398,7 @@ export function FamRiskAnalysisPage() {
   const protectionDecision = decideFamProtection({ evaluation, referralConfirmed });
   const referralOptions = resolveFamReferralOptions(evaluation);
   const urgent = evaluation.emergency;
-  const complete = FAM_RISK_QUESTIONS.every(({ key }) => answers[key]);
+  const complete = FAM_RISK_QUESTIONS.every(({ key }) => Boolean(answers[key]) && answers[key] !== "NO_ANSWER");
 
     useEffect(() => {
     if (!caseId || !submitted) return;
@@ -433,16 +431,19 @@ export function FamRiskAnalysisPage() {
     try {
       const attention = evaluation.attention;
       const next = stateForEvaluation(evaluation);
-      transitionAssessment(assessmentState, next.state, {
-        reasonCode: next.reasonCode,
-        ruleCode: next.ruleCode,
-      });
-      setAssessmentState(next.state);
       // Visitantes podem concluir a orientação sem cadastro. Nesse caso,
       // respostas e resultado permanecem somente nesta sessão do navegador.
       if (userId) {
         const activeCaseId = caseId ?? (await create({ user_id: userId, contact_name: undefined })).id;
         if (!caseId) setCaseId(activeCaseId);
+        const transition = transitionRiskAssessment({
+          assessmentId: activeCaseId,
+          actorUserId: userId,
+          from: assessmentState,
+          to: next.state,
+          reasonCode: next.reasonCode,
+          ruleCode: next.ruleCode,
+        });
         await saveAnswers(activeCaseId, answers);
         await submitAssessment(activeCaseId, {
           attention,
@@ -455,6 +456,57 @@ export function FamRiskAnalysisPage() {
           special_flow_flags: evaluation.specialFlowFlags,
           triggered_indicators: evaluation.triggeredIndicators,
         });
+        const auditEvents = [
+          createRiskAuditEvent({ eventType: "ASSESSMENT_STARTED", assessmentId: activeCaseId, actorUserId: userId, state: "IN_PROGRESS" }),
+          ...Object.keys(answers).map((questionCode) => createRiskAuditEvent({
+            eventType: "ANSWER_RECORDED",
+            assessmentId: activeCaseId,
+            actorUserId: userId,
+            state: "IN_PROGRESS",
+            questionCode,
+          })),
+          ...evaluation.triggeredRules.map((ruleCode) => createRiskAuditEvent({
+            eventType: "RULE_TRIGGERED",
+            assessmentId: activeCaseId,
+            actorUserId: userId,
+            state: next.state,
+            ruleCode,
+          })),
+          ...evaluation.specialFlowFlags.map((specialFlow) => createRiskAuditEvent({
+            eventType: "SPECIAL_FLOW_TRIGGERED",
+            assessmentId: activeCaseId,
+            actorUserId: userId,
+            state: "PROTECTION_SPECIAL",
+            metadata: { specialFlow },
+          })),
+          transition.auditEvent,
+          createRiskAuditEvent({
+            eventType: "RESULT_GENERATED",
+            assessmentId: activeCaseId,
+            actorUserId: userId,
+            state: next.state,
+            metadata: {
+              attention,
+              rulesVersion: evaluation.rulesVersion,
+              engineVersion: evaluation.engineVersion,
+            },
+          }),
+        ];
+        // Auditoria não deve impedir a orientação urgente; a falha fica registada no console técnico.
+        await recordFamRiskAuditEvents(supabase, auditEvents).catch((auditError) => {
+          console.error("Não foi possível persistir a auditoria da avaliação:", auditError);
+        });
+        setAssessmentState(next.state);
+      } else {
+        // Validação local da transição para a sessão sem persistência.
+        const transition = transitionRiskAssessment({
+          assessmentId: "local-session",
+          from: assessmentState,
+          to: next.state,
+          reasonCode: next.reasonCode,
+          ruleCode: next.ruleCode,
+        });
+        setAssessmentState(transition.transition.to);
       }
       setSubmitted(true);
     } catch (e) {

@@ -14,8 +14,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useMyProfile, useMyActiveModules, useMyChurch } from "@/hooks/use-queries";
+import { useMyProfile, useMyActiveModules, useMyChurch, useTenantModules } from "@/hooks/use-queries";
 import { DELEGATION_TAB_MAP } from "@/services/delegations";
+import { TENANT_MODULE_DEFAULTS, TAB_TENANT_MODULE } from "@/services/tenantModules";
 
 export type TabKey =
   | "supervision" | "org-dashboard" | "pendencias" | "agenda" | "notificacoes" | "usuarios-painel" | "pesquisa-avancada"
@@ -224,9 +225,18 @@ export function AdminSidebar({
   const { data: myChurch } = useMyChurch(profile?.church_id);
   const brandLabel = myChurch?.short_name ? `${myChurch.short_name.toUpperCase()} FAMILY` : "CEC FAMILY";
   const { data: activeModules = [] } = useMyActiveModules();
+  const { data: tenantModules = TENANT_MODULE_DEFAULTS } = useTenantModules(profile?.church_id);
   const isApostolo = profile?.role === "apostolo";
 
-  let groups = buildGroups(counts);
+  let groups = buildGroups(counts)
+    .map((g) => ({
+      ...g,
+      items: g.items.filter((item) => {
+        const moduleKey = TAB_TENANT_MODULE[item.key];
+        return !moduleKey || tenantModules[moduleKey] !== false;
+      }),
+    }))
+    .filter((g) => g.items.length > 0);
   if (!isApostolo) {
     const allowedTabKeys = new Set(activeModules.flatMap((m) => DELEGATION_TAB_MAP[m] ?? []));
     groups = groups

@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { serviceTimeSchema, type ServiceTimeInput } from "@/schemas";
-import { useChurches, useAllServiceTimes } from "@/hooks/use-queries";
+import { useChurches, useAllServiceTimes, useMyProfile, useTenantModules } from "@/hooks/use-queries";
+import { TENANT_MODULE_DEFAULTS } from "@/services/tenantModules";
 import { supabase } from "@/lib/supabase/client";
 import { logAudit } from "@/services/audit";
 import { Field } from "./PanelHelpers";
@@ -19,6 +20,8 @@ const WEEKDAY_OPTS = [
 ] as const;
 
 export function ServiceTimesAdmin() {
+  const { data: profile } = useMyProfile();
+  const { data: tenantModules = TENANT_MODULE_DEFAULTS } = useTenantModules(profile?.church_id);
   const { data: churches = [] } = useChurches();
   const { data: services = [] } = useAllServiceTimes();
   const qc = useQueryClient();
@@ -29,6 +32,20 @@ export function ServiceTimesAdmin() {
       resolver: zodResolver(serviceTimeSchema),
       defaultValues: { church_id: sede?.id, weekday: "domingo", sort_order: 0 },
     });
+
+  if (tenantModules.services === false) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Programação de actividades desactivada</CardTitle>
+          <CardDescription>Este tenant não utiliza o módulo de Cultos ou horários de serviços.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted">Para a FAM, reuniões e eventos devem ser cadastrados na Agenda.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   async function onSubmit(v: ServiceTimeInput) {
     setErr("");

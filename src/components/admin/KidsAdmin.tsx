@@ -2,7 +2,8 @@
 import { Baby, CalendarClock, LogIn, LogOut, Users2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useChurches } from "@/hooks/use-queries";
+import { useChurches, useMyProfile, useTenantModules } from "@/hooks/use-queries";
+import { TENANT_MODULE_DEFAULTS } from "@/services/tenantModules";
 import { useState } from "react";
 import { KidsGroupsTab } from "./kids/KidsGroupsTab";
 import { KidsDependentsTab } from "./kids/KidsDependentsTab";
@@ -17,9 +18,22 @@ import { KidsHandoffTab } from "./kids/KidsHandoffTab";
  * Autorizadas, Turmas). Fundamentos: CORE-TERM-001, KIDS-000/001/003.
  */
 export function KidsAdmin() {
+  const { data: profile } = useMyProfile();
+  const { data: tenantModules = TENANT_MODULE_DEFAULTS } = useTenantModules(profile?.church_id);
   const { data: churches = [] } = useChurches();
   const [churchId, setChurchId] = useState("");
   const activeChurchId = churchId || churches[0]?.id || "";
+
+  if (tenantModules.kids === false) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Atendimento infantil desactivado</CardTitle>
+          <CardDescription>Este tenant não utiliza o módulo de cuidado infantil.</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">

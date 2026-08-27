@@ -32,12 +32,20 @@ export const useMyChurch = (churchId: string | null | undefined) =>
 
 // ── Terminologia organizacional (Núcleo/Setor/Distrito/etc.) ────
 import * as OrgTerm from "@/services/orgTerminology";
+import * as TenantModules from "@/services/tenantModules";
 export const useOrgTerminology = (churchId?: string | null) =>
   useQuery({
     queryKey: ["org-terminology", churchId ?? null],
     queryFn: () => OrgTerm.getOrgTerminology(supabase, churchId),
     staleTime: 1000 * 60 * 10,
     placeholderData: OrgTerm.ORG_TERM_DEFAULTS,
+  });
+export const useTenantModules = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["tenant-modules", churchId ?? null],
+    queryFn: () => TenantModules.getTenantModules(supabase, churchId),
+    staleTime: 1000 * 60 * 10,
+    placeholderData: TenantModules.TENANT_MODULE_DEFAULTS,
   });
 export const useChurchStateName = (churchId: string | null) =>
   useQuery({

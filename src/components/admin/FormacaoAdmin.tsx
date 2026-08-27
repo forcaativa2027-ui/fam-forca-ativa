@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase/client";
-import { useCourses, useCourseClasses, useEnrollments, useAllMembers, useCourseModules, useModuleLessons, useEscolas, useJornadas, useProgramas, useLessonAssessments } from "@/hooks/use-queries";
+import { useCourses, useCourseClasses, useEnrollments, useAllMembers, useCourseModules, useModuleLessons, useEscolas, useJornadas, useProgramas, useLessonAssessments, useMyProfile, useTenantModules } from "@/hooks/use-queries";
+import { TENANT_MODULE_DEFAULTS } from "@/services/tenantModules";
 import * as Fo from "@/services/formacao";
 import * as Ac from "@/services/academyContent";
 import { CLASS_STATUS_LABELS, ENROLLMENT_STATUS_LABELS } from "@/services/formacao";
@@ -47,11 +48,22 @@ export function escolaKeyOf(category: string | null): string {
 }
 
 export function FormacaoAdmin() {
+  const { data: profile } = useMyProfile();
+  const { data: tenantModules = TENANT_MODULE_DEFAULTS } = useTenantModules(profile?.church_id);
   const { data: courses = [] } = useCourses();
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedClass, setSelectedClass] = useState<CourseClass | null>(null);
   const [showNewCourse, setShowNewCourse] = useState(false);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
+  if (tenantModules.academy === false) {
+    return (
+      <div className="rounded-xl border bg-card p-6">
+        <h2 className="font-display text-xl text-navy">Formação desactivada</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Este tenant não utiliza o módulo Academy. Os conteúdos existentes foram preservados.</p>
+      </div>
+    );
+  }
 
   if (selectedClass) return <ClassDetail cls={selectedClass} onBack={() => setSelectedClass(null)} />;
   if (selectedCourse) return <CourseDetail course={selectedCourse} onBack={() => setSelectedCourse(null)} onOpenClass={setSelectedClass} />;

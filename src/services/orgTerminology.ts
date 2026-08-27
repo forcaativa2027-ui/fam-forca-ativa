@@ -2,21 +2,30 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Rótulos padrão (o que já era usado fixo em todo lugar) — usados
- * como fallback instantâneo antes da consulta carregar, e caso um
- * termo não esteja configurado no banco.
+ * Fallback neutro da plataforma. Os rótulos específicos de cada organização
+ * devem ser persistidos em `org_terminology` no escopo do tenant.
+ *
+ * As chaves técnicas permanecem estáveis; somente o texto apresentado muda.
  */
 export const ORG_TERM_DEFAULTS: Record<string, string> = {
-  lg: "Life Group", setor: "Setor", area: "Área", distrito: "Distrito",
-  nucleo: "Núcleo", sede: "Sede", nacional: "Nacional", igreja: "Igreja/Comunidade",
+  lg: "Grupo", setor: "Setor", area: "Área", distrito: "Distrito",
+  nucleo: "Núcleo", sede: "Sede", nacional: "Nacional", igreja: "Organização",
+  event: "Evento", events: "Eventos", meeting: "Reunião", meetings: "Reuniões",
+  service: "Atividade", services: "Atividades", communion: "Evento especial",
+  church: "Organização", community: "Comunicação", discipleship: "Acompanhamento",
+  life_group: "Grupo", evangelism_group: "Grupo de Voluntários", member_id: "Membro ID",
 };
 
 export type OrgTerminologyMap = Record<string, string>;
 
-/** Busca a terminologia configurada (hoje global; por igreja quando o multi-tenant for retomado). */
+/** Busca defaults neutros globais e depois aplica a configuração específica do tenant. */
 export async function getOrgTerminology(sb: SupabaseClient, churchId?: string | null): Promise<OrgTerminologyMap> {
   const { data, error } = await sb.from("org_terminology").select("*").is("church_id", null);
-  if (error) { console.error("[org-terminology]", error); return { ...ORG_TERM_DEFAULTS }; }
+  if (error) {
+    // A interface continua utilizável mesmo antes da migration FAM020.
+    console.warn("[org-terminology] configuração indisponível; usando fallback neutro");
+    return { ...ORG_TERM_DEFAULTS };
+  }
   const map = { ...ORG_TERM_DEFAULTS };
   for (const row of (data ?? []) as { concept_key: string; label: string }[]) map[row.concept_key] = row.label;
   if (churchId) {

@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/shared/DatePicker";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { evangelismGroupSchema, type EvangelismGroupInput } from "@/schemas";
-import { useEvangelismGroups, useCells, useAllMembers, useEvangelismParticipants } from "@/hooks/use-queries";
+import { useEvangelismGroups, useCells, useAllMembers, useEvangelismParticipants, useMyProfile, useTenantModules } from "@/hooks/use-queries";
+import { TENANT_MODULE_DEFAULTS } from "@/services/tenantModules";
 import { supabase } from "@/lib/supabase/client";
 import * as Eg from "@/services/evangelismGroups";
 import * as Pp from "@/services/pipeline";
@@ -57,6 +58,8 @@ const isEncerrado = (s: EvangelismGroupStatus) => s.startsWith("encerrado_");
  * Implantação → Evangelização → Consolidação → um de 3 desfechos.
  */
 export function EvangelismGroupsAdmin() {
+  const { data: profile } = useMyProfile();
+  const { data: tenantModules = TENANT_MODULE_DEFAULTS } = useTenantModules(profile?.church_id);
   const { data: groups = [] } = useEvangelismGroups();
   const { data: cells = [] } = useCells();
   const { data: members = [] } = useAllMembers();
@@ -72,6 +75,20 @@ export function EvangelismGroupsAdmin() {
   const filteredMembers = leaderQuery.trim().length >= 2
     ? members.filter(m => m.full_name.toLowerCase().includes(leaderQuery.trim().toLowerCase())).slice(0, 8)
     : [];
+
+  if (tenantModules.evangelism_groups === false) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Grupos de participação desactivados</CardTitle>
+          <CardDescription>Este tenant não utiliza o módulo de Grupos de Evangelismo.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted">Os dados históricos foram preservados. Para a FAM, utilize Participar, Eventos e os módulos de acompanhamento activos.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   function startEdit(g: EvangelismGroup) {
     setEditing(g); setErr("");

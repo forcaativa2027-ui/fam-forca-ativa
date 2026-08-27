@@ -15,7 +15,8 @@ import {
   ministrySchema, type MinistryInput,
   ministryPostSchema, type MinistryPostInput,
 } from "@/schemas";
-import { useMinistries, useMinistryMembers, useMinistryPosts, useChurches, useAllMembers, useMinistryGoalsVsActual } from "@/hooks/use-queries";
+import { useMinistries, useMinistryMembers, useMinistryPosts, useChurches, useAllMembers, useMinistryGoalsVsActual, useMyProfile, useTenantModules } from "@/hooks/use-queries";
+import { TENANT_MODULE_DEFAULTS } from "@/services/tenantModules";
 import { setMinistryGoal } from "@/services/goals";
 import { supabase } from "@/lib/supabase/client";
 import {
@@ -43,6 +44,8 @@ const ROLE_COLORS: Record<MinistryRole, string> = {
 };
 
 export function MinistriesAdmin({ initialChurchId = "" }: { initialChurchId?: string } = {}) {
+  const { data: profile } = useMyProfile();
+  const { data: tenantModules = TENANT_MODULE_DEFAULTS } = useTenantModules(profile?.church_id);
   const [churchFilter, setChurchFilter] = useState<string>(initialChurchId);
   const [selectedMinistry, setSelectedMinistry] = useState<Ministry | null>(null);
   const { data: ministries = [] } = useMinistries(churchFilter || null);
@@ -50,6 +53,20 @@ export function MinistriesAdmin({ initialChurchId = "" }: { initialChurchId?: st
   const qc = useQueryClient();
 
   const churchMap = new Map(churches.map((c) => [c.id, c]));
+
+  if (tenantModules.ministry === false) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Ministérios desactivados</CardTitle>
+          <CardDescription>Este tenant não utiliza o módulo de Ministérios.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted">Os dados históricos foram preservados. Para a FAM, utilize os módulos institucionais e de acompanhamento activos.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">

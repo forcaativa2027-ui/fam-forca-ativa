@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cellSchema, type CellInput } from "@/schemas";
-import { useCells, useSectors, useAllMembers, useChurches, useOrgTerminology } from "@/hooks/use-queries";
+import { useCells, useSectors, useAllMembers, useChurches, useOrgTerminology, useMyProfile, useTenantModules } from "@/hooks/use-queries";
+import { TENANT_MODULE_DEFAULTS } from "@/services/tenantModules";
 import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
 import { supabase } from "@/lib/supabase/client";
 import { createCell, updateCell, deleteCell } from "@/services/cells";
@@ -25,6 +26,8 @@ const WEEKDAYS: [string, string][] = [
 ];
 
 export function CellsAdmin() {
+  const { data: profile } = useMyProfile();
+  const { data: tenantModules = TENANT_MODULE_DEFAULTS } = useTenantModules(profile?.church_id);
   const { data: cells = [] } = useCells();
   const { data: sectors = [] } = useSectors();
   const { data: churches = [] } = useChurches();
@@ -34,6 +37,20 @@ export function CellsAdmin() {
   const [editingCell, setEditingCell] = useState<Cell | null>(null);
 
   const createForm = useForm<CellInput>({ resolver: zodResolver(cellSchema) });
+
+  if (tenantModules.life_groups === false) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Grupos desactivados</CardTitle>
+          <CardDescription>Este tenant não utiliza o módulo de Life Groups.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted">Os dados históricos foram preservados. Para a FAM, utilize a Agenda e os módulos de acompanhamento activos.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   async function onCreate(v: CellInput) {
     setCreateErr("");

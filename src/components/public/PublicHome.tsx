@@ -14,12 +14,13 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { BottomNav, BottomNavSpacer, type BottomNavItem } from "@/components/shared/BottomNav";
 import {
   usePublicSermons, usePublicEvents, useChurches, useCells, usePublicNews, useChurchGivingInfo,
-  useServiceTimes, useTodaysWord, useActiveBanners, useActiveCommunity, useMyProfile,
+  useTodaysWord, useActiveBanners, useActiveCommunity, useMyProfile, useOrgTerminology, useTenantModules,
   usePublicRegistrationEvents, useRadioConfig, useMyMember,
 } from "@/hooks/use-queries";
 import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import { youtubeThumb } from "@/services/content";
-import { defaultServiceTimes, defaultWord } from "@/services/institutional";
+import { defaultWord } from "@/services/institutional";
+import { TENANT_MODULE_DEFAULTS } from "@/services/tenantModules";
 import { PublicNewsSection } from "./PublicNewsSection";
 import { PublicContactForms } from "./PublicContactForms";
 import { PublicParticipateSection } from "./PublicParticipateSection";
@@ -58,6 +59,8 @@ export default function PublicHome() {
   const { data: myMember } = useMyMember();
   const { data: community } = useActiveCommunity();
   const communityId = community?.id ?? null;
+  const { data: terms } = useOrgTerminology(communityId);
+  const { data: tenantModules = TENANT_MODULE_DEFAULTS } = useTenantModules(communityId);
   const { data: sermons = [] } = usePublicSermons(communityId);
   const { data: news = [] } = usePublicNews(undefined, communityId);
   const { data: events = [] } = usePublicEvents(communityId);
@@ -66,30 +69,38 @@ export default function PublicHome() {
   const { data: cells = [] } = useCells();
   const { data: banners = [] } = useActiveBanners(communityId);
   const sede = community ?? churches.find((c) => c.type === "sede") ?? churches[0] ?? null;
-  const { data: dbServices = [] } = useServiceTimes(sede?.id ?? null);
   const { data: dbWord } = useTodaysWord(communityId);
   const { data: radioEnabled } = useRadioEnabled(communityId);
   const { data: radioConfig } = useRadioConfig(communityId);
+  const eventLabel = terms?.event ?? "Evento";
+  const eventsLabel = terms?.events ?? "Eventos";
+  const memberIdLabel = terms?.member_id ?? "Membro ID";
 
   // Rádio visível por padrão; ocultada apenas se desabilitada explicitamente (seção 25 do spec)
-  const showRadio = radioEnabled?.is_enabled !== false;
+  const showRadio = tenantModules.radio !== false && radioEnabled?.is_enabled !== false;
+  const showEvents = tenantModules.events !== false;
+  const showNews = tenantModules.news !== false;
+  const showVideos = tenantModules.videos !== false;
+  const showParticipate = tenantModules.participate !== false;
+  const showContact = tenantModules.contact !== false;
+  const showDonations = tenantModules.donations !== false;
+  const showRiskAnalysis = tenantModules.risk_analysis !== false;
 
-  // Fallback inteligente: se o banco tem dados use-os; senao mostra defaults.
-  const services = dbServices.length > 0 ? dbServices : defaultServiceTimes(sede);
+  // A programação deve vir dos dados do tenant; não há fallback religioso hardcoded.
   const word = dbWord ?? defaultWord();
 
   const navItems: (BottomNavItem | null)[] = [
     { key: "inicio", label: "Início", icon: <Home size={18} />, onClick: () => setTab("inicio") },
-    { key: "noticias", label: "Notícias", icon: <Newspaper size={18} />, onClick: () => setTab("noticias") },
+    ...(showNews ? [{ key: "noticias", label: "Notícias", icon: <Newspaper size={18} />, onClick: () => setTab("noticias") }] : []),
     ...(showRadio ? [{ key: "radio", label: "Rádio Web", icon: <Radio size={18} />, onClick: () => setTab("radio") }] : []),
 
-    { key: "videos", label: "FAM Vídeos", icon: <Video size={18} />, onClick: () => setTab("videos") },
-    { key: "agenda", label: "Agenda", icon: <Calendar size={18} />, onClick: () => setTab("agenda") },
-    { key: "participar", label: "Participar", icon: <Sparkles size={18} />, onClick: () => setTab("participar") },
-    { key: "contato", label: "Fale Conosco", icon: <MessageCircle size={18} />, onClick: () => setTab("contato") },
-    { key: "risco", label: "Análise de Risco", icon: <ShieldAlert size={18} />, onClick: () => { window.location.href = "/analise-risco"; } },
-    { key: "ofertar", label: "Doação", icon: <HeartHandshake size={18} />, onClick: () => setTab("ofertar") },
-    ...(profile && myMember ? [{ key: "member-id", label: "Member ID", icon: <LayoutDashboard size={18} />, onClick: () => { window.location.href = "/painel/carteira"; } }] : []),
+    ...(showVideos ? [{ key: "videos", label: "FAM Vídeos", icon: <Video size={18} />, onClick: () => setTab("videos") }] : []),
+    ...(showEvents ? [{ key: "agenda", label: "Agenda", icon: <Calendar size={18} />, onClick: () => setTab("agenda") }] : []),
+    ...(showParticipate ? [{ key: "participar", label: "Participar", icon: <Sparkles size={18} />, onClick: () => setTab("participar") }] : []),
+    ...(showContact ? [{ key: "contato", label: "Fale Conosco", icon: <MessageCircle size={18} />, onClick: () => setTab("contato") }] : []),
+    ...(showRiskAnalysis ? [{ key: "risco", label: "Análise de Risco", icon: <ShieldAlert size={18} />, onClick: () => { window.location.href = "/analise-risco"; } }] : []),
+    ...(showDonations ? [{ key: "ofertar", label: "Doação", icon: <HeartHandshake size={18} />, onClick: () => setTab("ofertar") }] : []),
+    ...(profile && myMember ? [{ key: "member-id", label: memberIdLabel, icon: <LayoutDashboard size={18} />, onClick: () => { window.location.href = "/painel/carteira"; } }] : []),
     !profile
       ? { key: "entrar", label: "Entrar", icon: <LogIn size={18} />, onClick: () => { window.location.href = "/entrar"; } }
       : null,
@@ -154,7 +165,7 @@ export default function PublicHome() {
           )}
 
           {/* Últimas Notícias */}
-          {news.length > 0 && (
+          {showNews && news.length > 0 && (
             <section>
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="font-display text-xl text-navy">Últimas notícias</h2>
@@ -200,10 +211,10 @@ export default function PublicHome() {
           )}
 
           {/* Próximos eventos resumo */}
-          {events.length > 0 && (
+          {showEvents && events.length > 0 && (
             <section>
-              <h2 className="mb-4 font-display text-xl text-navy">Próximos eventos</h2>
-              <div className="space-y-3">{events.slice(0, 3).map((ev) => <EventRow key={ev.id} ev={ev} />)}</div>
+              <h2 className="mb-4 font-display text-xl text-navy">Próximos {eventsLabel.toLowerCase()}</h2>
+              <div className="space-y-3">{events.slice(0, 3).map((ev) => <EventRow key={ev.id} ev={ev} eventLabel={eventLabel} />)}</div>
               <Button variant="ghost" onClick={() => setTab("agenda")} className="mt-4 gap-2">Ver agenda completa <ArrowRight className="h-4 w-4" /></Button>
             </section>
           )}
@@ -236,18 +247,18 @@ export default function PublicHome() {
         </TabsContent>
 
         {/* === NOTÍCIAS === */}
-        <TabsContent value="noticias">
+        {showNews && <TabsContent value="noticias">
           <PublicNewsSection churchId={communityId} />
-        </TabsContent>
+        </TabsContent>}
 
         {/* === RADIO === */}
-        <TabsContent value="radio">
+        {showRadio && <TabsContent value="radio">
           <RadioPage />
-        </TabsContent>
+        </TabsContent>}
 
           {/* Área de eventos removida da navegação pública */}
         {/* === VÍDEOS === */}
-        <TabsContent value="videos">
+        {showVideos && <TabsContent value="videos">
           <h2 className="mb-4 font-display text-2xl text-navy">FAM Vídeos</h2>
           {sermons.length === 0 ? (
             <p className="py-8 text-center italic text-muted">Em breve novos conteúdos da FAM por aqui.</p>
@@ -273,14 +284,14 @@ export default function PublicHome() {
               ))}
             </div>
           )}
-        </TabsContent>
+        </TabsContent>}
 
         {/* === AGENDA === */}
-        <TabsContent value="agenda">
-          <h2 className="mb-4 font-display text-2xl text-navy">Agenda de ações e eventos</h2>
+        {showEvents && <TabsContent value="agenda">
+          <h2 className="mb-4 font-display text-2xl text-navy">Agenda de ações e {eventsLabel.toLowerCase()}</h2>
           {registrationEvents.length > 0 && (
             <div className="mb-6 space-y-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Eventos com inscrição</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{eventsLabel} com inscrição</h3>
               {(() => {
                 const categories = Array.from(new Set(registrationEvents.map((e) => e.category).filter((c): c is string => !!c)));
                 const filtered = regEventCategory === "todos" ? registrationEvents : registrationEvents.filter((e) => e.category === regEventCategory);
@@ -329,21 +340,21 @@ export default function PublicHome() {
               })()}
             </div>
           )}
-          <AgendaList events={events} />
-        </TabsContent>
+          <AgendaList events={events} eventLabel={eventLabel} />
+        </TabsContent>}
 
         {/* === QUERO PARTICIPAR === */}
-        <TabsContent value="participar">
+        {showParticipate && <TabsContent value="participar">
           <PublicParticipateSection />
-        </TabsContent>
+        </TabsContent>}
 
         {/* === QUERO CONVERSAR === */}
-        <TabsContent value="contato">
+        {showContact && <TabsContent value="contato">
           <PublicContactForms churchId={communityId} />
-        </TabsContent>
+        </TabsContent>}
 
         {/* === FAM — ACOLHIMENTO E PROTEÇÃO === */}
-        <TabsContent value="risco">
+        {showRiskAnalysis && <TabsContent value="risco">
           <div className="mx-auto max-w-3xl py-6">
             <div className="rounded-xl border border-gold/30 bg-gold/5 p-5">
               <h2 className="font-display text-2xl text-navy">Análise de Risco</h2>
@@ -351,12 +362,12 @@ export default function PublicHome() {
               <Button asChild className="mt-4"><Link href="/analise-risco">Iniciar análise orientativa</Link></Button>
             </div>
           </div>
-        </TabsContent>
+        </TabsContent>}
 
         {/* === DÍZIMOS E OFERTAS === */}
-        <TabsContent value="ofertar">
+        {showDonations && <TabsContent value="ofertar">
           <GivingSection churchId={communityId} />
-        </TabsContent>
+        </TabsContent>}
       </Tabs>
 
       <RadioMiniPlayer />
@@ -375,11 +386,11 @@ export default function PublicHome() {
   );
 }
 
-function EventRow({ ev, light }: { ev: EventItem; light?: boolean }) {
+function EventRow({ ev, light, eventLabel }: { ev: EventItem; light?: boolean; eventLabel?: string }) {
   const d = new Date(ev.starts_at);
   const day = d.toLocaleDateString("pt-BR", { day:"2-digit" });
   const mon = d.toLocaleDateString("pt-BR", { month:"short" }).replace(".", "");
-  const tlabel = EVENT_TYPE_LABELS[ev.event_type] ?? EVENT_TYPE_LABELS.outro;
+  const tlabel = ev.event_type === "culto" ? (eventLabel ?? "Evento") : (EVENT_TYPE_LABELS[ev.event_type] ?? EVENT_TYPE_LABELS.outro);
   const tcolor = EVENT_TYPE_COLORS[ev.event_type] ?? EVENT_TYPE_COLORS.outro;
   return (
     <div className={`flex items-center gap-4 rounded-xl border p-4 ${light ? "bg-card" : "bg-navy text-white border-navy-600"}`}>
@@ -424,7 +435,7 @@ function ChurchCard({ church }: { church: Church }) {
   );
 }
 
-function AgendaList({ events }: { events: EventItem[] }) {
+function AgendaList({ events, eventLabel }: { events: EventItem[]; eventLabel: string }) {
   const [filter, setFilter] = useState<string>("todos");
   const types = ["todos","culto","congresso","conferencia","encontro","ebd","outro"] as const;
   const filtered = filter === "todos" ? events : events.filter((e) => (e.event_type ?? "outro") === filter);
@@ -444,7 +455,7 @@ function AgendaList({ events }: { events: EventItem[] }) {
                   ? "bg-navy text-white border-navy"
                   : "bg-card text-muted border-border hover:border-navy/30"
               }`}>
-              {t === "todos" ? "Todos" : (EVENT_TYPE_LABELS[t] ?? t)}
+              {t === "todos" ? "Todos" : (t === "culto" ? eventLabel : (EVENT_TYPE_LABELS[t] ?? t))}
             </button>
           ))}
         </div>
@@ -452,7 +463,7 @@ function AgendaList({ events }: { events: EventItem[] }) {
       {filtered.length === 0 ? (
         <p className="py-8 text-center italic text-muted">Nenhum evento nessa categoria.</p>
       ) : (
-        <div className="space-y-3">{filtered.map((ev) => <EventRow key={ev.id} ev={ev} light />)}</div>
+        <div className="space-y-3">{filtered.map((ev) => <EventRow key={ev.id} ev={ev} light eventLabel={eventLabel} />)}</div>
       )}
     </div>
   );

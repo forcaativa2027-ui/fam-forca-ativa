@@ -1,6 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { FAM_RISK_ENGINE_VERSION } from "./famRiskEngine";
 import { FAM_RISK_CATALOG_VERSION } from "./famRiskCatalog";
+import { FAM_RISK_RULES_VERSION } from "./famRiskRules";
+import { evaluateFamRiskWithRemoteCatalog } from "./famRiskRemoteCatalog";
+import { stateForEvaluation } from "./famAssessmentState";
+import { createRiskAuditEvent, transitionRiskAssessment } from "./famRiskStateMachine";
+import { recordFamRiskAuditEvents } from "./famRiskAudit";
+import type { FamRiskAnswerInput } from "./famRiskSemantics";
 
 export const FAM_RISK_METHODOLOGY_VERSION = FAM_RISK_CATALOG_VERSION;
 export const FAM_RISK_QUESTIONNAIRE_VERSION = FAM_RISK_CATALOG_VERSION;
@@ -22,6 +28,7 @@ export interface FamRiskCase {
   assessment_status?: string;
   current_step?: string | null;
   risk_engine_version?: string | null;
+  rules_version?: string | null;
   methodology_version?: string | null;
   questionnaire_version?: string | null;
   methodology_source_document?: string | null;
@@ -63,6 +70,7 @@ export async function createRiskCase(
       contact_name: data.contact_name,
       consented_at: new Date().toISOString(),
       risk_engine_version: FAM_RISK_ENGINE_VERSION,
+      rules_version: FAM_RISK_RULES_VERSION,
       methodology_version: FAM_RISK_METHODOLOGY_VERSION,
       questionnaire_version: FAM_RISK_QUESTIONNAIRE_VERSION,
       methodology_source_document: FAM_RISK_METHODOLOGY_SOURCE_DOCUMENT,
@@ -165,6 +173,50 @@ export async function updateRiskCaseAssessment(
   }
 
   return data as FamRiskCase;
+}
+
+export async function evaluateAndPersistRiskCase(
+  sb: SupabaseClient,
+  caseId: string,
+  actorUserId: string,
+): Promise<FamRiskCase> {
+  const riskCase = await getRiskCase(sb, caseId);
+  if (!riskCase) throw new Error("Caso de risco não encontrado");
+  if (riskCase.user_id && riskCase.user_id !== actorUserId) throw new Error("Utilizador não autorizado para este caso");
+
+  const answers = await getRiskAnswers(sb, caseId);
+  const answerMap: Record<string, FamRiskAnswerInput> = Object.fromEntries(
+    answers.map((answer) => [answer.question_key, answer.answer as FamRiskAnswerInput]),
+  );
+  const evaluation = await evaluateFamRiskWithRemoteCatalog(sb, answerMap);
+  const next = stateForEvaluation(evaluation);
+  const transition = transitionRiskAssessment({
+    assessmentId: caseId,
+    actorUserId,
+    from: (riskCase.assessment_state ?? riskCase.assessment_status ?? "IN_PROGRESS") as Parameters<typeof transitionRiskAssessment>[0]["from"],
+    to: next.state,
+    reasonCode: next.reasonCode,
+    ruleCode: next.ruleCode,
+  });
+
+  const updated = await updateRiskCaseAssessment(sb, caseId, {
+    attention: evaluation.attention,
+    preliminary_summary: evaluation.summary,
+    limitations_acknowledged_at: new Date().toISOString(),
+    current_step: "result",
+    assessment_state: next.state,
+    transition_reason_code: next.reasonCode,
+    transition_rule_code: next.ruleCode,
+    special_flow_flags: evaluation.specialFlowFlags,
+    triggered_indicators: evaluation.triggeredIndicators,
+  });
+
+  await recordFamRiskAuditEvents(sb, [
+    createRiskAuditEvent({ eventType: "RESULT_GENERATED", assessmentId: caseId, actorUserId, state: next.state, metadata: { rulesVersion: evaluation.rulesVersion, engineVersion: evaluation.engineVersion } }),
+    ...evaluation.triggeredRules.map((ruleCode) => createRiskAuditEvent({ eventType: "RULE_TRIGGERED", assessmentId: caseId, actorUserId, state: next.state, ruleCode })),
+    transition.auditEvent,
+  ]);
+  return updated;
 }
 
 export async function getRiskCase(

@@ -3,7 +3,9 @@ import { Heart, Map, Award, ClipboardList, Newspaper, Video, Church as ChurchIco
   CalendarDays, MapPin, UserPlus, MessageCircle, HeartHandshake, Sparkles, Play,
   Users, UserCog, ClipboardList as ReportsIcon, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { usePublicSermons, useMyActiveModules } from "@/hooks/use-queries";
+import { usePublicSermons, useMyActiveModules, useOrgTerminology, useTenantModules } from "@/hooks/use-queries";
+import { ORG_TERM_DEFAULTS, type OrgTerminologyMap } from "@/services/orgTerminology";
+import { TENANT_MODULE_DEFAULTS } from "@/services/tenantModules";
 import { youtubeThumb } from "@/services/content";
 import type { Profile } from "@/types/domain";
 
@@ -21,8 +23,11 @@ export function MemberOverviewTab({
   isAdmin: boolean;
   goTab: (t: string) => void;
 }) {
-  const { data: sermons = [] } = usePublicSermons(profile?.church_id ?? null);
+  const churchId = profile?.church_id ?? null;
+  const { data: sermons = [] } = usePublicSermons(churchId);
   const { data: activeModules = [] } = useMyActiveModules();
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(churchId);
+  const { data: tenantModules = TENANT_MODULE_DEFAULTS } = useTenantModules(churchId);
 
   // §7.3 — mapeamento dos módulos reais de delegação (GOV-002) pras
   // ferramentas que o documento pede. "Batismos" fica de fora por ora:
@@ -36,13 +41,13 @@ export function MemberOverviewTab({
   return (
     <div className="space-y-8">
       <LatestSermonsSection sermons={sermons} churchName={churchName} />
-      <MemberJourneyGrid goTab={goTab} />
-      <CommunityLinksGrid />
+      <MemberJourneyGrid goTab={goTab} terms={terms} modules={tenantModules} />
+      <CommunityLinksGrid terms={terms} modules={tenantModules} />
       <ParticipationGrid />
       {hasAnyLeadershipTool && (
         <LeadershipToolsSection
           canMembers={canMembers} canVisitors={canVisitors}
-          canLifeGroups={canLifeGroups} canReports={canReports} isAdmin={isAdmin}
+          canLifeGroups={canLifeGroups} canReports={canReports} isAdmin={isAdmin} terms={terms} modules={tenantModules}
         />
       )}
     </div>
@@ -57,7 +62,7 @@ function LatestSermonsSection({ sermons, churchName }: { sermons: import("@/type
   return (
     <section>
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-display text-lg text-navy">Últimas pregações</h2>
+        <h2 className="font-display text-lg text-navy">Últimos vídeos</h2>
         {items.length > 0 && (
           <button onClick={() => { window.location.href = "/?tab=videos"; }} className="text-xs font-semibold text-gold hover:underline">
             Ver mais vídeos
@@ -66,7 +71,7 @@ function LatestSermonsSection({ sermons, churchName }: { sermons: import("@/type
       </div>
       {items.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border bg-card p-6 text-center text-sm italic text-muted">
-          Ainda não há pregações publicadas {churchName ? `para ${churchName}` : "para esta comunidade"}.
+          Ainda não há vídeos publicados {churchName ? `para ${churchName}` : "para esta organização"}.
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -101,35 +106,36 @@ function LatestSermonsSection({ sermons, churchName }: { sermons: import("@/type
 // ============================================================
 // §6.1 — Meu Caminho
 // ============================================================
-function MemberJourneyGrid({ goTab }: { goTab: (t: string) => void }) {
-  const items = [
-    { key: "discipulado", label: "Discipulado", icon: <Heart className="h-5 w-5" />, onClick: () => goTab("discipulado") },
+type MemberLinkItem = { key: string; label: string; icon: React.ReactNode; onClick: () => void };
+function MemberJourneyGrid({ goTab, terms, modules }: { goTab: (t: string) => void; terms: OrgTerminologyMap; modules: Record<string, boolean> }) {
+  const items: (MemberLinkItem | false)[] = [
+    { key: "discipulado", label: terms.discipleship ?? "Acompanhamento", icon: <Heart className="h-5 w-5" />, onClick: () => goTab("discipulado") },
     { key: "jornada", label: "Jornada", icon: <Map className="h-5 w-5" />, onClick: () => goTab("jornada") },
-    { key: "ministerio", label: "Ministério", icon: <Award className="h-5 w-5" />, onClick: () => goTab("ministerio") },
+    modules.ministry !== false && { key: "ministerio", label: terms.ministry ?? "Área de atuação", icon: <Award className="h-5 w-5" />, onClick: () => goTab("ministerio") },
     { key: "carteira", label: "Carteira", icon: <ClipboardList className="h-5 w-5" />, onClick: () => { window.location.href = "/painel/carteira"; } },
   ];
-  return <LinkGridSection title="Meu Caminho" items={items} />;
+  return <LinkGridSection title="Meu Caminho" items={items.filter((item): item is MemberLinkItem => item !== false)} />;
 }
 
 // ============================================================
 // §6.2 — Comunidade
 // ============================================================
-function CommunityLinksGrid() {
-  const items = [
+function CommunityLinksGrid({ terms, modules }: { terms: OrgTerminologyMap; modules: Record<string, boolean> }) {
+  const items: (MemberLinkItem | false)[] = [
     { key: "noticias", label: "Notícias", icon: <Newspaper className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=noticias"; } },
     { key: "videos", label: "Vídeos", icon: <Video className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=videos"; } },
-    { key: "cultos", label: "Cultos", icon: <ChurchIcon className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=cultos"; } },
+    modules.services !== false && { key: "cultos", label: terms.services ?? "Atividades", icon: <ChurchIcon className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=cultos"; } },
     { key: "agenda", label: "Agenda", icon: <CalendarDays className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=agenda"; } },
-    { key: "igrejas", label: "Igrejas", icon: <MapPin className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=igrejas"; } },
+    modules.partners !== false && { key: "igrejas", label: terms.church ?? "Organizações", icon: <MapPin className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=igrejas"; } },
   ];
-  return <LinkGridSection title="Comunidade" items={items} />;
+  return <LinkGridSection title={terms.community ?? "Comunicação"} items={items.filter((item): item is MemberLinkItem => item !== false)} />;
 }
 
 // ============================================================
 // §6.3 — Participação
 // ============================================================
 function ParticipationGrid() {
-  const items = [
+  const items: MemberLinkItem[] = [
     { key: "participar", label: "Convidar", icon: <UserPlus className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=participar"; } },
     { key: "contato", label: "Falar com alguém", icon: <MessageCircle className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=contato"; } },
     { key: "ofertar", label: "Doação", icon: <HeartHandshake className="h-5 w-5" />, onClick: () => { window.location.href = "/?tab=ofertar"; } },
@@ -138,7 +144,7 @@ function ParticipationGrid() {
   return <LinkGridSection title="Participação" items={items} />;
 }
 
-function LinkGridSection({ title, items }: { title: string; items: { key: string; label: string; icon: React.ReactNode; onClick: () => void }[] }) {
+function LinkGridSection({ title, items }: { title: string; items: MemberLinkItem[] }) {
   return (
     <section>
       <h2 className="mb-3 font-display text-lg text-navy">{title}</h2>
@@ -162,12 +168,12 @@ function LinkGridSection({ title, items }: { title: string; items: { key: string
 // §7 — Ferramentas de Liderança (só com delegação ativa real)
 // ============================================================
 function LeadershipToolsSection({
-  canMembers, canVisitors, canLifeGroups, canReports, isAdmin,
-}: { canMembers: boolean; canVisitors: boolean; canLifeGroups: boolean; canReports: boolean; isAdmin: boolean }) {
+  canMembers, canVisitors, canLifeGroups, canReports, isAdmin, terms, modules,
+}: { canMembers: boolean; canVisitors: boolean; canLifeGroups: boolean; canReports: boolean; isAdmin: boolean; terms: OrgTerminologyMap; modules: Record<string, boolean> }) {
   const items = [
     canMembers   && { key: "members",    label: "Membros",    icon: <Users className="h-5 w-5" />,    href: "/admin" },
     canVisitors  && { key: "visitors",   label: "Visitantes",  icon: <UserCog className="h-5 w-5" />,  href: "/admin" },
-    canLifeGroups && { key: "lifeGroups", label: "Life Groups", icon: <ShieldCheck className="h-5 w-5" />, href: "/admin" },
+    canLifeGroups && modules.life_groups !== false && { key: "lifeGroups", label: terms.life_group ?? "Grupo", icon: <ShieldCheck className="h-5 w-5" />, href: "/admin" },
     canReports   && { key: "reports",    label: "Relatórios",  icon: <ReportsIcon className="h-5 w-5" />, href: "/admin" },
   ].filter(Boolean) as { key: string; label: string; icon: React.ReactNode; href: string }[];
 
