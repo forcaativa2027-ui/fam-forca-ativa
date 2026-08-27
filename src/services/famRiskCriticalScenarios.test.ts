@@ -33,11 +33,13 @@ describe("cenários críticos do Mapa de Risco", () => {
     expect(scenario.transition.auditEvent.eventType).toBe("STATE_TRANSITIONED");
   });
 
-  it("arma gera regra de emergência e prioridade imediata", () => {
+  it("arma isolada gera atenção relevante, sem prioridade imediata", () => {
     const scenario = eventFor(evaluateFamRisk({ weapon: "YES" }), "case-weapon", "user-1");
-    expect(scenario.result.triggeredRules).toContain("RULE-EMERGENCY-002");
-    expect(scenario.result.priorities).toContain("immediate");
-    expect(scenario.ruleEvents.some((event) => event.ruleCode === "RULE-EMERGENCY-002")).toBe(true);
+    expect(scenario.result.triggeredRules).toContain("RULE-WEAPON-001");
+    expect(scenario.result.attention).toBe("relevant");
+    expect(scenario.result.priorities).toContain("relevant");
+    expect(scenario.result.priorities).not.toContain("immediate");
+    expect(scenario.ruleEvents.some((event) => event.ruleCode === "RULE-WEAPON-001")).toBe(true);
   });
 
   it("ameaça de morte é avaliada pela regra remota legada versionada", () => {

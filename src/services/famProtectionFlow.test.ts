@@ -25,7 +25,7 @@ describe("decideFamProtection", () => {
 
   it("permite oferecer encaminhamento somente após confirmação", () => {
     const result = decideFamProtection({ evaluation: evaluation({ injury: "YES" }), referralConfirmed: true });
-    expect(result.scenario).toBe("EMERGENCY");
+    expect(result.scenario).toBe("RELEVANT_RISK");
     expect(result.referralAllowed).toBe(true);
   });
 

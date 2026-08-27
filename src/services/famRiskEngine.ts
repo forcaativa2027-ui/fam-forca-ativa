@@ -10,6 +10,10 @@ export interface FamRiskQuestion {
   key: string;
   text: string;
   source: string;
+  purpose?: string;
+  sensitivity?: "normal" | "alta";
+  optional?: boolean;
+  nextFlow?: string;
   options: ReadonlyArray<{ value: FamRiskAnswerValue; label: string }>;
 }
 

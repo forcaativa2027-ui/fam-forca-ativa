@@ -37,6 +37,18 @@ export function decideFamProtection({ evaluation, referralConfirmed = false }: F
       sharingRequiresConfirmation: true,
     };
   }
+  if (specialFlows.includes("children")) {
+    return {
+      scenario: "SPECIALIZED_PROTECTION",
+      title: "Vamos priorizar a proteção",
+      guidance: "Você informou que pode haver uma criança ou adolescente em situação de risco. A FAM não realiza investigação nem confirma crimes. Se houver perigo imediato, procure um local seguro e acione o serviço de emergência adequado. Em situações de violência, a orientação poderá indicar a rede oficial de proteção, conforme o caso. Você não precisa fornecer detalhes desnecessários nem enviar arquivos para receber esta orientação inicial.",
+      disclaimer: "Este resultado é orientativo, não substitui os órgãos da rede de proteção e não constitui diagnóstico, laudo, investigação ou decisão jurídica.",
+      actions: ["OPEN_FAM_ATTENDANT", "CONTACT_EMERGENCY_190", "REVIEW_SPECIAL_FLOW", "OFFER_REFERRAL"],
+      specialFlows,
+      referralAllowed: referralConfirmed,
+      sharingRequiresConfirmation: true,
+    };
+  }
   if (specialFlows.length) {
     return {
       scenario: "SPECIALIZED_PROTECTION",

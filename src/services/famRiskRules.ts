@@ -1,6 +1,6 @@
 import { normalizeFamRiskAnswer, type FamRiskAnswerInput, type FamRiskAnswerValue } from "./famRiskSemantics";
 
-export const FAM_RISK_RULES_VERSION = "FAM-RULES-1.0" as const;
+export const FAM_RISK_RULES_VERSION = "FAM-RULES-1.1" as const;
 
 export type FamRiskRuleOperator = "equals" | "not_equals";
 export type FamRiskRuleExpression =
@@ -32,12 +32,16 @@ export interface FamRiskRuleMatch {
 
 export const FAM_RISK_RULES: readonly FamRiskRule[] = [
   { code: "RULE-EMERGENCY-001", version: FAM_RISK_RULES_VERSION, expression: { kind: "condition", questionKey: "danger_now", operator: "equals", value: "YES" }, signal: "danger_now", priority: "immediate", orientationCode: "ORIENT-EMERGENCY-001" },
-  { code: "RULE-EMERGENCY-002", version: FAM_RISK_RULES_VERSION, expression: { kind: "any", conditions: [
-    { kind: "condition", questionKey: "injury", operator: "equals", value: "YES" },
-    { kind: "condition", questionKey: "weapon", operator: "equals", value: "YES" },
+  { code: "RULE-EMERGENCY-002", version: FAM_RISK_RULES_VERSION, expression: { kind: "all", conditions: [
+    { kind: "condition", questionKey: "danger_now", operator: "equals", value: "YES" },
+    { kind: "any", conditions: [
+      { kind: "condition", questionKey: "injury", operator: "equals", value: "YES" },
+      { kind: "condition", questionKey: "weapon", operator: "equals", value: "YES" },
+    ] },
   ] }, signal: "immediate_danger_signal", priority: "immediate", orientationCode: "ORIENT-EMERGENCY-001" },
+  { code: "RULE-WEAPON-001", version: FAM_RISK_RULES_VERSION, expression: { kind: "condition", questionKey: "weapon", operator: "equals", value: "YES" }, signal: "weapon", priority: "relevant", orientationCode: "ORIENT-SAFETY-001" },
   { code: "RULE-SPECIAL-SEXUAL-001", version: FAM_RISK_RULES_VERSION, expression: { kind: "condition", questionKey: "sexual", operator: "equals", value: "YES" }, signal: "sexual", priority: "specialized", specialFlow: "sexual", orientationCode: "ORIENT-SPECIALIZED-001" },
-  { code: "RULE-SPECIAL-CHILDREN-001", version: FAM_RISK_RULES_VERSION, expression: { kind: "condition", questionKey: "children", operator: "equals", value: "YES" }, signal: "children", priority: "specialized", specialFlow: "children", orientationCode: "ORIENT-SPECIALIZED-001" },
+  { code: "RULE-SPECIAL-CHILDREN-001", version: FAM_RISK_RULES_VERSION, expression: { kind: "condition", questionKey: "children", operator: "equals", value: "YES" }, signal: "children", priority: "specialized", specialFlow: "children", orientationCode: "ORIENT-CHILD-PROTECTION-001" },
   { code: "RULE-COMBINED-001", version: FAM_RISK_RULES_VERSION, expression: { kind: "all", conditions: [
     { kind: "condition", questionKey: "danger_now", operator: "equals", value: "YES" },
     { kind: "condition", questionKey: "injury", operator: "equals", value: "YES" },

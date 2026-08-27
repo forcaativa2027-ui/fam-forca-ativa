@@ -113,7 +113,7 @@ describe("famRiskSemantics e regras versionadas", () => {
     const { evaluateFamRiskRules } = await import("./famRiskRules");
     const matches = evaluateFamRiskRules({ danger_now: "YES", injury: "YES" });
     expect(matches.some((match) => match.ruleCode === "RULE-COMBINED-001")).toBe(true);
-    expect(matches.every((match) => match.ruleVersion === "FAM-RULES-1.0")).toBe(true);
+    expect(matches.every((match) => match.ruleVersion === "FAM-RULES-1.1")).toBe(true);
   });
 
   it("não trata SEM_RESPOSTA como sinal afirmativo", () => {

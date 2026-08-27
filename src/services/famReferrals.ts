@@ -2,7 +2,7 @@ import type { FamRiskEvaluation } from "@/services/famRiskEngine";
 
 export const FAM_REFERRAL_CATALOG_VERSION = "FAM-REFERRAL-1.0" as const;
 
-export type FamReferralRecipient = "CRAS" | "POLICIA_CIVIL" | "MINISTERIO_PUBLICO" | "SAUDE" | "OUTRO_ORGAO_COMPETENTE";
+export type FamReferralRecipient = "CRAS" | "CONSELHO_TUTELAR" | "POLICIA_CIVIL" | "MINISTERIO_PUBLICO" | "SAUDE" | "OUTRO_ORGAO_COMPETENTE";
 export type FamReferralPriority = "immediate" | "relevant" | "specialized";
 
 export interface FamReferralOption {
@@ -38,12 +38,23 @@ export function resolveFamReferralOptions(evaluation: FamRiskEvaluation): FamRef
 
   if (evaluation.specialFlowFlags.includes("children")) {
     options.push({
-      code: "REF-CRAS-PROTECTION-001",
-      recipient: "CRAS",
-      label: "Proteção e acompanhamento socioassistencial",
-      purpose: "Buscar proteção e acompanhamento socioassistencial para a família e pessoas em desenvolvimento.",
+      code: "REF-CHILD-PROTECTION-001",
+      recipient: "CONSELHO_TUTELAR",
+      label: "Rede oficial de proteção de criança ou adolescente",
+      purpose: "Conhecer caminhos de proteção junto ao Conselho Tutelar ou serviço competente, conforme a situação.",
       priority: "specialized",
-      reason: "Fluxo especial relacionado a criança ou adolescente.",
+      reason: "Foi identificado um sinal que pode exigir proteção especial.",
+      dataScope: ["identificador do caso", "sinais de atenção pertinentes", "data e hora", "arquivos escolhidos explicitamente"],
+      requiresProfessionalConfirmation: true,
+      disclaimer: BASE_DISCLAIMER,
+    });
+    options.push({
+      code: "REF-POLICE-CHILD-PROTECTION-001",
+      recipient: "POLICIA_CIVIL",
+      label: "Autoridade policial competente",
+      purpose: "Conhecer o canal oficial adequado quando houver necessidade de proteção ou comunicação à autoridade competente.",
+      priority: "specialized",
+      reason: "Fluxo especial de proteção de criança ou adolescente; a competência depende do caso.",
       dataScope: ["identificador do caso", "sinais de atenção pertinentes", "data e hora", "arquivos escolhidos explicitamente"],
       requiresProfessionalConfirmation: true,
       disclaimer: BASE_DISCLAIMER,
