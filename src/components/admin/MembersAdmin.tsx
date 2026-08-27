@@ -168,8 +168,8 @@ export function MembersAdmin() {
 
   async function onCreate(v: MemberCreateInput) {
     setErr("");
-    if (!v.church_id && !v.life_group_id) {
-      setErr("Selecione ao menos a Igreja (ou o Life Group) antes de cadastrar. Sem isso o membro fica sem escopo e não aparece pra ninguém depois.");
+    if (!v.church_id) {
+      setErr("Selecione a Igreja/Comunidade antes de cadastrar. O Life Group/Grupo é opcional e pode ser associado depois.");
       return;
     }
     try {
@@ -324,7 +324,7 @@ export function MembersAdmin() {
 
               {/* Cascata Estado → Cidade → Igreja → LG */}
               <div className="rounded-md border bg-navy-50/40 p-3">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-navy-600">Localizar Life Group</p>
+                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-navy-600">Vínculo institucional</p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Field label="Estado">
                     <select {...createForm.register("state")}
@@ -352,7 +352,7 @@ export function MembersAdmin() {
                       {churchesFiltered.map((ch) => <option key={ch.id} value={ch.id}>{ch.name}</option>)}
                     </select>
                   </Field>
-                  <Field label="Life Group">
+                  <Field label="Life Group (opcional)">
                     <select {...createForm.register("life_group_id")}
                       className="h-10 w-full rounded-md border bg-background px-3 text-sm">
                       <option value="">— Sem célula —</option>
@@ -360,7 +360,7 @@ export function MembersAdmin() {
                     </select>
                   </Field>
                 </div>
-                <p className="mt-2 text-[11px] text-muted">{lgsFiltered.length} célula(s) disponível(is) com esses filtros.</p>
+                <p className="mt-2 text-[11px] text-muted">{lgsFiltered.length} grupo(s) disponível(is). Se nenhum for escolhido, a liderança poderá fazer a associação depois.</p>
               </div>
 
               <Field label="Etapa da jornada">

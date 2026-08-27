@@ -8,7 +8,7 @@ import { createClient } from "@supabase/supabase-js";
  * - Verifica se quem chama é admin (apostolo/pastor) usando o access_token enviado
  * - Cria auth.user com senha 'cec1234'
  * - Atualiza profile com nome, telefone, role (trigger já criou o profile)
- * - Cria entrada em members com church_id definido (obrigatório pra RLS funcionar depois)
+ * - Cria entrada em members com church_id definido; life_group_id é opcional
  */
 
 const INITIAL_PASSWORD = "cec1234";
@@ -29,7 +29,9 @@ export async function POST(req: Request) {
   if (!email || !/^\S+@\S+\.\S+$/.test(email)) return NextResponse.json({ error: "E-mail inválido" }, { status: 400 });
   if (full_name.length < 3) return NextResponse.json({ error: "Nome muito curto" }, { status: 400 });
   if (!access_token)        return NextResponse.json({ error: "Token de autenticação ausente" }, { status: 401 });
-  if (!church_id_in && !life_group_id) return NextResponse.json({ error: "Selecione ao menos a Igreja ou o Life Group" }, { status: 400 });
+  // O grupo é uma associação posterior opcional. A Igreja/Comunidade é o escopo
+  // mínimo necessário para que o membro seja localizado pelas políticas da plataforma.
+  if (!church_id_in) return NextResponse.json({ error: "Selecione a Igreja/Comunidade. O Life Group/Grupo pode ser definido depois." }, { status: 400 });
 
   let admin;
   try {
@@ -73,7 +75,8 @@ export async function POST(req: Request) {
     role,
   }).eq("id", newUserId);
 
-  // 4) Resolve church_id: usa o enviado, ou deduz a partir do Life Group
+  // 4) Resolve church_id: normalmente vem da Igreja/Comunidade; a dedução por
+  // Life Group permanece para compatibilidade com chamadas antigas.
   let church_id = church_id_in;
   if (!church_id && life_group_id) {
     const { data: lg } = await admin.from("life_groups").select("church_id").eq("id", life_group_id).maybeSingle();
