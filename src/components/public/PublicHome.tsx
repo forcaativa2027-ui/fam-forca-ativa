@@ -67,7 +67,7 @@ export default function PublicHome() {
   const { data: registrationEvents = [] } = usePublicRegistrationEvents(profile?.church_id ?? null);
   const { data: churches = [] } = useChurches();
   const { data: cells = [] } = useCells();
-  const { data: banners = [] } = useActiveBanners(communityId);
+  const { data: banners = [] } = useActiveBanners();
   const sede = community ?? churches.find((c) => c.type === "sede") ?? churches[0] ?? null;
   const { data: dbWord } = useTodaysWord(communityId);
   const { data: radioEnabled } = useRadioEnabled(communityId);

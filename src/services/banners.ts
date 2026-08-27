@@ -1,36 +1,35 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Banner, BannerWorkflowStatus } from "@/types/domain";
 
-/** Lista somente banners FAM elegíveis; mantém fallback para schema legado durante a migração. */
-export async function listActiveBanners(sb: SupabaseClient, churchId?: string | null): Promise<Banner[]> {
-  try {
-    const { data, error } = await sb.from("banners").select("*")
-      .eq("tenant_key", "FAM")
-      .eq("is_active", true)
-      .in("workflow_status", ["publicado", "agendado"])
-      .order("priority", { ascending: false })
-      .order("sort_order", { ascending: true })
-      .order("updated_at", { ascending: false });
-    if (!error) return filterEligible((data ?? []) as Banner[]);
-  } catch { /* fallback legado abaixo */ }
+const FAM_TENANT_KEY = "FAM" as const;
 
-  try {
-    let q = sb.from("banners").select("*")
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true });
-    if (churchId) q = q.or(`church_id.eq.${churchId},church_id.is.null`);
-    const { data, error } = await q;
-    if (error) return [];
-    return filterEligible((data ?? []) as Banner[]);
-  } catch { return []; }
+/**
+ * Lista somente banners FAM elegíveis.
+ *
+ * Falhas de schema, RLS ou rede são tratadas como falha fechada: a função
+ * retorna uma lista vazia para que a UI use o hero institucional estático.
+ * Nunca há uma segunda consulta sem escopo de tenant.
+ */
+export async function listActiveBanners(sb: SupabaseClient): Promise<Banner[]> {
+  const { data, error } = await sb.from("banners").select("*")
+    .eq("tenant_key", FAM_TENANT_KEY)
+    .eq("is_active", true)
+    .in("workflow_status", ["publicado", "agendado"])
+    .order("priority", { ascending: false })
+    .order("sort_order", { ascending: true })
+    .order("updated_at", { ascending: false });
+
+  if (error) return [];
+  return filterEligible((data ?? []) as Banner[]);
 }
 
 function filterEligible(banners: Banner[]): Banner[] {
   const now = Date.now();
   return banners.filter((b) => {
-    if (b.tenant_key && b.tenant_key !== "FAM") return false;
-    if (b.workflow_status && !["publicado", "agendado"].includes(b.workflow_status)) return false;
+    // Ausência/null nunca é interpretada como banner FAM.
+    if (b.tenant_key !== FAM_TENANT_KEY) return false;
     if (!b.is_active) return false;
+    if (!b.workflow_status || !["publicado", "agendado"].includes(b.workflow_status)) return false;
     if (b.starts_at && new Date(b.starts_at).getTime() > now) return false;
     if (b.ends_at && new Date(b.ends_at).getTime() < now) return false;
     if (b.audience && b.audience !== "publico_geral") return false;
@@ -38,46 +37,53 @@ function filterEligible(banners: Banner[]): Banner[] {
   });
 }
 
-/** Lista todos os banners para a administração, ordenados por prioridade e ordem manual. */
+/**
+ * Lista todos os banners FAM para a administração.
+ * Em caso de erro, lança a falha em vez de retornar dados globais ou parciais.
+ */
 export async function listAllBanners(sb: SupabaseClient): Promise<Banner[]> {
-  try {
-    const { data, error } = await sb.from("banners").select("*")
-      .eq("tenant_key", "FAM")
-      .order("priority", { ascending: false })
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
-    if (!error) return (data ?? []) as Banner[];
-  } catch { /* fallback legado abaixo */ }
-  try {
-    const { data, error } = await sb.from("banners").select("*")
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
-    if (error) return [];
-    return (data ?? []) as Banner[];
-  } catch { return []; }
+  const { data, error } = await sb.from("banners").select("*")
+    .eq("tenant_key", FAM_TENANT_KEY)
+    .order("priority", { ascending: false })
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return ((data ?? []) as Banner[]).filter((banner) => banner.tenant_key === FAM_TENANT_KEY);
 }
 
 export async function createBanner(sb: SupabaseClient, input: Partial<Banner>): Promise<Banner> {
-  const payload = { tenant_key: "FAM", ...input };
+  // O tenant é imposto pelo serviço; nunca aceitar esse campo do formulário.
+  const { tenant_key: _ignoredTenant, ...safeInput } = input as Partial<Banner> & { tenant_key?: string };
+  const payload = { ...safeInput, tenant_key: FAM_TENANT_KEY };
   const { data, error } = await sb.from("banners").insert(payload).select().single();
   if (error) throw error;
   return data as Banner;
 }
 
 export async function updateBanner(sb: SupabaseClient, id: string, patch: Partial<Banner>): Promise<void> {
-  const { error } = await sb.from("banners").update(patch).eq("id", id);
+  const { tenant_key: _ignoredTenant, ...safePatch } = patch as Partial<Banner> & { tenant_key?: string };
+  const { error } = await sb.from("banners").update(safePatch)
+    .eq("id", id)
+    .eq("tenant_key", FAM_TENANT_KEY);
   if (error) throw error;
 }
 
 export async function deleteBanner(sb: SupabaseClient, id: string): Promise<void> {
-  const { error } = await sb.from("banners").delete().eq("id", id);
+  const { error } = await sb.from("banners").delete()
+    .eq("id", id)
+    .eq("tenant_key", FAM_TENANT_KEY);
   if (error) throw error;
 }
 
 export async function swapBannerOrder(sb: SupabaseClient, a: Banner, b: Banner): Promise<void> {
-  const { error: e1 } = await sb.from("banners").update({ sort_order: b.sort_order }).eq("id", a.id);
+  const { error: e1 } = await sb.from("banners").update({ sort_order: b.sort_order })
+    .eq("id", a.id)
+    .eq("tenant_key", FAM_TENANT_KEY);
   if (e1) throw e1;
-  const { error: e2 } = await sb.from("banners").update({ sort_order: a.sort_order }).eq("id", b.id);
+  const { error: e2 } = await sb.from("banners").update({ sort_order: a.sort_order })
+    .eq("id", b.id)
+    .eq("tenant_key", FAM_TENANT_KEY);
   if (e2) throw e2;
 }
 
@@ -96,7 +102,7 @@ export async function recordBannerEvent(
   metadataMinimal: Record<string, string> = {},
 ): Promise<void> {
   const { error } = await sb.from("fam_banner_events").insert({
-    tenant_key: "FAM",
+    tenant_key: FAM_TENANT_KEY,
     banner_id: bannerId,
     event_type: eventType,
     device_type: typeof window !== "undefined" && window.innerWidth < 768 ? "mobile" : "desktop",

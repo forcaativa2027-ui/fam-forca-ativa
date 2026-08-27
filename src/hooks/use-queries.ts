@@ -231,9 +231,9 @@ export const usePendingCounts = () => useQuery({
 
 // M1b — Banners
 import * as Bn from "@/services/banners";
-export const useActiveBanners = (churchId?: string|null) => useQuery({
-  queryKey: ["active-banners", churchId ?? "all"],
-  queryFn: () => Bn.listActiveBanners(supabase, churchId),
+export const useActiveBanners = () => useQuery({
+  queryKey: ["active-banners", "FAM"],
+  queryFn: () => Bn.listActiveBanners(supabase),
   refetchInterval: 60_000,
 });
 export const useAllBanners = () => useQuery({
