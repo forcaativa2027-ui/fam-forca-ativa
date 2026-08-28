@@ -15,12 +15,13 @@ import { BottomNav, BottomNavSpacer, type BottomNavItem } from "@/components/sha
 import {
   usePublicSermons, usePublicEvents, useChurches, useCells, usePublicNews, useChurchGivingInfo,
   useTodaysWord, useActiveBanners, useActiveCommunity, useMyProfile, useOrgTerminology, useTenantModules,
-  usePublicRegistrationEvents, useRadioConfig, useMyMember,
+  usePublicRegistrationEvents, useRadioConfig, useMyMember, useOrganizationConfig,
 } from "@/hooks/use-queries";
 import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import { youtubeThumb } from "@/services/content";
 import { defaultWord } from "@/services/institutional";
 import { TENANT_MODULE_DEFAULTS } from "@/services/tenantModules";
+import { organizationDisplayName, organizationIsOperational, type OrganizationConfig } from "@/services/organizationConfig";
 import { PublicNewsSection } from "./PublicNewsSection";
 import { PublicContactForms } from "./PublicContactForms";
 import { PublicParticipateSection } from "./PublicParticipateSection";
@@ -59,6 +60,11 @@ export default function PublicHome() {
   const { data: myMember } = useMyMember();
   const { data: community } = useActiveCommunity();
   const communityId = community?.id ?? null;
+  const { data: organizationConfig } = useOrganizationConfig(communityId);
+  const publicOrganization = organizationConfig?.is_public && organizationIsOperational(organizationConfig)
+    ? organizationConfig
+    : null;
+  const organizationName = organizationDisplayName(publicOrganization, "Força Ativa da Mulher");
   const { data: terms } = useOrgTerminology(communityId);
   const { data: tenantModules = TENANT_MODULE_DEFAULTS } = useTenantModules(communityId);
   const { data: sermons = [] } = usePublicSermons(communityId);
@@ -113,8 +119,8 @@ export default function PublicHome() {
       <header className="sticky top-0 z-20 border-b-[3px] border-gold bg-navy">
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-white">
-            <img src="/brand/fam-logo.jpg" alt="Logo do Instituto FAM — Força Ativa da Mulher" className="h-9 w-9 rounded-full bg-white object-contain p-0.5" />
-            <span className="font-display text-lg font-bold tracking-wide">FAM · FORÇA ATIVA DA MULHER</span>
+            <img src="/brand/fam-logo.jpg" alt={`Logo de ${organizationName}`} className="h-9 w-9 rounded-full bg-white object-contain p-0.5" />
+            <span className="font-display text-lg font-bold tracking-wide">{organizationName}</span>
           </Link>
           <div className="flex items-center gap-2">
             <Button asChild variant="outline" size="sm" className="hidden border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white sm:inline-flex">
@@ -246,6 +252,8 @@ export default function PublicHome() {
               </button>
             </div>
           </section>
+
+          {publicOrganization && <PublicInstitutionalProfile config={publicOrganization} />}
         </TabsContent>
 
         {/* === NOTÍCIAS === */}
@@ -377,14 +385,80 @@ export default function PublicHome() {
 
       <footer className="container flex flex-wrap items-center justify-between gap-3 border-t py-6">
         <p className="text-xs text-muted">
-          Instituto FAM · Força Ativa da Mulher
-          {community?.whatsapp_phone && <> · WhatsApp: <a href={`https://wa.me/${community.whatsapp_phone.replace(/\D/g, '')}`} className="hover:underline">{community.whatsapp_phone}</a></>}
+          {organizationName}
+          {publicOrganization && textValue(publicOrganization.contacts?.whatsapp) && (
+            <> · WhatsApp: <a href={whatsappHref(publicOrganization.contacts.whatsapp)} className="hover:underline">{textValue(publicOrganization.contacts.whatsapp)}</a></>
+          )}
+          {!publicOrganization && community?.whatsapp_phone && <> · WhatsApp: <a href={`https://wa.me/${community.whatsapp_phone.replace(/\D/g, '')}`} className="hover:underline">{community.whatsapp_phone}</a></>}
         </p>
         <Link href={profile ? "/painel" : "/entrar"} className="text-xs font-bold text-gold hover:underline">{profile ? "Meu Painel" : "Área do membro"} →</Link>
       </footer>
 
       <BottomNav items={navItems.filter((item): item is BottomNavItem => item !== null)} activeKey={tab} />
     </div>
+  );
+}
+
+function textValue(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function safeHttpUrl(value: unknown): string | null {
+  const candidate = textValue(value);
+  if (!candidate) return null;
+  try {
+    const parsed = new URL(candidate);
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+function whatsappHref(value: unknown): string {
+  return `https://wa.me/${textValue(value).replace(/\D/g, "")}`;
+}
+
+function PublicInstitutionalProfile({ config }: { config: OrganizationConfig }) {
+  const address = config.address ?? {};
+  const contacts = config.contacts ?? {};
+  const social = config.social ?? {};
+  const addressLine = [
+    [textValue(address.logradouro), textValue(address.numero)].filter(Boolean).join(", "),
+    textValue(address.complemento),
+    textValue(address.bairro),
+    [textValue(address.cidade), textValue(address.estado)].filter(Boolean).join(" — "),
+    textValue(address.cep) && `CEP ${textValue(address.cep)}`,
+  ].filter(Boolean).join(" · ");
+  const contactItems = [
+    { label: "E-mail", value: textValue(contacts.email), href: textValue(contacts.email) ? `mailto:${textValue(contacts.email)}` : null },
+    { label: "Telefone", value: textValue(contacts.phone), href: textValue(contacts.phone) ? `tel:${textValue(contacts.phone).replace(/\D/g, "")}` : null },
+    { label: "WhatsApp", value: textValue(contacts.whatsapp), href: textValue(contacts.whatsapp) ? whatsappHref(contacts.whatsapp) : null },
+  ].filter((item) => item.value);
+  const socialItems = [
+    ["Site", social.site], ["Instagram", social.instagram], ["Facebook", social.facebook],
+    ["YouTube", social.youtube], ["TikTok", social.tiktok], ["LinkedIn", social.linkedin],
+    [textValue(social.other_name) || "Outra rede", social.other_url],
+  ].map(([label, value]) => ({ label: String(label), href: safeHttpUrl(value) })).filter((item): item is { label: string; href: string } => Boolean(item.href));
+  const name = organizationDisplayName(config, "Força Ativa da Mulher");
+
+  return (
+    <section aria-labelledby="institutional-profile-title" className="rounded-2xl border border-fam-plum/20 bg-fam-plum/5 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-fam-magenta">Informações institucionais</p>
+          <h2 id="institutional-profile-title" className="mt-1 font-display text-xl text-navy">{name}</h2>
+          {config.official_name && config.official_name !== config.display_name && (
+            <p className="mt-1 text-sm text-muted">{config.official_name}</p>
+          )}
+        </div>
+        {config.document && <p className="text-xs text-muted">{config.document}</p>}
+      </div>
+      <div className="mt-4 grid gap-4 text-sm text-ink sm:grid-cols-2">
+        {addressLine && <div><p className="font-semibold text-navy">Endereço</p><p className="mt-1 text-muted">{addressLine}</p></div>}
+        {contactItems.length > 0 && <div><p className="font-semibold text-navy">Canais de contato</p><div className="mt-1 space-y-1">{contactItems.map((item) => <p key={item.label}><span className="text-muted">{item.label}: </span><a className="font-medium text-fam-plum underline-offset-2 hover:underline" href={item.href ?? undefined}>{item.value}</a></p>)}</div></div>}
+      </div>
+      {socialItems.length > 0 && <div className="mt-4 border-t border-fam-plum/15 pt-3"><p className="font-semibold text-navy">Redes e site</p><div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm">{socialItems.map((item) => <a key={item.label} href={item.href} target="_blank" rel="noreferrer" className="font-medium text-fam-plum underline-offset-2 hover:underline">{item.label} <ExternalLink className="inline h-3 w-3" aria-hidden="true" /></a>)}</div></div>}
+    </section>
   );
 }
 
