@@ -33,6 +33,7 @@ export const useMyChurch = (churchId: string | null | undefined) =>
 // ── Terminologia organizacional (Núcleo/Setor/Distrito/etc.) ────
 import * as OrgTerm from "@/services/orgTerminology";
 import * as TenantModules from "@/services/tenantModules";
+import * as OrganizationConfig from "@/services/organizationConfig";
 export const useOrgTerminology = (churchId?: string | null) =>
   useQuery({
     queryKey: ["org-terminology", churchId ?? null],
@@ -46,6 +47,13 @@ export const useTenantModules = (churchId?: string | null) =>
     queryFn: () => TenantModules.getTenantModules(supabase, churchId),
     staleTime: 1000 * 60 * 10,
     placeholderData: TenantModules.TENANT_MODULE_DEFAULTS,
+  });
+export const useOrganizationConfig = (churchId?: string | null) =>
+  useQuery({
+    queryKey: ["organization-config", churchId ?? null],
+    queryFn: () => OrganizationConfig.getOrganizationConfig(supabase, churchId as string),
+    enabled: !!churchId,
+    staleTime: 1000 * 60 * 10,
   });
 export const useChurchStateName = (churchId: string | null) =>
   useQuery({
