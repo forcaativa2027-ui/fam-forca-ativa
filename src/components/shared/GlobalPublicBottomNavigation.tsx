@@ -16,8 +16,7 @@ import {
 import { BottomNav, BottomNavSpacer, type BottomNavItem } from "./BottomNav";
 import { useOrgTerminology } from "@/hooks/use-queries";
 import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
-
-const PUBLIC_FAM_TENANT_ID = "3f440664-450c-45f8-ae6e-6ccef31f2993";
+import { PUBLIC_FAM_TENANT_ID } from "@/services/organizationConfig";
 
 const HIDDEN_PREFIXES = [
   "/entrar",

@@ -21,7 +21,7 @@ import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import { youtubeThumb } from "@/services/content";
 import { defaultWord } from "@/services/institutional";
 import { TENANT_MODULE_DEFAULTS } from "@/services/tenantModules";
-import { organizationDisplayName, organizationIsOperational, type OrganizationConfig } from "@/services/organizationConfig";
+import { organizationDisplayName, organizationIsOperational, PUBLIC_FAM_TENANT_ID, type OrganizationConfig } from "@/services/organizationConfig";
 import { PublicNewsSection } from "./PublicNewsSection";
 import { PublicContactForms } from "./PublicContactForms";
 import { PublicParticipateSection } from "./PublicParticipateSection";
@@ -60,7 +60,7 @@ export default function PublicHome() {
   const { data: myMember } = useMyMember();
   const { data: community } = useActiveCommunity();
   const communityId = community?.id ?? null;
-  const { data: organizationConfig } = useOrganizationConfig(communityId);
+  const { data: organizationConfig } = useOrganizationConfig(PUBLIC_FAM_TENANT_ID);
   const publicOrganization = organizationConfig?.is_public && organizationIsOperational(organizationConfig)
     ? organizationConfig
     : null;

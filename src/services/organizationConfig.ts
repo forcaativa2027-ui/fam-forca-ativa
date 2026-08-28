@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+export const PUBLIC_FAM_TENANT_ID = "3f440664-450c-45f8-ae6e-6ccef31f2993";
+
 export type OrganizationType = "church" | "institute" | "association";
 export type OrganizationSetupStatus =
   | "setup_required"
