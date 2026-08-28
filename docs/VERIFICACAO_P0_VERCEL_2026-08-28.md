@@ -82,3 +82,19 @@ A Vercel marcou o deployment `07c22c3` como `Ready`, com URL `https://forcaativa
 Na URL já propagada `https://forcaativa2027-ui-fam-forca-ativa-8w0u00tyz-fam-0cef.vercel.app/cadastrar`, a etapa 1 carregou normalmente, e o avanço controlado exibiu `Escolha como continuar` e `Seus dados iniciais foram validados, Maria. Ainda falta concluir o cadastro.`. A barra inferior manteve `Grupo` e `FAM Mais`. Nenhuma etapa de finalização foi acionada.
 
 O teste funcional não concluiu o cadastro nem enviou foto ou emitiu FAM ID. A homologação completa deve usar uma conta de teste previamente autorizada ou um ambiente de staging.
+
+## Integração da configuração institucional na Home
+
+A Home pública não consultava `organization_configs`; ela dependia apenas do resolvedor legado de comunidades. Foi adicionada a consulta ao hook existente `useOrganizationConfig`, com validação de `is_public` e `setup_status = active`. O componente agora renderiza o nome aprovado no cabeçalho e no rodapé, além de um bloco institucional acessível com endereço, e-mail, telefone, WhatsApp, site e redes sociais, usando somente URLs HTTP/HTTPS válidas.
+
+O UUID público FAM foi centralizado em `PUBLIC_FAM_TENANT_ID`, reutilizado pela Home e pela navegação pública, sem duplicação de identificadores. A alteração foi validada com `tsc --noEmit` e `git diff --check`.
+
+Commit enviado: `306e56c` — `fix(fam): resolve public institutional tenant centrally`.
+
+A Vercel identificou o deployment `b9ucx7qdq` como `Building` durante a primeira janela de propagação; a URL deixou de exibir `Deployment is building` após a propagação.
+
+## Sanitização de placeholders
+
+A validação do deployment `e0a63a0` confirmou que a Home passou a exibir apenas `FAM` e `Força Ativa da Mulher`. Os valores técnicos `<CNPJ_REAL_DA_FAM>`, `<LOGRADOURO>`, `<EMAIL_INSTITUCIONAL>`, `<TELEFONE>` e `<WHATSAPP>` não são mais renderizados. O filtro foi aplicado tanto ao nome institucional quanto aos campos de endereço, contato, redes sociais e documento, sem remover os registros do banco.
+
+Commit enviado: `e0a63a0` — `fix(fam): hide institutional placeholders publicly`.
