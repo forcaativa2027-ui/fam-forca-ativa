@@ -15,8 +15,8 @@ export function StepTipoCadastro({ s, onBack, onBasico, onCompleto }: {
       <div className="flex items-center gap-2">
         <PartyPopper className="h-5 w-5 text-gold" />
         <div>
-          <h2 className="font-display text-2xl font-bold text-navy">Sua conta foi criada com sucesso!</h2>
-          <p className="text-base text-muted">Como você quer continuar, {s.full_name.split(" ")[0] || "amigo(a)"}?</p>
+          <h2 className="font-display text-2xl font-bold text-navy">Escolha como continuar</h2>
+          <p className="text-base text-muted">Seus dados iniciais foram validados, {s.full_name.split(" ")[0] || "amigo(a)"}. Ainda falta concluir o cadastro.</p>
         </div>
       </div>
 
@@ -26,7 +26,7 @@ export function StepTipoCadastro({ s, onBack, onBasico, onCompleto }: {
           <div className="flex-1">
             <b className="text-navy">Cadastro Básico</b>
             <p className="mt-1 text-sm text-muted">
-              Você já pode acessar a plataforma com o e-mail e a senha cadastrados. Com o Cadastro Básico você pode:
+              Ao concluir o Cadastro Básico, você poderá acessar a plataforma com o e-mail e a senha cadastrados. Com o Cadastro Básico você poderá:
             </p>
             <ul className="mt-2 space-y-1 text-sm text-ink">
               <li>• Acessar a Home do Usuário</li>

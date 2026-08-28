@@ -50,3 +50,29 @@ A ação `Conheça seus direitos` abriu a rota `/jornada-conhecimento` corretame
 Não foram encontrados conteúdos publicados na consulta inicial. Isso é coerente com o catálogo de homologação ainda conter registros em `draft`, mas impede validar a renderização de um artigo publicado nesta etapa.
 
 Foi encontrada uma inconsistência de terminologia na barra inferior da rota pública: o item aparece como `CEC Mais`, enquanto o dicionário institucional FAM aprovado exige `FAM Mais`. Esse item deve ser corrigido antes de encerrar a auditoria visual P0.
+
+## Correção aplicada
+
+Foi corrigido o fallback central em `src/services/orgTerminology.ts` para `Adm`, `FAM Mais` e `FAM ID`. Também foi corrigido o fallback do cabeçalho de membro em `src/components/panel/MemberHeader.tsx`, preservando a rota técnica interna `/painel/cecmais`.
+
+O TypeScript foi validado diretamente pelo binário local com `tsc --noEmit`. A execução via pnpm ficou bloqueada pelo mecanismo de aprovação de scripts de dependências (`core-js` e `unrs-resolver`), sem apontar erro de código.
+
+Commit enviado ao GitHub: `84546de` — `fix(fam): align institutional terminology fallbacks`.
+
+A Vercel criou o deployment `7nn15sr5d` para Production e, na última observação, ele ainda estava com status `Building`. A URL de validação é `https://forcaativa2027-ui-fam-forca-ativa-7nn15sr5d-fam-0cef.vercel.app/jornada-conhecimento`.
+
+## Correção estrutural do tenant público
+
+A primeira correção não foi suficiente porque a rota `/jornada-conhecimento` carregava a terminologia global legada por meio de `useOrgTerminology(null)`. O componente `GlobalPublicBottomNavigation` passou a consultar explicitamente o UUID institucional FAM `3f440664-450c-45f8-ae6e-6ccef31f2993`, preservando as rotas técnicas internas.
+
+Commit enviado: `a02623c` — `fix(fam): bind public navigation to fam tenant`.
+
+O deployment `3k69x19ad` ficou `Ready` em Production. Na URL `https://forcaativa2027-ui-fam-forca-ativa-3k69x19ad-fam-0cef.vercel.app/jornada-conhecimento`, a barra inferior passou a exibir corretamente `FAM Mais` e `Grupo`. A rota da Jornada permanece acessível, com busca, filtros e aviso editorial.
+
+## Teste controlado do cadastro
+
+A rota `/entrar` carregou sem a mensagem `Invalid API key` e apresentou os links para recuperação de senha e criação de conta. A rota `/cadastrar` carregou como `Cadastro FAM`, com a primeira etapa exibindo nome, CPF opcional, e-mail, telefone/WhatsApp, barra de progresso e navegação inferior FAM.
+
+Ao acionar `Continuar` com o formulário vazio, a validação exibiu `Nome muito curto`, `E-mail inválido` e `Telefone incompleto`, impedindo o avanço. Com dados fictícios em formato válido e CPF vazio, o fluxo avançou para a etapa 2 e exibiu `Sua conta foi criada com sucesso!`. O teste foi interrompido nessa etapa para não criar mais dados de produção e não enviar foto ou emitir um FAM ID.
+
+Esse comportamento demonstra que o primeiro avanço do cadastro já cria uma conta de autenticação; a homologação completa deve usar uma conta de teste previamente autorizada ou um ambiente de staging, e deve definir um procedimento de limpeza administrativa para contas fictícias antes de repetir o teste.
