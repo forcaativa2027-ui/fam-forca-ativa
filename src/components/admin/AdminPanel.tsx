@@ -56,6 +56,8 @@ export default function AdminPanel() {
     { key: "relatorios", label: "Relatórios", icon: <FileBarChart size={18} />, onClick: () => handleNavigate("weekly") },
     { key: "conteudo", label: "Conteúdo", icon: <BookOpen size={18} />, onClick: () => handleNavigate("content-library") },
     { key: "configuracao", label: "Configuração", icon: <Settings2 size={18} />, onClick: () => handleNavigate("org-terminology") },
+    { key: "risco", label: "Análise de Risco", icon: <ShieldAlert size={18} />, onClick: () => { window.location.href = "/analise-risco"; } },
+    { key: "direitos", label: "Conheça seus direitos", icon: <BookOpen size={18} />, onClick: () => { window.location.href = "/jornada-conhecimento"; } },
   ];
 
   if (isLoading) {

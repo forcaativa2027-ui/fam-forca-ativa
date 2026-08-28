@@ -9,6 +9,7 @@ import {
   LogOut, Sparkles, AlertTriangle, BarChart3, Users, Heart, Map,
   MessageSquareHeart, User, Check, Plus, Calendar as Cal,
   Award, ClipboardList, Wand2, ChevronRight, GraduationCap, Radio,
+  ShieldAlert, BookOpen,
 } from "lucide-react";
 import { useAccessibility } from "@/components/shared/AccessibilityProvider";
 import { Button } from "@/components/ui/button";
@@ -104,6 +105,8 @@ export default function PanelDashboard() {
     { key: "jornada", label: "Jornada", icon: <Map size={18} />, onClick: () => setTab("jornada") },
     { key: "oracao", label: "Oração", icon: <MessageSquareHeart size={18} />, onClick: () => setTab("oracao") },
     { key: "perfil", label: "Perfil", icon: <User size={18} />, onClick: () => setTab("perfil") },
+    { key: "risco", label: "Análise de Risco", icon: <ShieldAlert size={18} />, onClick: () => { window.location.href = "/analise-risco"; } },
+    { key: "conhecimento", label: "Conheça seus direitos", icon: <BookOpen size={18} />, onClick: () => { window.location.href = "/jornada-conhecimento"; } },
   ];
 
   return (
