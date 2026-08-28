@@ -1,6 +1,21 @@
 -- FAM040 — Escola de Direitos e Deveres
 -- Não remove ou altera conteúdo existente. Reutiliza o modelo Academy:
 -- Escola -> Curso -> Módulo -> Lição -> lesson_progress.
+-- Pré-requisitos: FORM001_cursos_turmas_matriculas.sql e
+-- ACAD002_bloco1_estrutura_minima.sql aplicadas previamente.
+
+do $$
+begin
+  if to_regclass('public.courses') is null then
+    raise exception using message = 'Pré-requisito ausente: aplique FORM001_cursos_turmas_matriculas.sql antes da FAM040.';
+  end if;
+  if to_regclass('public.escolas') is null then
+    raise exception using message = 'Pré-requisito ausente: aplique ACAD002_bloco1_estrutura_minima.sql antes da FAM040.';
+  end if;
+  if to_regclass('public.course_modules') is null or to_regclass('public.course_lessons') is null or to_regclass('public.lesson_progress') is null then
+    raise exception using message = 'Estrutura Academy incompleta: aplique ACAD002_bloco1_estrutura_minima.sql antes da FAM040.';
+  end if;
+end $$;
 
 insert into public.escolas (name, slug, description, icon_key, order_index, is_active)
 values (
