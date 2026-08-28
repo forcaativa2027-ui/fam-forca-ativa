@@ -4,7 +4,7 @@ import { QueryProvider } from "@/components/layout/QueryProvider";
 import { AccessibilityProvider } from "@/components/shared/AccessibilityProvider";
 import { RadioPlayerProvider } from "@/components/radio/RadioPlayerContext";
 import { AccessibilityButton } from "@/components/shared/AccessibilityButton";
-import { AccessibilityOnboarding } from "@/components/shared/AccessibilityOnboarding";
+import { NavigationPreferencesPrompt } from "@/components/shared/NavigationPreferencesPrompt";
 import { GlobalPublicBottomNavigation } from "@/components/shared/GlobalPublicBottomNavigation";
 
 export const metadata: Metadata = {
@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <GlobalPublicBottomNavigation />
               <ServiceWorkerRegistration />
               <AccessibilityButton />
-              <AccessibilityOnboarding />
+              <NavigationPreferencesPrompt />
             </AccessibilityProvider>
           </RadioPlayerProvider>
         </QueryProvider>
