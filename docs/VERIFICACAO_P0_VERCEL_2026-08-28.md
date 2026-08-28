@@ -75,4 +75,10 @@ A rota `/entrar` carregou sem a mensagem `Invalid API key` e apresentou os links
 
 Ao acionar `Continuar` com o formulário vazio, a validação exibiu `Nome muito curto`, `E-mail inválido` e `Telefone incompleto`, impedindo o avanço. Com dados fictícios em formato válido e CPF vazio, o fluxo avançou para a etapa 2 e exibiu `Sua conta foi criada com sucesso!`. O teste foi interrompido nessa etapa para não criar mais dados de produção e não enviar foto ou emitir um FAM ID.
 
-Esse comportamento demonstra que o primeiro avanço do cadastro já cria uma conta de autenticação; a homologação completa deve usar uma conta de teste previamente autorizada ou um ambiente de staging, e deve definir um procedimento de limpeza administrativa para contas fictícias antes de repetir o teste.
+O texto da etapa 2 foi corrigido no commit `07c22c3` para não afirmar que a conta já foi criada. A nova mensagem informa que os dados iniciais foram validados e que o cadastro ainda precisa ser concluído. O fluxo básico agora também informa que o acesso só estará disponível após a finalização.
+
+A Vercel marcou o deployment `07c22c3` como `Ready`, com URL `https://forcaativa2027-ui-fam-forca-ativa-8w0u00tyz-fam-0cef.vercel.app`; contudo, a URL ainda exibiu temporariamente `Deployment is building` durante a propagação. A validação visual final deve ser repetida após a conclusão dessa propagação.
+
+Na URL já propagada `https://forcaativa2027-ui-fam-forca-ativa-8w0u00tyz-fam-0cef.vercel.app/cadastrar`, a etapa 1 carregou normalmente, e o avanço controlado exibiu `Escolha como continuar` e `Seus dados iniciais foram validados, Maria. Ainda falta concluir o cadastro.`. A barra inferior manteve `Grupo` e `FAM Mais`. Nenhuma etapa de finalização foi acionada.
+
+O teste funcional não concluiu o cadastro nem enviou foto ou emitiu FAM ID. A homologação completa deve usar uma conta de teste previamente autorizada ou um ambiente de staging.
