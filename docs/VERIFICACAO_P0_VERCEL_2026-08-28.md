@@ -106,3 +106,9 @@ A primeira remoção havia retirado o cartão original de preferências de naveg
 Commit enviado: `888d971` — `fix(fam): keep navigation preferences card only`.
 
 Na URL `https://forcaativa2027-ui-fam-forca-ativa-6pye8739s-fam-0cef.vercel.app/`, a validação confirmou a presença exclusiva de `Personalização — Configure sua navegação` e a ausência de `Seja muito bem-vindo(a)!`. As preferências locais continuam preservadas; apenas o cartão duplicado foi removido.
+
+## Barra inferior estática
+
+A barra global foi ajustada para reutilizar uma lista fixa de atalhos nas rotas `/analise-risco` e `/jornada-conhecimento`, sem reduzir a quantidade ou trocar os ícones conforme o pathname. O commit `e2183f0` — `fix(fam): keep public bottom navigation static` — foi enviado para `main`. A Vercel criou o deployment `7l9uy3vxs`.
+
+A validação visual final confirmou a mesma sequência nas duas rotas: `Início`, `Notícias`, `Rádio Web`, `FAM Vídeos`, `Agenda`, `Participar`, `Fale Conosco`, `Análise de Risco`, `Doação`, `Conheça seus direitos` e `Entrar`. A barra permanece estática ao alternar entre Análise de Risco e Jornada do Conhecimento.
