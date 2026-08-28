@@ -76,8 +76,10 @@ export function AccessibilityOnboarding() {
   const [sessionDismissed, setSessionDismissed] = useState(false);
 
   const isFirstAccess = !onboarded && !sessionDismissed;
-  const isRiskAnalysisRoute = pathname === "/analise-risco";
-  const visible = loaded && !isRiskAnalysisRoute && (isFirstAccess || onboardingForceOpen);
+  // O prompt pertence exclusivamente à experiência de entrada na Home.
+  // Conteúdo, proteção e demais páginas nunca devem dispará-lo.
+  const isHomePage = pathname === "/";
+  const visible = loaded && isHomePage && (isFirstAccess || onboardingForceOpen);
 
   useEffect(() => {
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");

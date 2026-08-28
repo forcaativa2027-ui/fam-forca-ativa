@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ShieldAlert } from "lucide-react";
+import { ArrowLeft, ShieldAlert, LayoutDashboard, Users, FileBarChart, Settings2, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useMyProfile, useMyActiveModules, usePendingCounts, useMfaRequired, useMfaFactors, useMyChurch } from "@/hooks/use-queries";
@@ -11,6 +11,7 @@ import { GlobalSearchDialog } from "./GlobalSearchDialog";
 import { GlobalSearch } from "./GlobalSearch";
 import { TabContent } from "./panel/TabRouter";
 import { SubmenuExplorer } from "./panel/SubmenuExplorer";
+import { BottomNav, type BottomNavItem } from "@/components/shared/BottomNav";
 
 export default function AdminPanel() {
   const { data: me, isLoading } = useMyProfile();
@@ -48,6 +49,14 @@ export default function AdminPanel() {
       return tab;
     });
   }, []);
+
+  const adminBottomItems: BottomNavItem[] = [
+    { key: "visao-geral", label: "Visão geral", icon: <LayoutDashboard size={18} />, onClick: () => handleNavigate("org-dashboard") },
+    { key: "membros", label: "Membros", icon: <Users size={18} />, onClick: () => handleNavigate("members") },
+    { key: "relatorios", label: "Relatórios", icon: <FileBarChart size={18} />, onClick: () => handleNavigate("weekly") },
+    { key: "conteudo", label: "Conteúdo", icon: <BookOpen size={18} />, onClick: () => handleNavigate("content-library") },
+    { key: "configuracao", label: "Configuração", icon: <Settings2 size={18} />, onClick: () => handleNavigate("org-terminology") },
+  ];
 
   if (isLoading) {
     return (
@@ -154,7 +163,7 @@ export default function AdminPanel() {
         />
 
         {/* Conteúdo */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto pb-20">
           <div className="container py-8">
             {previousTab === "org-dashboard" && activeTab !== "org-dashboard" && (
               <Button
@@ -168,6 +177,13 @@ export default function AdminPanel() {
             <TabContent activeTab={activeTab} onNavigate={handleNavigate} prefillEventId={prefillEventId} />
           </div>
         </main>
+
+        <BottomNav items={adminBottomItems} activeKey={
+          activeTab === "members" ? "membros" :
+          activeTab === "weekly" || activeTab === "monthly" ? "relatorios" :
+          activeTab === "content-library" ? "conteudo" :
+          activeTab === "org-terminology" ? "configuracao" : "visao-geral"
+        } />
 
         {/* Painel de exploração à direita — cards dos submenus */}
         {explorerGroup && (

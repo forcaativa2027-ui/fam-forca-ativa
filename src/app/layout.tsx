@@ -5,6 +5,8 @@ import { AccessibilityProvider } from "@/components/shared/AccessibilityProvider
 import { RadioPlayerProvider } from "@/components/radio/RadioPlayerContext";
 import { AccessibilityButton } from "@/components/shared/AccessibilityButton";
 import { AccessibilityOnboarding } from "@/components/shared/AccessibilityOnboarding";
+import { GlobalPublicBottomNavigation } from "@/components/shared/GlobalPublicBottomNavigation";
+import { NavigationPreferencesPrompt } from "@/components/shared/NavigationPreferencesPrompt";
 
 export const metadata: Metadata = {
   title: "FAM — Força Ativa da Mulher",
@@ -30,6 +32,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <RadioPlayerProvider>
             <AccessibilityProvider>
               {children}
+              <GlobalPublicBottomNavigation />
+              <NavigationPreferencesPrompt />
               <ServiceWorkerRegistration />
               <AccessibilityButton />
               <AccessibilityOnboarding />
