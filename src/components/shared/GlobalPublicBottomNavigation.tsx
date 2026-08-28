@@ -5,18 +5,16 @@ import {
   Calendar,
   HeartHandshake,
   Home,
+  LogIn,
   MessageCircle,
   Newspaper,
   Radio,
   ShieldAlert,
   Sparkles,
-  Users2,
   Video,
+  BookOpen,
 } from "lucide-react";
 import { BottomNav, BottomNavSpacer, type BottomNavItem } from "./BottomNav";
-import { useOrgTerminology } from "@/hooks/use-queries";
-import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
-import { PUBLIC_FAM_TENANT_ID } from "@/services/organizationConfig";
 
 const HIDDEN_PREFIXES = [
   "/entrar",
@@ -29,10 +27,8 @@ const HIDDEN_PREFIXES = [
 export function GlobalPublicBottomNavigation() {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(PUBLIC_FAM_TENANT_ID);
-
-  // PublicHome e PanelDashboard já renderizam a navegação contextual completa.
-  // A barra global cobre as páginas públicas que não passam por esses componentes.
+  // PublicHome já renderiza a mesma sequência; as páginas públicas secundárias
+  // reutilizam esta lista fixa para não reduzir nem trocar os atalhos ao navegar.
   const isCoveredByLocalNav = pathname === "/" || pathname === "/painel";
   const isHidden = HIDDEN_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   if (isCoveredByLocalNav || isHidden) return null;
@@ -41,17 +37,21 @@ export function GlobalPublicBottomNavigation() {
   const items: BottomNavItem[] = [
     { key: "inicio", label: "Início", icon: <Home size={18} />, onClick: () => goHome() },
     { key: "noticias", label: "Notícias", icon: <Newspaper size={18} />, onClick: () => goHome("noticias") },
+    { key: "radio", label: "Rádio Web", icon: <Radio size={18} />, onClick: () => goHome("radio") },
+    { key: "videos", label: "FAM Vídeos", icon: <Video size={18} />, onClick: () => goHome("videos") },
     { key: "agenda", label: "Agenda", icon: <Calendar size={18} />, onClick: () => goHome("agenda") },
-    { key: "grupo", label: terms.life_group, icon: <Users2 size={18} />, onClick: () => goHome("participar") },
-    { key: "conteudo", label: terms.more_brand, icon: <Sparkles size={18} />, onClick: () => router.push("/painel/cecmais") },
-    { key: "contato", label: "Contato", icon: <MessageCircle size={18} />, onClick: () => goHome("contato") },
-    { key: "risco", label: "Proteção", icon: <ShieldAlert size={18} />, onClick: () => router.push("/analise-risco") },
+    { key: "participar", label: "Participar", icon: <Sparkles size={18} />, onClick: () => goHome("participar") },
+    { key: "contato", label: "Fale Conosco", icon: <MessageCircle size={18} />, onClick: () => goHome("contato") },
+    { key: "risco", label: "Análise de Risco", icon: <ShieldAlert size={18} />, onClick: () => router.push("/analise-risco") },
+    { key: "ofertar", label: "Doação", icon: <HeartHandshake size={18} />, onClick: () => goHome("ofertar") },
+    { key: "conhecimento", label: "Conheça seus direitos", icon: <BookOpen size={18} />, onClick: () => router.push("/jornada-conhecimento") },
+    { key: "entrar", label: "Entrar", icon: <LogIn size={18} />, onClick: () => router.push("/entrar") },
   ];
 
   return (
     <>
       <BottomNavSpacer />
-      <BottomNav items={items} activeKey={pathname === "/analise-risco" ? "risco" : pathname.startsWith("/jornada-conhecimento") ? "conteudo" : "inicio"} />
+      <BottomNav items={items} activeKey={pathname === "/analise-risco" ? "risco" : pathname.startsWith("/jornada-conhecimento") ? "conhecimento" : "inicio"} />
     </>
   );
 }
