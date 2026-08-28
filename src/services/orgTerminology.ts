@@ -15,7 +15,7 @@ export const ORG_TERM_DEFAULTS: Record<string, string> = {
   service: "Atividade", services: "Atividades", communion: "Evento especial",
   church: "Organização", community: "Comunicação", discipleship: "Acompanhamento",
   evangelism_group: "Grupo de Voluntários", member_id: "Membro ID",
-  admin_role: "Apóstolo", more_brand: "CEC Mais", member_id_brand: "CEC ID",
+  admin_role: "Adm", more_brand: "FAM Mais", member_id_brand: "FAM ID",
   organization_name: "Organização", organization_short_name: "Organização",
   program_name: "Programa", academy_brand: "Academy", id_brand: "Membro ID",
   group_name: "Grupo", group_name_plural: "Grupos",

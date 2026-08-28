@@ -64,7 +64,7 @@ export function MemberHeader({ active, isAdmin, cardReady, onSignOut }: {
                 active === "cecmais" ? "border-b-2 border-gold text-white" : "text-white/60 hover:text-white"
               }`}
             >
-              {terms.more_brand ?? "CEC Mais"}
+              {terms.more_brand ?? "FAM Mais"}
             </Link>
           </nav>
         </div>
