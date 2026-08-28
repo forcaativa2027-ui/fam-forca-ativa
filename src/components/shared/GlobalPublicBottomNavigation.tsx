@@ -14,8 +14,10 @@ import {
   Video,
 } from "lucide-react";
 import { BottomNav, BottomNavSpacer, type BottomNavItem } from "./BottomNav";
-import { useActiveCommunity, useOrgTerminology } from "@/hooks/use-queries";
+import { useOrgTerminology } from "@/hooks/use-queries";
 import { ORG_TERM_DEFAULTS } from "@/services/orgTerminology";
+
+const PUBLIC_FAM_TENANT_ID = "3f440664-450c-45f8-ae6e-6ccef31f2993";
 
 const HIDDEN_PREFIXES = [
   "/entrar",
@@ -28,8 +30,7 @@ const HIDDEN_PREFIXES = [
 export function GlobalPublicBottomNavigation() {
   const pathname = usePathname();
   const router = useRouter();
-  const { data: community } = useActiveCommunity();
-  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(community?.id ?? null);
+  const { data: terms = ORG_TERM_DEFAULTS } = useOrgTerminology(PUBLIC_FAM_TENANT_ID);
 
   // PublicHome e PanelDashboard já renderizam a navegação contextual completa.
   // A barra global cobre as páginas públicas que não passam por esses componentes.
