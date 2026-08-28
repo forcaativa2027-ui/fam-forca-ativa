@@ -244,7 +244,7 @@ export const DELEGATION_TAB_MAP: Record<DelegationModule, string[]> = {
   administrativo: [
     "org-dashboard", "pendencias", "agenda", "notificacoes", "metas",
     "communities", "structure", "life-groups", "expansion-map", "genealogy", "formacao", "conhecimento-biblico", "biblioteca-conhecimento", "biblia-referencias",
-    "evangelism-groups",
+    "evangelism-groups", "fam-study-monitoring",
     "mda", "mda-health", "saude", "ministerios", "ministerial-reports", "export", "pesquisa-avancada", "gpv",
   ],
   usuarios: [

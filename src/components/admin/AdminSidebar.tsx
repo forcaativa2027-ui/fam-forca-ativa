@@ -29,7 +29,7 @@ export type TabKey =
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
   | "news" | "banners" | "sermons" | "radio" | "live360" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
-  | "delegations" | "fam-credenciamento" | "fam-governance-reports" | "fam-conhecimento" | "invites" | "audit"
+  | "delegations" | "fam-credenciamento" | "fam-governance-reports" | "fam-conhecimento" | "fam-study-monitoring" | "invites" | "audit"
   | "export";
 
 interface NavItem {
@@ -142,6 +142,7 @@ export function buildGroups(
         { key: "services",label: "Cultos",       icon: <Radio size={15} /> },
         { key: "word",    label: "Palavra do dia",icon: <BookOpen size={15} /> },
         { key: "fam-conhecimento", label: "Jornada do Conhecimento", icon: <BookOpen size={15} /> },
+        { key: "fam-study-monitoring", label: "Escola — Monitoramento", icon: <GraduationCap size={15} /> },
       ],
     },
     {

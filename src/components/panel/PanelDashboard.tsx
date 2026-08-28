@@ -106,7 +106,7 @@ export default function PanelDashboard() {
     { key: "oracao", label: "Oração", icon: <MessageSquareHeart size={18} />, onClick: () => setTab("oracao") },
     { key: "perfil", label: "Perfil", icon: <User size={18} />, onClick: () => setTab("perfil") },
     { key: "risco", label: "Análise de Risco", icon: <ShieldAlert size={18} />, onClick: () => { window.location.href = "/analise-risco"; } },
-    { key: "conhecimento", label: "Conheça seus direitos", icon: <BookOpen size={18} />, onClick: () => { window.location.href = "/jornada-conhecimento"; } },
+    { key: "conhecimento", label: "Conheça seus direitos", icon: <BookOpen size={18} />, onClick: () => { window.location.href = "/escola-direitos-e-deveres"; } },
   ];
 
   return (

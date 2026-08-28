@@ -64,6 +64,7 @@ export function FamKnowledgeJourney() {
       </section>
 
       <div className="mx-auto max-w-6xl space-y-10 px-4 py-8 sm:px-6">
+        <section className="flex flex-col justify-between gap-4 rounded-2xl border border-fam-purple/20 bg-white p-5 shadow-sm sm:flex-row sm:items-center" aria-labelledby="study-access-title"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-fam-magenta">Experiência EAD</p><h2 id="study-access-title" className="mt-1 font-display text-xl text-fam-plum">Aprenda no seu ritmo</h2><p className="mt-1 max-w-2xl text-sm leading-6 text-fam-night/70">Usuários cadastrados e membros ativos podem acessar cursos, roteiro de aulas e progresso privado na Escola de Direitos e Deveres.</p></div><Button asChild className="shrink-0 gap-2 bg-fam-plum font-bold hover:bg-fam-purple"><Link href="/escola-direitos-e-deveres">Entrar na Escola <ArrowRight className="h-4 w-4" /></Link></Button></section>
         <section aria-labelledby="topics-title">
           <div className="mb-4 flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-fam-magenta" aria-hidden="true" /><h2 id="topics-title" className="font-display text-2xl text-navy">Encontre por tema</h2></div>
           <div className="flex flex-wrap gap-2">

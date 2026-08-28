@@ -75,6 +75,7 @@ import { FamProfessionalAccessAdmin } from "../FamProfessionalAccessAdmin";
 import { FamGovernanceReportsAdmin } from "../FamGovernanceReportsAdmin";
 import { FamKnowledgeAdmin } from "../FamKnowledgeAdmin";
 import { TenantModuleGuard } from "@/components/shared/TenantModuleGuard";
+import { FamKnowledgeMonitoringAdmin } from "../FamKnowledgeMonitoringAdmin";
 
 // AuditView foi extraído para AuditAdmin.tsx (reutilizado também em /governanca).
 function AuditView() {
@@ -165,6 +166,7 @@ export function TabContent({ activeTab, onNavigate, prefillEventId }: { activeTa
     case "events":              return <EventsAdmin />;
     case "registration-events": return <RegistrationEventsAdmin />;
     case "editorial-dashboard": return <EditorialDashboardAdmin onNavigate={onNavigate} />;
+    case "fam-study-monitoring": return <FamKnowledgeMonitoringAdmin />;
     case "content-library":     return <ContentLibraryAdmin />;
     case "categories-tags":     return <CategoriesTagsAdmin />;
     case "services":            return <ServiceTimesAdmin />;
