@@ -72,12 +72,17 @@ export async function saveOrganizationConfig(
   return data as OrganizationConfig;
 }
 
+function publicText(value: unknown): string {
+  const text = typeof value === "string" ? value.trim() : "";
+  return /^<[^>]+>$/.test(text) ? "" : text;
+}
+
 export function organizationDisplayName(
   config: OrganizationConfig | null | undefined,
   fallback = "Organização",
 ): string {
-  return config?.display_name?.trim()
-    || config?.official_name?.trim()
+  return publicText(config?.display_name)
+    || publicText(config?.official_name)
     || fallback;
 }
 

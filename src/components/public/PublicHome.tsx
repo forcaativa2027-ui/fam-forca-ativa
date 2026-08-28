@@ -400,7 +400,8 @@ export default function PublicHome() {
 }
 
 function textValue(value: unknown): string {
-  return typeof value === "string" ? value.trim() : "";
+  const text = typeof value === "string" ? value.trim() : "";
+  return /^<[^>]+>$/.test(text) ? "" : text;
 }
 
 function safeHttpUrl(value: unknown): string | null {
@@ -440,6 +441,9 @@ function PublicInstitutionalProfile({ config }: { config: OrganizationConfig }) 
     [textValue(social.other_name) || "Outra rede", social.other_url],
   ].map(([label, value]) => ({ label: String(label), href: safeHttpUrl(value) })).filter((item): item is { label: string; href: string } => Boolean(item.href));
   const name = organizationDisplayName(config, "Força Ativa da Mulher");
+  const officialName = textValue(config.official_name);
+  const displayName = textValue(config.display_name);
+  const document = textValue(config.document);
 
   return (
     <section aria-labelledby="institutional-profile-title" className="rounded-2xl border border-fam-plum/20 bg-fam-plum/5 p-5">
@@ -447,11 +451,11 @@ function PublicInstitutionalProfile({ config }: { config: OrganizationConfig }) 
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-fam-magenta">Informações institucionais</p>
           <h2 id="institutional-profile-title" className="mt-1 font-display text-xl text-navy">{name}</h2>
-          {config.official_name && config.official_name !== config.display_name && (
-            <p className="mt-1 text-sm text-muted">{config.official_name}</p>
+          {officialName && officialName !== displayName && (
+            <p className="mt-1 text-sm text-muted">{officialName}</p>
           )}
         </div>
-        {config.document && <p className="text-xs text-muted">{config.document}</p>}
+        {document && <p className="text-xs text-muted">{document}</p>}
       </div>
       <div className="mt-4 grid gap-4 text-sm text-ink sm:grid-cols-2">
         {addressLine && <div><p className="font-semibold text-navy">Endereço</p><p className="mt-1 text-muted">{addressLine}</p></div>}
