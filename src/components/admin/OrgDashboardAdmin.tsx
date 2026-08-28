@@ -8,6 +8,7 @@ import { useOrgKpis, useGrowthMonthly, useMyProfile, useChurches, useMinisterios
 import { HierarchyExplorer } from "./HierarchyExplorer";
 import { IntelligenceInsights } from "./IntelligenceInsights";
 import { CommunityIdentity } from "@/components/shared/CommunityIdentity";
+import { OrganizationConfigAdmin } from "./OrganizationConfigAdmin";
 import type { TabKey } from "./AdminSidebar";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -53,6 +54,7 @@ export function OrgDashboardAdmin({ onNavigate }: { onNavigate?: (tab: TabKey) =
           roleName={me?.role ? (ROLE_LABELS[me.role] ?? me.role) : null}
         />
       )}
+      <OrganizationConfigAdmin />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5 text-gold" />Dashboard Organizacional</CardTitle>
