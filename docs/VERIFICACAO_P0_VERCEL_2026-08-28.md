@@ -98,3 +98,11 @@ A Vercel identificou o deployment `b9ucx7qdq` como `Building` durante a primeira
 A validação do deployment `e0a63a0` confirmou que a Home passou a exibir apenas `FAM` e `Força Ativa da Mulher`. Os valores técnicos `<CNPJ_REAL_DA_FAM>`, `<LOGRADOURO>`, `<EMAIL_INSTITUCIONAL>`, `<TELEFONE>` e `<WHATSAPP>` não são mais renderizados. O filtro foi aplicado tanto ao nome institucional quanto aos campos de endereço, contato, redes sociais e documento, sem remover os registros do banco.
 
 Commit enviado: `e0a63a0` — `fix(fam): hide institutional placeholders publicly`.
+
+## Correção dos cartões de boas-vindas
+
+A primeira remoção havia retirado o cartão original de preferências de navegação, embora o pedido se referisse ao novo cartão institucional `AccessibilityOnboarding`, com o texto `Seja muito bem-vindo(a)!`. A montagem do layout foi corrigida: `NavigationPreferencesPrompt` voltou a ser exibido na Home, enquanto `AccessibilityOnboarding` deixou de ser montado globalmente. A implementação foi validada com TypeScript.
+
+Commit enviado: `888d971` — `fix(fam): keep navigation preferences card only`.
+
+Na URL `https://forcaativa2027-ui-fam-forca-ativa-6pye8739s-fam-0cef.vercel.app/`, a validação confirmou a presença exclusiva de `Personalização — Configure sua navegação` e a ausência de `Seja muito bem-vindo(a)!`. As preferências locais continuam preservadas; apenas o cartão duplicado foi removido.
