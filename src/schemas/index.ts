@@ -364,7 +364,7 @@ export const wizardStep2Schema = z.object({
   city: optionalText,
 });
 export const wizardStep3Schema = z.object({
-  community_id: z.string().uuid("Selecione uma comunidade"),
+  community_id: z.string().uuid("Selecione uma comunidade").optional().or(z.literal("")),
 });
 export const wizardStep4Schema = z.object({
   intent: z.enum(["lifegroup","discipulado","acompanhamento_pastoral","visita","conhecer","batismo","servir","outro"]),

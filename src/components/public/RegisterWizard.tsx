@@ -35,9 +35,10 @@ export default function RegisterWizard() {
 
   useEffect(() => {
     if (activeCommunity?.id && !s.community_id) {
-      setS((prev) => ({ ...prev, community_id: activeCommunity.id }));
+      update("community_id", activeCommunity.id);
     }
-  }, [activeCommunity?.id, s.community_id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeCommunity?.id]);
 
   function update<K extends keyof RegisterState>(k: K, v: RegisterState[K]) {
     setS((prev) => ({ ...prev, [k]: v }));

@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PipelineIntent } from "@/types/domain";
 
 export interface PipelineCreateInput {
-  community_id: string;
+  community_id?: string;
   intent: PipelineIntent;
   full_name: string;
   phone: string;

@@ -168,10 +168,6 @@ export function MembersAdmin() {
 
   async function onCreate(v: MemberCreateInput) {
     setErr("");
-    if (!v.church_id) {
-      setErr("Selecione a Igreja/Comunidade antes de cadastrar. O Life Group/Grupo é opcional e pode ser associado depois.");
-      return;
-    }
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { setErr("Sessão expirada. Faça login novamente."); return; }

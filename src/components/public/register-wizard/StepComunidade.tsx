@@ -20,7 +20,6 @@ export function StepComunidade({ s, update, churches, cells, churchesLoading, ch
   const [err, setErr] = useState("");
 
   function next() {
-    if (!s.community_id) { setErr("Selecione uma região de atendimento"); return; }
     onNext();
   }
 
@@ -39,6 +38,7 @@ export function StepComunidade({ s, update, churches, cells, churchesLoading, ch
       <div>
         <h2 className="font-display text-2xl font-bold text-navy">Região de atendimento mais próxima</h2>
         <p className="text-base text-muted">Onde você gostaria de receber informações e apoio da FAM</p>
+        <p className="text-xs text-muted mt-1">Opcional — você pode escolher agora ou pular esta etapa</p>
       </div>
 
       <div className="space-y-2">

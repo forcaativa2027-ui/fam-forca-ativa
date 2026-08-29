@@ -22,7 +22,6 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
   async function finish() {
     if (busy) return;
     const errs: Record<string,string> = {};
-    if (!s.community_id) errs.community = "Selecione uma região de atendimento antes de finalizar o cadastro.";
     if (s.password.length < 6) errs.password = "Senha precisa ter ao menos 6 caracteres";
     if (s.password !== passwordConfirm) errs.password_confirm = "Senhas não conferem";
     if (!lgpdAccepted) errs.lgpd = "Você precisa aceitar os Termos e a Política de Privacidade para continuar.";
@@ -91,8 +90,6 @@ export function StepFinalizacao({ s, update, onBack, onDone, setGlobalErr }: { s
 
   return (
     <div className="space-y-4">
-      {err.community && <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{err.community}</p>}
-
       <div className="flex items-center gap-2">
         <PartyPopper className="h-5 w-5 text-gold" />
         <div>
