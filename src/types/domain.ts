@@ -346,7 +346,7 @@ export interface News {
   cover_url: string | null; author_name: string | null;
   church_id: string | null;
   is_published: boolean; published_at: string | null;
-  meta_title: string | null; meta_description: string | null; og_image_url: string | null;
+  meta_title: string | null; meta_description: string | null; og_image_url: string | null; video_url: string | null; subtitle: string | null;
   created_at: string; updated_at: string; sort_order: number;
 }
 export interface PublicPrayerRequest {

@@ -52,6 +52,7 @@ export function MembersAdmin() {
   const [viewingHistory, setViewingHistory] = useState<Member | null>(null);
   const [fullEditing, setFullEditing] = useState<Member | null>(null);
   const [credentials, setCredentials] = useState<{ name: string; email: string; password: string } | null>(null);
+  const [showInstitutionalLink, setShowInstitutionalLink] = useState(false);
 
   // ============ FILTROS DA LISTAGEM (busca + estrutura territorial) ============
   const [searchQuery, setSearchQuery] = useState("");
@@ -168,10 +169,7 @@ export function MembersAdmin() {
 
   async function onCreate(v: MemberCreateInput) {
     setErr("");
-    if (!v.church_id && !v.life_group_id) {
-      setErr("Selecione ao menos a Igreja (ou o Life Group) antes de cadastrar. Sem isso o membro fica sem escopo e não aparece pra ninguém depois.");
-      return;
-    }
+    // Para plataforma FAM (instituto), vínculo institucional é opcional
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { setErr("Sessão expirada. Faça login novamente."); return; }
@@ -322,45 +320,57 @@ export function MembersAdmin() {
                 <Input type="date" {...createForm.register("birth_date")} />
               </Field>
 
-              {/* Cascata Estado → Cidade → Igreja → LG */}
-              <div className="rounded-md border bg-navy-50/40 p-3">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-navy-600">Localizar Life Group</p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Estado">
-                    <select {...createForm.register("state")}
-                      onChange={(e) => { createForm.setValue("state", e.target.value); createForm.setValue("city", ""); createForm.setValue("church_id", ""); createForm.setValue("life_group_id", ""); }}
-                      className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                      <option value="">— Todos —</option>
-                      {states.map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </Field>
-                  <Field label="Cidade">
-                    <select {...createForm.register("city")}
-                      onChange={(e) => { createForm.setValue("city", e.target.value); createForm.setValue("church_id", ""); createForm.setValue("life_group_id", ""); }}
-                      className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                      <option value="">— Todas —</option>
-                      {cities.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </Field>
-                </div>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <Field label="Igreja / Comunidade">
-                    <select {...createForm.register("church_id")}
-                      onChange={(e) => { createForm.setValue("church_id", e.target.value); createForm.setValue("life_group_id", ""); }}
-                      className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                      <option value="">— Todas —</option>
-                      {churchesFiltered.map((ch) => <option key={ch.id} value={ch.id}>{ch.name}</option>)}
-                    </select>
-                  </Field>
-                  <Field label="Life Group">
-                    <select {...createForm.register("life_group_id")}
-                      className="h-10 w-full rounded-md border bg-background px-3 text-sm">
-                      <option value="">— Sem célula —</option>
-                      {lgsFiltered.map((c) => <option key={c.id} value={c.id}>{c.name}{c.neighborhood ? ` · ${c.neighborhood}` : ""}</option>)}
-                    </select>
-                  </Field>
-                </div>
-                <p className="mt-2 text-[11px] text-muted">{lgsFiltered.length} célula(s) disponível(is) com esses filtros.</p>
+              {/* Cascata Estado → Cidade → Igreja → LG - OPCIONAL para plataforma FAM */}
+              <div className="rounded-md border border-dashed bg-navy-50/40 p-3">
+                <button
+                  type="button"
+                  onClick={() => setShowInstitutionalLink(!showInstitutionalLink)}
+                  className="flex w-full items-center justify-between text-[11px] font-bold uppercase tracking-wider text-navy-600"
+                >
+                  <span>Vinculo Institucional (Opcional)</span>
+                  <span className="text-muted-foreground">{showInstitutionalLink ? "▲ Ocultar" : "▼ Mostrar"}</span>
+                </button>
+                {showInstitutionalLink && (
+                  <>
+                    <p className="mb-2 mt-2 text-[11px] text-muted">Campos da plataforma eclesiastica - nao obrigatórios para a plataforma FAM.</p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field label="Estado">
+                        <select {...createForm.register("state")}
+                          onChange={(e) => { createForm.setValue("state", e.target.value); createForm.setValue("city", ""); createForm.setValue("church_id", ""); createForm.setValue("life_group_id", ""); }}
+                          className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                          <option value="">— Todos —</option>
+                          {states.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </Field>
+                      <Field label="Cidade">
+                        <select {...createForm.register("city")}
+                          onChange={(e) => { createForm.setValue("city", e.target.value); createForm.setValue("church_id", ""); createForm.setValue("life_group_id", ""); }}
+                          className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                          <option value="">— Todas —</option>
+                          {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </Field>
+                    </div>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      <Field label="Igreja / Comunidade">
+                        <select {...createForm.register("church_id")}
+                          onChange={(e) => { createForm.setValue("church_id", e.target.value); createForm.setValue("life_group_id", ""); }}
+                          className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                          <option value="">— Todas —</option>
+                          {churchesFiltered.map((ch) => <option key={ch.id} value={ch.id}>{ch.name}</option>)}
+                        </select>
+                      </Field>
+                      <Field label="Life Group">
+                        <select {...createForm.register("life_group_id")}
+                          className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+                          <option value="">— Sem célula —</option>
+                          {lgsFiltered.map((c) => <option key={c.id} value={c.id}>{c.name}{c.neighborhood ? ` · ${c.neighborhood}` : ""}</option>)}
+                        </select>
+                      </Field>
+                    </div>
+                    <p className="mt-2 text-[11px] text-muted">{lgsFiltered.length} célula(s) disponível(is) com esses filtros.</p>
+                  </>
+                )}
               </div>
 
               <Field label="Etapa da jornada">
