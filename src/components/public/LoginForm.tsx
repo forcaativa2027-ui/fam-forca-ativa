@@ -31,26 +31,32 @@ export default function LoginForm() {
   }, [envOk]);
 
   async function onSubmit(values: LoginInput) {
-    if (!envOk) { setErr("Configure as variáveis de ambiente do Supabase."); return; }
+    if (!envOk) { setErr("O serviço de autenticação não está configurado. Configure as variáveis públicas do Supabase e faça um novo deploy."); return; }
     setErr("");
-    const { error, data } = await supabase.auth.signInWithPassword(values);
-    if (error) {
-      setErr(error.message);
-      return;
-    }
-    if (data.user) await logAudit(supabase, "login", "auth", data.user.id);
 
-    // Se a conta tem 2FA ativo, o próximo nível de segurança (aal2) ainda não
-    // foi alcançado só com a senha — manda pra tela de verificação do código.
     try {
-      const { current, next } = await getAssuranceLevel(supabase);
-      if (next === "aal2" && current !== "aal2") {
-        window.location.href = "/verificacao-2fa";
+      const { error, data } = await supabase.auth.signInWithPassword(values);
+      if (error) {
+        setErr(error.message);
         return;
       }
-    } catch { /* se a checagem falhar, segue o fluxo normal */ }
+      if (data.user) await logAudit(supabase, "login", "auth", data.user.id);
 
-    window.location.href = "/painel";
+      // Se a conta tem 2FA ativo, o próximo nível de segurança (aal2) ainda não
+      // foi alcançado só com a senha — manda pra tela de verificação do código.
+      try {
+        const { current, next } = await getAssuranceLevel(supabase);
+        if (next === "aal2" && current !== "aal2") {
+          window.location.href = "/verificacao-2fa";
+          return;
+        }
+      } catch { /* se a checagem falhar, segue o fluxo normal */ }
+
+      window.location.href = "/painel";
+    } catch (error) {
+      console.error("Falha de conexão durante o login", error);
+      setErr("Não foi possível conectar ao serviço de autenticação. Confira a URL e a chave pública do Supabase no ambiente de produção e faça um novo deploy.");
+    }
   }
 
   return (
