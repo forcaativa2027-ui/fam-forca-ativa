@@ -1,7 +1,10 @@
 -- FAM042: Tabela de itens do carrossel institucional da pagina inicial
 -- Especificacao: FAM-CAR-01 v1.0
 
-create table if not exists public.content_carousel_items (
+drop table if exists public.carousel_audit_events cascade;
+drop table if exists public.content_carousel_items cascade;
+
+create table public.content_carousel_items (
   id              uuid primary key default gen_random_uuid(),
   tenant_key      text not null default 'FAM',
   title           text not null,
@@ -36,19 +39,22 @@ create index if not exists idx_carousel_items_active_order
 -- RLS: leitura publica apenas de itens ativos
 alter table public.content_carousel_items enable row level security;
 
+drop policy if exists "carousel_public_read" on public.content_carousel_items;
 create policy "carousel_public_read" on public.content_carousel_items
   for select using (is_active = true);
 
+drop policy if exists "carousel_admin_all" on public.content_carousel_items;
 create policy "carousel_admin_all" on public.content_carousel_items
   for all using (
     exists (
       select 1 from public.profiles
       where profiles.id = auth.uid()
-      and profiles.role in ('apostolo', 'pastor')
+      and lower(profiles.role::text) in ('apostolo', 'administrador_geral', 'admin', 'pastor')
     )
   );
 
 -- RPC para buscar itens publicos do carrossel
+drop function if exists public.get_active_carousel_items(text);
 create or replace function public.get_active_carousel_items(p_tenant text default 'FAM')
 returns table (
   id              uuid,
