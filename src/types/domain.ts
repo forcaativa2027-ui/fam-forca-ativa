@@ -306,6 +306,20 @@ export interface Banner {
   starts_at: string | null; ends_at: string | null;
   created_at: string; updated_at?: string;
 }
+// FAM042 — Carrossel Institucional de Conteudo (FAM-CAR-01)
+export type CarouselContentType = "banner" | "video" | "noticia" | "informativo" | "evento" | "campanha" | "outro";
+export type CarouselActionType = "nenhum" | "interno" | "externo" | "noticia" | "evento" | "video" | "servico" | "fale_fam" | "direitos";
+export type CarouselAudience = "todos" | "nao_autenticados" | "cadastrados" | "membros_ativos" | "membros_inativos";
+export interface CarouselItem {
+  id: string; title: string; description: string | null;
+  content_type: CarouselContentType;
+  image_url: string | null; video_url: string | null; cover_url: string | null;
+  button_label: string | null; action_type: CarouselActionType; action_url: string | null;
+  display_order: number; audience: CarouselAudience;
+  starts_at: string | null; ends_at: string | null;
+  is_active: boolean; created_by: string | null;
+  created_at: string; updated_at: string;
+}
 export interface PrayerRequest { id:string; life_group_id:string|null; member_id:string|null; request:string; is_answered:boolean; created_at:string; }
 export interface Discipleship { id:string; discipler_id:string; disciple_id:string; status:DiscipleshipStatus; started_on:string; ended_on:string|null; current_module:string|null; notes:string|null; }
 export type TimelineEventType = "conversao"|"batismo"|"consolidacao"|"discipulado"|"curso"|"ministerio"|"encontro"|"mudanca_etapa"|"observacao";

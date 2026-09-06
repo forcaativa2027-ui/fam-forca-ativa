@@ -1229,3 +1229,15 @@ export const useLiveCommandLog = (sessionId?: string | null, limit = 50) =>
     enabled: !!sessionId,
     refetchInterval: 10000,
   });
+
+// FAM042 — Carrossel Institucional
+import * as Cr from "@/services/carousel";
+export const useActiveCarouselItems = () => useQuery({
+  queryKey: ["active-carousel-items", "FAM"],
+  queryFn: () => Cr.listActiveCarouselItems(supabase),
+  refetchInterval: 60_000,
+});
+export const useAllCarouselItems = () => useQuery({
+  queryKey: ["all-carousel-items"],
+  queryFn: () => Cr.listAllCarouselItems(supabase),
+});

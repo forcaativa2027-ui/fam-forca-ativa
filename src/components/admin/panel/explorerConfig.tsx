@@ -80,6 +80,7 @@ export const EXPLORER_MAP: Record<string, ExplorerItem[]> = {
       children: [
         { key: "news", label: "Notícias", icon: <Megaphone size={16} />, description: "Publique notícias da igreja." },
         { key: "banners", label: "Banners", icon: <Image size={16} />, description: "Banners e destaques do site." },
+        { key: "carrossel", label: "Carrossel Institucional", icon: <Image size={16} />, description: "Carrossel de conteudo da pagina inicial." },
         { key: "sermons", label: "Pregações", icon: <Mic2 size={16} />, description: "Mensagens e pregações." },
         { key: "news-videos", label: "CEC News Vídeos", icon: <Video size={16} />, description: "Vídeos do CEC News." },
         { key: "services", label: "Cultos", icon: <Radio size={16} />, description: "Programação de cultos." },

@@ -25,6 +25,7 @@ import { RadioAdmin } from "../radio/RadioAdmin";
 import { Live360Admin } from "../Live360Admin";
 import { PublicPrayerRequestsAdmin, VisitRequestsAdmin } from "../ContactRequestsAdmin";
 import { BannersAdmin } from "../BannersAdmin";
+import { CarouselAdmin } from "../CarouselAdmin";
 import { CommunitiesAdmin } from "../CommunitiesAdmin";
 import { OrgStructureAdmin } from "../OrgStructureAdmin";
 import { PermissionsAdmin } from "../PermissionsAdmin";
@@ -160,6 +161,7 @@ export function TabContent({ activeTab, onNavigate, prefillEventId }: { activeTa
     case "radio":               return <RadioAdmin />;
     case "live360":             return <Live360Admin />;
     case "banners":             return <BannersAdmin />;
+    case "carrossel":           return <CarouselAdmin />;
     case "sermons":             return <SermonsAdmin />;
     case "giving":               return <GivingAdmin />;
     case "news-videos":          return <CecNewsVideosAdmin prefillEventId={prefillEventId} />;

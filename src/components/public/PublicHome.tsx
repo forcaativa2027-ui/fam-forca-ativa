@@ -16,6 +16,7 @@ import {
   usePublicSermons, usePublicEvents, useChurches, useCells, usePublicNews, useChurchGivingInfo,
   useTodaysWord, useActiveBanners, useActiveCommunity, useMyProfile, useOrgTerminology, useTenantModules,
   usePublicRegistrationEvents, useRadioConfig, useMyMember, useOrganizationConfig,
+  useActiveCarouselItems,
 } from "@/hooks/use-queries";
 import { EventSignupCard } from "@/components/shared/EventSignupCard";
 import { youtubeThumb } from "@/services/content";
@@ -26,6 +27,7 @@ import { PublicNewsSection } from "./PublicNewsSection";
 import { PublicContactForms } from "./PublicContactForms";
 import { PublicParticipateSection } from "./PublicParticipateSection";
 import { HeroCarousel } from "./HeroCarousel";
+import { InstitutionalCarousel } from "@/components/shared/InstitutionalCarousel";
 import type { EventItem, Church, Cell } from "@/types/domain";
 import RadioPage from "@/components/radio/RadioPage";
 import { RadioMiniPlayer } from "@/components/radio/RadioMiniPlayer";
@@ -78,6 +80,7 @@ export default function PublicHome() {
   const { data: dbWord } = useTodaysWord(communityId);
   const { data: radioEnabled } = useRadioEnabled(communityId);
   const { data: radioConfig } = useRadioConfig(communityId);
+  const { data: carouselItems = [] } = useActiveCarouselItems();
   const eventLabel = terms?.event ?? "Evento";
   const eventsLabel = terms?.events ?? "Eventos";
   const memberIdLabel = terms?.member_id ?? "Membro ID";
@@ -142,6 +145,25 @@ export default function PublicHome() {
             onSeeVideos={() => setTab("videos")}
             onSeeServices={() => { window.location.href = "/fale-conosco"; }}
           />
+
+          {/* FAM-CAR-01 — Carrossel Institucional de Conteudo */}
+          {carouselItems.length > 0 && (
+            <InstitutionalCarousel
+              items={carouselItems}
+              intervalMs={10000}
+              onItemClick={(item) => {
+                if (item.action_type === "externo" && item.action_url) {
+                  window.open(item.action_url, "_blank", "noopener,noreferrer");
+                } else if (item.action_type === "fale_fam") {
+                  setTab("contato");
+                } else if (item.action_type === "direitos") {
+                  window.location.href = "/jornada-conhecimento";
+                } else if (item.action_url) {
+                  window.location.href = item.action_url;
+                }
+              }}
+            />
+          )}
 
 
           {/* Últimos Vídeos */}
