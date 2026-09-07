@@ -9,6 +9,7 @@ import type { ContentLibraryType } from "@/types/domain";
 const TYPE_ICONS: Record<ContentLibraryType, React.ReactNode> = {
   imagem: <ImageIcon className="h-4 w-4" />, video_youtube: <Video className="h-4 w-4" />,
   documento: <FileText className="h-4 w-4" />, logo: <ImageIcon className="h-4 w-4" />, outro: <FileText className="h-4 w-4" />,
+  arquivo: <FileText className="h-4 w-4" />, carrossel: <ImageIcon className="h-4 w-4" />,
 };
 
 export function MediaLibraryPicker({
