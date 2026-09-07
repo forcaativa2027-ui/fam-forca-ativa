@@ -27,7 +27,7 @@ export type TabKey =
   | "communities" | "structure" | "genealogy" | "expansion-map" | "evangelism-groups" | "formacao" | "conhecimento-biblico" | "biblioteca-conhecimento" | "biblia-referencias" | "kids-admin" | "org-terminology"
   | "ministerios" | "life-groups" | "mda-health" | "saude" | "mda" | "permissions"
   | "weekly" | "monthly" | "relmda-supervisao" | "relmda-consolidacao" | "relmda-dashboard" | "relmda-prazos" | "relmda-area" | "cec-id-portaria"
-  | "news" | "banners" | "carrossel" | "sermons" | "radio" | "live360" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
+  | "news" | "banners" | "sermons" | "radio" | "live360" | "events" | "registration-events" | "news-videos" | "services" | "word" | "giving" | "editorial-dashboard" | "content-library" | "categories-tags"
   | "finance" | "patrimony" | "gpv" | "cecmais-ofertas"
   | "delegations" | "fam-credenciamento" | "fam-governance-reports" | "fam-conhecimento" | "fam-study-monitoring" | "invites" | "audit"
   | "export";
@@ -132,7 +132,6 @@ export function buildGroups(
         { key: "categories-tags", label: "Categorias e Tags", icon: <FolderTree size={15} /> },
         { key: "news",    label: "Notícias",     icon: <Megaphone size={15} /> },
         { key: "banners", label: "Banners",      icon: <Image size={15} /> },
-        { key: "carrossel", label: "Carrossel",   icon: <Image size={15} /> },
         { key: "sermons", label: "Pregações",    icon: <Mic2 size={15} /> },
         { key: "radio",   label: "Rádio Web",    icon: <Radio size={15} /> },
         { key: "live360", label: "Live-360",     icon: <ScreenShare size={15} /> },

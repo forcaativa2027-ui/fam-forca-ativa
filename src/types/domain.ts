@@ -1609,7 +1609,7 @@ export interface AdminUserDirectoryRow {
   delegacoes_ativas: number;
 }
 
-export type ContentLibraryType = "imagem" | "video_youtube" | "documento" | "logo" | "outro";
+export type ContentLibraryType = "imagem" | "video_youtube" | "documento" | "logo" | "outro" | "arquivo" | "carrossel";
 
 // Eventos — Check-in, Palestrantes, Promoção de fila, Mudanças, Feedback, Programação (EVT005-EVT013)
 // Confirmados por uso direto no código (EventCheckinAdmin.tsx, events.ts):
