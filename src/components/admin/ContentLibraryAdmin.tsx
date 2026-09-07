@@ -454,34 +454,34 @@ function CarouselTab({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1"><Label>Título *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Tipo *</Label><select value={form.content_type} onChange={(e) => setForm({ ...form, content_type: e.target.value })} className="h-10 w-full rounded-md border bg-background px-3 text-sm">{CONTENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
+              <div className="space-y-1"><Label>Título *</Label><Input value={form.title ?? ""} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Tipo *</Label><select value={form.content_type ?? "banner"} onChange={(e) => setForm({ ...form, content_type: e.target.value as CarouselContentType })} className="h-10 w-full rounded-md border bg-background px-3 text-sm">{CONTENT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
             </div>
-            <div className="space-y-1"><Label>Descrição</Label><textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full rounded-md border bg-background px-3 py-2 text-sm" rows={2} /></div>
+            <div className="space-y-1"><Label>Descrição</Label><textarea value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full rounded-md border bg-background px-3 py-2 text-sm" rows={2} /></div>
 
             <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-1"><Label>Imagem</Label><Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." />
+              <div className="space-y-1"><Label>Imagem</Label><Input value={form.image_url ?? ""} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." />
                 <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) setForm({ ...form, image_file: f }); }} className="mt-1" />
               </div>
-              <div className="space-y-1"><Label>Vídeo</Label><Input value={form.video_url} onChange={(e) => setForm({ ...form, video_url: e.target.value })} placeholder="https://youtube.com/..." />
+              <div className="space-y-1"><Label>Vídeo</Label><Input value={form.video_url ?? ""} onChange={(e) => setForm({ ...form, video_url: e.target.value })} placeholder="https://youtube.com/..." />
                 <input type="file" accept="video/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) setForm({ ...form, video_file: f }); }} className="mt-1" />
               </div>
-              <div className="space-y-1"><Label>Capa do Vídeo</Label><Input value={form.cover_url} onChange={(e) => setForm({ ...form, cover_url: e.target.value })} placeholder="https://..." />
+              <div className="space-y-1"><Label>Capa do Vídeo</Label><Input value={form.cover_url ?? ""} onChange={(e) => setForm({ ...form, cover_url: e.target.value })} placeholder="https://..." />
                 <input type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) setForm({ ...form, cover_file: f }); }} className="mt-1" />
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
-              <div className="space-y-1"><Label>Texto do Botão</Label><Input value={form.button_label} onChange={(e) => setForm({ ...form, button_label: e.target.value })} placeholder="Saiba mais" /></div>
-              <div className="space-y-1"><Label>Ação</Label><select value={form.action_type} onChange={(e) => setForm({ ...form, action_type: e.target.value })} className="h-10 w-full rounded-md border bg-background px-3 text-sm">{ACTION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
-              <div className="space-y-1"><Label>URL Destino</Label><Input value={form.action_url} onChange={(e) => setForm({ ...form, action_url: e.target.value })} placeholder="https://..." /></div>
+              <div className="space-y-1"><Label>Texto do Botão</Label><Input value={form.button_label ?? ""} onChange={(e) => setForm({ ...form, button_label: e.target.value })} placeholder="Saiba mais" /></div>
+              <div className="space-y-1"><Label>Ação</Label><select value={form.action_type ?? "nenhum"} onChange={(e) => setForm({ ...form, action_type: e.target.value as CarouselActionType })} className="h-10 w-full rounded-md border bg-background px-3 text-sm">{ACTION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
+              <div className="space-y-1"><Label>URL Destino</Label><Input value={form.action_url ?? ""} onChange={(e) => setForm({ ...form, action_url: e.target.value })} placeholder="https://..." /></div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-4">
-              <div className="space-y-1"><Label>Ordem</Label><Input type="number" value={form.display_order} onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })} /></div>
-              <div className="space-y-1"><Label>Público</Label><select value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value })} className="h-10 w-full rounded-md border bg-background px-3 text-sm">{AUDIENCES.map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
-              <div className="space-y-1"><Label>Início</Label><Input type="datetime-local" value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Fim</Label><Input type="datetime-local" value={form.ends_at} onChange={(e) => setForm({ ...form, ends_at: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Ordem</Label><Input type="number" value={form.display_order ?? 0} onChange={(e) => setForm({ ...form, display_order: Number(e.target.value) })} /></div>
+              <div className="space-y-1"><Label>Público</Label><select value={form.audience ?? "todos"} onChange={(e) => setForm({ ...form, audience: e.target.value as CarouselAudience })} className="h-10 w-full rounded-md border bg-background px-3 text-sm">{AUDIENCES.map((t) => <option key={t} value={t}>{t}</option>)}</select></div>
+              <div className="space-y-1"><Label>Início</Label><Input type="datetime-local" value={form.starts_at ?? ""} onChange={(e) => setForm({ ...form, starts_at: e.target.value })} /></div>
+              <div className="space-y-1"><Label>Fim</Label><Input type="datetime-local" value={form.ends_at ?? ""} onChange={(e) => setForm({ ...form, ends_at: e.target.value })} /></div>
             </div>
 
             <div className="flex items-center gap-2"><input type="checkbox" id="carousel-active" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="h-4 w-4 rounded border-input" /><Label htmlFor="carousel-active">Ativo</Label></div>
