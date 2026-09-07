@@ -88,6 +88,8 @@ export function ContentLibraryAdmin() {
                     items={libraryFiltered}
                     onRemove={removeLibraryItem}
                     onChange={() => qc.invalidateQueries({ queryKey: ["content-library"] })}
+                    filterType={filterType}
+                    setFilterType={setFilterType}
                   />
                 )}
               </TabsContent>
@@ -104,11 +106,15 @@ function LibraryTab({
   items,
   onRemove,
   onChange,
+  filterType,
+  setFilterType,
 }: {
   type: ContentLibraryType;
   items: ContentLibraryItem[];
   onRemove: (id: string, title: string) => Promise<void>;
   onChange: () => void;
+  filterType: "todos" | ContentLibraryType;
+  setFilterType: (v: "todos" | ContentLibraryType) => void;
 }) {
   const [open, setOpen] = useState(false);
   const { data: churches = [] } = useChurches();
