@@ -14,7 +14,7 @@ import { logAudit } from "@/services/audit";
 import { youtubeThumbnailUrl, isValidYoutubeUrl } from "@/lib/youtube";
 import { uploadContentLibraryFile, validateFile, getFolderForType, MAX_FILE_SIZE } from "@/services/storage";
 import { createCarouselItem, updateCarouselItem, deleteCarouselItem, listAllCarouselItems, logCarouselAudit } from "@/services/carousel";
-import type { ContentLibraryType, ContentLibraryItem } from "@/types/domain";
+import type { ContentLibraryType, ContentLibraryItem, CarouselContentType, CarouselActionType, CarouselAudience } from "@/types/domain";
 import type { CarouselItem } from "@/types/domain";
 
 const TYPE_LABELS: Record<ContentLibraryType, string> = {
