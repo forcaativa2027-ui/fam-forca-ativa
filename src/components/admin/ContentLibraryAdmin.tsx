@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, X, Image as ImageIcon, Video, FileText, Library, Upload, ChevronLeft, ChevronRight, Play, ExternalLink } from "lucide-react";
+import { Plus, Trash2, X, Image as ImageIcon, Video, FileText, Library, Upload, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Play, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
