@@ -382,7 +382,7 @@ function CarouselTab({
   function cancel() { setEditing(null); setErr(""); }
 
   async function handleSave() {
-    if (!form.title.trim()) { setErr("Título é obrigatório"); return; }
+    if (!form.title?.trim()) { setErr("Título é obrigatório"); return; }
     setBusy(true); setErr("");
     try {
       const uploads = await Promise.all([
