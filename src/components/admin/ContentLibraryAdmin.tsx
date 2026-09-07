@@ -41,6 +41,7 @@ export function ContentLibraryAdmin() {
   const { data: libraryItems = [] } = useContentLibrary();
   const { data: carouselItems = [] } = useQuery({ queryKey: ["all-carousel-items"], queryFn: () => listAllCarouselItems(supabase) });
   const [activeTab, setActiveTab] = useState<ContentLibraryType>("imagem");
+  const handleTabChange = (value: string) => setActiveTab(value as ContentLibraryType);
   const [filterType, setFilterType] = useState<"todos" | ContentLibraryType>("todos");
 
   async function removeLibraryItem(id: string, title: string) {
@@ -64,7 +65,7 @@ export function ContentLibraryAdmin() {
           </div>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid w-full grid-cols-5">
               {TABS.map((t) => (
                 <TabsTrigger key={t.key} value={t.key} className="gap-1 py-2">
