@@ -10,10 +10,10 @@
 create table if not exists public.content_library (
   id          uuid primary key default gen_random_uuid(),
   title       text not null,
-  type        text not null check (type in ('imagem', 'video_youtube', 'documento', 'logo', 'outro')),
+  type        text not null check (type in ('imagem', 'video_youtube', 'documento', 'logo', 'outro', 'arquivo', 'carrossel')),
   url         text not null,
   tags        text[] not null default '{}',
-  church_id   uuid references public.churches(id),  -- null = disponível pra rede toda
+  church_id   uuid references public.churches(id),
   created_by  uuid references public.profiles(id),
   created_at  timestamptz not null default now()
 );
