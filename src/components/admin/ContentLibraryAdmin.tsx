@@ -392,7 +392,7 @@ function CarouselTab({
       ]);
 
       const payload = {
-        title: form.title.trim(), description: form.description.trim() || null,
+        title: form.title?.trim() ?? "", description: form.description?.trim() || null,
         content_type: form.content_type,
         image_url: uploads[0] && "url" in uploads[0] ? uploads[0].url : form.image_url || null,
         video_url: uploads[1] && "url" in uploads[1] ? uploads[1].url : form.video_url || null,
